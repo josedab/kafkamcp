@@ -1,0 +1,94 @@
+package server
+
+import (
+	"net/http"
+	"testing"
+
+	"github.com/mark3labs/mcp-go/mcp"
+)
+
+func TestMatchTopicFilter(t *testing.T) {
+	tests := []struct {
+		pattern string
+		name    string
+		want    bool
+	}{
+		{"*", "anything", true},
+		{"*", "dotted.name", true},
+		{"orders.*", "orders.created", true},
+		{"orders.*", "orders.deleted", true},
+		{"orders.*", "payments.created", false},
+		{"*.dlq", "orders.dlq", true},
+		{"*.dlq", "orders.created", false},
+		{"orders.created", "orders.created", true},
+		{"orders.created", "orders.deleted", false},
+		{"test", "test", true},
+		{"test", "other", false},
+		{"*.*", "a.b", true},
+		{"prefix.*", "prefix.suffix.extra", true}, // prefix.* matches any topic starting with "prefix."
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.pattern+"_"+tt.name, func(t *testing.T) {
+			got := matchTopicFilter(tt.pattern, tt.name)
+			if got != tt.want {
+				t.Errorf("matchTopicFilter(%q, %q) = %v, want %v", tt.pattern, tt.name, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestExtractAgentID(t *testing.T) {
+	// extractAgentID with no headers returns "anonymous"
+	req := mcp.CallToolRequest{}
+	id := extractAgentID(req)
+	if id != "anonymous" {
+		t.Errorf("expected 'anonymous', got %q", id)
+	}
+}
+
+func TestExtractAgentIDWithHeader(t *testing.T) {
+	req := mcp.CallToolRequest{}
+	req.Header = http.Header{"X-Agent-Id": []string{"my-agent"}}
+	id := extractAgentID(req)
+	if id != "my-agent" {
+		t.Errorf("expected 'my-agent', got %q", id)
+	}
+}
+
+func TestMarshalResult(t *testing.T) {
+	result, err := marshalResult(map[string]any{"key": "value"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected non-nil result")
+	}
+}
+
+func TestMarshalResourceJSON(t *testing.T) {
+	contents, err := marshalResourceJSON("kafka://test", map[string]any{"foo": "bar"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(contents) != 1 {
+		t.Fatalf("expected 1 content, got %d", len(contents))
+	}
+}
+
+func TestExtractAgentIDFromResource(t *testing.T) {
+	req := mcp.ReadResourceRequest{}
+	id := extractAgentIDFromResource(req)
+	if id != "anonymous" {
+		t.Errorf("expected 'anonymous', got %q", id)
+	}
+}
+
+func TestExtractAgentIDFromResourceWithHeader(t *testing.T) {
+	req := mcp.ReadResourceRequest{}
+	req.Header = http.Header{"X-Agent-Id": []string{"resource-agent"}}
+	id := extractAgentIDFromResource(req)
+	if id != "resource-agent" {
+		t.Errorf("expected 'resource-agent', got %q", id)
+	}
+}
