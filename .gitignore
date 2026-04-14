@@ -24,3 +24,7 @@ coverage.html
 
 # Local config (keep example)
 !kafkamcp.yaml
+
+# Environment files
+.env
+.env.local
