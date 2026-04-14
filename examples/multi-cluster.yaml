@@ -1,0 +1,66 @@
+# KafkaMCP with Multi-Cluster Setup
+server:
+  transport: sse
+  host: 0.0.0.0
+  port: 3100
+  log_level: info
+
+clusters:
+  - name: production
+    bootstrap_servers: "prod-broker-1:9092,prod-broker-2:9092,prod-broker-3:9092"
+    security_protocol: SASL_SSL
+    sasl_mechanism: SCRAM-SHA-512
+    sasl_username: "${PROD_KAFKA_USERNAME}"
+    sasl_password: "${PROD_KAFKA_PASSWORD}"
+    schema_registry:
+      url: "https://prod-schema-registry:8081"
+      auth:
+        username: "${PROD_SR_USERNAME}"
+        password: "${PROD_SR_PASSWORD}"
+    default: true
+
+  - name: staging
+    bootstrap_servers: "staging-broker-1:9092"
+    security_protocol: PLAINTEXT
+    schema_registry:
+      url: "http://staging-schema-registry:8081"
+
+policies:
+  default_deny: true
+  agents:
+    - id: "incident-agent"
+      role: reader
+      topics:
+        - pattern: "*.dlq"
+          permissions: [read]
+        - pattern: "orders.*"
+          permissions: [read]
+        - pattern: "monitoring.*"
+          permissions: [read, write]
+      consumer_groups:
+        permissions: [describe]
+      schemas:
+        permissions: [read]
+      rate_limit:
+        requests_per_minute: 120
+
+    - id: "pipeline-agent"
+      role: admin
+      topics:
+        - pattern: "*"
+          permissions: [read, write, create, delete]
+      consumer_groups:
+        permissions: [describe, reset]
+      schemas:
+        permissions: [read, write]
+      rate_limit:
+        requests_per_minute: 600
+
+schema_cache:
+  max_entries: 10000
+  ttl_seconds: 300
+
+audit:
+  enabled: true
+  max_entries: 10000
+  log_file: /var/log/kafkamcp/audit.jsonl

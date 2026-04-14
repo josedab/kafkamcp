@@ -1,0 +1,63 @@
+# KafkaMCP Server Configuration
+server:
+  transport: stdio          # stdio | sse | streamable-http
+  host: 0.0.0.0             # For SSE/HTTP transports
+  port: 3100                # For SSE/HTTP transports
+  log_level: info           # debug | info | warn | error
+
+clusters:
+  - name: local
+    bootstrap_servers: "localhost:9092"
+    security_protocol: PLAINTEXT
+    default: true
+
+    # Optional: Schema Registry
+    # schema_registry:
+    #   url: "http://localhost:8081"
+    #   auth:
+    #     username: "${SR_USERNAME}"
+    #     password: "${SR_PASSWORD}"
+
+# Schema Cache Configuration
+schema_cache:
+  max_entries: 10000
+  ttl_seconds: 300
+
+# Access Control Policies
+# Uncomment to enable per-agent access control with default-deny semantics.
+# policies:
+#   default_deny: true
+#   agents:
+#     - id: "incident-agent"
+#       role: reader
+#       topics:
+#         - pattern: "*.dlq"
+#           permissions: [read]
+#         - pattern: "orders.*"
+#           permissions: [read]
+#         - pattern: "monitoring.*"
+#           permissions: [read, write]
+#       consumer_groups:
+#         permissions: [describe]
+#       schemas:
+#         permissions: [read]
+#       rate_limit:
+#         requests_per_minute: 120
+#
+#     - id: "pipeline-agent"
+#       role: admin
+#       topics:
+#         - pattern: "*"
+#           permissions: [read, write, create, delete]
+#       consumer_groups:
+#         permissions: [describe, reset]
+#       schemas:
+#         permissions: [read, write]
+#       rate_limit:
+#         requests_per_minute: 600
+
+# Audit Logging
+audit:
+  enabled: true
+  max_entries: 10000
+  # log_file: /var/log/kafkamcp/audit.jsonl

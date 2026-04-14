@@ -1,0 +1,26 @@
+# KafkaMCP with Confluent Cloud
+server:
+  transport: stdio
+  log_level: info
+
+clusters:
+  - name: confluent-cloud
+    bootstrap_servers: "${CONFLUENT_BOOTSTRAP_SERVERS}"
+    security_protocol: SASL_SSL
+    sasl_mechanism: PLAIN
+    sasl_username: "${CONFLUENT_API_KEY}"
+    sasl_password: "${CONFLUENT_API_SECRET}"
+    schema_registry:
+      url: "${CONFLUENT_SR_URL}"
+      auth:
+        username: "${CONFLUENT_SR_API_KEY}"
+        password: "${CONFLUENT_SR_API_SECRET}"
+    default: true
+
+schema_cache:
+  max_entries: 10000
+  ttl_seconds: 300
+
+audit:
+  enabled: true
+  max_entries: 10000
