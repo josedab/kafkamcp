@@ -1,0 +1,26 @@
+# Binaries
+bin/
+dist/
+kafkamcp
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test
+coverage.out
+coverage.html
+
+# Logs
+*.log
+*.jsonl
+
+# Local config (keep example)
+!kafkamcp.yaml
