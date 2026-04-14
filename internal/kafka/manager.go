@@ -534,7 +534,7 @@ func (m *Manager) Consume(ctx context.Context, cluster, topic string, partition 
 	defer consumer.Close()
 
 	var messages []Message
-	ctx, cancel := context.WithTimeout(ctx, java_timeout(timeoutMs))
+	ctx, cancel := context.WithTimeout(ctx, parseDurationMs(timeoutMs))
 	defer cancel()
 
 	for len(messages) < limit {

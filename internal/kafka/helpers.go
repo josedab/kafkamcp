@@ -51,8 +51,8 @@ func serializeValue(v any) string {
 	}
 }
 
-// java_timeout converts milliseconds to a Go duration.
-func java_timeout(ms int) time.Duration {
+// parseDurationMs converts milliseconds to a Go duration.
+func parseDurationMs(ms int) time.Duration {
 	if ms <= 0 {
 		ms = 5000
 	}

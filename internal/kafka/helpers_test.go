@@ -87,14 +87,14 @@ func TestSerializeValue(t *testing.T) {
 }
 
 func TestJavaTimeout(t *testing.T) {
-	if java_timeout(0) != 5*time.Second {
+	if parseDurationMs(0) != 5*time.Second {
 		t.Error("expected default 5s for 0")
 	}
-	if java_timeout(-1) != 5*time.Second {
+	if parseDurationMs(-1) != 5*time.Second {
 		t.Error("expected default 5s for -1")
 	}
-	if java_timeout(1000) != time.Second {
-		t.Errorf("expected 1s, got %v", java_timeout(1000))
+	if parseDurationMs(1000) != time.Second {
+		t.Errorf("expected 1s, got %v", parseDurationMs(1000))
 	}
 }
 
