@@ -1,0 +1,84 @@
+/**
+ * KafkaMCP Documentation Theme
+ * Color palette inspired by Kafka's brand (coral/orange) with modern tech feel
+ */
+
+:root {
+  --ifm-color-primary: #e04e39;
+  --ifm-color-primary-dark: #d43a24;
+  --ifm-color-primary-darker: #c93722;
+  --ifm-color-primary-darkest: #a52d1c;
+  --ifm-color-primary-light: #e4634f;
+  --ifm-color-primary-lighter: #e66e5c;
+  --ifm-color-primary-lightest: #ec9183;
+  --ifm-code-font-size: 95%;
+  --ifm-font-family-base: 'Inter', system-ui, -apple-system, sans-serif;
+  --docusaurus-highlighted-code-line-bg: rgba(224, 78, 57, 0.1);
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #f06449;
+  --ifm-color-primary-dark: #ee4d2f;
+  --ifm-color-primary-darker: #ed3f1f;
+  --ifm-color-primary-darkest: #cb2e10;
+  --ifm-color-primary-light: #f27b63;
+  --ifm-color-primary-lighter: #f38973;
+  --ifm-color-primary-lightest: #f7b0a4;
+  --docusaurus-highlighted-code-line-bg: rgba(240, 100, 73, 0.2);
+}
+
+/* Hero section */
+.hero {
+  padding: 4rem 0;
+}
+
+.hero__title {
+  font-size: 3rem;
+  font-weight: 800;
+}
+
+.hero__subtitle {
+  font-size: 1.3rem;
+  max-width: 640px;
+}
+
+/* Feature cards */
+.feature-card {
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.feature-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* Code blocks */
+.prism-code {
+  border-radius: 8px;
+}
+
+/* Install command */
+.install-command {
+  background: var(--ifm-color-emphasis-100);
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 500px;
+  margin: 1.5rem auto;
+}
+
+/* Badge styling */
+.badge-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 1rem 0;
+}
