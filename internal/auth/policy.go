@@ -1,10 +1,8 @@
 package auth
 
 import (
-	"path"
-	"strings"
-
 	"github.com/kafkamcp/kafkamcp/internal/config"
+	"github.com/kafkamcp/kafkamcp/internal/match"
 )
 
 // Action represents a permission action.
@@ -77,7 +75,7 @@ func (pe *PolicyEngine) Authorize(agentID string, resource ResourceType, resourc
 
 func (pe *PolicyEngine) authorizeTopicAction(policy *config.AgentPolicy, topicName string, action Action) bool {
 	for _, tp := range policy.Topics {
-		if matchPattern(tp.Pattern, topicName) {
+		if match.Glob(tp.Pattern, topicName) {
 			for _, perm := range tp.Permissions {
 				if perm == string(action) || perm == "admin" {
 					return true
@@ -119,47 +117,4 @@ func (pe *PolicyEngine) FilterTopics(agentID string, topics []string) []string {
 		}
 	}
 	return filtered
-}
-
-// matchPattern matches a topic name against a glob-style pattern.
-// Uses path.Match for portable, OS-independent matching.
-func matchPattern(pattern, name string) bool {
-	if pattern == "*" {
-		return true
-	}
-
-	// Try exact match first
-	if pattern == name {
-		return true
-	}
-
-	// Use path.Match for glob matching
-	matched, err := path.Match(pattern, name)
-	if err != nil {
-		return false
-	}
-	if matched {
-		return true
-	}
-
-	// Support "prefix.*" patterns by also trying with segment matching
-	if strings.Contains(pattern, ".") {
-		parts := strings.Split(pattern, ".")
-		nameParts := strings.Split(name, ".")
-		if len(parts) <= len(nameParts) {
-			allMatch := true
-			for i, p := range parts {
-				m, err := path.Match(p, nameParts[i])
-				if err != nil || !m {
-					allMatch = false
-					break
-				}
-			}
-			if allMatch {
-				return true
-			}
-		}
-	}
-
-	return false
 }

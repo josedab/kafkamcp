@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/kafkamcp/kafkamcp/internal/config"
+	"github.com/kafkamcp/kafkamcp/internal/match"
 )
 
 func TestMatchPattern(t *testing.T) {
@@ -24,9 +25,9 @@ func TestMatchPattern(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.pattern+"_"+tt.name, func(t *testing.T) {
-			got := matchPattern(tt.pattern, tt.name)
+			got := match.Glob(tt.pattern, tt.name)
 			if got != tt.want {
-				t.Errorf("matchPattern(%q, %q) = %v, want %v", tt.pattern, tt.name, got, tt.want)
+				t.Errorf("match.Glob(%q, %q) = %v, want %v", tt.pattern, tt.name, got, tt.want)
 			}
 		})
 	}
