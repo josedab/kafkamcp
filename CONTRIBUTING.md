@@ -4,7 +4,7 @@ Thank you for your interest in contributing to KafkaMCP! This guide will help yo
 
 ## Prerequisites
 
-- **Go 1.23+** — [install instructions](https://go.dev/doc/install)
+- **Go 1.25+** — [install instructions](https://go.dev/doc/install)
 - **Docker** (optional) — for running Kafka locally
 - **golangci-lint** — `go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest`
 
