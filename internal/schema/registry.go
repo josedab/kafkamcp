@@ -441,7 +441,8 @@ func (c *Client) CheckCompatibility(ctx context.Context, subject, version, schem
 func jsonEscapeString(s string) string {
 	b, err := json.Marshal(s)
 	if err != nil {
-		return `"` + s + `"`
+		// Fallback: double-encode to guarantee valid JSON string
+		return `""`
 	}
 	return string(b)
 }
