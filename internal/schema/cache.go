@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"container/list"
 	"sync"
 	"time"
 )
@@ -8,12 +9,14 @@ import (
 // Cache is a simple LRU cache with TTL for schema entries.
 type Cache struct {
 	mu         sync.RWMutex
-	entries    map[string]*cacheEntry
+	entries    map[string]*list.Element
+	order      *list.List // insertion order for O(1) eviction
 	maxEntries int
 	ttl        time.Duration
 }
 
 type cacheEntry struct {
+	key       string
 	value     *SchemaInfo
 	expiresAt time.Time
 }
@@ -27,7 +30,8 @@ func NewCache(maxEntries int, ttl time.Duration) *Cache {
 		ttl = 5 * time.Minute
 	}
 	return &Cache{
-		entries:    make(map[string]*cacheEntry),
+		entries:    make(map[string]*list.Element),
+		order:      list.New(),
 		maxEntries: maxEntries,
 		ttl:        ttl,
 	}
@@ -36,15 +40,16 @@ func NewCache(maxEntries int, ttl time.Duration) *Cache {
 // Get retrieves a cached schema entry.
 func (c *Cache) Get(key string) (*SchemaInfo, bool) {
 	c.mu.RLock()
-	entry, ok := c.entries[key]
+	elem, ok := c.entries[key]
 	c.mu.RUnlock()
 
 	if !ok {
 		return nil, false
 	}
+	entry := elem.Value.(*cacheEntry)
 	if time.Now().After(entry.expiresAt) {
 		c.mu.Lock()
-		delete(c.entries, key)
+		c.removeElement(elem)
 		c.mu.Unlock()
 		return nil, false
 	}
@@ -56,30 +61,36 @@ func (c *Cache) Set(key string, value *SchemaInfo) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	// Evict oldest entries if at capacity
+	// Update existing entry
+	if elem, ok := c.entries[key]; ok {
+		c.order.Remove(elem)
+		delete(c.entries, key)
+	}
+
+	// Evict oldest entry if at capacity
 	if len(c.entries) >= c.maxEntries {
 		c.evictOldest()
 	}
 
-	c.entries[key] = &cacheEntry{
+	entry := &cacheEntry{
+		key:       key,
 		value:     value,
 		expiresAt: time.Now().Add(c.ttl),
 	}
+	elem := c.order.PushBack(entry)
+	c.entries[key] = elem
 }
 
 func (c *Cache) evictOldest() {
-	var oldestKey string
-	var oldestTime time.Time
+	front := c.order.Front()
+	if front != nil {
+		c.removeElement(front)
+	}
+}
 
-	for k, v := range c.entries {
-		if oldestKey == "" || v.expiresAt.Before(oldestTime) {
-			oldestKey = k
-			oldestTime = v.expiresAt
-		}
-	}
-	if oldestKey != "" {
-		delete(c.entries, oldestKey)
-	}
+func (c *Cache) removeElement(elem *list.Element) {
+	entry := c.order.Remove(elem).(*cacheEntry)
+	delete(c.entries, entry.key)
 }
 
 // Stats returns cache statistics.
