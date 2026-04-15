@@ -165,6 +165,11 @@ func (s *Server) handleSearch(ctx context.Context, request mcp.CallToolRequest) 
 		return deny, nil
 	}
 
+	if err := s.acquireExpensiveOp(ctx); err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+	defer s.releaseExpensiveOp()
+
 	req := kafka.SearchRequest{
 		Topic:         topic,
 		KeyFilter:     request.GetString("key_filter", ""),

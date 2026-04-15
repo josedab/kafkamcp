@@ -1,6 +1,7 @@
 package server
 
 import (
+"context"
 "encoding/json"
 "fmt"
 "log/slog"
@@ -29,6 +30,7 @@ rateLimiter  *ratelimit.Limiter
 metrics      *metrics.Metrics
 logger       *slog.Logger
 mcpServer    *server.MCPServer
+expensiveOps chan struct{} // semaphore for expensive operations (aggregate, join, search)
 }
 
 // New creates a new KafkaMCP server.
@@ -70,6 +72,7 @@ auditLogger:   auditLogger,
 rateLimiter:   rl,
 metrics:       metrics.New(),
 logger:        logger,
+expensiveOps:  make(chan struct{}, 5), // max 5 concurrent expensive operations
 }
 
 mcpServer := server.NewMCPServer(
@@ -420,6 +423,21 @@ s.metrics.RateLimitDenials.WithLabelValues(agentID, resource).Inc()
 return fmt.Errorf("rate limit exceeded for agent %q", agentID)
 }
 return nil
+}
+
+// acquireExpensiveOp blocks until a slot is available for an expensive operation,
+// or returns an error if the context is cancelled while waiting.
+func (s *Server) acquireExpensiveOp(ctx context.Context) error {
+select {
+case s.expensiveOps <- struct{}{}:
+	return nil
+case <-ctx.Done():
+	return fmt.Errorf("timed out waiting for available capacity; too many concurrent expensive operations")
+}
+}
+
+func (s *Server) releaseExpensiveOp() {
+<-s.expensiveOps
 }
 
 func (s *Server) resolveClusterName(cluster string) string {

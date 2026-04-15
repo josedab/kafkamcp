@@ -44,6 +44,11 @@ func (s *Server) handleAggregate(ctx context.Context, request mcp.CallToolReques
 		return deny, nil
 	}
 
+	if err := s.acquireExpensiveOp(ctx); err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+	defer s.releaseExpensiveOp()
+
 	result, err := s.kafkaManager.Aggregate(ctx, cluster, kafka.AggregateRequest{
 		Topic:    topic,
 		Field:    request.GetString("field", ""),
@@ -203,6 +208,11 @@ func (s *Server) handleJoin(ctx context.Context, request mcp.CallToolRequest) (*
 	if deny := s.checkAuth(agentID, "kafka_join", auth.ResourceTopic, rightTopic, auth.ActionRead); deny != nil {
 		return deny, nil
 	}
+
+	if err := s.acquireExpensiveOp(ctx); err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+	defer s.releaseExpensiveOp()
 
 	result, err := s.kafkaManager.JoinTopics(ctx, cluster, kafka.JoinRequest{
 		LeftTopic:  leftTopic,
