@@ -500,6 +500,17 @@ func clampInt64(v, min, max int64) int64 {
 	return v
 }
 
+// maxInputLength is the maximum allowed length for user-supplied string parameters.
+const maxInputLength = 1024
+
+// validateStringLength checks that a string parameter doesn't exceed the maximum length.
+func validateStringLength(name, value string) *mcp.CallToolResult {
+	if len(value) > maxInputLength {
+		return mcp.NewToolResultError(fmt.Sprintf("%s exceeds maximum length of %d characters", name, maxInputLength))
+	}
+	return nil
+}
+
 // Tool and resource handler implementations are in:
 // - tools_p0.go  (P0 handlers: list topics, describe, consume, produce, schemas, consumer groups)
 // - tools_p1.go  (P1 handlers: create/alter/delete topic, search, reset offsets, DLQ, subscribe)

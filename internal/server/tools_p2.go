@@ -22,6 +22,9 @@ func (s *Server) handleAggregate(ctx context.Context, request mcp.CallToolReques
 	if topic == "" {
 		return mcp.NewToolResultError("topic is required"), nil
 	}
+	if deny := validateStringLength("topic", topic); deny != nil {
+		return deny, nil
+	}
 	if deny := s.checkRateLimit(agentID, "kafka_aggregate"); deny != nil {
 		return deny, nil
 	}
@@ -53,6 +56,12 @@ func (s *Server) handleSuggestSchemaEvolution(ctx context.Context, request mcp.C
 
 	if subject == "" || change == "" {
 		return mcp.NewToolResultError("subject and change are required"), nil
+	}
+	if deny := validateStringLength("subject", subject); deny != nil {
+		return deny, nil
+	}
+	if deny := validateStringLength("change", change); deny != nil {
+		return deny, nil
 	}
 	if deny := s.checkRateLimit(agentID, "kafka_suggest_schema_evolution"); deny != nil {
 		return deny, nil
@@ -126,6 +135,9 @@ func (s *Server) handleDescribeConnector(ctx context.Context, request mcp.CallTo
 	if name == "" {
 		return mcp.NewToolResultError("name is required"), nil
 	}
+	if deny := validateStringLength("name", name); deny != nil {
+		return deny, nil
+	}
 	if deny := s.checkRateLimit(agentID, "kafka_describe_connector"); deny != nil {
 		return deny, nil
 	}
@@ -164,6 +176,12 @@ func (s *Server) handleJoin(ctx context.Context, request mcp.CallToolRequest) (*
 	if leftTopic == "" || rightTopic == "" {
 		return mcp.NewToolResultError("left_topic and right_topic are required"), nil
 	}
+	if deny := validateStringLength("left_topic", leftTopic); deny != nil {
+		return deny, nil
+	}
+	if deny := validateStringLength("right_topic", rightTopic); deny != nil {
+		return deny, nil
+	}
 	if deny := s.checkRateLimit(agentID, "kafka_join"); deny != nil {
 		return deny, nil
 	}
@@ -199,6 +217,9 @@ func (s *Server) handleNaturalLanguageQuery(ctx context.Context, request mcp.Cal
 
 	if query == "" {
 		return mcp.NewToolResultError("query is required"), nil
+	}
+	if deny := validateStringLength("query", query); deny != nil {
+		return deny, nil
 	}
 	if deny := s.checkRateLimit(agentID, "kafka_query"); deny != nil {
 		return deny, nil

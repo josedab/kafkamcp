@@ -72,6 +72,9 @@ func (s *Server) handleDescribeTopic(ctx context.Context, request mcp.CallToolRe
 	if topic == "" {
 		return mcp.NewToolResultError("topic is required"), nil
 	}
+	if deny := validateStringLength("topic", topic); deny != nil {
+		return deny, nil
+	}
 	if deny := s.checkRateLimit(agentID, "kafka_describe_topic"); deny != nil {
 		return deny, nil
 	}
@@ -101,6 +104,9 @@ func (s *Server) handleConsume(ctx context.Context, request mcp.CallToolRequest)
 
 	if topic == "" {
 		return mcp.NewToolResultError("topic is required"), nil
+	}
+	if deny := validateStringLength("topic", topic); deny != nil {
+		return deny, nil
 	}
 	if deny := s.checkRateLimit(agentID, "kafka_consume"); deny != nil {
 		return deny, nil
@@ -144,6 +150,9 @@ func (s *Server) handleProduce(ctx context.Context, request mcp.CallToolRequest)
 
 	if topic == "" {
 		return mcp.NewToolResultError("topic is required"), nil
+	}
+	if deny := validateStringLength("topic", topic); deny != nil {
+		return deny, nil
 	}
 	if deny := s.checkRateLimit(agentID, "kafka_produce"); deny != nil {
 		return deny, nil
@@ -252,6 +261,9 @@ func (s *Server) handleGetSchema(ctx context.Context, request mcp.CallToolReques
 	if subject == "" {
 		return mcp.NewToolResultError("subject is required"), nil
 	}
+	if deny := validateStringLength("subject", subject); deny != nil {
+		return deny, nil
+	}
 	if deny := s.checkRateLimit(agentID, "kafka_get_schema"); deny != nil {
 		return deny, nil
 	}
@@ -278,6 +290,9 @@ func (s *Server) handleDescribeConsumerGroup(ctx context.Context, request mcp.Ca
 
 	if groupID == "" {
 		return mcp.NewToolResultError("group_id is required"), nil
+	}
+	if deny := validateStringLength("group_id", groupID); deny != nil {
+		return deny, nil
 	}
 	if deny := s.checkRateLimit(agentID, "kafka_describe_consumer_group"); deny != nil {
 		return deny, nil

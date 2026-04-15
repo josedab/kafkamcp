@@ -23,6 +23,9 @@ func (s *Server) handleCreateTopic(ctx context.Context, request mcp.CallToolRequ
 	if name == "" {
 		return mcp.NewToolResultError("name is required"), nil
 	}
+	if deny := validateStringLength("name", name); deny != nil {
+		return deny, nil
+	}
 	if deny := s.checkRateLimit(agentID, "kafka_create_topic"); deny != nil {
 		return deny, nil
 	}
@@ -75,6 +78,9 @@ func (s *Server) handleAlterTopic(ctx context.Context, request mcp.CallToolReque
 	if name == "" {
 		return mcp.NewToolResultError("name is required"), nil
 	}
+	if deny := validateStringLength("name", name); deny != nil {
+		return deny, nil
+	}
 	if deny := s.checkRateLimit(agentID, "kafka_alter_topic"); deny != nil {
 		return deny, nil
 	}
@@ -119,6 +125,9 @@ func (s *Server) handleDeleteTopic(ctx context.Context, request mcp.CallToolRequ
 	if name == "" {
 		return mcp.NewToolResultError("name is required"), nil
 	}
+	if deny := validateStringLength("name", name); deny != nil {
+		return deny, nil
+	}
 	if deny := s.checkRateLimit(agentID, "kafka_delete_topic"); deny != nil {
 		return deny, nil
 	}
@@ -145,6 +154,9 @@ func (s *Server) handleSearch(ctx context.Context, request mcp.CallToolRequest) 
 
 	if topic == "" {
 		return mcp.NewToolResultError("topic is required"), nil
+	}
+	if deny := validateStringLength("topic", topic); deny != nil {
+		return deny, nil
 	}
 	if deny := s.checkRateLimit(agentID, "kafka_search"); deny != nil {
 		return deny, nil
@@ -199,6 +211,12 @@ func (s *Server) handleResetOffsets(ctx context.Context, request mcp.CallToolReq
 	if groupID == "" || topic == "" || strategy == "" {
 		return mcp.NewToolResultError("group_id, topic, and strategy are required"), nil
 	}
+	if deny := validateStringLength("group_id", groupID); deny != nil {
+		return deny, nil
+	}
+	if deny := validateStringLength("topic", topic); deny != nil {
+		return deny, nil
+	}
 	if deny := s.checkRateLimit(agentID, "kafka_reset_offsets"); deny != nil {
 		return deny, nil
 	}
@@ -230,6 +248,9 @@ func (s *Server) handleCheckSchemaCompatibility(ctx context.Context, request mcp
 	if subject == "" || schemaStr == "" {
 		return mcp.NewToolResultError("subject and schema are required"), nil
 	}
+	if deny := validateStringLength("subject", subject); deny != nil {
+		return deny, nil
+	}
 	if deny := s.checkRateLimit(agentID, "kafka_check_schema_compatibility"); deny != nil {
 		return deny, nil
 	}
@@ -257,6 +278,9 @@ func (s *Server) handleAnalyzeDLQ(ctx context.Context, request mcp.CallToolReque
 
 	if topic == "" {
 		return mcp.NewToolResultError("topic is required"), nil
+	}
+	if deny := validateStringLength("topic", topic); deny != nil {
+		return deny, nil
 	}
 	if limit > 10000 {
 		limit = 10000
@@ -287,6 +311,9 @@ func (s *Server) handleSubscribe(ctx context.Context, request mcp.CallToolReques
 
 	if topic == "" {
 		return mcp.NewToolResultError("topic is required"), nil
+	}
+	if deny := validateStringLength("topic", topic); deny != nil {
+		return deny, nil
 	}
 	if deny := s.checkRateLimit(agentID, "kafka_subscribe"); deny != nil {
 		return deny, nil
