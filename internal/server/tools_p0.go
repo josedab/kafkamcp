@@ -9,6 +9,7 @@ import (
 
 	"github.com/kafkamcp/kafkamcp/internal/auth"
 	"github.com/kafkamcp/kafkamcp/internal/kafka"
+	"github.com/kafkamcp/kafkamcp/internal/metrics"
 	"github.com/kafkamcp/kafkamcp/internal/schema"
 	"github.com/mark3labs/mcp-go/mcp"
 )
@@ -142,7 +143,7 @@ func (s *Server) handleConsume(ctx context.Context, request mcp.CallToolRequest)
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to consume: %v", err)), nil
 	}
 
-	s.metrics.MessagesConsumed.WithLabelValues(topic, agentID, s.resolveClusterName(cluster)).Add(float64(len(messages)))
+	s.metrics.MessagesConsumed.WithLabelValues(topic, metrics.SanitizeAgentLabel(agentID), s.resolveClusterName(cluster)).Add(float64(len(messages)))
 	s.logAudit(agentID, "kafka_consume", args, cluster, "success", len(messages), nil, start)
 	return marshalResult(map[string]any{"messages": messages, "count": len(messages), "topic": topic, "deserialization": deserializer})
 }
@@ -219,7 +220,7 @@ func (s *Server) handleProduce(ctx context.Context, request mcp.CallToolRequest)
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to produce: %v", err)), nil
 	}
 
-	s.metrics.MessagesProduced.WithLabelValues(topic, agentID, s.resolveClusterName(cluster)).Add(float64(len(deliveries)))
+	s.metrics.MessagesProduced.WithLabelValues(topic, metrics.SanitizeAgentLabel(agentID), s.resolveClusterName(cluster)).Add(float64(len(deliveries)))
 	s.logAudit(agentID, "kafka_produce", args, cluster, "success", len(deliveries), nil, start)
 	return marshalResult(map[string]any{"deliveries": deliveries, "count": len(deliveries), "topic": topic, "serialization": serializer, "acks": acks})
 }

@@ -8,6 +8,7 @@ import (
 
 	"github.com/kafkamcp/kafkamcp/internal/auth"
 	"github.com/kafkamcp/kafkamcp/internal/kafka"
+	"github.com/kafkamcp/kafkamcp/internal/metrics"
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
@@ -367,7 +368,7 @@ func (s *Server) handleSubscribe(ctx context.Context, request mcp.CallToolReques
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to subscribe: %v", err)), nil
 	}
 
-	s.metrics.MessagesConsumed.WithLabelValues(topic, agentID, s.resolveClusterName(cluster)).Add(float64(result.Count))
+	s.metrics.MessagesConsumed.WithLabelValues(topic, metrics.SanitizeAgentLabel(agentID), s.resolveClusterName(cluster)).Add(float64(result.Count))
 	s.logAudit(agentID, "kafka_subscribe", args, cluster, "success", result.Count, nil, start)
 	return marshalResult(result)
 }

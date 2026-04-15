@@ -136,7 +136,11 @@ func (s *Server) handleListConnectors(ctx context.Context, request mcp.CallToolR
 		return mcp.NewToolResultError(fmt.Sprintf("Cluster error: %v", err)), nil
 	}
 
-	client := kafka.NewConnectClient(clCfg.ConnectURL, connectTLSOpts(clCfg)...)
+	client, err := s.getConnectClient(clCfg)
+	if err != nil {
+		s.logAudit(agentID, "kafka_list_connectors", args, cluster, "error", 0, err, start)
+		return mcp.NewToolResultError(fmt.Sprintf("Connect client error: %v", err)), nil
+	}
 	if client == nil {
 		return mcp.NewToolResultError("Kafka Connect URL not configured for this cluster. Set connect_url in cluster config."), nil
 	}
@@ -176,7 +180,11 @@ func (s *Server) handleDescribeConnector(ctx context.Context, request mcp.CallTo
 		return mcp.NewToolResultError(fmt.Sprintf("Cluster error: %v", err)), nil
 	}
 
-	client := kafka.NewConnectClient(clCfg.ConnectURL, connectTLSOpts(clCfg)...)
+	client, err := s.getConnectClient(clCfg)
+	if err != nil {
+		s.logAudit(agentID, "kafka_describe_connector", args, cluster, "error", 0, err, start)
+		return mcp.NewToolResultError(fmt.Sprintf("Connect client error: %v", err)), nil
+	}
 	if client == nil {
 		return mcp.NewToolResultError("Kafka Connect URL not configured for this cluster."), nil
 	}

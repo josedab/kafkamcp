@@ -24,6 +24,7 @@ type Server struct {
 config       *config.Config
 kafkaManager *kafka.Manager
 schemaClients map[string]*schema.Client // per-cluster schema clients
+connectClients map[string]*kafka.ConnectClient // cached per-cluster Connect clients
 policyEngine *auth.PolicyEngine
 auditLogger  *audit.Logger
 rateLimiter  *ratelimit.Limiter
@@ -64,15 +65,16 @@ rl.SetAgentLimit(agent.ID, agent.RateLimit.RequestsPerMinute)
 }
 
 s := &Server{
-config:        cfg,
-kafkaManager:  kafkaManager,
-schemaClients: schemaClients,
-policyEngine:  policyEngine,
-auditLogger:   auditLogger,
-rateLimiter:   rl,
-metrics:       metrics.New(),
-logger:        logger,
-expensiveOps:  make(chan struct{}, 5), // max 5 concurrent expensive operations
+config:         cfg,
+kafkaManager:   kafkaManager,
+schemaClients:  schemaClients,
+connectClients: make(map[string]*kafka.ConnectClient),
+policyEngine:   policyEngine,
+auditLogger:    auditLogger,
+rateLimiter:    rl,
+metrics:        metrics.New(),
+logger:         logger,
+expensiveOps:   make(chan struct{}, 5), // max 5 concurrent expensive operations
 }
 
 mcpServer := server.NewMCPServer(
@@ -119,6 +121,25 @@ return nil
 
 func (s *Server) hasSchemaRegistry() bool {
 return len(s.schemaClients) > 0
+}
+
+// getConnectClient returns a cached ConnectClient for the given cluster config.
+// Clients are created once and reused across requests.
+func (s *Server) getConnectClient(clCfg *config.ClusterConfig) (*kafka.ConnectClient, error) {
+	if clCfg.ConnectURL == "" {
+		return nil, nil
+	}
+	if c, ok := s.connectClients[clCfg.Name]; ok {
+		return c, nil
+	}
+	c, err := kafka.NewConnectClient(clCfg.ConnectURL, connectTLSOpts(clCfg)...)
+	if err != nil {
+		return nil, err
+	}
+	if c != nil {
+		s.connectClients[clCfg.Name] = c
+	}
+	return c, nil
 }
 
 // extractAgentID gets the agent ID from the MCP request headers or defaults.
@@ -396,12 +417,50 @@ mcp.WithTemplateMIMEType("application/json"),
 
 // --- Auth & Rate Limit helpers ---
 
+// toolAuthConfig defines auth requirements for a tool handler.
+type toolAuthConfig struct {
+	tool         string
+	resourceType auth.ResourceType
+	action       auth.Action
+	// resourceName extracts the resource name from the request.
+	// If nil, defaults to "*".
+	resourceName func(mcp.CallToolRequest) string
+}
+
+// toolHandler is a handler function that receives pre-validated context.
+type toolHandler func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error)
+
+// withToolAuth wraps a tool handler with agent ID extraction, rate limiting,
+// auth checking, and audit logging. It eliminates repeated boilerplate across handlers.
+func (s *Server) withToolAuth(cfg toolAuthConfig, handler toolHandler) func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		start := time.Now()
+		agentID := extractAgentID(request)
+		args := request.GetArguments()
+
+		if deny := s.checkRateLimit(agentID, cfg.tool); deny != nil {
+			return deny, nil
+		}
+
+		resourceName := "*"
+		if cfg.resourceName != nil {
+			resourceName = cfg.resourceName(request)
+		}
+		if deny := s.checkAuth(agentID, cfg.tool, cfg.resourceType, resourceName, cfg.action); deny != nil {
+			return deny, nil
+		}
+
+		result, err := handler(ctx, request, agentID, args, start)
+		return result, err
+	}
+}
+
 func (s *Server) checkAuth(agentID, tool string, resource auth.ResourceType, resourceName string, action auth.Action) *mcp.CallToolResult {
 if deny := s.validateAgentID(agentID); deny != nil {
 	return deny
 }
 if !s.policyEngine.Authorize(agentID, resource, resourceName, action) {
-s.metrics.AuthzDenials.WithLabelValues(agentID, tool, string(action)).Inc()
+s.metrics.AuthzDenials.WithLabelValues(metrics.SanitizeAgentLabel(agentID), tool, string(action)).Inc()
 s.logger.Warn("authorization denied", "agent", agentID, "tool", tool, "resource", resourceName, "action", action)
 return mcp.NewToolResultError(fmt.Sprintf("Unauthorized: agent %q lacks %s permission on %s", agentID, action, resourceName))
 }
@@ -410,7 +469,7 @@ return nil
 
 func (s *Server) checkRateLimit(agentID, tool string) *mcp.CallToolResult {
 if !s.rateLimiter.Allow(agentID) {
-s.metrics.RateLimitDenials.WithLabelValues(agentID, tool).Inc()
+s.metrics.RateLimitDenials.WithLabelValues(metrics.SanitizeAgentLabel(agentID), tool).Inc()
 return mcp.NewToolResultError("Rate limit exceeded. Please retry later.")
 }
 return nil
@@ -419,7 +478,7 @@ return nil
 // checkResourceRateLimit checks rate limits for resource handlers.
 func (s *Server) checkResourceRateLimit(agentID, resource string) error {
 if !s.rateLimiter.Allow(agentID) {
-s.metrics.RateLimitDenials.WithLabelValues(agentID, resource).Inc()
+s.metrics.RateLimitDenials.WithLabelValues(metrics.SanitizeAgentLabel(agentID), resource).Inc()
 return fmt.Errorf("rate limit exceeded for agent %q", agentID)
 }
 return nil
@@ -466,8 +525,9 @@ if err != nil {
 entry.Result.Error = err.Error()
 }
 s.auditLogger.Log(entry)
-s.metrics.ToolCallsTotal.WithLabelValues(tool, agentID, entry.Cluster, status).Inc()
-s.metrics.ToolLatencySeconds.WithLabelValues(tool, agentID, entry.Cluster).Observe(latency.Seconds())
+safeAgent := metrics.SanitizeAgentLabel(agentID)
+s.metrics.ToolCallsTotal.WithLabelValues(tool, safeAgent, entry.Cluster, status).Inc()
+s.metrics.ToolLatencySeconds.WithLabelValues(tool, safeAgent, entry.Cluster).Observe(latency.Seconds())
 }
 
 // sanitizeAuditParams redacts sensitive data from audit log parameters.
@@ -476,8 +536,12 @@ if params == nil {
 	return nil
 }
 sensitiveTools := map[string][]string{
-	"kafka_produce": {"messages"},
-	"kafka_consume": {"messages"},
+	"kafka_produce":                  {"messages"},
+	"kafka_consume":                  {"messages"},
+	"kafka_alter_topic":              {"configs"},
+	"kafka_create_topic":             {"configs"},
+	"kafka_check_schema_compatibility": {"schema"},
+	"kafka_describe_connector":       {"name"},
 }
 keys, ok := sensitiveTools[tool]
 if !ok {
