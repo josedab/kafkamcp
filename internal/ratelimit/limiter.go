@@ -80,5 +80,6 @@ func (l *Limiter) Allow(agentID string) bool {
 		return b.allow()
 	}
 
-	return true
+	// Deny agents without configured rate limits
+	return false
 }

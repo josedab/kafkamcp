@@ -41,13 +41,14 @@ func TestLimiterPerAgent(t *testing.T) {
 	if l.Allow("agent-1") {
 		t.Fatal("expected deny")
 	}
-	if !l.Allow("agent-2") {
-		t.Fatal("expected allow for unknown agent")
+	if l.Allow("agent-2") {
+		t.Fatal("expected deny for unknown agent (default-deny)")
 	}
 }
 
 func TestLimiterGlobal(t *testing.T) {
 	l := New(2)
+	l.SetAgentLimit("any", 100) // configure agent so it's not default-denied
 	if !l.Allow("any") {
 		t.Fatal("expected allow")
 	}
