@@ -415,7 +415,11 @@ return nil
 
 func (s *Server) resolveClusterName(cluster string) string {
 if cluster != "" {
-return cluster
+	// Only return the cluster name if it's a valid configured cluster
+	if _, err := s.kafkaManager.GetClusterConfig(cluster); err == nil {
+		return cluster
+	}
+	return s.kafkaManager.DefaultClusterName()
 }
 return s.kafkaManager.DefaultClusterName()
 }
