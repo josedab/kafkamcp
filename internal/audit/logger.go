@@ -88,7 +88,9 @@ func (l *Logger) Log(entry Entry) {
 		data, err := json.Marshal(entry)
 		if err == nil {
 			data = append(data, '\n')
-			l.fileWriter.Write(data) //nolint:errcheck
+			if _, err := l.fileWriter.Write(data); err != nil {
+				l.slogger.Error("audit write failed", "error", err)
+			}
 		}
 	}
 	l.mu.Unlock()
