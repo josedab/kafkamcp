@@ -255,22 +255,48 @@ sasl_password: "${KAFKA_PASSWORD:-changeme}"
 - Docker (for integration tests)
 - A Kafka cluster (local or remote)
 
+### Setup
+
+Install all dev dependencies in one command:
+
+```bash
+make setup
+```
+
 ### Build
 
 ```bash
-go build -o bin/kafkamcp ./cmd/kafkamcp
+make build
 ```
 
 ### Test
 
 ```bash
-go test ./...
+make test
+```
+
+### Lint
+
+```bash
+make lint
+```
+
+### Run All Checks
+
+```bash
+make validate
 ```
 
 ### Validate Config
 
 ```bash
 ./bin/kafkamcp validate --config kafkamcp.yaml
+```
+
+### See All Targets
+
+```bash
+make help
 ```
 
 ## Project Structure
@@ -297,6 +323,40 @@ kafkamcp/
 ## License
 
 Apache License 2.0 — see [LICENSE](LICENSE).
+
+## Troubleshooting
+
+### Kafka connection refused
+
+```
+error: creating kafka manager: dial tcp 127.0.0.1:9092: connect: connection refused
+```
+
+Ensure Kafka is running and `bootstrap_servers` in your config points to the correct address. If using Docker: `docker compose -f examples/docker-compose.yaml up -d`.
+
+### Schema Registry unavailable
+
+Schema tools (`kafka_list_schemas`, `kafka_get_schema`) require `schema_registry.url` in your cluster config. If the registry isn't running, these tools will return errors but other tools continue to work.
+
+### SASL authentication failures
+
+```
+error: SASL handshake failed
+```
+
+Verify `sasl_mechanism`, `sasl_username`, and `sasl_password` match your broker config. Use `${ENV_VAR}` syntax to avoid hardcoding secrets. Supported mechanisms: `PLAIN`, `SCRAM-SHA-256`, `SCRAM-SHA-512`.
+
+### Port already in use
+
+```
+error: listen tcp :3100: bind: address already in use
+```
+
+Another process is using the configured port. Either stop that process or change `server.port` in your config. The metrics endpoint runs on `port+1` (default 3101).
+
+### Permission denied
+
+If using access control (`default_deny: true`), ensure the connecting agent's ID is listed in your policies and has the required permissions for the topics/groups it needs to access. Check audit logs for denied requests.
 
 ## Contributing
 
