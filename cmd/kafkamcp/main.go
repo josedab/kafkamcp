@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/kafkamcp/kafkamcp/internal/config"
 	"github.com/kafkamcp/kafkamcp/internal/kafka"
@@ -115,10 +116,10 @@ func runServer(cmd *cobra.Command, args []string) error {
 	if cfg.Server.Transport != "stdio" {
 		metricsAddr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port+1)
 		metricsMux := http.NewServeMux()
-		metricsMux.Handle("/metrics", promhttp.Handler())
+		metricsMux.Handle("/metrics", promhttp.HandlerFor(srv.Metrics().Registry, promhttp.HandlerOpts{}))
 		metricsMux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("ok"))
+			_, _ = w.Write([]byte("ok")) //nolint:errcheck
 		})
 		metricsServer := &http.Server{Addr: metricsAddr, Handler: metricsMux}
 		go func() {
@@ -129,7 +130,9 @@ func runServer(cmd *cobra.Command, args []string) error {
 		}()
 		go func() {
 			<-ctx.Done()
-			metricsServer.Close()
+			shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer shutdownCancel()
+			metricsServer.Shutdown(shutdownCtx)
 		}()
 	}
 
@@ -158,7 +161,9 @@ func runServer(cmd *cobra.Command, args []string) error {
 			go func() {
 				<-ctx.Done()
 				logger.Info("shutting down HTTPS server")
-				httpServer.Close()
+				shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+				defer shutdownCancel()
+				httpServer.Shutdown(shutdownCtx)
 			}()
 			logger.Info("TLS enabled", "cert", cfg.Server.TLSCert, "key", cfg.Server.TLSKey)
 			if err := httpServer.ListenAndServeTLS(cfg.Server.TLSCert, cfg.Server.TLSKey); err != nil && err != http.ErrServerClosed {
@@ -168,7 +173,9 @@ func runServer(cmd *cobra.Command, args []string) error {
 			go func() {
 				<-ctx.Done()
 				logger.Info("shutting down HTTP server")
-				httpServer.Close()
+				shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+				defer shutdownCancel()
+				httpServer.Shutdown(shutdownCtx)
 			}()
 			if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 				return fmt.Errorf("HTTP server error: %w", err)
