@@ -1,9 +1,44 @@
 package metrics
 
 import (
+	"crypto/sha256"
+	"fmt"
+	"sync"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
+
+const maxUniqueAgents = 1000
+
+var (
+	agentMu       sync.RWMutex
+	knownAgents   = make(map[string]struct{})
+)
+
+// SanitizeAgentLabel caps unique agent_id label values to prevent unbounded cardinality.
+// If the agent is already known or the allowlist has capacity, the original ID is returned.
+// Otherwise, the ID is hashed into a fixed number of overflow buckets.
+func SanitizeAgentLabel(agentID string) string {
+	agentMu.RLock()
+	_, ok := knownAgents[agentID]
+	n := len(knownAgents)
+	agentMu.RUnlock()
+
+	if ok {
+		return agentID
+	}
+	if n < maxUniqueAgents {
+		agentMu.Lock()
+		knownAgents[agentID] = struct{}{}
+		agentMu.Unlock()
+		return agentID
+	}
+	// Hash-bucket overflow agents into 16 buckets
+	h := sha256.Sum256([]byte(agentID))
+	bucket := h[0] % 16
+	return fmt.Sprintf("overflow_%02d", bucket)
+}
 
 // Metrics holds all KafkaMCP Prometheus metrics.
 type Metrics struct {
@@ -36,7 +71,7 @@ func New() *Metrics {
 		ToolLatencySeconds: factory.NewHistogramVec(prometheus.HistogramOpts{
 			Name:    "kafkamcp_tool_latency_seconds",
 			Help:    "Tool call latency distribution",
-			Buckets: prometheus.DefBuckets,
+			Buckets: []float64{0.01, 0.05, 0.1, 0.5, 1, 5, 10, 30, 60, 120},
 		}, []string{"tool", "agent_id", "cluster"}),
 
 		MessagesConsumed: factory.NewCounterVec(prometheus.CounterOpts{
