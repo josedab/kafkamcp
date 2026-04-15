@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -44,6 +45,9 @@ type SchemaInfo struct {
 
 // NewClient creates a new Schema Registry client.
 func NewClient(baseURL, username, password string, cacheMaxEntries, cacheTTLSeconds int) *Client {
+	if username != "" && !strings.HasPrefix(baseURL, "https://") {
+		slog.Warn("Schema Registry credentials configured over non-HTTPS connection — credentials will be sent in plaintext", "url", baseURL)
+	}
 	return &Client{
 		baseURL:  strings.TrimRight(baseURL, "/"),
 		username: username,
