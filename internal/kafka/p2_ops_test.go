@@ -19,6 +19,15 @@ func TestExtractNumericField(t *testing.T) {
 		{"missing field", map[string]any{"a": 1.0}, "b", 0, false},
 		{"non-numeric", map[string]any{"name": "test"}, "name", 0, false},
 		{"empty field on non-number", "hello", "", 0, false},
+		{"int value", map[string]any{"count": 5}, "count", 5.0, true},
+		{"int64 value", map[string]any{"big": int64(9999999)}, "big", 9999999.0, true},
+		{"string number in nested", map[string]any{"val": "3.14"}, "val", 3.14, true},
+		{"nil value", nil, "", 0, false},
+		{"nil value with field", nil, "x", 0, false},
+		{"field on non-map", "hello", "x", 0, false},
+		{"three level nesting", map[string]any{"a": map[string]any{"b": map[string]any{"c": 7.0}}}, "a.b.c", 7.0, true},
+		{"zero float", 0.0, "", 0.0, true},
+		{"negative float", -5.5, "", -5.5, true},
 	}
 
 	for _, tt := range tests {
@@ -54,6 +63,24 @@ func TestExtractJoinKey(t *testing.T) {
 	if got := extractJoinKey(msg, "nonexistent"); got != "" {
 		t.Errorf("expected empty, got %q", got)
 	}
+
+	// Numeric key converted to string
+	numMsg := Message{Key: 42.0, Value: map[string]any{}}
+	if got := extractJoinKey(numMsg, ""); got != "42" {
+		t.Errorf("expected '42', got %q", got)
+	}
+
+	// Nil key returns "<nil>" (fmt.Sprintf behavior)
+	nilMsg := Message{Key: nil, Value: map[string]any{"id": "abc"}}
+	if got := extractJoinKey(nilMsg, ""); got != "<nil>" {
+		t.Errorf("expected '<nil>' for nil key, got %q", got)
+	}
+
+	// Top-level value field
+	simpleMsg := Message{Key: "k", Value: map[string]any{"user_id": "u1"}}
+	if got := extractJoinKey(simpleMsg, "user_id"); got != "u1" {
+		t.Errorf("expected 'u1', got %q", got)
+	}
 }
 
 func TestTopicMatchScore(t *testing.T) {
@@ -67,6 +94,24 @@ func TestTopicMatchScore(t *testing.T) {
 	}
 	if partial <= none {
 		t.Errorf("partial (%d) should score higher than none (%d)", partial, none)
+	}
+
+	// Zero score for unrelated
+	if s := topicMatchScore("hello world", "x.y.z"); s != 0 {
+		t.Errorf("expected 0 for unrelated, got %d", s)
+	}
+
+	// Keyword associations boost score
+	payScore := topicMatchScore("show me payment transactions", "payment.events")
+	if payScore <= 0 {
+		t.Errorf("expected positive score for keyword match, got %d", payScore)
+	}
+
+	// Short segments (<3 chars) should not match
+	shortSeg := topicMatchScore("ab", "ab.cd")
+	exactShort := topicMatchScore("ab.cd", "ab.cd")
+	if shortSeg >= exactShort {
+		t.Errorf("short segment (%d) should score less than exact (%d)", shortSeg, exactShort)
 	}
 }
 
