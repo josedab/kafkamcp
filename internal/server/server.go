@@ -425,7 +425,7 @@ latency := time.Since(start)
 entry := audit.Entry{
 AgentID:    agentID,
 Tool:       tool,
-Parameters: params,
+Parameters: sanitizeAuditParams(tool, params),
 Cluster:    s.resolveClusterName(cluster),
 Result:     audit.Result{Status: status, MessageCount: count},
 LatencyMs:  latency.Milliseconds(),
@@ -436,6 +436,31 @@ entry.Result.Error = err.Error()
 s.auditLogger.Log(entry)
 s.metrics.ToolCallsTotal.WithLabelValues(tool, agentID, entry.Cluster, status).Inc()
 s.metrics.ToolLatencySeconds.WithLabelValues(tool, agentID, entry.Cluster).Observe(latency.Seconds())
+}
+
+// sanitizeAuditParams redacts sensitive data from audit log parameters.
+func sanitizeAuditParams(tool string, params map[string]any) map[string]any {
+if params == nil {
+	return nil
+}
+sensitiveTools := map[string][]string{
+	"kafka_produce": {"messages"},
+	"kafka_consume": {"messages"},
+}
+keys, ok := sensitiveTools[tool]
+if !ok {
+	return params
+}
+sanitized := make(map[string]any, len(params))
+for k, v := range params {
+	sanitized[k] = v
+}
+for _, key := range keys {
+	if _, exists := sanitized[key]; exists {
+		sanitized[key] = "**REDACTED**"
+	}
+}
+return sanitized
 }
 
 func marshalResult(v any) (*mcp.CallToolResult, error) {
