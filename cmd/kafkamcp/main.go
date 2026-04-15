@@ -94,7 +94,7 @@ func runServer(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("creating kafka manager: %w", err)
 	}
 
-	srv, err := mcpserver.New(cfg, kafkaManager, logger)
+	srv, err := mcpserver.New(cfg, kafkaManager, logger, version)
 	if err != nil {
 		return fmt.Errorf("creating server: %w", err)
 	}

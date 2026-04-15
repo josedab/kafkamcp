@@ -32,7 +32,7 @@ mcpServer    *server.MCPServer
 }
 
 // New creates a new KafkaMCP server.
-func New(cfg *config.Config, kafkaManager *kafka.Manager, logger *slog.Logger) (*Server, error) {
+func New(cfg *config.Config, kafkaManager *kafka.Manager, logger *slog.Logger, version string) (*Server, error) {
 // Per-cluster schema registry clients
 schemaClients := make(map[string]*schema.Client)
 for _, cl := range cfg.Clusters {
@@ -74,7 +74,7 @@ logger:        logger,
 
 mcpServer := server.NewMCPServer(
 "KafkaMCP",
-"0.1.0",
+version,
 server.WithToolCapabilities(true),
 server.WithResourceCapabilities(true, true),
 )
