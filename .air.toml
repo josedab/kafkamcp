@@ -1,0 +1,10 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  cmd = "go build -trimpath -ldflags=\"-s -w -X main.version=$(git describe --tags --always --dirty 2>/dev/null || echo dev)\" -o bin/kafkamcp ./cmd/kafkamcp"
+  bin = "bin/kafkamcp"
+  args_bin = ["--config", "kafkamcp.yaml"]
+  include_ext = ["go", "yaml", "yml"]
+  exclude_dir = ["website", "examples", "bin", "blog", "tmp", ".git"]
+  delay = 1000

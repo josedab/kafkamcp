@@ -25,10 +25,7 @@ run: build ## Build and run with default config
 
 dev: ## Run with auto-reload (requires air: go install github.com/air-verse/air@latest)
 	@command -v air >/dev/null 2>&1 || { echo "Installing air..."; go install github.com/air-verse/air@latest; }
-	air --build.cmd "go build -trimpath -ldflags=\"$(LDFLAGS)\" -o $(BUILD_DIR)/$(BINARY) $(CMD)" \
-	    --build.bin "$(BUILD_DIR)/$(BINARY)" \
-	    --build.args_bin "--config,kafkamcp.yaml" \
-	    --build.exclude_dir "website,examples,bin,blog"
+	air
 
 test: ## Run tests with race detection
 	go test -race -coverprofile=coverage.out ./...
