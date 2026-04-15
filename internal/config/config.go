@@ -155,6 +155,14 @@ func Load(path string) (*Config, error) {
 		return nil, fmt.Errorf("reading config file: %w", err)
 	}
 
+	// Warn if config file is world-readable (may contain credentials)
+	if info, err := os.Stat(path); err == nil {
+		mode := info.Mode().Perm()
+		if mode&0044 != 0 {
+			fmt.Fprintf(os.Stderr, "WARNING: config file %q has permissive permissions (%04o); consider chmod 600 if it contains credentials\n", path, mode)
+		}
+	}
+
 	expanded, err := expandEnvVars(data)
 	if err != nil {
 		return nil, fmt.Errorf("expanding environment variables: %w", err)
