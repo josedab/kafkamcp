@@ -82,9 +82,8 @@ func (l *Logger) Log(entry Entry) {
 	if l.pos == 0 {
 		l.full = true
 	}
-	l.mu.Unlock()
 
-	// Write to file (durable)
+	// Write to file (durable) — inside mutex to prevent interleaved writes
 	if l.fileWriter != nil {
 		data, err := json.Marshal(entry)
 		if err == nil {
@@ -92,6 +91,7 @@ func (l *Logger) Log(entry Entry) {
 			l.fileWriter.Write(data) //nolint:errcheck
 		}
 	}
+	l.mu.Unlock()
 
 	// Also emit via slog at debug level
 	l.slogger.Debug("audit",
