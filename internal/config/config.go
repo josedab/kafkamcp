@@ -19,12 +19,13 @@ type Config struct {
 }
 
 type ServerConfig struct {
-	Transport string `yaml:"transport" json:"transport"`
-	Host      string `yaml:"host" json:"host"`
-	Port      int    `yaml:"port" json:"port"`
-	LogLevel  string `yaml:"log_level" json:"log_level"`
-	TLSCert   string `yaml:"tls_cert,omitempty" json:"tls_cert,omitempty"`
-	TLSKey    string `yaml:"tls_key,omitempty" json:"tls_key,omitempty"`
+	Transport      string `yaml:"transport" json:"transport"`
+	Host           string `yaml:"host" json:"host"`
+	Port           int    `yaml:"port" json:"port"`
+	LogLevel       string `yaml:"log_level" json:"log_level"`
+	MaxMessageSize int    `yaml:"max_message_size" json:"max_message_size"`
+	TLSCert        string `yaml:"tls_cert,omitempty" json:"tls_cert,omitempty"`
+	TLSKey         string `yaml:"tls_key,omitempty" json:"tls_key,omitempty"`
 }
 
 func (s ServerConfig) Address() string {
@@ -209,6 +210,9 @@ func (c *Config) applyDefaults() {
 	}
 	if c.Server.Port == 0 {
 		c.Server.Port = 3100
+	}
+	if c.Server.MaxMessageSize == 0 {
+		c.Server.MaxMessageSize = 1048576 // 1MB default
 	}
 	if c.SchemaCache.MaxEntries == 0 {
 		c.SchemaCache.MaxEntries = 10000

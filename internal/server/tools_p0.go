@@ -178,6 +178,17 @@ func (s *Server) handleProduce(ctx context.Context, request mcp.CallToolRequest)
 		return mcp.NewToolResultError("max 100 messages per call"), nil
 	}
 
+	// Validate individual message sizes
+	maxSize := s.config.Server.MaxMessageSize
+	if maxSize > 0 {
+		for i, msg := range messages {
+			b, _ := json.Marshal(msg.Value)
+			if len(b) > maxSize {
+				return mcp.NewToolResultError(fmt.Sprintf("message %d exceeds maximum size of %d bytes", i, maxSize)), nil
+			}
+		}
+	}
+
 	serializer := request.GetString("serializer", "auto")
 	acks := request.GetString("acks", "all")
 	schemaID := request.GetInt("schema_id", -1)
