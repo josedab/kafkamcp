@@ -226,6 +226,9 @@ func (c *Client) ListSubjectsDetailed(ctx context.Context) ([]Subject, error) {
 	sem := make(chan struct{}, 10)
 
 	for i, subj := range subjects {
+		if ctx.Err() != nil {
+			break
+		}
 		wg.Add(1)
 		go func(idx int, subj string) {
 			defer wg.Done()
