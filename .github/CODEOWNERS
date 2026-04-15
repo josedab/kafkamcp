@@ -1,0 +1,8 @@
+# Default owners for everything
+* @kafkamcp/maintainers
+
+# Security-sensitive code
+/internal/auth/ @kafkamcp/security
+
+# Kafka client code
+/internal/kafka/ @kafkamcp/kafka
