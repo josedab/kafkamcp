@@ -33,7 +33,7 @@ func (s *Server) handleAggregate(ctx context.Context, request mcp.CallToolReques
 		Topic:    topic,
 		Field:    request.GetString("field", ""),
 		Function: request.GetString("function", "count"),
-		WindowMs: int64(request.GetInt("window_ms", 300000)),
+		WindowMs: clampInt64(int64(request.GetInt("window_ms", 300000)), 1, 3600000),
 	})
 	if err != nil {
 		s.logAudit(agentID, "kafka_aggregate", args, cluster, "error", 0, err, start)
@@ -178,7 +178,7 @@ func (s *Server) handleJoin(ctx context.Context, request mcp.CallToolRequest) (*
 		LeftTopic:  leftTopic,
 		RightTopic: rightTopic,
 		KeyField:   request.GetString("key_field", ""),
-		WindowMs:   int64(request.GetInt("window_ms", 60000)),
+		WindowMs:   clampInt64(int64(request.GetInt("window_ms", 60000)), 1, 3600000),
 		Limit:      request.GetInt("limit", 100),
 	})
 	if err != nil {

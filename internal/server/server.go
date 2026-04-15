@@ -485,6 +485,17 @@ func matchTopicFilter(pattern, name string) bool {
 	return match.Glob(pattern, name)
 }
 
+// clampInt64 constrains a value to [min, max].
+func clampInt64(v, min, max int64) int64 {
+	if v < min {
+		return min
+	}
+	if v > max {
+		return max
+	}
+	return v
+}
+
 // Tool and resource handler implementations are in:
 // - tools_p0.go  (P0 handlers: list topics, describe, consume, produce, schemas, consumer groups)
 // - tools_p1.go  (P1 handlers: create/alter/delete topic, search, reset offsets, DLQ, subscribe)
