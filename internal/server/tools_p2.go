@@ -57,6 +57,9 @@ func (s *Server) handleSuggestSchemaEvolution(ctx context.Context, request mcp.C
 	if deny := s.checkRateLimit(agentID, "kafka_suggest_schema_evolution"); deny != nil {
 		return deny, nil
 	}
+	if deny := s.checkAuth(agentID, "kafka_suggest_schema_evolution", auth.ResourceSchema, "", auth.ActionRead); deny != nil {
+		return deny, nil
+	}
 
 	// Fetch current schema for context
 	var currentSchema map[string]any
@@ -87,6 +90,9 @@ func (s *Server) handleListConnectors(ctx context.Context, request mcp.CallToolR
 	args := request.GetArguments()
 
 	if deny := s.checkRateLimit(agentID, "kafka_list_connectors"); deny != nil {
+		return deny, nil
+	}
+	if deny := s.checkAuth(agentID, "kafka_list_connectors", auth.ResourceCluster, "", auth.ActionRead); deny != nil {
 		return deny, nil
 	}
 
@@ -121,6 +127,9 @@ func (s *Server) handleDescribeConnector(ctx context.Context, request mcp.CallTo
 		return mcp.NewToolResultError("name is required"), nil
 	}
 	if deny := s.checkRateLimit(agentID, "kafka_describe_connector"); deny != nil {
+		return deny, nil
+	}
+	if deny := s.checkAuth(agentID, "kafka_describe_connector", auth.ResourceCluster, "", auth.ActionRead); deny != nil {
 		return deny, nil
 	}
 
@@ -192,6 +201,9 @@ func (s *Server) handleNaturalLanguageQuery(ctx context.Context, request mcp.Cal
 		return mcp.NewToolResultError("query is required"), nil
 	}
 	if deny := s.checkRateLimit(agentID, "kafka_query"); deny != nil {
+		return deny, nil
+	}
+	if deny := s.checkAuth(agentID, "kafka_query", auth.ResourceTopic, "*", auth.ActionRead); deny != nil {
 		return deny, nil
 	}
 
