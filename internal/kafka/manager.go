@@ -92,6 +92,9 @@ func (m *Manager) clientOpts(cl *config.ClusterConfig) ([]kgo.Opt, error) {
 	// SASL
 	switch strings.ToUpper(cl.SASLMechanism) {
 	case "PLAIN":
+		if !strings.Contains(strings.ToUpper(cl.SecurityProtocol), "SSL") {
+			m.logger.Warn("SASL PLAIN configured without SSL — credentials will be sent in plaintext to Kafka brokers", "cluster", cl.Name)
+		}
 		opts = append(opts, kgo.SASL(plain.Auth{User: cl.SASLUsername, Pass: cl.SASLPassword}.AsMechanism()))
 	case "SCRAM-SHA-256":
 		opts = append(opts, kgo.SASL(scram.Auth{User: cl.SASLUsername, Pass: cl.SASLPassword}.AsSha256Mechanism()))
