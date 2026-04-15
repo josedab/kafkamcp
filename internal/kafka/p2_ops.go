@@ -31,6 +31,13 @@ type AggregateResult struct {
 
 // Aggregate computes count, sum, avg, min, or max over a time window on a numeric field.
 func (m *Manager) Aggregate(ctx context.Context, cluster string, req AggregateRequest) (*AggregateResult, error) {
+	// Validate function before consuming messages to avoid wasted resources
+	fn := strings.ToLower(req.Function)
+	validFunctions := map[string]bool{"count": true, "sum": true, "avg": true, "min": true, "max": true}
+	if !validFunctions[fn] {
+		return nil, fmt.Errorf("unsupported function %q; must be: count, sum, avg, min, max", req.Function)
+	}
+
 	if req.WindowMs <= 0 {
 		req.WindowMs = 300000 // 5 minutes default
 	}
@@ -65,7 +72,7 @@ func (m *Manager) Aggregate(ctx context.Context, cluster string, req AggregateRe
 		return result, nil
 	}
 
-	switch strings.ToLower(req.Function) {
+	switch fn {
 	case "count":
 		result.Value = float64(len(values))
 	case "sum":
