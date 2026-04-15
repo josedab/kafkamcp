@@ -290,7 +290,10 @@ func generateFieldSummary(schema any, schemaType string) string {
 		return ""
 	}
 
-	name, _ := schemaMap["name"].(string)
+	name, ok := schemaMap["name"].(string)
+	if !ok {
+		name = ""
+	}
 	fields, ok := schemaMap["fields"].([]any)
 	if !ok {
 		return name
@@ -302,7 +305,10 @@ func generateFieldSummary(schema any, schemaType string) string {
 		if !ok {
 			continue
 		}
-		fieldName, _ := field["name"].(string)
+		fieldName, ok := field["name"].(string)
+		if !ok {
+			continue
+		}
 		fieldType := formatAvroType(field["type"])
 
 		desc := fieldName + ": " + fieldType
@@ -416,6 +422,9 @@ func (c *Client) CheckCompatibility(ctx context.Context, subject, version, schem
 }
 
 func jsonEscapeString(s string) string {
-	b, _ := json.Marshal(s)
+	b, err := json.Marshal(s)
+	if err != nil {
+		return `"` + s + `"`
+	}
 	return string(b)
 }
