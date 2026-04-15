@@ -67,7 +67,7 @@ func (pe *PolicyEngine) Authorize(agentID string, resource ResourceType, resourc
 	case ResourceSchema:
 		return pe.authorizeSchemaAction(policy, action)
 	case ResourceCluster:
-		return true // Cluster metadata is always readable
+		return pe.authorizeClusterAction(policy, action)
 	default:
 		return !pe.defaultDeny
 	}
@@ -102,6 +102,26 @@ func (pe *PolicyEngine) authorizeSchemaAction(policy *config.AgentPolicy, action
 		}
 	}
 	return false
+}
+
+func (pe *PolicyEngine) authorizeClusterAction(policy *config.AgentPolicy, action Action) bool {
+	// Read/describe access is allowed for all configured agents
+	if action == ActionRead || action == ActionDescribe {
+		return true
+	}
+	// Admin actions require admin role
+	return policy.Role == "admin"
+}
+
+// DefaultDeny returns whether the policy engine is in default-deny mode.
+func (pe *PolicyEngine) DefaultDeny() bool {
+	return pe.defaultDeny
+}
+
+// AgentExists returns true if the agent ID is configured in the policy.
+func (pe *PolicyEngine) AgentExists(agentID string) bool {
+	_, ok := pe.agents[agentID]
+	return ok
 }
 
 // FilterTopics filters a list of topic names by the agent's read permissions.
