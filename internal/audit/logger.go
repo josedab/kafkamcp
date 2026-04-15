@@ -91,6 +91,8 @@ func (l *Logger) Log(entry Entry) {
 			if _, err := l.fileWriter.Write(data); err != nil {
 				l.slogger.Error("audit write failed", "error", err)
 			}
+		} else {
+			l.slogger.Error("failed to marshal audit entry", "error", err)
 		}
 	}
 	l.mu.Unlock()
