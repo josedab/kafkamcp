@@ -16,6 +16,9 @@ import (
 func (s *Server) handleClusterMetadata(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
+	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceCluster, "", auth.ActionRead) {
+		return nil, fmt.Errorf("unauthorized: agent %q cannot read cluster metadata", agentID)
+	}
 	meta, err := s.kafkaManager.GetClusterMetadata(ctx, "")
 	if err != nil {
 		return nil, fmt.Errorf("getting cluster metadata: %w", err)
@@ -27,6 +30,9 @@ func (s *Server) handleClusterMetadata(ctx context.Context, request mcp.ReadReso
 func (s *Server) handleClusterList(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
+	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceCluster, "", auth.ActionRead) {
+		return nil, fmt.Errorf("unauthorized: agent %q cannot list clusters", agentID)
+	}
 	type clusterSummary struct {
 		Name              string `json:"name"`
 		BootstrapServers  string `json:"bootstrap_servers"`
@@ -70,6 +76,9 @@ func (s *Server) handleTopicCatalog(ctx context.Context, request mcp.ReadResourc
 func (s *Server) handleSchemaCatalog(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
+	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceSchema, "", auth.ActionRead) {
+		return nil, fmt.Errorf("unauthorized: agent %q cannot read schemas", agentID)
+	}
 	sc := s.getSchemaClient("")
 	if sc == nil {
 		return marshalResourceJSON("kafka://schemas", map[string]any{"error": "Schema Registry not configured"})
@@ -85,6 +94,9 @@ func (s *Server) handleSchemaCatalog(ctx context.Context, request mcp.ReadResour
 func (s *Server) handleGroupCatalog(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
+	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceConsumerGroup, "", auth.ActionDescribe) {
+		return nil, fmt.Errorf("unauthorized: agent %q cannot list consumer groups", agentID)
+	}
 	groups, err := s.kafkaManager.ListConsumerGroups(ctx, "")
 	if err != nil {
 		return nil, fmt.Errorf("listing consumer groups: %w", err)
@@ -94,6 +106,10 @@ func (s *Server) handleGroupCatalog(ctx context.Context, request mcp.ReadResourc
 }
 
 func (s *Server) handleAuditLogResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+	agentID := extractAgentIDFromResource(request)
+	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceCluster, "", auth.ActionAdmin) {
+		return nil, fmt.Errorf("unauthorized: agent %q cannot access audit logs", agentID)
+	}
 	entries := s.auditLogger.RecentEntries(1000)
 	return marshalResourceJSON("kafka://audit/log", map[string]any{"entries": entries, "count": len(entries)})
 }
@@ -101,6 +117,9 @@ func (s *Server) handleAuditLogResource(ctx context.Context, request mcp.ReadRes
 func (s *Server) handleTopicGraphResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
+	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceCluster, "", auth.ActionRead) {
+		return nil, fmt.Errorf("unauthorized: agent %q cannot access topic graph", agentID)
+	}
 	graph, err := s.kafkaManager.GetTopicGraph(ctx, "")
 	if err != nil {
 		return nil, fmt.Errorf("building topic graph: %w", err)
