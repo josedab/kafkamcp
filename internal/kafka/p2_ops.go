@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	nethttp "net/http"
+	"net/url"
 	"sort"
 	"strconv"
 	"strings"
@@ -726,7 +727,7 @@ func (c *ConnectClient) DescribeConnector(ctx context.Context, name string) (*Co
 	}
 
 	// Get config
-	configBody, err := c.httpGet(ctx, c.baseURL+"/connectors/"+name+"/config")
+	configBody, err := c.httpGet(ctx, c.baseURL+"/connectors/"+url.PathEscape(name)+"/config")
 	if err != nil {
 		return nil, fmt.Errorf("getting connector config: %w", err)
 	}
@@ -736,7 +737,7 @@ func (c *ConnectClient) DescribeConnector(ctx context.Context, name string) (*Co
 	}
 
 	// Get status
-	statusBody, err := c.httpGet(ctx, c.baseURL+"/connectors/"+name+"/status")
+	statusBody, err := c.httpGet(ctx, c.baseURL+"/connectors/"+url.PathEscape(name)+"/status")
 	if err != nil {
 		return nil, fmt.Errorf("getting connector status: %w", err)
 	}
@@ -777,9 +778,15 @@ func (c *ConnectClient) DescribeConnector(ctx context.Context, name string) (*Co
 	return detail, nil
 }
 
-func (c *ConnectClient) httpGet(ctx context.Context, url string) ([]byte, error) {
+func (c *ConnectClient) httpGet(ctx context.Context, reqURL string) ([]byte, error) {
+	// Enforce a deadline if the parent context doesn't have one
+	if _, ok := ctx.Deadline(); !ok {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, 30*time.Second)
+		defer cancel()
+	}
 	client := c.httpClient
-	req, err := nethttp.NewRequestWithContext(ctx, nethttp.MethodGet, url, nil)
+	req, err := nethttp.NewRequestWithContext(ctx, nethttp.MethodGet, reqURL, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -794,7 +801,7 @@ func (c *ConnectClient) httpGet(ctx context.Context, url string) ([]byte, error)
 		return nil, err
 	}
 	if resp.StatusCode >= 400 {
-		return nil, fmt.Errorf("HTTP %d: %s", resp.StatusCode, string(body))
+		return nil, fmt.Errorf("Connect API error (HTTP %d)", resp.StatusCode)
 	}
 	return body, nil
 }
