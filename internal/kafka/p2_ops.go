@@ -656,7 +656,8 @@ type ConnectorTask struct {
 
 // ConnectClient wraps HTTP calls to the Kafka Connect REST API.
 type ConnectClient struct {
-	baseURL string
+	baseURL    string
+	httpClient *nethttp.Client
 }
 
 // NewConnectClient creates a Connect REST API client.
@@ -664,7 +665,10 @@ func NewConnectClient(baseURL string) *ConnectClient {
 	if baseURL == "" {
 		return nil
 	}
-	return &ConnectClient{baseURL: strings.TrimRight(baseURL, "/")}
+	return &ConnectClient{
+		baseURL: strings.TrimRight(baseURL, "/"),
+		httpClient: &nethttp.Client{Timeout: 10 * time.Second},
+	}
 }
 
 // ListConnectors lists all connectors.
@@ -673,7 +677,7 @@ func (c *ConnectClient) ListConnectors(ctx context.Context) ([]ConnectorSummary,
 		return nil, fmt.Errorf("Kafka Connect URL not configured")
 	}
 
-	body, err := httpGet(ctx, c.baseURL+"/connectors?expand=status")
+	body, err := c.httpGet(ctx, c.baseURL+"/connectors?expand=status")
 	if err != nil {
 		return nil, fmt.Errorf("listing connectors: %w", err)
 	}
@@ -722,15 +726,17 @@ func (c *ConnectClient) DescribeConnector(ctx context.Context, name string) (*Co
 	}
 
 	// Get config
-	configBody, err := httpGet(ctx, c.baseURL+"/connectors/"+name+"/config")
+	configBody, err := c.httpGet(ctx, c.baseURL+"/connectors/"+name+"/config")
 	if err != nil {
 		return nil, fmt.Errorf("getting connector config: %w", err)
 	}
 	var config map[string]string
-	json.Unmarshal(configBody, &config)
+	if err := json.Unmarshal(configBody, &config); err != nil {
+		return nil, fmt.Errorf("parsing connector config JSON: %w", err)
+	}
 
 	// Get status
-	statusBody, err := httpGet(ctx, c.baseURL+"/connectors/"+name+"/status")
+	statusBody, err := c.httpGet(ctx, c.baseURL+"/connectors/"+name+"/status")
 	if err != nil {
 		return nil, fmt.Errorf("getting connector status: %w", err)
 	}
@@ -748,7 +754,9 @@ func (c *ConnectClient) DescribeConnector(ctx context.Context, name string) (*Co
 			Trace  string `json:"trace"`
 		} `json:"tasks"`
 	}
-	json.Unmarshal(statusBody, &status)
+	if err := json.Unmarshal(statusBody, &status); err != nil {
+		return nil, fmt.Errorf("parsing connector status JSON: %w", err)
+	}
 
 	detail := &ConnectorDetail{
 		Name:   name,
@@ -769,8 +777,8 @@ func (c *ConnectClient) DescribeConnector(ctx context.Context, name string) (*Co
 	return detail, nil
 }
 
-func httpGet(ctx context.Context, url string) ([]byte, error) {
-	client := &nethttp.Client{Timeout: 10 * time.Second}
+func (c *ConnectClient) httpGet(ctx context.Context, url string) ([]byte, error) {
+	client := c.httpClient
 	req, err := nethttp.NewRequestWithContext(ctx, nethttp.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
