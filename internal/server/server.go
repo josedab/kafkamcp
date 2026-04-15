@@ -446,6 +446,7 @@ if cluster != "" {
 	if _, err := s.kafkaManager.GetClusterConfig(cluster); err == nil {
 		return cluster
 	}
+	s.logger.Warn("invalid cluster name, falling back to default", "requested", cluster, "default", s.kafkaManager.DefaultClusterName())
 	return s.kafkaManager.DefaultClusterName()
 }
 return s.kafkaManager.DefaultClusterName()
