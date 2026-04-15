@@ -380,8 +380,14 @@ func (m *Manager) DescribeTopic(ctx context.Context, cluster, topicName string) 
 		return nil, fmt.Errorf("topic %q not found", topicName)
 	}
 
-	startOffsets, _ := admin.ListStartOffsets(ctx, topicName)
-	endOffsets, _ := admin.ListEndOffsets(ctx, topicName)
+	startOffsets, err := admin.ListStartOffsets(ctx, topicName)
+	if err != nil {
+		m.logger.Warn("failed to list start offsets", "topic", topicName, "error", err)
+	}
+	endOffsets, err := admin.ListEndOffsets(ctx, topicName)
+	if err != nil {
+		m.logger.Warn("failed to list end offsets", "topic", topicName, "error", err)
+	}
 
 	// Fetch topic configs via admin API
 	configs := make(map[string]string)
