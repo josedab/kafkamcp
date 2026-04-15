@@ -9,6 +9,27 @@ import (
 	"github.com/twmb/franz-go/pkg/kadm"
 )
 
+// dangerousConfigKeys lists Kafka topic config keys that should not be set by agents.
+// These could cause data loss, security weakening, or cluster instability.
+var dangerousConfigKeys = []string{
+	"min.insync.replicas",
+	"unclean.leader.election.enable",
+	"message.downconversion.enable",
+}
+
+// validateTopicConfigs checks that no dangerous config keys are being set.
+func validateTopicConfigs(configs map[string]string) error {
+	for k := range configs {
+		lower := strings.ToLower(k)
+		for _, dk := range dangerousConfigKeys {
+			if lower == dk {
+				return fmt.Errorf("config key %q is restricted and cannot be set via MCP", k)
+			}
+		}
+	}
+	return nil
+}
+
 // CreateTopicRequest defines parameters for creating a topic.
 type CreateTopicRequest struct {
 	Name              string            `json:"name"`
@@ -36,6 +57,10 @@ func (m *Manager) CreateTopic(ctx context.Context, cluster string, req CreateTop
 	var configs []kadm.AlterConfig
 	for k, v := range req.Configs {
 		configs = append(configs, kadm.AlterConfig{Name: k, Value: &v, Op: kadm.SetConfig})
+	}
+
+	if err := validateTopicConfigs(req.Configs); err != nil {
+		return err
 	}
 
 	resp, err := admin.CreateTopics(ctx, partitions, replFactor, nil, req.Name)
@@ -82,6 +107,10 @@ func (m *Manager) AlterTopic(ctx context.Context, cluster string, req AlterTopic
 	for k, v := range req.Configs {
 		val := v
 		configs = append(configs, kadm.AlterConfig{Name: k, Value: &val, Op: kadm.SetConfig})
+	}
+
+	if err := validateTopicConfigs(req.Configs); err != nil {
+		return err
 	}
 
 	resps, err := admin.AlterTopicConfigs(ctx, configs, req.Name)
