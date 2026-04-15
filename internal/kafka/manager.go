@@ -76,7 +76,7 @@ func (m *Manager) clientOpts(cl *config.ClusterConfig) ([]kgo.Opt, error) {
 		if cl.SSLCALocation != "" {
 			caCert, err := os.ReadFile(cl.SSLCALocation)
 			if err != nil {
-				return nil, fmt.Errorf("reading CA certificate: %w", err)
+				return nil, fmt.Errorf("reading CA certificate failed")
 			}
 			pool := x509.NewCertPool()
 			if !pool.AppendCertsFromPEM(caCert) {

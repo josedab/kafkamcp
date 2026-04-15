@@ -69,7 +69,7 @@ func (c *Client) doRequest(ctx context.Context, method, path string) ([]byte, er
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("executing request to %s: %w", reqURL, err)
+		return nil, fmt.Errorf("schema registry request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -79,7 +79,7 @@ func (c *Client) doRequest(ctx context.Context, method, path string) ([]byte, er
 	}
 
 	if resp.StatusCode >= 400 {
-		return nil, fmt.Errorf("schema registry error (HTTP %d): %s", resp.StatusCode, string(body))
+		return nil, fmt.Errorf("schema registry error (HTTP %d)", resp.StatusCode)
 	}
 
 	return body, nil
