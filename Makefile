@@ -1,10 +1,11 @@
-.PHONY: build test lint fmt docker clean validate help run dev coverage setup-hooks docker-dev docker-dev-down
+.PHONY: build test lint fmt docker clean validate help run dev coverage setup-hooks docker-dev docker-dev-down setup test-one
 
 # Build variables
 BINARY    := kafkamcp
 CMD       := ./cmd/kafkamcp
 BUILD_DIR := bin
-LDFLAGS   := -s -w
+VERSION   := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
+LDFLAGS   := -s -w -X main.version=$(VERSION)
 
 # Docker variables
 DOCKER_IMAGE := kafkamcp/kafkamcp
@@ -38,6 +39,7 @@ coverage: test ## Generate and open HTML coverage report
 	@command -v open >/dev/null 2>&1 && open coverage.html || command -v xdg-open >/dev/null 2>&1 && xdg-open coverage.html || true
 
 lint: ## Run golangci-lint
+	@command -v golangci-lint >/dev/null 2>&1 || { echo "Installing golangci-lint..."; go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest; }
 	golangci-lint run ./...
 
 fmt: ## Format code
@@ -63,4 +65,14 @@ setup-hooks: ## Install git pre-commit hook running make validate
 	@chmod +x .git/hooks/pre-commit
 	@echo "Pre-commit hook installed."
 
+setup: ## Install all dev dependencies (golangci-lint, air, goimports)
+	@echo "Installing dev dependencies..."
+	@command -v golangci-lint >/dev/null 2>&1 || { echo "  Installing golangci-lint..."; go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest; }
+	@command -v air >/dev/null 2>&1 || { echo "  Installing air..."; go install github.com/air-verse/air@latest; }
+	@command -v goimports >/dev/null 2>&1 || { echo "  Installing goimports..."; go install golang.org/x/tools/cmd/goimports@latest; }
+	@echo "All dev dependencies installed."
+
 validate: fmt lint test build ## Run all checks (fmt, lint, test, build)
+
+test-one: ## Run a single test: make test-one TEST=TestName PKG=./internal/...
+	go test -race -v -run $(TEST) $(PKG)
