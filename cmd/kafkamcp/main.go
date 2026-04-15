@@ -159,9 +159,12 @@ func runServer(cmd *cobra.Command, args []string) error {
 			handler = server.NewStreamableHTTPServer(srv.MCPServer())
 		}
 
+		// Wrap handler with security headers
+		secureHandler := securityHeadersMiddleware(handler)
+
 		httpServer := &http.Server{
 			Addr:              addr,
-			Handler:           handler,
+			Handler:           secureHandler,
 			ReadHeaderTimeout: 10 * time.Second,
 			ReadTimeout:       30 * time.Second,
 			IdleTimeout:       120 * time.Second,
@@ -198,4 +201,15 @@ func runServer(cmd *cobra.Command, args []string) error {
 	default:
 		return fmt.Errorf("unsupported transport: %s", cfg.Server.Transport)
 	}
+}
+
+// securityHeadersMiddleware adds standard security headers to HTTP responses.
+func securityHeadersMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("X-Frame-Options", "DENY")
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("Content-Security-Policy", "default-src 'none'")
+		next.ServeHTTP(w, r)
+	})
 }
