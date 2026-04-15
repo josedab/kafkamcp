@@ -233,7 +233,7 @@ func (s *Server) handleJoin(ctx context.Context, request mcp.CallToolRequest) (*
 		RightTopic: rightTopic,
 		KeyField:   keyField,
 		WindowMs:   clampInt64(int64(request.GetInt("window_ms", 60000)), 1, 3600000),
-		Limit:      int(clampInt64(int64(request.GetInt("limit", 100)), 1, 10000)),
+		Limit:      int(clampInt64(int64(request.GetInt("limit", 100)), 1, MaxJoinLimit)),
 	})
 	if err != nil {
 		s.logAudit(agentID, "kafka_join", args, cluster, "error", 0, err, start)

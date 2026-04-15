@@ -34,11 +34,11 @@ func (s *Server) handleCreateTopic(ctx context.Context, request mcp.CallToolRequ
 	}
 
 	partitions := int32(request.GetInt("partitions", 1))
-	if partitions > 10000 {
+	if partitions > MaxPartitions {
 		return mcp.NewToolResultError("partitions must be <= 10000"), nil
 	}
 	replFactor := int16(request.GetInt("replication_factor", 1))
-	if replFactor > 10 {
+	if replFactor > MaxReplicationFactor {
 		return mcp.NewToolResultError("replication_factor must be <= 10"), nil
 	}
 
@@ -178,7 +178,7 @@ func (s *Server) handleSearch(ctx context.Context, request mcp.CallToolRequest) 
 		ValueContains: request.GetString("value_contains", ""),
 		StartTime:     request.GetString("start_time", ""),
 		EndTime:       request.GetString("end_time", ""),
-		MaxScan:       request.GetInt("max_scan", 10000),
+		MaxScan:       request.GetInt("max_scan", DefaultSearchScan),
 		Limit:         request.GetInt("limit", 10),
 	}
 
@@ -195,8 +195,8 @@ func (s *Server) handleSearch(ctx context.Context, request mcp.CallToolRequest) 
 	}
 
 	// Cap max_scan to prevent excessive resource consumption
-	if req.MaxScan > 100000 {
-		req.MaxScan = 100000
+	if req.MaxScan > MaxSearchScan {
+		req.MaxScan = MaxSearchScan
 	}
 
 	matched, scanned, err := s.kafkaManager.SearchMessages(ctx, cluster, req)
@@ -274,10 +274,9 @@ func (s *Server) handleCheckSchemaCompatibility(ctx context.Context, request mcp
 	if deny := validateStringLength("subject", subject); deny != nil {
 		return deny, nil
 	}
-	// Cap schema body at 1MB to prevent memory exhaustion
-	const maxSchemaSize = 1 << 20
-	if len(schemaStr) > maxSchemaSize {
-		return mcp.NewToolResultError(fmt.Sprintf("schema body exceeds maximum size of %d bytes", maxSchemaSize)), nil
+	// Cap schema body at MaxSchemaSize to prevent memory exhaustion
+	if len(schemaStr) > MaxSchemaSize {
+		return mcp.NewToolResultError(fmt.Sprintf("schema body exceeds maximum size of %d bytes", MaxSchemaSize)), nil
 	}
 	if deny := s.checkRateLimit(agentID, "kafka_check_schema_compatibility"); deny != nil {
 		return deny, nil
@@ -310,8 +309,8 @@ func (s *Server) handleAnalyzeDLQ(ctx context.Context, request mcp.CallToolReque
 	if deny := validateStringLength("topic", topic); deny != nil {
 		return deny, nil
 	}
-	if limit > 10000 {
-		limit = 10000
+	if limit > MaxDLQMessages {
+		limit = MaxDLQMessages
 	}
 	if deny := s.checkRateLimit(agentID, "kafka_analyze_dlq"); deny != nil {
 		return deny, nil

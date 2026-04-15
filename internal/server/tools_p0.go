@@ -128,11 +128,11 @@ func (s *Server) handleConsume(ctx context.Context, request mcp.CallToolRequest)
 	if limit < 1 {
 		limit = 1
 	}
-	if limit > 1000 {
-		limit = 1000
+	if limit > MaxConsumeLimit {
+		limit = MaxConsumeLimit
 	}
-	if timeoutMs > 60000 {
-		timeoutMs = 60000
+	if timeoutMs > MaxConsumeTimeout {
+		timeoutMs = MaxConsumeTimeout
 	}
 
 	deserializer := request.GetString("deserializer", "auto")
@@ -192,7 +192,7 @@ func (s *Server) handleProduce(ctx context.Context, request mcp.CallToolRequest)
 	if len(messages) == 0 {
 		return mcp.NewToolResultError("at least one message required"), nil
 	}
-	if len(messages) > 100 {
+	if len(messages) > MaxProduceMessages {
 		return mcp.NewToolResultError("max 100 messages per call"), nil
 	}
 

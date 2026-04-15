@@ -542,9 +542,6 @@ func clampInt64(v, min, max int64) int64 {
 	return v
 }
 
-// maxInputLength is the maximum allowed length for user-supplied string parameters.
-const maxInputLength = 1024
-
 // validateStringLength checks that a string parameter doesn't exceed the maximum length.
 func validateStringLength(name, value string) *mcp.CallToolResult {
 	if len(value) > maxInputLength {
