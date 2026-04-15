@@ -182,6 +182,18 @@ func (s *Server) handleSearch(ctx context.Context, request mcp.CallToolRequest) 
 		Limit:         request.GetInt("limit", 10),
 	}
 
+	// Validate secondary string parameters
+	for _, p := range []struct{ name, value string }{
+		{"key_filter", req.KeyFilter},
+		{"header_key", req.HeaderKey},
+		{"header_value", req.HeaderValue},
+		{"value_contains", req.ValueContains},
+	} {
+		if deny := validateStringLength(p.name, p.value); deny != nil {
+			return deny, nil
+		}
+	}
+
 	// Cap max_scan to prevent excessive resource consumption
 	if req.MaxScan > 100000 {
 		req.MaxScan = 100000
@@ -228,6 +240,12 @@ func (s *Server) handleResetOffsets(ctx context.Context, request mcp.CallToolReq
 	if deny := s.checkAuth(agentID, "kafka_reset_offsets", auth.ResourceConsumerGroup, "", auth.ActionReset); deny != nil {
 		return deny, nil
 	}
+	if deny := validateStringLength("strategy", strategy); deny != nil {
+		return deny, nil
+	}
+	if deny := validateStringLength("value", value); deny != nil {
+		return deny, nil
+	}
 
 	result, err := s.kafkaManager.ResetOffsets(ctx, cluster, kafka.ResetOffsetsRequest{
 		GroupID: groupID, Topic: topic, Strategy: strategy, Value: value, DryRun: dryRun,
@@ -255,6 +273,11 @@ func (s *Server) handleCheckSchemaCompatibility(ctx context.Context, request mcp
 	}
 	if deny := validateStringLength("subject", subject); deny != nil {
 		return deny, nil
+	}
+	// Cap schema body at 1MB to prevent memory exhaustion
+	const maxSchemaSize = 1 << 20
+	if len(schemaStr) > maxSchemaSize {
+		return mcp.NewToolResultError(fmt.Sprintf("schema body exceeds maximum size of %d bytes", maxSchemaSize)), nil
 	}
 	if deny := s.checkRateLimit(agentID, "kafka_check_schema_compatibility"); deny != nil {
 		return deny, nil
@@ -327,9 +350,14 @@ func (s *Server) handleSubscribe(ctx context.Context, request mcp.CallToolReques
 		return deny, nil
 	}
 
+	groupID := request.GetString("group_id", "")
+	if deny := validateStringLength("group_id", groupID); deny != nil {
+		return deny, nil
+	}
+
 	result, err := s.kafkaManager.Subscribe(ctx, cluster, kafka.SubscribeRequest{
 		Topic:        topic,
-		GroupID:      request.GetString("group_id", ""),
+		GroupID:      groupID,
 		AutoCommit:   request.GetBool("auto_commit", true),
 		MaxMessages:  request.GetInt("max_messages", 100),
 		TimeoutMs:    request.GetInt("timeout_ms", 10000),

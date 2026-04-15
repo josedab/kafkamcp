@@ -29,6 +29,9 @@ func (s *Server) handleListTopics(ctx context.Context, request mcp.CallToolReque
 	if deny := s.checkAuth(agentID, "kafka_list_topics", auth.ResourceTopic, "*", auth.ActionRead); deny != nil {
 		return deny, nil
 	}
+	if deny := validateStringLength("filter", filter); deny != nil {
+		return deny, nil
+	}
 
 	topics, err := s.kafkaManager.ListTopics(ctx, cluster, includeInternal)
 	if err != nil {
@@ -112,6 +115,9 @@ func (s *Server) handleConsume(ctx context.Context, request mcp.CallToolRequest)
 		return deny, nil
 	}
 	if deny := s.checkAuth(agentID, "kafka_consume", auth.ResourceTopic, topic, auth.ActionRead); deny != nil {
+		return deny, nil
+	}
+	if deny := validateStringLength("offset", offset); deny != nil {
 		return deny, nil
 	}
 
@@ -230,6 +236,9 @@ func (s *Server) handleListSchemas(ctx context.Context, request mcp.CallToolRequ
 	if deny := s.checkAuth(agentID, "kafka_list_schemas", auth.ResourceSchema, "", auth.ActionRead); deny != nil {
 		return deny, nil
 	}
+	if deny := validateStringLength("filter", filter); deny != nil {
+		return deny, nil
+	}
 
 	subjects, err := s.getSchemaClient("").ListSubjectsDetailed(ctx)
 	if err != nil {
@@ -322,6 +331,9 @@ func (s *Server) handleListConsumerGroups(ctx context.Context, request mcp.CallT
 		return deny, nil
 	}
 	if deny := s.checkAuth(agentID, "kafka_list_consumer_groups", auth.ResourceConsumerGroup, "", auth.ActionDescribe); deny != nil {
+		return deny, nil
+	}
+	if deny := validateStringLength("state_filter", stateFilter); deny != nil {
 		return deny, nil
 	}
 

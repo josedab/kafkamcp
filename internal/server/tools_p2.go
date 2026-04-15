@@ -49,10 +49,19 @@ func (s *Server) handleAggregate(ctx context.Context, request mcp.CallToolReques
 	}
 	defer s.releaseExpensiveOp()
 
+	field := request.GetString("field", "")
+	function := request.GetString("function", "count")
+	if deny := validateStringLength("field", field); deny != nil {
+		return deny, nil
+	}
+	if deny := validateStringLength("function", function); deny != nil {
+		return deny, nil
+	}
+
 	result, err := s.kafkaManager.Aggregate(ctx, cluster, kafka.AggregateRequest{
 		Topic:    topic,
-		Field:    request.GetString("field", ""),
-		Function: request.GetString("function", "count"),
+		Field:    field,
+		Function: function,
 		WindowMs: clampInt64(int64(request.GetInt("window_ms", 300000)), 1, 3600000),
 	})
 	if err != nil {
@@ -214,10 +223,15 @@ func (s *Server) handleJoin(ctx context.Context, request mcp.CallToolRequest) (*
 	}
 	defer s.releaseExpensiveOp()
 
+	keyField := request.GetString("key_field", "")
+	if deny := validateStringLength("key_field", keyField); deny != nil {
+		return deny, nil
+	}
+
 	result, err := s.kafkaManager.JoinTopics(ctx, cluster, kafka.JoinRequest{
 		LeftTopic:  leftTopic,
 		RightTopic: rightTopic,
-		KeyField:   request.GetString("key_field", ""),
+		KeyField:   keyField,
 		WindowMs:   clampInt64(int64(request.GetInt("window_ms", 60000)), 1, 3600000),
 		Limit:      int(clampInt64(int64(request.GetInt("limit", 100)), 1, 10000)),
 	})

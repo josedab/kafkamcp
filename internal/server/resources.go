@@ -186,6 +186,9 @@ func (s *Server) handleTopicResource(ctx context.Context, request mcp.ReadResour
 	if name == "" || name == uri {
 		return nil, fmt.Errorf("invalid topic URI")
 	}
+	if len(name) > maxInputLength {
+		return nil, fmt.Errorf("topic name exceeds maximum length of %d characters", maxInputLength)
+	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceTopic, name, auth.ActionRead) {
 		return nil, fmt.Errorf("unauthorized: agent %q cannot read topic %q", agentID, name)
 	}
@@ -215,6 +218,9 @@ func (s *Server) handleSchemaResource(ctx context.Context, request mcp.ReadResou
 	if subject == "" || subject == uri {
 		return nil, fmt.Errorf("invalid schema URI")
 	}
+	if len(subject) > maxInputLength {
+		return nil, fmt.Errorf("schema subject exceeds maximum length of %d characters", maxInputLength)
+	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceSchema, "", auth.ActionRead) {
 		return nil, fmt.Errorf("unauthorized: agent %q cannot read schemas", agentID)
 	}
@@ -239,6 +245,9 @@ func (s *Server) handleGroupResource(ctx context.Context, request mcp.ReadResour
 	groupID := strings.TrimPrefix(uri, "kafka://groups/")
 	if groupID == "" || groupID == uri {
 		return nil, fmt.Errorf("invalid group URI")
+	}
+	if len(groupID) > maxInputLength {
+		return nil, fmt.Errorf("group ID exceeds maximum length of %d characters", maxInputLength)
 	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceConsumerGroup, "", auth.ActionDescribe) {
 		return nil, fmt.Errorf("unauthorized: agent %q cannot describe consumer groups", agentID)
