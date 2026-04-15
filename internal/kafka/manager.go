@@ -547,7 +547,7 @@ func (m *Manager) Produce(ctx context.Context, cluster, topic string, messages [
 		client.Produce(ctx, record, func(r *kgo.Record, err error) {
 			defer wg.Done()
 			if err != nil {
-				results[idx] = DeliveryResult{Status: fmt.Sprintf("error: %v", err)}
+				results[idx] = DeliveryResult{Status: "error: delivery failed"}
 				return
 			}
 			results[idx] = DeliveryResult{
