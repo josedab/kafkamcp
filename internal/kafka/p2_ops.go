@@ -2,11 +2,14 @@ package kafka
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io"
 	nethttp "net/http"
 	"net/url"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -661,14 +664,61 @@ type ConnectClient struct {
 	httpClient *nethttp.Client
 }
 
-// NewConnectClient creates a Connect REST API client.
-func NewConnectClient(baseURL string) *ConnectClient {
+// NewConnectClient creates a Connect REST API client with optional TLS configuration.
+func NewConnectClient(baseURL string, tlsOpts ...ConnectTLSOption) *ConnectClient {
 	if baseURL == "" {
 		return nil
 	}
+
+	transport := nethttp.DefaultTransport.(*nethttp.Transport).Clone()
+	for _, opt := range tlsOpts {
+		opt(transport)
+	}
+
 	return &ConnectClient{
 		baseURL: strings.TrimRight(baseURL, "/"),
-		httpClient: &nethttp.Client{Timeout: 10 * time.Second},
+		httpClient: &nethttp.Client{
+			Timeout:   10 * time.Second,
+			Transport: transport,
+		},
+	}
+}
+
+// ConnectTLSOption configures TLS for the Connect client.
+type ConnectTLSOption func(*nethttp.Transport)
+
+// WithConnectCA adds a custom CA certificate for the Connect API.
+func WithConnectCA(caFile string) ConnectTLSOption {
+	return func(t *nethttp.Transport) {
+		if caFile == "" {
+			return
+		}
+		caCert, err := os.ReadFile(caFile)
+		if err != nil {
+			return
+		}
+		if t.TLSClientConfig == nil {
+			t.TLSClientConfig = &tls.Config{MinVersion: tls.VersionTLS13}
+		}
+		pool := t.TLSClientConfig.RootCAs
+		if pool == nil {
+			pool = x509.NewCertPool()
+		}
+		pool.AppendCertsFromPEM(caCert)
+		t.TLSClientConfig.RootCAs = pool
+	}
+}
+
+// WithConnectInsecureSkipVerify disables TLS certificate verification (not recommended for production).
+func WithConnectInsecureSkipVerify(skip bool) ConnectTLSOption {
+	return func(t *nethttp.Transport) {
+		if !skip {
+			return
+		}
+		if t.TLSClientConfig == nil {
+			t.TLSClientConfig = &tls.Config{MinVersion: tls.VersionTLS13}
+		}
+		t.TLSClientConfig.InsecureSkipVerify = skip
 	}
 }
 

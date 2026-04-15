@@ -6,9 +6,21 @@ import (
 	"time"
 
 	"github.com/kafkamcp/kafkamcp/internal/auth"
+	"github.com/kafkamcp/kafkamcp/internal/config"
 	"github.com/kafkamcp/kafkamcp/internal/kafka"
 	"github.com/mark3labs/mcp-go/mcp"
 )
+
+func connectTLSOpts(cfg *config.ClusterConfig) []kafka.ConnectTLSOption {
+	var opts []kafka.ConnectTLSOption
+	if cfg.ConnectTLS.CAFile != "" {
+		opts = append(opts, kafka.WithConnectCA(cfg.ConnectTLS.CAFile))
+	}
+	if cfg.ConnectTLS.InsecureSkipVerify {
+		opts = append(opts, kafka.WithConnectInsecureSkipVerify(true))
+	}
+	return opts
+}
 
 // ===================== P2 TOOL HANDLERS =====================
 
@@ -110,7 +122,7 @@ func (s *Server) handleListConnectors(ctx context.Context, request mcp.CallToolR
 		return mcp.NewToolResultError(fmt.Sprintf("Cluster error: %v", err)), nil
 	}
 
-	client := kafka.NewConnectClient(clCfg.ConnectURL)
+	client := kafka.NewConnectClient(clCfg.ConnectURL, connectTLSOpts(clCfg)...)
 	if client == nil {
 		return mcp.NewToolResultError("Kafka Connect URL not configured for this cluster. Set connect_url in cluster config."), nil
 	}
@@ -150,7 +162,7 @@ func (s *Server) handleDescribeConnector(ctx context.Context, request mcp.CallTo
 		return mcp.NewToolResultError(fmt.Sprintf("Cluster error: %v", err)), nil
 	}
 
-	client := kafka.NewConnectClient(clCfg.ConnectURL)
+	client := kafka.NewConnectClient(clCfg.ConnectURL, connectTLSOpts(clCfg)...)
 	if client == nil {
 		return mcp.NewToolResultError("Kafka Connect URL not configured for this cluster."), nil
 	}

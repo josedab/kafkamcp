@@ -50,12 +50,19 @@ type ClusterConfig struct {
 	SSLCALocation    string               `yaml:"ssl_ca_location,omitempty" json:"ssl_ca_location,omitempty"`
 	SchemaRegistry   SchemaRegistryConfig `yaml:"schema_registry,omitempty" json:"schema_registry,omitempty"`
 	ConnectURL       string               `yaml:"connect_url,omitempty" json:"connect_url,omitempty"`
+	ConnectTLS       ConnectTLSConfig     `yaml:"connect_tls,omitempty" json:"connect_tls,omitempty"`
 	Default          bool                 `yaml:"default,omitempty" json:"default,omitempty"`
 }
 
 type SchemaRegistryConfig struct {
 	URL  string    `yaml:"url" json:"url"`
 	Auth BasicAuth `yaml:"auth,omitempty" json:"auth,omitempty"`
+}
+
+// ConnectTLSConfig holds TLS settings for the Kafka Connect REST API.
+type ConnectTLSConfig struct {
+	CAFile             string `yaml:"ca_file,omitempty" json:"ca_file,omitempty"`
+	InsecureSkipVerify bool   `yaml:"insecure_skip_verify,omitempty" json:"insecure_skip_verify,omitempty"`
 }
 
 type BasicAuth struct {
