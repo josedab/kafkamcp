@@ -144,6 +144,20 @@ return id
 return "anonymous"
 }
 
+// validateAgentID checks that the claimed agent ID exists in policy config when default_deny is true.
+func (s *Server) validateAgentID(agentID string) *mcp.CallToolResult {
+if !s.policyEngine.DefaultDeny() {
+	return nil
+}
+if agentID == "anonymous" {
+	return mcp.NewToolResultError("Authentication required: X-Agent-ID header must be provided")
+}
+if !s.policyEngine.AgentExists(agentID) {
+	return mcp.NewToolResultError(fmt.Sprintf("Unknown agent %q: not configured in policy", agentID))
+}
+return nil
+}
+
 func (s *Server) registerTools() {
 // P0 Tools
 s.mcpServer.AddTool(mcp.NewTool("kafka_list_topics",
@@ -380,6 +394,9 @@ mcp.WithTemplateMIMEType("application/json"),
 // --- Auth & Rate Limit helpers ---
 
 func (s *Server) checkAuth(agentID, tool string, resource auth.ResourceType, resourceName string, action auth.Action) *mcp.CallToolResult {
+if deny := s.validateAgentID(agentID); deny != nil {
+	return deny
+}
 if !s.policyEngine.Authorize(agentID, resource, resourceName, action) {
 s.metrics.AuthzDenials.WithLabelValues(agentID, tool, string(action)).Inc()
 s.logger.Warn("authorization denied", "agent", agentID, "tool", tool, "resource", resourceName, "action", action)
