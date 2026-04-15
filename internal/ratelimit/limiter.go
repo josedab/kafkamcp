@@ -80,6 +80,11 @@ func (l *Limiter) Allow(agentID string) bool {
 		return b.allow()
 	}
 
+	// Allow all requests when no limits are configured (fresh install)
+	if len(l.buckets) == 0 && l.global == nil {
+		return true
+	}
+
 	// Deny agents without configured rate limits
 	return false
 }
