@@ -2,8 +2,10 @@ package kafka
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/hex"
 	"fmt"
 	"log/slog"
 	"os"
@@ -712,7 +714,11 @@ func (m *Manager) Subscribe(ctx context.Context, cluster string, req SubscribeRe
 
 	groupID := req.GroupID
 	if groupID == "" {
-		groupID = fmt.Sprintf("kafkamcp-subscribe-%d", time.Now().UnixNano())
+		b := make([]byte, 8)
+		if _, err := rand.Read(b); err != nil {
+			return nil, fmt.Errorf("generating group ID: %w", err)
+		}
+		groupID = fmt.Sprintf("kafkamcp-subscribe-%s", hex.EncodeToString(b))
 	}
 
 	maxMessages := req.MaxMessages
