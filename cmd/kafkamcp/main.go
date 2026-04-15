@@ -114,14 +114,20 @@ func runServer(cmd *cobra.Command, args []string) error {
 
 	// Start Prometheus metrics server on a separate port if using HTTP transports
 	if cfg.Server.Transport != "stdio" {
-		metricsAddr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port+1)
+		metricsAddr := fmt.Sprintf("127.0.0.1:%d", cfg.Server.Port+1)
 		metricsMux := http.NewServeMux()
 		metricsMux.Handle("/metrics", promhttp.HandlerFor(srv.Metrics().Registry, promhttp.HandlerOpts{}))
 		metricsMux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
 			_, _ = w.Write([]byte("ok")) //nolint:errcheck
 		})
-		metricsServer := &http.Server{Addr: metricsAddr, Handler: metricsMux}
+		metricsServer := &http.Server{
+			Addr:              metricsAddr,
+			Handler:           metricsMux,
+			ReadHeaderTimeout: 10 * time.Second,
+			ReadTimeout:       30 * time.Second,
+			IdleTimeout:       120 * time.Second,
+		}
 		go func() {
 			logger.Info("metrics server listening", "address", metricsAddr)
 			if err := metricsServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -153,7 +159,13 @@ func runServer(cmd *cobra.Command, args []string) error {
 			handler = server.NewStreamableHTTPServer(srv.MCPServer())
 		}
 
-		httpServer := &http.Server{Addr: addr, Handler: handler}
+		httpServer := &http.Server{
+			Addr:              addr,
+			Handler:           handler,
+			ReadHeaderTimeout: 10 * time.Second,
+			ReadTimeout:       30 * time.Second,
+			IdleTimeout:       120 * time.Second,
+		}
 
 		// TLS support
 		if cfg.Server.TLSCert != "" && cfg.Server.TLSKey != "" {
