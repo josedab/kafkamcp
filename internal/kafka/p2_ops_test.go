@@ -143,12 +143,18 @@ func TestSuggestSchemaEvolution(t *testing.T) {
 }
 
 func TestNewConnectClient(t *testing.T) {
-	c := NewConnectClient("")
+	c, err := NewConnectClient("")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if c != nil {
 		t.Error("expected nil for empty URL")
 	}
 
-	c = NewConnectClient("http://localhost:8083")
+	c, err = NewConnectClient("http://localhost:8083")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if c == nil {
 		t.Error("expected non-nil client")
 	}

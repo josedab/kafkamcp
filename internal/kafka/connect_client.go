@@ -49,14 +49,16 @@ type ConnectClient struct {
 }
 
 // NewConnectClient creates a Connect REST API client with optional TLS configuration.
-func NewConnectClient(baseURL string, tlsOpts ...ConnectTLSOption) *ConnectClient {
+func NewConnectClient(baseURL string, tlsOpts ...ConnectTLSOption) (*ConnectClient, error) {
 	if baseURL == "" {
-		return nil
+		return nil, nil
 	}
 
 	transport := nethttp.DefaultTransport.(*nethttp.Transport).Clone()
 	for _, opt := range tlsOpts {
-		opt(transport)
+		if err := opt(transport); err != nil {
+			return nil, fmt.Errorf("configuring Connect TLS: %w", err)
+		}
 	}
 
 	return &ConnectClient{
@@ -65,21 +67,21 @@ func NewConnectClient(baseURL string, tlsOpts ...ConnectTLSOption) *ConnectClien
 			Timeout:   10 * time.Second,
 			Transport: transport,
 		},
-	}
+	}, nil
 }
 
 // ConnectTLSOption configures TLS for the Connect client.
-type ConnectTLSOption func(*nethttp.Transport)
+type ConnectTLSOption func(*nethttp.Transport) error
 
 // WithConnectCA adds a custom CA certificate for the Connect API.
 func WithConnectCA(caFile string) ConnectTLSOption {
-	return func(t *nethttp.Transport) {
+	return func(t *nethttp.Transport) error {
 		if caFile == "" {
-			return
+			return nil
 		}
 		caCert, err := os.ReadFile(caFile)
 		if err != nil {
-			return
+			return fmt.Errorf("reading Connect CA file %q: %w", caFile, err)
 		}
 		if t.TLSClientConfig == nil {
 			t.TLSClientConfig = &tls.Config{MinVersion: tls.VersionTLS13}
@@ -90,20 +92,22 @@ func WithConnectCA(caFile string) ConnectTLSOption {
 		}
 		pool.AppendCertsFromPEM(caCert)
 		t.TLSClientConfig.RootCAs = pool
+		return nil
 	}
 }
 
 // WithConnectInsecureSkipVerify disables TLS certificate verification (not recommended for production).
 func WithConnectInsecureSkipVerify(skip bool) ConnectTLSOption {
-	return func(t *nethttp.Transport) {
+	return func(t *nethttp.Transport) error {
 		if !skip {
-			return
+			return nil
 		}
 		slog.Warn("Kafka Connect TLS certificate verification disabled — connections are vulnerable to MITM attacks")
 		if t.TLSClientConfig == nil {
 			t.TLSClientConfig = &tls.Config{MinVersion: tls.VersionTLS13}
 		}
 		t.TLSClientConfig.InsecureSkipVerify = skip
+		return nil
 	}
 }
 
