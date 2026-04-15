@@ -159,6 +159,11 @@ func (s *Server) handleSearch(ctx context.Context, request mcp.CallToolRequest) 
 		Limit:         request.GetInt("limit", 10),
 	}
 
+	// Cap max_scan to prevent excessive resource consumption
+	if req.MaxScan > 100000 {
+		req.MaxScan = 100000
+	}
+
 	matched, scanned, err := s.kafkaManager.SearchMessages(ctx, cluster, req)
 	if err != nil {
 		s.logAudit(agentID, "kafka_search", args, cluster, "error", 0, err, start)
