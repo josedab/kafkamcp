@@ -413,6 +413,15 @@ return mcp.NewToolResultError("Rate limit exceeded. Please retry later.")
 return nil
 }
 
+// checkResourceRateLimit checks rate limits for resource handlers.
+func (s *Server) checkResourceRateLimit(agentID, resource string) error {
+if !s.rateLimiter.Allow(agentID) {
+s.metrics.RateLimitDenials.WithLabelValues(agentID, resource).Inc()
+return fmt.Errorf("rate limit exceeded for agent %q", agentID)
+}
+return nil
+}
+
 func (s *Server) resolveClusterName(cluster string) string {
 if cluster != "" {
 	// Only return the cluster name if it's a valid configured cluster
@@ -483,6 +492,20 @@ return nil, fmt.Errorf("marshaling resource: %w", err)
 return []mcp.ResourceContents{
 mcp.TextResourceContents{URI: uri, MIMEType: "application/json", Text: string(data)},
 }, nil
+}
+
+// validateResourceAgentID validates agent identity for resource handlers.
+func (s *Server) validateResourceAgentID(agentID string) error {
+	if !s.policyEngine.DefaultDeny() {
+		return nil
+	}
+	if agentID == "anonymous" {
+		return fmt.Errorf("authentication required: X-Agent-ID header must be provided")
+	}
+	if !s.policyEngine.AgentExists(agentID) {
+		return fmt.Errorf("unknown agent %q: not configured in policy", agentID)
+	}
+	return nil
 }
 
 func matchTopicFilter(pattern, name string) bool {

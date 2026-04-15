@@ -16,6 +16,12 @@ import (
 func (s *Server) handleClusterMetadata(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
+	if err := s.validateResourceAgentID(agentID); err != nil {
+		return nil, err
+	}
+	if err := s.checkResourceRateLimit(agentID, "resource:kafka://cluster/metadata"); err != nil {
+		return nil, err
+	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceCluster, "", auth.ActionRead) {
 		return nil, fmt.Errorf("unauthorized: agent %q cannot read cluster metadata", agentID)
 	}
@@ -30,6 +36,12 @@ func (s *Server) handleClusterMetadata(ctx context.Context, request mcp.ReadReso
 func (s *Server) handleClusterList(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
+	if err := s.validateResourceAgentID(agentID); err != nil {
+		return nil, err
+	}
+	if err := s.checkResourceRateLimit(agentID, "resource:kafka://clusters"); err != nil {
+		return nil, err
+	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceCluster, "", auth.ActionRead) {
 		return nil, fmt.Errorf("unauthorized: agent %q cannot list clusters", agentID)
 	}
@@ -53,6 +65,16 @@ func (s *Server) handleClusterList(ctx context.Context, request mcp.ReadResource
 func (s *Server) handleTopicCatalog(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
+	if err := s.validateResourceAgentID(agentID); err != nil {
+		return nil, err
+	}
+	if err := s.checkResourceRateLimit(agentID, "resource:kafka://topics"); err != nil {
+		return nil, err
+	}
+	// Auth check before fetching from Kafka to avoid wasting resources
+	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceTopic, "*", auth.ActionRead) {
+		return nil, fmt.Errorf("unauthorized: agent %q cannot list topics", agentID)
+	}
 	topics, err := s.kafkaManager.ListTopics(ctx, "", false)
 	if err != nil {
 		return nil, fmt.Errorf("listing topics: %w", err)
@@ -74,6 +96,12 @@ func (s *Server) handleTopicCatalog(ctx context.Context, request mcp.ReadResourc
 func (s *Server) handleSchemaCatalog(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
+	if err := s.validateResourceAgentID(agentID); err != nil {
+		return nil, err
+	}
+	if err := s.checkResourceRateLimit(agentID, "resource:kafka://schemas"); err != nil {
+		return nil, err
+	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceSchema, "", auth.ActionRead) {
 		return nil, fmt.Errorf("unauthorized: agent %q cannot read schemas", agentID)
 	}
@@ -92,6 +120,12 @@ func (s *Server) handleSchemaCatalog(ctx context.Context, request mcp.ReadResour
 func (s *Server) handleGroupCatalog(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
+	if err := s.validateResourceAgentID(agentID); err != nil {
+		return nil, err
+	}
+	if err := s.checkResourceRateLimit(agentID, "resource:kafka://groups"); err != nil {
+		return nil, err
+	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceConsumerGroup, "", auth.ActionDescribe) {
 		return nil, fmt.Errorf("unauthorized: agent %q cannot list consumer groups", agentID)
 	}
@@ -105,6 +139,12 @@ func (s *Server) handleGroupCatalog(ctx context.Context, request mcp.ReadResourc
 
 func (s *Server) handleAuditLogResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	agentID := extractAgentIDFromResource(request)
+	if err := s.validateResourceAgentID(agentID); err != nil {
+		return nil, err
+	}
+	if err := s.checkResourceRateLimit(agentID, "resource:kafka://audit/log"); err != nil {
+		return nil, err
+	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceCluster, "", auth.ActionAdmin) {
 		return nil, fmt.Errorf("unauthorized: agent %q cannot access audit logs", agentID)
 	}
@@ -115,6 +155,12 @@ func (s *Server) handleAuditLogResource(ctx context.Context, request mcp.ReadRes
 func (s *Server) handleTopicGraphResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
+	if err := s.validateResourceAgentID(agentID); err != nil {
+		return nil, err
+	}
+	if err := s.checkResourceRateLimit(agentID, "resource:kafka://topic_graph"); err != nil {
+		return nil, err
+	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceCluster, "", auth.ActionRead) {
 		return nil, fmt.Errorf("unauthorized: agent %q cannot access topic graph", agentID)
 	}
@@ -129,6 +175,12 @@ func (s *Server) handleTopicGraphResource(ctx context.Context, request mcp.ReadR
 func (s *Server) handleTopicResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
+	if err := s.validateResourceAgentID(agentID); err != nil {
+		return nil, err
+	}
+	if err := s.checkResourceRateLimit(agentID, "resource:kafka://topics/{name}"); err != nil {
+		return nil, err
+	}
 	uri := request.Params.URI
 	name := strings.TrimPrefix(uri, "kafka://topics/")
 	if name == "" || name == uri {
@@ -148,6 +200,12 @@ func (s *Server) handleTopicResource(ctx context.Context, request mcp.ReadResour
 func (s *Server) handleSchemaResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
+	if err := s.validateResourceAgentID(agentID); err != nil {
+		return nil, err
+	}
+	if err := s.checkResourceRateLimit(agentID, "resource:kafka://schemas/{subject}"); err != nil {
+		return nil, err
+	}
 	sc := s.getSchemaClient("")
 	if sc == nil {
 		return nil, fmt.Errorf("Schema Registry not configured")
@@ -171,6 +229,12 @@ func (s *Server) handleSchemaResource(ctx context.Context, request mcp.ReadResou
 func (s *Server) handleGroupResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
+	if err := s.validateResourceAgentID(agentID); err != nil {
+		return nil, err
+	}
+	if err := s.checkResourceRateLimit(agentID, "resource:kafka://groups/{id}"); err != nil {
+		return nil, err
+	}
 	uri := request.Params.URI
 	groupID := strings.TrimPrefix(uri, "kafka://groups/")
 	if groupID == "" || groupID == uri {
