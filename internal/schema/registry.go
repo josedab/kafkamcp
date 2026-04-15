@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -73,7 +74,7 @@ func (c *Client) doRequest(ctx context.Context, method, path string) ([]byte, er
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
+	body, err := io.ReadAll(io.LimitReader(resp.Body, 10<<20))
 	if err != nil {
 		return nil, fmt.Errorf("reading response body: %w", err)
 	}
@@ -117,6 +118,13 @@ func (c *Client) GetSubjectVersions(ctx context.Context, subject string) ([]int,
 
 // GetSchema returns a schema for a specific subject and version.
 func (c *Client) GetSchema(ctx context.Context, subject, version string) (*SchemaInfo, error) {
+	// Validate version to prevent path traversal
+	if version != "latest" {
+		if _, err := strconv.Atoi(version); err != nil {
+			return nil, fmt.Errorf("invalid version %q: must be 'latest' or a numeric value", version)
+		}
+	}
+
 	cacheKey := fmt.Sprintf("%s:%s", subject, version)
 
 	// Check cache
@@ -124,7 +132,7 @@ func (c *Client) GetSchema(ctx context.Context, subject, version string) (*Schem
 		return cached, nil
 	}
 
-	path := fmt.Sprintf("/subjects/%s/versions/%s", url.PathEscape(subject), version)
+	path := fmt.Sprintf("/subjects/%s/versions/%s", url.PathEscape(subject), url.PathEscape(version))
 	body, err := c.doRequest(ctx, http.MethodGet, path)
 	if err != nil {
 		return nil, err
@@ -371,6 +379,11 @@ func (c *Client) CheckCompatibility(ctx context.Context, subject, version, schem
 	if version == "" {
 		version = "latest"
 	}
+	if version != "latest" {
+		if _, err := strconv.Atoi(version); err != nil {
+			return nil, fmt.Errorf("invalid version %q: must be 'latest' or a numeric value", version)
+		}
+	}
 	if schemaType == "" {
 		schemaType = "AVRO"
 	}
@@ -379,7 +392,7 @@ func (c *Client) CheckCompatibility(ctx context.Context, subject, version, schem
 		jsonEscapeString(schemaStr), schemaType)
 
 	path := fmt.Sprintf("/compatibility/subjects/%s/versions/%s",
-		url.PathEscape(subject), version)
+		url.PathEscape(subject), url.PathEscape(version))
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+path,
 		strings.NewReader(reqBody))
@@ -398,13 +411,13 @@ func (c *Client) CheckCompatibility(ctx context.Context, subject, version, schem
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
+	body, err := io.ReadAll(io.LimitReader(resp.Body, 10<<20))
 	if err != nil {
 		return nil, fmt.Errorf("reading response: %w", err)
 	}
 
 	if resp.StatusCode >= 400 {
-		return nil, fmt.Errorf("compatibility check failed (HTTP %d): %s", resp.StatusCode, string(body))
+		return nil, fmt.Errorf("compatibility check failed (HTTP %d)", resp.StatusCode)
 	}
 
 	var result struct {
