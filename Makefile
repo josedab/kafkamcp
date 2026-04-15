@@ -1,4 +1,4 @@
-.PHONY: build test lint fmt docker clean validate help run dev coverage setup-hooks docker-dev docker-dev-down setup test-one
+.PHONY: build test lint fmt docker clean validate help run dev coverage setup-hooks docker-dev docker-dev-down setup test-one setup-vscode
 
 # Build variables
 BINARY    := kafkamcp
@@ -73,3 +73,9 @@ validate: fmt lint test build ## Run all checks (fmt, lint, test, build)
 
 test-one: ## Run a single test: make test-one TEST=TestName PKG=./internal/...
 	go test -race -v -run $(TEST) $(PKG)
+
+setup-vscode: ## Copy .vscode example configs (if not already present)
+	@mkdir -p .vscode
+	@test -f .vscode/launch.json || (cp .vscode/launch.json.example .vscode/launch.json && echo "Created .vscode/launch.json")
+	@test -f .vscode/settings.json || (cp .vscode/settings.json.example .vscode/settings.json && echo "Created .vscode/settings.json")
+	@echo "VSCode setup complete."
