@@ -72,7 +72,7 @@ func (m *Manager) clientOpts(cl *config.ClusterConfig) ([]kgo.Opt, error) {
 
 	// TLS
 	if strings.Contains(strings.ToUpper(cl.SecurityProtocol), "SSL") {
-		tlsCfg := &tls.Config{MinVersion: tls.VersionTLS12}
+		tlsCfg := &tls.Config{MinVersion: tls.VersionTLS13}
 		if cl.SSLCALocation != "" {
 			caCert, err := os.ReadFile(cl.SSLCALocation)
 			if err != nil {
