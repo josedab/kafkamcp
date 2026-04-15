@@ -311,7 +311,10 @@ kafkamcp/
 │   ├── schema/            # Schema Registry client with LRU cache
 │   ├── auth/              # Policy engine (per-agent access control)
 │   ├── audit/             # Structured JSON audit logger
-│   └── server/            # MCP server, tool/resource handlers
+│   ├── server/            # MCP server, tool/resource handlers
+│   ├── match/             # Topic pattern matching utilities
+│   ├── metrics/           # Prometheus metrics collection
+│   └── ratelimit/         # Per-agent rate limiting
 ├── examples/              # Example configurations
 ├── .github/workflows/     # CI/CD
 ├── Dockerfile

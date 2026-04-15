@@ -23,7 +23,13 @@ cd kafkamcp
 make build
 ```
 
-### 3. Run Tests
+### 3. Setup VSCode (optional)
+
+```bash
+make setup-vscode
+```
+
+### 4. Run Tests
 
 ```bash
 make test
@@ -113,6 +119,7 @@ internal/
   config/           — YAML configuration parsing
   schema/           — Schema Registry client and cache
   audit/            — Structured audit logging
+  match/            — Topic pattern matching utilities
   metrics/          — Prometheus metrics
   ratelimit/        — Per-agent rate limiting
 examples/           — Example configs (docker-compose, Confluent Cloud)
