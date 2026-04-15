@@ -210,6 +210,10 @@ func securityHeadersMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("X-Frame-Options", "DENY")
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("Content-Security-Policy", "default-src 'none'")
+		// Restrict cross-origin requests — MCP servers are not browser-facing
+		w.Header().Set("Access-Control-Allow-Origin", "")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-Agent-ID, X-Client-ID")
 		next.ServeHTTP(w, r)
 	})
 }
