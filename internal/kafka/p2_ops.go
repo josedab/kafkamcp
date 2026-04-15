@@ -764,7 +764,7 @@ func (c *ConnectClient) DescribeConnector(ctx context.Context, name string) (*Co
 		Type:   status.Type,
 		State:  status.Connector.State,
 		Worker: status.Connector.Worker,
-		Config: config,
+		Config: redactSensitiveConfig(config),
 	}
 	for _, t := range status.Tasks {
 		detail.Tasks = append(detail.Tasks, ConnectorTask{
@@ -776,6 +776,33 @@ func (c *ConnectClient) DescribeConnector(ctx context.Context, name string) (*Co
 	}
 
 	return detail, nil
+}
+
+// sensitiveConfigKeys contains substrings that indicate a config key holds a secret.
+var sensitiveConfigKeys = []string{
+	"password", "secret", "credential", "token", "api.key", "apikey",
+	"private.key", "ssl.key", "keystore", "truststore",
+}
+
+// redactSensitiveConfig returns a copy of the config map with sensitive values replaced.
+func redactSensitiveConfig(cfg map[string]string) map[string]string {
+	redacted := make(map[string]string, len(cfg))
+	for k, v := range cfg {
+		lower := strings.ToLower(k)
+		isSensitive := false
+		for _, s := range sensitiveConfigKeys {
+			if strings.Contains(lower, s) {
+				isSensitive = true
+				break
+			}
+		}
+		if isSensitive && v != "" {
+			redacted[k] = "**REDACTED**"
+		} else {
+			redacted[k] = v
+		}
+	}
+	return redacted
 }
 
 func (c *ConnectClient) httpGet(ctx context.Context, reqURL string) ([]byte, error) {
