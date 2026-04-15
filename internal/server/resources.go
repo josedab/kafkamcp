@@ -35,7 +35,6 @@ func (s *Server) handleClusterList(ctx context.Context, request mcp.ReadResource
 	}
 	type clusterSummary struct {
 		Name              string `json:"name"`
-		BootstrapServers  string `json:"bootstrap_servers"`
 		HasSchemaRegistry bool   `json:"has_schema_registry"`
 		IsDefault         bool   `json:"is_default"`
 	}
@@ -43,7 +42,6 @@ func (s *Server) handleClusterList(ctx context.Context, request mcp.ReadResource
 	for _, cl := range s.config.Clusters {
 		clusters = append(clusters, clusterSummary{
 			Name:              cl.Name,
-			BootstrapServers:  cl.BootstrapServers,
 			HasSchemaRegistry: cl.SchemaRegistry.URL != "",
 			IsDefault:         cl.Default,
 		})
