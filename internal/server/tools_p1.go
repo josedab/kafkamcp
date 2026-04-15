@@ -31,7 +31,13 @@ func (s *Server) handleCreateTopic(ctx context.Context, request mcp.CallToolRequ
 	}
 
 	partitions := int32(request.GetInt("partitions", 1))
+	if partitions > 10000 {
+		return mcp.NewToolResultError("partitions must be <= 10000"), nil
+	}
 	replFactor := int16(request.GetInt("replication_factor", 1))
+	if replFactor > 10 {
+		return mcp.NewToolResultError("replication_factor must be <= 10"), nil
+	}
 
 	var configs map[string]string
 	if rawArgs := request.GetRawArguments(); rawArgs != nil {
@@ -251,6 +257,9 @@ func (s *Server) handleAnalyzeDLQ(ctx context.Context, request mcp.CallToolReque
 
 	if topic == "" {
 		return mcp.NewToolResultError("topic is required"), nil
+	}
+	if limit > 10000 {
+		limit = 10000
 	}
 	if deny := s.checkRateLimit(agentID, "kafka_analyze_dlq"); deny != nil {
 		return deny, nil

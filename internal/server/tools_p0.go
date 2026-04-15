@@ -119,6 +119,9 @@ func (s *Server) handleConsume(ctx context.Context, request mcp.CallToolRequest)
 	if limit > 1000 {
 		limit = 1000
 	}
+	if timeoutMs > 60000 {
+		timeoutMs = 60000
+	}
 
 	deserializer := request.GetString("deserializer", "auto")
 	messages, err := s.kafkaManager.Consume(ctx, cluster, topic, partition, offset, limit, timeoutMs, deserializer)
