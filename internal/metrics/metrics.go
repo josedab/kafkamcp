@@ -11,33 +11,11 @@ import (
 
 const maxUniqueAgents = 1000
 
-var (
-	agentMu       sync.RWMutex
-	knownAgents   = make(map[string]struct{})
-)
-
 // SanitizeAgentLabel caps unique agent_id label values to prevent unbounded cardinality.
 // If the agent is already known or the allowlist has capacity, the original ID is returned.
 // Otherwise, the ID is hashed into a fixed number of overflow buckets.
 func SanitizeAgentLabel(agentID string) string {
-	agentMu.RLock()
-	_, ok := knownAgents[agentID]
-	n := len(knownAgents)
-	agentMu.RUnlock()
-
-	if ok {
-		return agentID
-	}
-	if n < maxUniqueAgents {
-		agentMu.Lock()
-		knownAgents[agentID] = struct{}{}
-		agentMu.Unlock()
-		return agentID
-	}
-	// Hash-bucket overflow agents into 16 buckets
-	h := sha256.Sum256([]byte(agentID))
-	bucket := h[0] % 16
-	return fmt.Sprintf("overflow_%02d", bucket)
+	return defaultMetrics.SanitizeAgentLabel(agentID)
 }
 
 // Metrics holds all KafkaMCP Prometheus metrics.
@@ -53,6 +31,9 @@ type Metrics struct {
 	AuthzDenials         *prometheus.CounterVec
 	RateLimitDenials     *prometheus.CounterVec
 	Registry             *prometheus.Registry
+
+	agentMu     sync.RWMutex
+	knownAgents map[string]struct{}
 }
 
 // New creates and registers all KafkaMCP metrics on a dedicated registry.
@@ -60,8 +41,9 @@ func New() *Metrics {
 	reg := prometheus.NewRegistry()
 	factory := promauto.With(reg)
 
-	return &Metrics{
-		Registry: reg,
+	m := &Metrics{
+		Registry:    reg,
+		knownAgents: make(map[string]struct{}),
 
 		ToolCallsTotal: factory.NewCounterVec(prometheus.CounterOpts{
 			Name: "kafkamcp_tool_calls_total",
@@ -114,4 +96,46 @@ func New() *Metrics {
 			Help: "Rate limit denials",
 		}, []string{"agent_id", "tool"}),
 	}
+
+	defaultMetrics = m
+	return m
 }
+
+// SanitizeAgentLabel on a Metrics instance caps unique agent_id label values.
+func (m *Metrics) SanitizeAgentLabel(agentID string) string {
+	m.agentMu.RLock()
+	_, ok := m.knownAgents[agentID]
+	n := len(m.knownAgents)
+	m.agentMu.RUnlock()
+
+	if ok {
+		return agentID
+	}
+	if n < maxUniqueAgents {
+		m.agentMu.Lock()
+		m.knownAgents[agentID] = struct{}{}
+		m.agentMu.Unlock()
+		return agentID
+	}
+	h := sha256.Sum256([]byte(agentID))
+	bucket := h[0] % 16
+	return fmt.Sprintf("overflow_%02d", bucket)
+}
+
+// ResetAgents clears the known agents set (for testing).
+func (m *Metrics) ResetAgents() {
+	m.agentMu.Lock()
+	m.knownAgents = make(map[string]struct{})
+	m.agentMu.Unlock()
+}
+
+// SetKnownAgents replaces the known agents set (for testing).
+func (m *Metrics) SetKnownAgents(agents map[string]struct{}) {
+	m.agentMu.Lock()
+	m.knownAgents = agents
+	m.agentMu.Unlock()
+}
+
+// defaultMetrics is a package-level Metrics instance used by the
+// package-level SanitizeAgentLabel function for backward compatibility.
+var defaultMetrics = &Metrics{knownAgents: make(map[string]struct{})}

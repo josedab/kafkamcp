@@ -7,10 +7,7 @@ import (
 )
 
 func TestSanitizeAgentLabel(t *testing.T) {
-	// Reset global state before tests
-	agentMu.Lock()
-	knownAgents = make(map[string]struct{})
-	agentMu.Unlock()
+	m := New()
 
 	tests := []struct {
 		name     string
@@ -37,12 +34,11 @@ func TestSanitizeAgentLabel(t *testing.T) {
 			name:    "overflow agent gets hash bucket",
 			agentID: "overflow-agent",
 			setup: func() {
-				agentMu.Lock()
-				knownAgents = make(map[string]struct{})
+				agents := make(map[string]struct{})
 				for i := 0; i < maxUniqueAgents; i++ {
-					knownAgents[fmt.Sprintf("agent-%d", i)] = struct{}{}
+					agents[fmt.Sprintf("agent-%d", i)] = struct{}{}
 				}
-				agentMu.Unlock()
+				m.SetKnownAgents(agents)
 			},
 			want: "", // will check prefix instead
 		},
@@ -53,7 +49,7 @@ func TestSanitizeAgentLabel(t *testing.T) {
 			if tt.setup != nil {
 				tt.setup()
 			}
-			got := SanitizeAgentLabel(tt.agentID)
+			got := m.SanitizeAgentLabel(tt.agentID)
 			if tt.want != "" {
 				if got != tt.want {
 					t.Errorf("SanitizeAgentLabel(%q) = %q, want %q", tt.agentID, got, tt.want)
@@ -69,26 +65,23 @@ func TestSanitizeAgentLabel(t *testing.T) {
 }
 
 func TestSanitizeAgentLabel_OverflowDeterministic(t *testing.T) {
-	// Reset and fill to capacity
-	agentMu.Lock()
-	knownAgents = make(map[string]struct{})
+	m := New()
+	agents := make(map[string]struct{})
 	for i := 0; i < maxUniqueAgents; i++ {
-		knownAgents[fmt.Sprintf("fill-%d", i)] = struct{}{}
+		agents[fmt.Sprintf("fill-%d", i)] = struct{}{}
 	}
-	agentMu.Unlock()
+	m.SetKnownAgents(agents)
 
 	// Same agent should always map to same bucket
-	result1 := SanitizeAgentLabel("deterministic-test-agent")
-	result2 := SanitizeAgentLabel("deterministic-test-agent")
+	result1 := m.SanitizeAgentLabel("deterministic-test-agent")
+	result2 := m.SanitizeAgentLabel("deterministic-test-agent")
 	if result1 != result2 {
 		t.Errorf("SanitizeAgentLabel not deterministic: got %q then %q", result1, result2)
 	}
 }
 
 func TestSanitizeAgentLabel_Concurrent(t *testing.T) {
-	agentMu.Lock()
-	knownAgents = make(map[string]struct{})
-	agentMu.Unlock()
+	m := New()
 
 	var wg sync.WaitGroup
 	const goroutines = 100
@@ -98,7 +91,7 @@ func TestSanitizeAgentLabel_Concurrent(t *testing.T) {
 		go func(id int) {
 			defer wg.Done()
 			agentID := fmt.Sprintf("concurrent-agent-%d", id)
-			result := SanitizeAgentLabel(agentID)
+			result := m.SanitizeAgentLabel(agentID)
 			if result == "" {
 				t.Errorf("SanitizeAgentLabel(%q) returned empty string", agentID)
 			}
