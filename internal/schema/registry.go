@@ -326,7 +326,7 @@ func generateFieldSummary(schema any, schemaType string) string {
 		if !ok {
 			continue
 		}
-		fieldType := formatAvroType(field["type"])
+		fieldType := formatAvroType(field["type"], 0)
 
 		desc := fieldName + ": " + fieldType
 		if def, ok := field["default"]; ok {
@@ -338,7 +338,12 @@ func generateFieldSummary(schema any, schemaType string) string {
 	return fmt.Sprintf("%s { %s }", name, strings.Join(fieldDescs, ", "))
 }
 
-func formatAvroType(t any) string {
+const maxAvroTypeDepth = 20
+
+func formatAvroType(t any, depth int) string {
+	if depth >= maxAvroTypeDepth {
+		return "..."
+	}
 	switch v := t.(type) {
 	case string:
 		return v
@@ -348,11 +353,11 @@ func formatAvroType(t any) string {
 				return logicalType
 			}
 			if typ == "array" {
-				items := formatAvroType(v["items"])
+				items := formatAvroType(v["items"], depth+1)
 				return "array<" + items + ">"
 			}
 			if typ == "map" {
-				values := formatAvroType(v["values"])
+				values := formatAvroType(v["values"], depth+1)
 				return "map<string, " + values + ">"
 			}
 			return typ
@@ -364,12 +369,12 @@ func formatAvroType(t any) string {
 				if s, ok := item.(string); ok && s == "null" {
 					continue
 				}
-				return formatAvroType(item) + "?"
+				return formatAvroType(item, depth+1) + "?"
 			}
 		}
 		types := make([]string, len(v))
 		for i, item := range v {
-			types[i] = formatAvroType(item)
+			types[i] = formatAvroType(item, depth+1)
 		}
 		return "union<" + strings.Join(types, ", ") + ">"
 	default:

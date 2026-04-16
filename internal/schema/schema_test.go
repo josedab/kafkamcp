@@ -93,7 +93,7 @@ func TestFormatAvroType(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := formatAvroType(tt.typ)
+			got := formatAvroType(tt.typ, 0)
 			if got != tt.want {
 				t.Errorf("formatAvroType(%v) = %q, want %q", tt.typ, got, tt.want)
 			}
