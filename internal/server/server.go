@@ -5,6 +5,7 @@ import (
 "encoding/json"
 "fmt"
 "log/slog"
+"sync"
 "time"
 
 "github.com/kafkamcp/kafkamcp/internal/audit"
@@ -24,6 +25,7 @@ type Server struct {
 config       *config.Config
 kafkaManager *kafka.Manager
 schemaClients map[string]*schema.Client // per-cluster schema clients
+connectMu      sync.RWMutex
 connectClients map[string]*kafka.ConnectClient // cached per-cluster Connect clients
 policyEngine *auth.PolicyEngine
 auditLogger  *audit.Logger
@@ -134,6 +136,16 @@ func (s *Server) getConnectClient(clCfg *config.ClusterConfig) (*kafka.ConnectCl
 	if clCfg.ConnectURL == "" {
 		return nil, nil
 	}
+	s.connectMu.RLock()
+	if c, ok := s.connectClients[clCfg.Name]; ok {
+		s.connectMu.RUnlock()
+		return c, nil
+	}
+	s.connectMu.RUnlock()
+
+	s.connectMu.Lock()
+	defer s.connectMu.Unlock()
+	// Double-check after acquiring write lock
 	if c, ok := s.connectClients[clCfg.Name]; ok {
 		return c, nil
 	}
