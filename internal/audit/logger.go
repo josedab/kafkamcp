@@ -46,7 +46,7 @@ func NewLogger(enabled bool, maxEntries int, logFile string, logger *slog.Logger
 	l := &Logger{
 		enabled:    enabled,
 		maxEntries: maxEntries,
-		entries:    make([]Entry, maxEntries),
+		entries:    make([]Entry, 0, min(maxEntries, 100)),
 		slogger:    logger,
 	}
 
@@ -77,10 +77,15 @@ func (l *Logger) Log(entry Entry) {
 
 	// Write to ring buffer
 	l.mu.Lock()
-	l.entries[l.pos] = entry
-	l.pos = (l.pos + 1) % l.maxEntries
-	if l.pos == 0 {
-		l.full = true
+	if len(l.entries) < l.maxEntries {
+		l.entries = append(l.entries, entry)
+		l.pos = len(l.entries)
+	} else {
+		l.entries[l.pos%l.maxEntries] = entry
+		l.pos++
+		if l.pos >= l.maxEntries {
+			l.full = true
+		}
 	}
 
 	// Write to file (durable) — inside mutex to prevent interleaved writes
@@ -111,10 +116,7 @@ func (l *Logger) RecentEntries(n int) []Entry {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 
-	count := l.pos
-	if l.full {
-		count = l.maxEntries
-	}
+	count := len(l.entries)
 
 	if n > count {
 		n = count
@@ -129,8 +131,9 @@ func (l *Logger) RecentEntries(n int) []Entry {
 	for i := 0; i < n; i++ {
 		idx := l.pos - 1 - i
 		if idx < 0 {
-			idx += l.maxEntries
+			idx += count
 		}
+		idx = idx % count
 		result = append(result, l.entries[idx])
 	}
 
