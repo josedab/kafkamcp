@@ -189,6 +189,7 @@ func (c *Client) getCompatibility(ctx context.Context, subject string) string {
 	path := fmt.Sprintf("/config/%s", url.PathEscape(subject))
 	body, err := c.doRequest(ctx, http.MethodGet, path)
 	if err != nil {
+		slog.Warn("failed to get schema compatibility", "subject", subject, "error", err)
 		return ""
 	}
 
@@ -196,6 +197,7 @@ func (c *Client) getCompatibility(ctx context.Context, subject string) string {
 		CompatibilityLevel string `json:"compatibilityLevel"`
 	}
 	if err := json.Unmarshal(body, &config); err != nil {
+		slog.Warn("failed to unmarshal schema compatibility response", "subject", subject, "error", err)
 		return ""
 	}
 	return config.CompatibilityLevel
