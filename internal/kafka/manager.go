@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/kafkamcp/kafkamcp/internal/config"
@@ -538,6 +539,7 @@ func (m *Manager) Produce(ctx context.Context, cluster, topic string, messages [
 	// Pre-allocate results to preserve input order
 	results := make([]DeliveryResult, len(messages))
 	var wg sync.WaitGroup
+	var failCount int64
 
 	for i, msg := range messages {
 		value := serializeValue(msg.Value)
@@ -561,6 +563,7 @@ func (m *Manager) Produce(ctx context.Context, cluster, topic string, messages [
 			defer wg.Done()
 			if err != nil {
 				results[idx] = DeliveryResult{Status: "error: delivery failed"}
+				atomic.AddInt64(&failCount, 1)
 				return
 			}
 			results[idx] = DeliveryResult{
@@ -573,6 +576,10 @@ func (m *Manager) Produce(ctx context.Context, cluster, topic string, messages [
 	}
 
 	wg.Wait()
+
+	if n := atomic.LoadInt64(&failCount); n > 0 {
+		return results, fmt.Errorf("%d of %d messages failed delivery", n, len(messages))
+	}
 	return results, nil
 }
 
