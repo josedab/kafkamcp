@@ -97,6 +97,11 @@ func (s *Server) MCPServer() *server.MCPServer { return s.mcpServer }
 // Metrics returns the Prometheus metrics.
 func (s *Server) Metrics() *metrics.Metrics { return s.metrics }
 
+// HealthCheck verifies Kafka connectivity by pinging the default cluster.
+func (s *Server) HealthCheck(ctx context.Context) error {
+	return s.kafkaManager.Ping(ctx)
+}
+
 // Close shuts down the server.
 func (s *Server) Close() error {
 s.kafkaManager.Close()

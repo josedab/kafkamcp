@@ -118,8 +118,15 @@ func runServer(cmd *cobra.Command, args []string) error {
 		metricsMux := http.NewServeMux()
 		metricsMux.Handle("/metrics", promhttp.HandlerFor(srv.Metrics().Registry, promhttp.HandlerOpts{}))
 		metricsMux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+			checkCtx, checkCancel := context.WithTimeout(r.Context(), 5*time.Second)
+			defer checkCancel()
+			if err := srv.HealthCheck(checkCtx); err != nil {
+				w.WriteHeader(http.StatusServiceUnavailable)
+				_, _ = w.Write([]byte(fmt.Sprintf("unhealthy: %v", err)))
+				return
+			}
 			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write([]byte("ok")) //nolint:errcheck
+			_, _ = w.Write([]byte("ok"))
 		})
 		metricsServer := &http.Server{
 			Addr:              metricsAddr,
