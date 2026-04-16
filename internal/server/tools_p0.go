@@ -227,7 +227,13 @@ func (s *Server) handleListSchemas(ctx context.Context, request mcp.CallToolRequ
 		return deny, nil
 	}
 
-	subjects, err := s.getSchemaClient("").ListSubjectsDetailed(ctx)
+	sc := s.getSchemaClient("")
+	if sc == nil {
+		s.logAudit(agentID, "kafka_list_schemas", args, "", "error", 0, fmt.Errorf("no schema registry configured"), start)
+		return mcp.NewToolResultError("No schema registry configured for this cluster"), nil
+	}
+
+	subjects, err := sc.ListSubjectsDetailed(ctx)
 	if err != nil {
 		s.logAudit(agentID, "kafka_list_schemas", args, "", "error", 0, err, start)
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to list schemas: %v", err)), nil
