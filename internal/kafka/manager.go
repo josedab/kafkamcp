@@ -737,6 +737,8 @@ func (m *Manager) ListConsumerGroups(ctx context.Context, cluster string) ([]Con
 					result[i].MemberCount = len(dg.Members)
 				}
 			}
+		} else {
+			m.logger.Warn("failed to describe consumer groups for enrichment", "error", err)
 		}
 		lags, err := admin.Lag(ctx, groupIDs...)
 		if err == nil {
@@ -748,6 +750,8 @@ func (m *Manager) ListConsumerGroups(ctx context.Context, cluster string) ([]Con
 					}
 				}
 			})
+		} else {
+			m.logger.Warn("failed to fetch consumer group lag for enrichment", "error", err)
 		}
 	}
 
