@@ -48,10 +48,11 @@ func (s *Server) handleCreateTopic(ctx context.Context, request mcp.CallToolRequ
 		if m, ok := rawArgs.(map[string]any); ok {
 			if cfgRaw, ok := m["configs"]; ok {
 				b, err := json.Marshal(cfgRaw)
-				if err == nil {
-					if err := json.Unmarshal(b, &configs); err != nil {
-						return mcp.NewToolResultError(fmt.Sprintf("Invalid configs format: %v", err)), nil
-					}
+				if err != nil {
+					return mcp.NewToolResultError(fmt.Sprintf("Failed to marshal configs: %v", err)), nil
+				}
+				if err := json.Unmarshal(b, &configs); err != nil {
+					return mcp.NewToolResultError(fmt.Sprintf("Invalid configs format: %v", err)), nil
 				}
 			}
 		}
@@ -94,10 +95,11 @@ func (s *Server) handleAlterTopic(ctx context.Context, request mcp.CallToolReque
 		if m, ok := rawArgs.(map[string]any); ok {
 			if cfgRaw, ok := m["configs"]; ok {
 				b, err := json.Marshal(cfgRaw)
-				if err == nil {
-					if err := json.Unmarshal(b, &configs); err != nil {
-						return mcp.NewToolResultError(fmt.Sprintf("Invalid configs format: %v", err)), nil
-					}
+				if err != nil {
+					return mcp.NewToolResultError(fmt.Sprintf("Failed to marshal configs: %v", err)), nil
+				}
+				if err := json.Unmarshal(b, &configs); err != nil {
+					return mcp.NewToolResultError(fmt.Sprintf("Invalid configs format: %v", err)), nil
 				}
 			}
 		}

@@ -201,7 +201,10 @@ func (s *Server) handleProduce(ctx context.Context, request mcp.CallToolRequest)
 	maxSize := s.config.Server.MaxMessageSize
 	if maxSize > 0 {
 		for i, msg := range messages {
-			b, _ := json.Marshal(msg.Value)
+			b, err := json.Marshal(msg.Value)
+			if err != nil {
+				return mcp.NewToolResultError(fmt.Sprintf("message %d: failed to marshal value: %v", i, err)), nil
+			}
 			if len(b) > maxSize {
 				return mcp.NewToolResultError(fmt.Sprintf("message %d exceeds maximum size of %d bytes", i, maxSize)), nil
 			}
