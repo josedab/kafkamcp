@@ -201,6 +201,19 @@ func (m *Manager) Close() {
 	}
 }
 
+// Ping checks connectivity to the default Kafka cluster by requesting metadata.
+func (m *Manager) Ping(ctx context.Context) error {
+	admin, err := m.GetAdmin("")
+	if err != nil {
+		return fmt.Errorf("getting admin client: %w", err)
+	}
+	_, err = admin.Metadata(ctx)
+	if err != nil {
+		return fmt.Errorf("kafka metadata request failed: %w", err)
+	}
+	return nil
+}
+
 // ListTopics lists topics in the cluster, optionally filtering by pattern.
 func (m *Manager) ListTopics(ctx context.Context, cluster string, includeInternal bool) ([]TopicSummary, error) {
 	admin, err := m.GetAdmin(cluster)
