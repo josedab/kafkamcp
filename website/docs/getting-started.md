@@ -10,7 +10,7 @@ Get KafkaMCP running and connected to your Kafka cluster in under 5 minutes.
 ## Prerequisites
 
 - A running Kafka cluster (local or remote)
-- Go 1.22+ (for source install) or Docker
+- Go 1.25+ (for source install) or Docker
 
 ## Step 1: Install
 

@@ -55,6 +55,7 @@ At least one cluster is required.
 | `ssl_ca_location` | string | No | empty | Path to a CA bundle used for TLS broker validation. |
 | `schema_registry` | object | No | — | Optional Schema Registry configuration for this cluster. |
 | `connect_url` | string | No | empty | Optional Kafka Connect base URL for connector tools. |
+| `connect_tls` | object | No | — | Optional TLS settings for the Kafka Connect REST API. |
 | `default` | boolean | No | first cluster if none set | Marks the default cluster. |
 
 ### `clusters[].schema_registry`
@@ -70,6 +71,13 @@ At least one cluster is required.
 |---|---|---:|---|---|
 | `username` | string | No | empty | Schema Registry username. |
 | `password` | string | No | empty | Schema Registry password. |
+
+### `clusters[].connect_tls`
+
+| Field | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `ca_file` | string | No | empty | Path to a CA certificate file for verifying the Connect REST API server. |
+| `insecure_skip_verify` | boolean | No | `false` | Skip TLS certificate verification (not recommended for production). |
 
 :::tip
 If no cluster is marked `default: true`, KafkaMCP automatically uses the first cluster in the list as the default.
