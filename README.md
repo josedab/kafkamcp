@@ -229,7 +229,11 @@ Once connected, your AI agent can:
 | `sasl_mechanism` | string | No | `PLAIN`, `SCRAM-SHA-256`, `SCRAM-SHA-512` |
 | `sasl_username` | string | No | SASL username (supports `${ENV_VAR}`) |
 | `sasl_password` | string | No | SASL password (supports `${ENV_VAR}`) |
+| `ssl_ca_location` | string | No | Path to CA certificate bundle for SSL/TLS |
 | `schema_registry.url` | string | No | Schema Registry URL |
+| `schema_registry.auth.username` | string | No | Schema Registry basic-auth username |
+| `schema_registry.auth.password` | string | No | Schema Registry basic-auth password |
+| `connect_url` | string | No | Kafka Connect REST API base URL |
 | `default` | bool | No | Mark as default cluster |
 
 ### Policies
@@ -237,8 +241,25 @@ Once connected, your AI agent can:
 |-------|------|---------|-------------|
 | `default_deny` | bool | `false` | Deny all access by default |
 | `agents[].id` | string | — | Agent identifier |
+| `agents[].role` | string | — | Agent role (e.g., `admin`, `viewer`) |
 | `agents[].topics[].pattern` | string | — | Glob pattern (e.g., `orders.*`) |
 | `agents[].topics[].permissions` | []string | — | `read`, `write`, `create`, `delete` |
+| `agents[].consumer_groups.permissions` | []string | — | Consumer group permissions |
+| `agents[].schemas.permissions` | []string | — | Schema Registry permissions |
+| `agents[].rate_limit.requests_per_minute` | int | — | Max requests per minute for this agent |
+
+### Schema Cache
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `schema_cache.max_entries` | int | `10000` | Maximum number of cached schemas |
+| `schema_cache.ttl_seconds` | int | `300` | Cache entry time-to-live in seconds |
+
+### Audit
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `audit.enabled` | bool | `false` | Enable audit logging |
+| `audit.max_entries` | int | `10000` | Max in-memory audit entries |
+| `audit.log_file` | string | — | Path to audit log file |
 
 ### Environment Variables
 
