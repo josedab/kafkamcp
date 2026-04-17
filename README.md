@@ -386,13 +386,17 @@ If using access control (`default_deny: true`), ensure the connecting agent's ID
 
 ## Contributing
 
-Contributions are welcome! Please:
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+## Security
+
+To report a vulnerability, please see [SECURITY.md](SECURITY.md).
 
 ## Roadmap
 
