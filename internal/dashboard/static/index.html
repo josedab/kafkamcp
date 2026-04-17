@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KafkaMCP Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0d1117; color: #c9d1d9; }
+    .header { background: #161b22; border-bottom: 1px solid #30363d; padding: 16px 24px; display: flex; align-items: center; gap: 12px; }
+    .header h1 { font-size: 20px; color: #58a6ff; }
+    .header .status { font-size: 12px; padding: 4px 8px; border-radius: 12px; background: #238636; color: #fff; }
+    .header .status.error { background: #da3633; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; }
+    .card h2 { font-size: 14px; color: #8b949e; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+    .card .count { font-size: 32px; font-weight: 600; color: #58a6ff; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #21262d; font-size: 13px; }
+    th { color: #8b949e; font-weight: 500; }
+    .status-success { color: #3fb950; }
+    .status-error { color: #f85149; }
+    .activity-feed { max-height: 400px; overflow-y: auto; }
+    .refresh-btn { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+    .refresh-btn:hover { background: #30363d; }
+    .topology-placeholder { text-align: center; padding: 40px; color: #8b949e; }
+    #live-indicator { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-left: 8px; }
+    #live-indicator.connected { background: #3fb950; animation: pulse 2s infinite; }
+    #live-indicator.disconnected { background: #f85149; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>⚡ KafkaMCP Dashboard</h1>
+    <span id="health-status" class="status">Checking...</span>
+    <span id="live-indicator" class="disconnected"></span>
+    <div style="flex:1"></div>
+    <button class="refresh-btn" onclick="refreshAll()">↻ Refresh</button>
+  </div>
+
+  <div class="container">
+    <div class="grid">
+      <div class="card">
+        <h2>Topics</h2>
+        <div id="topic-count" class="count">—</div>
+      </div>
+      <div class="card">
+        <h2>Recent Activity</h2>
+        <div id="activity-count" class="count">—</div>
+      </div>
+      <div class="card">
+        <h2>Rate Limits</h2>
+        <div id="ratelimit-info">Loading...</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom: 16px;">
+      <h2>Agent Activity Timeline</h2>
+      <div class="activity-feed" id="activity-feed">
+        <table>
+          <thead><tr><th>Time</th><th>Agent</th><th>Tool</th><th>Status</th><th>Latency</th></tr></thead>
+          <tbody id="activity-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Topic Topology</h2>
+        <div id="topology" class="topology-placeholder">
+          Click Refresh to load topology graph
+        </div>
+      </div>
+      <div class="card">
+        <h2>Audit Trail</h2>
+        <div class="activity-feed" id="audit-feed">
+          <table>
+            <thead><tr><th>Time</th><th>Agent</th><th>Tool</th><th>Cluster</th><th>Status</th></tr></thead>
+            <tbody id="audit-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const BASE = '';
+
+    async function fetchJSON(url) {
+      try {
+        const res = await fetch(BASE + url);
+        return await res.json();
+      } catch (e) {
+        console.error('Fetch error:', url, e);
+        return null;
+      }
+    }
+
+    async function loadHealth() {
+      const data = await fetchJSON('/api/v1/health');
+      const el = document.getElementById('health-status');
+      if (data && data.status === 'healthy') {
+        el.textContent = 'Healthy';
+        el.classList.remove('error');
+      } else {
+        el.textContent = 'Unhealthy';
+        el.classList.add('error');
+      }
+    }
+
+    async function loadTopics() {
+      const data = await fetchJSON('/api/v1/topics');
+      if (data) document.getElementById('topic-count').textContent = data.total || 0;
+    }
+
+    async function loadActivity() {
+      const data = await fetchJSON('/api/v1/activity');
+      if (!data) return;
+      document.getElementById('activity-count').textContent = data.total || 0;
+      const tbody = document.getElementById('activity-body');
+      tbody.innerHTML = '';
+      (data.activity || []).slice(0, 50).forEach(item => {
+        const tr = document.createElement('tr');
+        const statusClass = item.status === 'success' ? 'status-success' : 'status-error';
+        tr.innerHTML = `<td>${formatTime(item.timestamp)}</td><td>${esc(item.agent_id)}</td><td>${esc(item.tool)}</td><td class="${statusClass}">${item.status}</td><td>${item.latency_ms}ms</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function loadAudit() {
+      const data = await fetchJSON('/api/v1/audit');
+      if (!data) return;
+      const tbody = document.getElementById('audit-body');
+      tbody.innerHTML = '';
+      (data.entries || []).slice(0, 100).forEach(item => {
+        const tr = document.createElement('tr');
+        const statusClass = item.result?.status === 'success' ? 'status-success' : 'status-error';
+        tr.innerHTML = `<td>${formatTime(item.timestamp)}</td><td>${esc(item.agent_id)}</td><td>${esc(item.tool)}</td><td>${esc(item.cluster || '-')}</td><td class="${statusClass}">${item.result?.status || '-'}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function loadRateLimits() {
+      const data = await fetchJSON('/api/v1/ratelimits');
+      const el = document.getElementById('ratelimit-info');
+      if (data && data.rate_limits && data.rate_limits.length > 0) {
+        el.innerHTML = data.rate_limits.map(r =>
+          `<div style="margin:4px 0"><strong>${esc(r.agent_id)}</strong>: ${Math.round(r.tokens_remaining)}/${Math.round(r.max_tokens)} tokens</div>`
+        ).join('');
+      } else {
+        el.textContent = 'No rate limits configured';
+      }
+    }
+
+    async function loadTopology() {
+      const data = await fetchJSON('/api/v1/topology');
+      const el = document.getElementById('topology');
+      if (!data || !data.nodes) { el.textContent = 'No topology data'; return; }
+      const nodes = data.nodes || [];
+      const edges = data.edges || [];
+      el.innerHTML = `<div style="text-align:left"><strong>${nodes.length}</strong> nodes, <strong>${edges.length}</strong> edges</div>` +
+        nodes.map(n => `<div style="margin:2px 0;font-size:12px">${n.type === 'topic' ? '📋' : '👥'} ${esc(n.name)}</div>`).join('');
+    }
+
+    function formatTime(ts) { if (!ts) return '-'; try { return new Date(ts).toLocaleTimeString(); } catch { return ts; } }
+    function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+    function refreshAll() { loadHealth(); loadTopics(); loadActivity(); loadAudit(); loadRateLimits(); loadTopology(); }
+
+    // SSE live connection
+    function connectSSE() {
+      const indicator = document.getElementById('live-indicator');
+      const es = new EventSource(BASE + '/api/v1/events');
+      es.addEventListener('connected', () => { indicator.className = 'connected'; });
+      es.addEventListener('update', (e) => { try { const d = JSON.parse(e.data); if (d.type === 'audit') loadActivity(); } catch {} });
+      es.onerror = () => { indicator.className = 'disconnected'; setTimeout(connectSSE, 5000); es.close(); };
+    }
+
+    refreshAll();
+    setInterval(refreshAll, 30000);
+    connectSSE();
+  </script>
+</body>
+</html>
