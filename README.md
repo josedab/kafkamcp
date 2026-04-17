@@ -29,6 +29,7 @@ KafkaMCP is an MCP (Model Context Protocol) server that transforms Apache Kafka 
 **From source:**
 ```bash
 go install github.com/kafkamcp/kafkamcp/cmd/kafkamcp@latest
+kafkamcp version
 ```
 
 **From binary:**
@@ -36,10 +37,12 @@ go install github.com/kafkamcp/kafkamcp/cmd/kafkamcp@latest
 # Download from GitHub Releases
 curl -sSL https://github.com/kafkamcp/kafkamcp/releases/latest/download/kafkamcp_$(uname -s)_$(uname -m).tar.gz | tar xz
 sudo mv kafkamcp /usr/local/bin/
+kafkamcp version
 ```
 
 **Docker:**
 ```bash
+docker run --rm ghcr.io/kafkamcp/kafkamcp:latest version
 docker run --rm -v $(pwd)/kafkamcp.yaml:/etc/kafkamcp/kafkamcp.yaml \
   ghcr.io/kafkamcp/kafkamcp:latest --config /etc/kafkamcp/kafkamcp.yaml
 ```
