@@ -14,6 +14,7 @@ import (
 
 // ===================== P1 TOOL HANDLERS =====================
 
+// handleCreateTopic creates a new Kafka topic with the specified partitions, replication factor, and configs.
 func (s *Server) handleCreateTopic(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	start := time.Now()
 	agentID := extractAgentID(request)
@@ -70,6 +71,7 @@ func (s *Server) handleCreateTopic(ctx context.Context, request mcp.CallToolRequ
 	return marshalResult(map[string]any{"status": "created", "topic": name, "partitions": partitions, "replication_factor": replFactor})
 }
 
+// handleAlterTopic updates configuration properties for an existing Kafka topic.
 func (s *Server) handleAlterTopic(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	start := time.Now()
 	agentID := extractAgentID(request)
@@ -118,6 +120,7 @@ func (s *Server) handleAlterTopic(ctx context.Context, request mcp.CallToolReque
 	return marshalResult(map[string]any{"status": "altered", "topic": name, "configs": configs})
 }
 
+// handleDeleteTopic permanently deletes a Kafka topic and all its data.
 func (s *Server) handleDeleteTopic(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	start := time.Now()
 	agentID := extractAgentID(request)
@@ -148,6 +151,7 @@ func (s *Server) handleDeleteTopic(ctx context.Context, request mcp.CallToolRequ
 	return marshalResult(map[string]any{"status": "deleted", "topic": name})
 }
 
+// handleSearch scans topic messages matching key, header, value, or time range filters.
 func (s *Server) handleSearch(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	start := time.Now()
 	agentID := extractAgentID(request)
@@ -217,6 +221,7 @@ func (s *Server) handleSearch(ctx context.Context, request mcp.CallToolRequest) 
 	})
 }
 
+// handleResetOffsets resets consumer group offsets for a topic using the specified strategy (earliest, latest, timestamp, shift).
 func (s *Server) handleResetOffsets(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	start := time.Now()
 	agentID := extractAgentID(request)
@@ -262,6 +267,7 @@ func (s *Server) handleResetOffsets(ctx context.Context, request mcp.CallToolReq
 	return marshalResult(result)
 }
 
+// handleCheckSchemaCompatibility tests whether a proposed schema is compatible with an existing subject version.
 func (s *Server) handleCheckSchemaCompatibility(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	start := time.Now()
 	agentID := extractAgentID(request)
@@ -298,6 +304,7 @@ func (s *Server) handleCheckSchemaCompatibility(ctx context.Context, request mcp
 	return marshalResult(result)
 }
 
+// handleAnalyzeDLQ analyzes a dead-letter queue topic and summarizes error patterns and frequencies.
 func (s *Server) handleAnalyzeDLQ(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	start := time.Now()
 	agentID := extractAgentID(request)
@@ -332,6 +339,7 @@ func (s *Server) handleAnalyzeDLQ(ctx context.Context, request mcp.CallToolReque
 	return marshalResult(result)
 }
 
+// handleSubscribe creates a consumer group subscription and reads messages with optional auto-commit.
 func (s *Server) handleSubscribe(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	start := time.Now()
 	agentID := extractAgentID(request)

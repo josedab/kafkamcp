@@ -24,6 +24,7 @@ func connectTLSOpts(cfg *config.ClusterConfig) []kafka.ConnectTLSOption {
 
 // ===================== P2 TOOL HANDLERS =====================
 
+// handleAggregate performs a windowed aggregation (count, sum, avg, min, max) over messages in a topic.
 func (s *Server) handleAggregate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	start := time.Now()
 	agentID := extractAgentID(request)
@@ -73,6 +74,7 @@ func (s *Server) handleAggregate(ctx context.Context, request mcp.CallToolReques
 	return marshalResult(result)
 }
 
+// handleSuggestSchemaEvolution suggests backward-compatible schema changes for a given subject.
 func (s *Server) handleSuggestSchemaEvolution(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	start := time.Now()
 	agentID := extractAgentID(request)
@@ -118,6 +120,7 @@ func (s *Server) handleSuggestSchemaEvolution(ctx context.Context, request mcp.C
 	})
 }
 
+// handleListConnectors lists all Kafka Connect connectors for a cluster.
 func (s *Server) handleListConnectors(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	start := time.Now()
 	agentID := extractAgentID(request)
@@ -155,6 +158,7 @@ func (s *Server) handleListConnectors(ctx context.Context, request mcp.CallToolR
 	return marshalResult(map[string]any{"connectors": connectors, "total_count": len(connectors)})
 }
 
+// handleDescribeConnector returns the configuration and status of a single Kafka Connect connector.
 func (s *Server) handleDescribeConnector(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	start := time.Now()
 	agentID := extractAgentID(request)
@@ -199,6 +203,7 @@ func (s *Server) handleDescribeConnector(ctx context.Context, request mcp.CallTo
 	return marshalResult(detail)
 }
 
+// handleJoin performs a key-based join between two topics within a time window.
 func (s *Server) handleJoin(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	start := time.Now()
 	agentID := extractAgentID(request)
@@ -252,6 +257,7 @@ func (s *Server) handleJoin(ctx context.Context, request mcp.CallToolRequest) (*
 	return marshalResult(result)
 }
 
+// handleNaturalLanguageQuery translates a natural-language question into Kafka operations and executes them.
 func (s *Server) handleNaturalLanguageQuery(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	start := time.Now()
 	agentID := extractAgentID(request)

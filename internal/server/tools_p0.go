@@ -16,6 +16,7 @@ import (
 
 // ===================== P0 TOOL HANDLERS =====================
 
+// handleListTopics returns all Kafka topics, optionally filtered by name pattern and agent authorization.
 func (s *Server) handleListTopics(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	return s.withToolAuth(toolAuthConfig{
 		tool: "kafka_list_topics", resourceType: auth.ResourceTopic, action: auth.ActionRead,
@@ -61,6 +62,7 @@ func (s *Server) handleListTopics(ctx context.Context, request mcp.CallToolReque
 	})(ctx, request)
 }
 
+// handleDescribeTopic returns detailed metadata for a single Kafka topic including partitions and configs.
 func (s *Server) handleDescribeTopic(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	return s.withToolAuth(toolAuthConfig{
 		tool: "kafka_describe_topic", resourceType: auth.ResourceTopic, action: auth.ActionRead,
@@ -87,6 +89,7 @@ func (s *Server) handleDescribeTopic(ctx context.Context, request mcp.CallToolRe
 	})(ctx, request)
 }
 
+// handleConsume reads messages from a Kafka topic with configurable offset, limit, partition, and deserializer.
 func (s *Server) handleConsume(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	return s.withToolAuth(toolAuthConfig{
 		tool: "kafka_consume", resourceType: auth.ResourceTopic, action: auth.ActionRead,
@@ -135,6 +138,7 @@ func (s *Server) handleConsume(ctx context.Context, request mcp.CallToolRequest)
 	})(ctx, request)
 }
 
+// handleProduce writes one or more messages to a Kafka topic with optional schema-aware serialization.
 func (s *Server) handleProduce(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	return s.withToolAuth(toolAuthConfig{
 		tool: "kafka_produce", resourceType: auth.ResourceTopic, action: auth.ActionWrite,
@@ -211,6 +215,7 @@ func (s *Server) handleProduce(ctx context.Context, request mcp.CallToolRequest)
 	})(ctx, request)
 }
 
+// handleListSchemas returns all Schema Registry subjects, optionally filtered by name pattern.
 func (s *Server) handleListSchemas(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	start := time.Now()
 	agentID := extractAgentID(request)
@@ -253,6 +258,7 @@ func (s *Server) handleListSchemas(ctx context.Context, request mcp.CallToolRequ
 	return marshalResult(map[string]any{"subjects": subjects, "total_count": len(subjects)})
 }
 
+// handleGetSchema retrieves a schema by subject and version from the Schema Registry.
 func (s *Server) handleGetSchema(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	start := time.Now()
 	agentID := extractAgentID(request)
@@ -283,6 +289,7 @@ func (s *Server) handleGetSchema(ctx context.Context, request mcp.CallToolReques
 	return marshalResult(info)
 }
 
+// handleDescribeConsumerGroup returns detailed state and member assignments for a consumer group.
 func (s *Server) handleDescribeConsumerGroup(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	return s.withToolAuth(toolAuthConfig{
 		tool: "kafka_describe_consumer_group", resourceType: auth.ResourceConsumerGroup, action: auth.ActionDescribe,
@@ -308,6 +315,7 @@ func (s *Server) handleDescribeConsumerGroup(ctx context.Context, request mcp.Ca
 	})(ctx, request)
 }
 
+// handleListConsumerGroups returns all consumer groups, optionally filtered by state.
 func (s *Server) handleListConsumerGroups(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	start := time.Now()
 	agentID := extractAgentID(request)
