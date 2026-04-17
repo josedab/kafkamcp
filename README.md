@@ -391,6 +391,11 @@ Another process is using the configured port. Either stop that process or change
 
 If using access control (`default_deny: true`), ensure the connecting agent's ID is listed in your policies and has the required permissions for the topics/groups it needs to access. Check audit logs for denied requests.
 
+## Documentation & Community
+
+- 📖 **Website & Docs** — [kafkamcp.dev](https://kafkamcp.dev)
+- 💬 **Discord** — [discord.gg/kafkamcp](https://discord.gg/kafkamcp)
+
 ## Contributing
 
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
