@@ -16,6 +16,7 @@ type Config struct {
 	Policies    PolicyConfig   `yaml:"policies" json:"policies"`
 	SchemaCache CacheConfig    `yaml:"schema_cache" json:"schema_cache"`
 	Audit       AuditConfig    `yaml:"audit" json:"audit"`
+	Masking     MaskingConfig  `yaml:"masking,omitempty" json:"masking,omitempty"`
 }
 
 // ServerConfig holds network transport and TLS settings for the MCP server.
@@ -126,6 +127,22 @@ type AuditConfig struct {
 	Enabled    bool   `yaml:"enabled" json:"enabled"`         // Enable audit logging
 	MaxEntries int    `yaml:"max_entries" json:"max_entries"` // Max in-memory audit entries (default 10000)
 	LogFile    string `yaml:"log_file" json:"log_file"`       // Path to audit log file
+}
+
+// MaskingConfig defines data masking and PII redaction rules.
+type MaskingConfig struct {
+	Enabled bool          `yaml:"enabled" json:"enabled"`
+	Rules   []MaskingRule `yaml:"rules" json:"rules"`
+}
+
+// MaskingRule defines a single masking rule for a field pattern.
+type MaskingRule struct {
+	Name      string `yaml:"name" json:"name"`           // Rule identifier
+	Type      string `yaml:"type" json:"type"`           // Rule type: email, ssn, credit_card, phone, regex, ner
+	FieldPath string `yaml:"field_path" json:"field_path"` // JSON path pattern (e.g., "$.user.email", "**email**")
+	Pattern   string `yaml:"pattern,omitempty" json:"pattern,omitempty"` // Custom regex pattern (for type=regex)
+	Replace   string `yaml:"replace,omitempty" json:"replace,omitempty"` // Replacement string. Default: "***REDACTED***"
+	Agents    []string `yaml:"agents,omitempty" json:"agents,omitempty"` // Apply only to these agents. Empty = all.
 }
 
 var envVarPattern = regexp.MustCompile(`\$\{([^}]+)\}`)
