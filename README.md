@@ -173,7 +173,7 @@ Once connected, your AI agent can:
 
 ## Observability
 
-- **Prometheus metrics** at `/metrics` (port+1) — tool call counts, latencies, message throughput, auth denials, rate limit denials
+- **Prometheus metrics** at `/metrics` (port+1, bound to `127.0.0.1`) — tool call counts, latencies, message throughput, auth denials, rate limit denials
 - **Health check** at `/healthz`
 - **Structured JSON logging** via `slog`
 
@@ -216,6 +216,7 @@ Once connected, your AI agent can:
 | `host` | string | `0.0.0.0` | Bind host for SSE/HTTP |
 | `port` | int | `3100` | Bind port for SSE/HTTP |
 | `log_level` | string | `info` | Log level: `debug`, `info`, `warn`, `error` |
+| `max_message_size` | int | `1048576` | Max MCP message size in bytes (1 MB default) |
 | `tls_cert` | string | — | Path to TLS certificate for HTTPS |
 | `tls_key` | string | — | Path to TLS private key for HTTPS |
 
@@ -356,7 +357,7 @@ Verify `sasl_mechanism`, `sasl_username`, and `sasl_password` match your broker 
 error: listen tcp :3100: bind: address already in use
 ```
 
-Another process is using the configured port. Either stop that process or change `server.port` in your config. The metrics endpoint runs on `port+1` (default 3101).
+Another process is using the configured port. Either stop that process or change `server.port` in your config. The metrics endpoint runs on `127.0.0.1:port+1` (default `127.0.0.1:3101`); in container or Kubernetes deployments you may need to expose it separately since it only binds to localhost.
 
 ### Permission denied
 
