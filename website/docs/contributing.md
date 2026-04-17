@@ -78,7 +78,7 @@ Adding a KafkaMCP tool usually touches four areas.
 
 ### 1. Register the tool
 
-Add the MCP tool definition in `internal/server/server.go`.
+Add the MCP tool definition in `internal/server/server.go` (in the `registerTools()` method).
 
 That includes:
 
@@ -89,9 +89,13 @@ That includes:
 
 ### 2. Implement the handler
 
-Add a handler in `internal/server/server.go` that:
+Add a handler in the appropriate handler file based on the tool's tier:
 
-- parses arguments
+- `internal/server/tools_p0.go` — Core (P0) tool handlers
+- `internal/server/tools_p1.go` — Advanced (P1) tool handlers
+- `internal/server/tools_p2.go` — Intelligence (P2) tool handlers
+
+The handler should:
 - checks rate limits
 - checks authorization if needed
 - calls into the Kafka, schema, or connect layer
