@@ -140,6 +140,11 @@ func (l *Logger) RecentEntries(n int) []Entry {
 	return result
 }
 
+// Recent is an alias for RecentEntries.
+func (l *Logger) Recent(n int) []Entry {
+	return l.RecentEntries(n)
+}
+
 // Close closes the audit logger.
 func (l *Logger) Close() error {
 	if closer, ok := l.fileWriter.(io.Closer); ok {
