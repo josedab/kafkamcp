@@ -386,6 +386,8 @@ func (m *Manager) Consume(ctx context.Context, cluster, topic string, partition 
 
 	perPartitionLimit := limit
 	if partition < 0 && len(targetPartitions) > 0 {
+		// Distribute limit across partitions; +1 per partition to ensure we meet
+		// the total limit despite integer division truncation.
 		perPartitionLimit = (limit / len(targetPartitions)) + 1
 	}
 
