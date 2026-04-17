@@ -67,3 +67,23 @@ audit:
   enabled: true
   max_entries: 10000
   # log_file: /var/log/kafkamcp/audit.jsonl
+
+# Data Masking & PII Redaction
+# Uncomment to enable policy-driven field-level masking before messages reach agents.
+# masking:
+#   enabled: true
+#   rules:
+#     - name: email-redaction
+#       type: email              # Built-in: email, ssn, credit_card, phone, regex, ner
+#       field_path: "**email**"  # JSON path pattern (** matches any depth)
+#     - name: ssn-redaction
+#       type: ssn
+#     - name: card-redaction
+#       type: credit_card
+#     - name: full-ner
+#       type: ner                # Lightweight NER: detects emails, SSN, credit cards, phone
+#       agents: ["restricted-agent"]  # Apply only to specific agents (empty = all)
+#     - name: custom-pattern
+#       type: regex
+#       pattern: "API_KEY_\\w+"
+#       replace: "[REDACTED_KEY]"
