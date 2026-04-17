@@ -279,6 +279,17 @@ func (s *Server) handleNaturalLanguageQuery(ctx context.Context, request mcp.Cal
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to list topics: %v", err)), nil
 	}
 
+	// Filter topics by agent's read permissions
+	if s.config.Policies.DefaultDeny {
+		var allowed []kafka.TopicSummary
+		for _, t := range topics {
+			if s.policyEngine.Authorize(agentID, auth.ResourceTopic, t.Name, auth.ActionRead) {
+				allowed = append(allowed, t)
+			}
+		}
+		topics = allowed
+	}
+
 	result, err := s.kafkaManager.NaturalLanguageQuery(ctx, cluster, query, topics)
 	if err != nil {
 		s.logAudit(agentID, "kafka_query", args, cluster, "error", 0, err, start)
