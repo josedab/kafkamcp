@@ -4,6 +4,7 @@
 
 [![Go](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)](https://go.dev)
 [![CI](https://github.com/kafkamcp/kafkamcp/actions/workflows/ci.yml/badge.svg)](https://github.com/kafkamcp/kafkamcp/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-check%20locally-brightgreen?style=flat)](coverage.out)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 KafkaMCP is an MCP (Model Context Protocol) server that transforms Apache Kafka into a first-class, agent-accessible data layer. It exposes Kafka topics, consumer groups, schemas, and cluster metadata as MCP tools and resources — enabling any MCP-compatible AI agent to discover, read from, write to, and reason about Kafka data with zero custom integration code.
@@ -251,7 +252,7 @@ sasl_password: "${KAFKA_PASSWORD:-changeme}"
 
 ### Prerequisites
 
-- Go 1.22+
+- Go 1.25+
 - Docker (for integration tests)
 - A Kafka cluster (local or remote)
 
