@@ -30,6 +30,10 @@ The request snippets below show the **tool name and arguments payload**. In a re
 | `kafka_describe_consumer_group` | Inspect one consumer group |
 | `kafka_list_consumer_groups` | List consumer groups |
 
+:::note Schema tools availability
+`kafka_list_schemas`, `kafka_get_schema`, and `kafka_check_schema_compatibility` are only registered when `schema_registry.url` is configured for at least one cluster. If no Schema Registry URL is set, these tools will not appear in the MCP tool list.
+:::
+
 ### Advanced (P1)
 
 | Tool | Purpose |
@@ -1071,3 +1075,21 @@ Interpret a natural-language request, choose a likely topic, and return matching
 - connector tools require `connect_url`
 - topic list and resource reads may be filtered by your policy rules when `default_deny` is enabled
 - every tool call is subject to audit logging and rate limiting
+
+## Validation limits
+
+KafkaMCP enforces the following runtime limits on tool parameters. Requests exceeding these limits are rejected with a validation error.
+
+| Constant | Value | Applies to |
+|---|---|---|
+| `MaxConsumeLimit` | 1,000 messages | `kafka_consume`, `kafka_subscribe` — max messages per call |
+| `MaxProduceMessages` | 100 messages | `kafka_produce` — max messages per call |
+| `MaxConsumeTimeout` | 60,000 ms | `kafka_consume` — max timeout |
+| `MaxSearchScan` | 100,000 messages | `kafka_search` — max messages to scan |
+| `DefaultSearchScan` | 10,000 messages | `kafka_search` — default scan count when not specified |
+| `MaxPartitions` | 10,000 | `kafka_create_topic` — max partition count |
+| `MaxReplicationFactor` | 10 | `kafka_create_topic` — max replication factor |
+| `MaxSchemaSize` | 1 MB (1,048,576 bytes) | `kafka_check_schema_compatibility` — max schema body size |
+| `MaxDLQMessages` | 10,000 messages | `kafka_analyze_dlq` — max messages to analyze |
+| `MaxJoinLimit` | 10,000 results | `kafka_join` — max result count |
+| `maxInputLength` | 1,024 characters | All tools — max length for user-supplied string parameters |
