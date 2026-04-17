@@ -88,3 +88,34 @@ func (l *Limiter) Allow(agentID string) bool {
 	// Deny agents without configured rate limits
 	return false
 }
+
+// AgentStatus describes the current rate limit state for an agent.
+type AgentStatus struct {
+	AgentID           string  `json:"agent_id"`
+	TokensRemaining   float64 `json:"tokens_remaining"`
+	MaxTokens         float64 `json:"max_tokens"`
+	RefillRatePerSec  float64 `json:"refill_rate_per_sec"`
+}
+
+// Status returns rate limit status for all configured agents.
+func (l *Limiter) Status() []AgentStatus {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	var result []AgentStatus
+	for agentID, b := range l.buckets {
+		now := time.Now()
+		elapsed := now.Sub(b.lastRefill).Seconds()
+		tokens := b.tokens + elapsed*b.refillRate
+		if tokens > b.maxTokens {
+			tokens = b.maxTokens
+		}
+		result = append(result, AgentStatus{
+			AgentID:          agentID,
+			TokensRemaining:  tokens,
+			MaxTokens:        b.maxTokens,
+			RefillRatePerSec: b.refillRate,
+		})
+	}
+	return result
+}
