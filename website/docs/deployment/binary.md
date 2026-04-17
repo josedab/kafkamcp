@@ -102,6 +102,17 @@ sudo systemctl status kafkamcp
 kafkamcp validate --config /etc/kafkamcp/kafkamcp.yaml
 ```
 
+## Graceful shutdown
+
+KafkaMCP handles `SIGINT` and `SIGTERM` for graceful shutdown. When a signal is received:
+
+1. The server stops accepting new connections.
+2. In-flight requests are given up to **10 seconds** to complete (the drain period).
+3. The metrics/health server is shut down with the same 10-second drain window.
+4. The process exits cleanly.
+
+For systemd deployments, the default `TimeoutStopSec=90s` is more than sufficient.
+
 ## Operational notes
 
 - main HTTP endpoint uses `server.port`

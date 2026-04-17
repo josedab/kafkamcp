@@ -223,3 +223,19 @@ In multi-cluster configurations, set exactly one cluster to `default: true`.
 - ingress or gateway rules when exposing KafkaMCP beyond the cluster
 
 Kubernetes deployment works best when KafkaMCP is treated like shared infrastructure: explicit config, strong policies, and standard platform observability.
+
+## Graceful shutdown
+
+KafkaMCP handles `SIGINT` and `SIGTERM` for graceful shutdown. When a signal is received:
+
+1. The server stops accepting new connections.
+2. In-flight requests are given up to **10 seconds** to complete (the drain period).
+3. The metrics/health server is shut down with the same 10-second drain window.
+4. The process exits cleanly.
+
+Set `terminationGracePeriodSeconds` in your pod spec to at least **15 seconds** (10 s drain + margin) to allow the shutdown to complete before Kubernetes force-kills the container:
+
+```yaml
+spec:
+  terminationGracePeriodSeconds: 30
+```
