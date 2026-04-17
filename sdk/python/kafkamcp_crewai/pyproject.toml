@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kafkamcp-crewai"
+version = "0.1.0"
+description = "CrewAI integration for KafkaMCP — Kafka-aware AI agent crews"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.9"
+dependencies = [
+    "crewai>=0.28.0",
+    "mcp>=1.0.0",
+    "pydantic>=2.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/kafkamcp/kafkamcp"
+Repository = "https://github.com/kafkamcp/kafkamcp/tree/main/sdk/python/kafkamcp_crewai"
+
+[tool.setuptools.packages.find]
+include = ["kafkamcp_crewai*"]
