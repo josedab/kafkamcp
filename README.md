@@ -167,6 +167,7 @@ Once connected, your AI agent can:
 - **Per-agent authorization** — YAML policy engine with default-deny, topic glob patterns
 - **Rate limiting** — Token bucket per agent, configurable via policy
 - **Agent ID extraction** — From `X-Agent-ID` or `X-Client-ID` headers
+- **TLS 1.3 minimum** — All TLS connections (Kafka broker, Connect API, HTTPS) enforce TLS 1.3 as the minimum version
 - **TLS support** — HTTPS for SSE/HTTP transports via `tls_cert`/`tls_key` config
 - **Audit logging** — Structured JSON audit trail (file + ring buffer)
 - **Auth-filtered list results** — Agents only see resources they're authorized to access

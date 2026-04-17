@@ -36,6 +36,7 @@ Controls how KafkaMCP listens for MCP traffic.
 ### Notes
 
 - `tls_cert` and `tls_key` must both be set to enable TLS.
+- KafkaMCP enforces **TLS 1.3** as the minimum version for all TLS connections (Kafka broker SSL, Kafka Connect REST API, and HTTPS server).
 - `stdio` is the right choice for local MCP subprocess clients such as Claude Desktop.
 - `sse` and `streamable-http` are the right choices for network-accessible deployments.
 
