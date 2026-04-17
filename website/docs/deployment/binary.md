@@ -120,4 +120,32 @@ For systemd deployments, the default `TimeoutStopSec=90s` is more than sufficien
 - set `audit.log_file` if you want durable JSONL audit logs
 - use environment variables for secrets instead of hard-coding credentials
 
+## HTTP configuration
+
+When using `sse` or `streamable-http` transports, KafkaMCP applies the following server settings.
+
+### Timeouts
+
+| Setting | Value | Description |
+|---|---|---|
+| `ReadHeaderTimeout` | 10 s | Maximum time to read request headers. |
+| `ReadTimeout` | 30 s | Maximum time to read the full request body. |
+| `IdleTimeout` | 120 s | Maximum time a keep-alive connection stays idle. |
+
+These timeouts apply to both the main MCP HTTP server and the metrics/health server.
+
+### Security headers
+
+Every HTTP response includes the following headers:
+
+| Header | Value | Purpose |
+|---|---|---|
+| `X-Content-Type-Options` | `nosniff` | Prevent MIME-type sniffing. |
+| `X-Frame-Options` | `DENY` | Block framing to prevent clickjacking. |
+| `Cache-Control` | `no-store` | Disable caching of MCP responses. |
+| `Content-Security-Policy` | `default-src 'none'` | Restrict resource loading. |
+| `Access-Control-Allow-Origin` | (empty) | MCP servers are not browser-facing; CORS is restricted. |
+| `Access-Control-Allow-Methods` | `GET, POST` | Allowed HTTP methods. |
+| `Access-Control-Allow-Headers` | `Content-Type, X-Agent-ID, X-Client-ID` | Allowed request headers. |
+
 Binary deployment is the cleanest option when you want predictable startup, direct process supervision, and minimal runtime dependencies.
