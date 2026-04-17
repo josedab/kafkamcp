@@ -29,6 +29,7 @@ Controls how KafkaMCP listens for MCP traffic.
 | `host` | string | No | `0.0.0.0` | Bind host for HTTP transports. Ignored for `stdio`. |
 | `port` | integer | No | `3100` | Bind port for HTTP transports. Metrics listen on `port + 1`. |
 | `log_level` | string | No | `info` | Log level: `debug`, `info`, `warn`, `error`. |
+| `max_message_size` | integer | No | `1048576` | Max MCP message size in bytes (1 MB). Used to validate produce message payloads. |
 | `tls_cert` | string | No | — | Path to TLS certificate for HTTPS. |
 | `tls_key` | string | No | — | Path to TLS private key for HTTPS. |
 
