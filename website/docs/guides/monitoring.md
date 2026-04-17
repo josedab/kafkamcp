@@ -157,6 +157,10 @@ histogram_quantile(
 - alert on denials separately from Kafka errors; they mean different problems
 - track `status="error"` on `kafkamcp_tool_calls_total` to spot failing tools early
 
+## Concurrency limits
+
+KafkaMCP limits concurrent execution of expensive tools (`kafka_aggregate`, `kafka_join`, `kafka_search`) to **5 simultaneous operations**. Additional requests are queued until a slot becomes available. Factor this into capacity planning when multiple agents run heavy analytics concurrently.
+
 :::tip
 Start with latency, denials, and throughput. Those three views answer most production questions quickly.
 :::
