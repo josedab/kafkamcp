@@ -93,7 +93,7 @@ func (c *Cache) removeElement(elem *list.Element) {
 	delete(c.entries, entry.key)
 }
 
-// Stats returns cache statistics.
+// CacheStats holds size and capacity metrics for the schema cache.
 type CacheStats struct {
 	Size       int `json:"size"`
 	MaxEntries int `json:"max_entries"`
