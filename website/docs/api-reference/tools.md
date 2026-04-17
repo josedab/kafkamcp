@@ -1068,6 +1068,20 @@ Interpret a natural-language request, choose a likely topic, and return matching
 }
 ```
 
+## Supported timestamp formats
+
+Tools that accept ISO 8601 timestamps (`kafka_consume`, `kafka_search`, `kafka_reset_offsets`, `kafka_aggregate`) recognize the following formats:
+
+| Format | Example |
+|---|---|
+| RFC 3339 | `2025-01-15T08:30:00Z` |
+| RFC 3339 Nano | `2025-01-15T08:30:00.123456789Z` |
+| ISO 8601 with `Z` | `2025-01-15T08:30:00Z` |
+| ISO 8601 without zone | `2025-01-15T08:30:00` |
+| Date only | `2025-01-15` |
+
+When using date-only format, the time defaults to `00:00:00 UTC`.
+
 ## Practical notes
 
 - omit `cluster` to use the default cluster
