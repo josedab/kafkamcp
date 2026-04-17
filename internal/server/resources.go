@@ -13,6 +13,7 @@ import (
 
 // ===================== RESOURCE HANDLERS =====================
 
+// handleClusterMetadata returns broker metadata for the default cluster.
 func (s *Server) handleClusterMetadata(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
@@ -39,6 +40,7 @@ func (s *Server) handleClusterMetadata(ctx context.Context, request mcp.ReadReso
 	return marshalResourceJSON("kafka://cluster/metadata", meta)
 }
 
+// handleClusterList returns a summary of all configured Kafka clusters.
 func (s *Server) handleClusterList(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
@@ -72,6 +74,7 @@ func (s *Server) handleClusterList(ctx context.Context, request mcp.ReadResource
 	return marshalResourceJSON("kafka://clusters", map[string]any{"clusters": clusters, "total_count": len(clusters)})
 }
 
+// handleTopicCatalog returns a catalog of all topics the agent is authorized to read.
 func (s *Server) handleTopicCatalog(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
@@ -108,6 +111,7 @@ func (s *Server) handleTopicCatalog(ctx context.Context, request mcp.ReadResourc
 	return marshalResourceJSON("kafka://topics", map[string]any{"topics": topics, "total_count": len(topics)})
 }
 
+// handleSchemaCatalog returns all Schema Registry subjects for the default cluster.
 func (s *Server) handleSchemaCatalog(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
@@ -138,6 +142,7 @@ func (s *Server) handleSchemaCatalog(ctx context.Context, request mcp.ReadResour
 	return marshalResourceJSON("kafka://schemas", map[string]any{"subjects": subjects, "total_count": len(subjects)})
 }
 
+// handleGroupCatalog returns all consumer groups for the default cluster.
 func (s *Server) handleGroupCatalog(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
@@ -164,6 +169,7 @@ func (s *Server) handleGroupCatalog(ctx context.Context, request mcp.ReadResourc
 	return marshalResourceJSON("kafka://groups", map[string]any{"groups": groups, "total_count": len(groups)})
 }
 
+// handleAuditLogResource returns recent audit log entries from the in-memory ring buffer.
 func (s *Server) handleAuditLogResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
@@ -184,6 +190,7 @@ func (s *Server) handleAuditLogResource(ctx context.Context, request mcp.ReadRes
 	return marshalResourceJSON("kafka://audit/log", map[string]any{"entries": entries, "count": len(entries)})
 }
 
+// handleTopicGraphResource returns a dependency graph of topics based on connector and consumer group relationships.
 func (s *Server) handleTopicGraphResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
@@ -210,6 +217,7 @@ func (s *Server) handleTopicGraphResource(ctx context.Context, request mcp.ReadR
 	return marshalResourceJSON("kafka://topic_graph", graph)
 }
 
+// handleTopicResource returns detailed metadata for a single topic identified by its URI.
 func (s *Server) handleTopicResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
@@ -244,6 +252,7 @@ func (s *Server) handleTopicResource(ctx context.Context, request mcp.ReadResour
 	return marshalResourceJSON(uri, detail)
 }
 
+// handleSchemaResource returns the latest schema for a subject identified by its URI.
 func (s *Server) handleSchemaResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
@@ -282,6 +291,7 @@ func (s *Server) handleSchemaResource(ctx context.Context, request mcp.ReadResou
 	return marshalResourceJSON(uri, info)
 }
 
+// handleGroupResource returns detailed state for a consumer group identified by its URI.
 func (s *Server) handleGroupResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
