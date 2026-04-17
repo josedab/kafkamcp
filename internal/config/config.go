@@ -29,6 +29,7 @@ type ServerConfig struct {
 	TLSKey         string `yaml:"tls_key,omitempty" json:"tls_key,omitempty"`   // Path to TLS private key file
 }
 
+// Address returns the "host:port" listen address, using defaults if not set.
 func (s ServerConfig) Address() string {
 	host := s.Host
 	if host == "" {
