@@ -492,7 +492,8 @@ func (m *Manager) Consume(ctx context.Context, cluster, topic string, partition 
 	return messages, nil
 }
 
-// ProduceOptions are options for the Produce call.
+// ProduceOptions configures acknowledgement semantics and serialization for
+// producing messages to Kafka.
 type ProduceOptions struct {
 	Acks       string `json:"acks"`       // "0", "1", "all"
 	Serializer string `json:"serializer"` // "auto", "json", "string"
@@ -583,7 +584,8 @@ func (m *Manager) Produce(ctx context.Context, cluster, topic string, messages [
 	return results, nil
 }
 
-// ProduceMessage is an input message for producing.
+// ProduceMessage is a single message to be published to a Kafka topic,
+// including an optional key, headers, and target partition override.
 type ProduceMessage struct {
 	Key       string            `json:"key"`
 	Value     any               `json:"value"`
@@ -591,7 +593,8 @@ type ProduceMessage struct {
 	Partition *int32            `json:"partition,omitempty"`
 }
 
-// SubscribeRequest defines parameters for a streaming subscription.
+// SubscribeRequest defines parameters for a consumer-group-based subscription
+// including topic, group ID, timeout, and deserialization settings.
 type SubscribeRequest struct {
 	Topic          string `json:"topic"`
 	GroupID        string `json:"group_id"`
@@ -601,7 +604,8 @@ type SubscribeRequest struct {
 	Deserializer   string `json:"deserializer"`
 }
 
-// SubscribeResult is the result of a subscription poll.
+// SubscribeResult contains the messages consumed during a subscription poll
+// along with metadata such as the consumer group ID and commit status.
 type SubscribeResult struct {
 	Messages    []Message `json:"messages"`
 	Count       int       `json:"count"`
