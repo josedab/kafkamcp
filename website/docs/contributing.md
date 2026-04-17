@@ -11,7 +11,7 @@ This guide covers the fastest path to building, testing, and contributing change
 
 ## Prerequisites
 
-- Go 1.22+
+- Go 1.25+
 - Docker (useful for integration-style work and the local Kafka examples)
 - Git
 
@@ -140,6 +140,30 @@ A strong PR description should include:
 - keep public behavior documented
 - preserve copy-paste-ready examples
 - add comments only when code needs clarification
+
+## Code style
+
+- Follow standard Go conventions (`gofmt`, `goimports`).
+- Use tabs for indentation (enforced by `gofmt`).
+- Keep exported types and functions documented with GoDoc comments.
+- Avoid unnecessary comments — let clear naming speak for itself.
+- Error messages should be lowercase and not end with punctuation.
+- Wrap errors with context: `fmt.Errorf("doing thing: %w", err)`.
+
+## Commit conventions
+
+Use [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+feat: add consumer group lag monitoring
+fix: handle nil partition in offset reset
+docs: update README with SSE transport example
+refactor: split server.go into per-tier handler files
+test: add policy engine edge case tests
+chore: update golangci-lint to v1.57
+```
+
+Keep commits focused — one logical change per commit.
 
 ## Code of conduct
 
