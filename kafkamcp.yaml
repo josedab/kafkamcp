@@ -18,6 +18,12 @@ clusters:
     #     username: "${SR_USERNAME}"
     #     password: "${SR_PASSWORD}"
 
+    # Optional: Kafka Connect
+    # connect_url: "http://localhost:8083"
+    # connect_tls:
+    #   ca_file: "/path/to/connect-ca.pem"
+    #   insecure_skip_verify: false
+
 # Schema Cache Configuration
 schema_cache:
   max_entries: 10000

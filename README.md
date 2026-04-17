@@ -234,6 +234,9 @@ Once connected, your AI agent can:
 | `schema_registry.auth.username` | string | No | Schema Registry basic-auth username |
 | `schema_registry.auth.password` | string | No | Schema Registry basic-auth password |
 | `connect_url` | string | No | Kafka Connect REST API base URL |
+| `connect_tls` | object | No | TLS settings for the Kafka Connect REST API |
+| `connect_tls.ca_file` | string | No | Path to CA certificate for verifying the Connect REST API server |
+| `connect_tls.insecure_skip_verify` | bool | No | Skip TLS certificate verification (default `false`) |
 | `default` | bool | No | Mark as default cluster |
 
 ### Policies
