@@ -11,11 +11,16 @@ import (
 "github.com/kafkamcp/kafkamcp/internal/audit"
 "github.com/kafkamcp/kafkamcp/internal/auth"
 "github.com/kafkamcp/kafkamcp/internal/config"
+"github.com/kafkamcp/kafkamcp/internal/dlq"
 "github.com/kafkamcp/kafkamcp/internal/kafka"
+"github.com/kafkamcp/kafkamcp/internal/masking"
 "github.com/kafkamcp/kafkamcp/internal/match"
 "github.com/kafkamcp/kafkamcp/internal/metrics"
+"github.com/kafkamcp/kafkamcp/internal/plugin"
 "github.com/kafkamcp/kafkamcp/internal/ratelimit"
+"github.com/kafkamcp/kafkamcp/internal/replication"
 "github.com/kafkamcp/kafkamcp/internal/schema"
+"github.com/kafkamcp/kafkamcp/internal/watch"
 "github.com/mark3labs/mcp-go/mcp"
 "github.com/mark3labs/mcp-go/server"
 )
@@ -34,6 +39,11 @@ metrics      *metrics.Metrics
 logger       *slog.Logger
 mcpServer    *server.MCPServer
 expensiveOps chan struct{} // semaphore for expensive operations (aggregate, join, search)
+watchManager   *watch.Manager       // event-driven watch subscriptions
+maskingEngine  *masking.Engine       // PII redaction engine
+dlqRemediator  *dlq.Remediator       // DLQ auto-remediation
+replicationMon *replication.Monitor   // cross-cluster replication monitoring
+pluginRegistry *plugin.Registry      // plugin/extension system
 }
 
 // New creates a new KafkaMCP server.
@@ -77,6 +87,11 @@ rateLimiter:    rl,
 metrics:        metrics.New(),
 logger:         logger,
 expensiveOps:   make(chan struct{}, 5), // max 5 concurrent expensive operations
+watchManager:   watch.NewManager(logger),
+maskingEngine:  masking.NewEngine(cfg.Masking, logger),
+dlqRemediator:  dlq.NewRemediator(logger),
+replicationMon: replication.NewMonitor(logger),
+pluginRegistry: plugin.NewRegistry(logger),
 }
 
 mcpServer := server.NewMCPServer(
@@ -107,6 +122,9 @@ func (s *Server) HealthCheck(ctx context.Context) error {
 // Close shuts down the server.
 func (s *Server) Close() error {
 s.kafkaManager.Close()
+if s.watchManager != nil {
+	s.watchManager.Close()
+}
 return s.auditLogger.Close()
 }
 
@@ -377,6 +395,35 @@ mcp.WithDescription("Accept a natural language description of desired data and t
 mcp.WithString("query", mcp.Required(), mcp.Description("Natural language description of the data you want")),
 mcp.WithString("cluster", mcp.Description("Cluster name.")),
 ), s.handleNaturalLanguageQuery)
+
+// P3 Tools
+s.mcpServer.AddTool(mcp.NewTool("kafka_watch",
+mcp.WithDescription("Register or manage event-driven watch subscriptions on topic patterns. When matching messages arrive, notifications are pushed via webhooks or MCP sampling."),
+mcp.WithString("action", mcp.Description("Action: subscribe, unsubscribe, list. Default: subscribe")),
+mcp.WithString("topic_pattern", mcp.Description("Glob pattern to match topics (e.g., 'orders.*', '*-dlq'). Required for subscribe.")),
+mcp.WithString("key_filter", mcp.Description("Filter messages where key contains this string")),
+mcp.WithString("value_filter", mcp.Description("Filter messages where value contains this string")),
+mcp.WithString("webhook_url", mcp.Description("URL to POST notifications to")),
+mcp.WithString("subscription_id", mcp.Description("Subscription ID (required for unsubscribe)")),
+), s.handleWatch)
+
+s.mcpServer.AddTool(mcp.NewTool("kafka_remediate_dlq",
+mcp.WithDescription("Auto-remediate DLQ messages: retry with backoff, route to correction topic, or generate fix suggestions using schema context."),
+mcp.WithString("topic", mcp.Required(), mcp.Description("DLQ topic name")),
+mcp.WithString("action", mcp.Description("Remediation action: analyze, retry, route, suggest. Default: analyze")),
+mcp.WithString("target_topic", mcp.Description("Target topic for routing remediation")),
+mcp.WithNumber("limit", mcp.Description("Max messages to process. Default: 100")),
+mcp.WithString("cluster", mcp.Description("Cluster name.")),
+), s.handleRemediateDLQ)
+
+if s.hasSchemaRegistry() {
+s.mcpServer.AddTool(mcp.NewTool("kafka_schema_diff",
+mcp.WithDescription("Compute a field-by-field diff between two schema versions showing additions, removals, and changes."),
+mcp.WithString("subject", mcp.Required(), mcp.Description("Schema subject name")),
+mcp.WithString("version_from", mcp.Required(), mcp.Description("Source version number")),
+mcp.WithString("version_to", mcp.Description("Target version number. Default: 'latest'")),
+), s.handleSchemaDiff)
+}
 }
 
 func (s *Server) registerResources() {
@@ -430,6 +477,21 @@ s.mcpServer.AddResourceTemplate(mcp.NewResourceTemplate("kafka://groups/{id}", "
 mcp.WithTemplateDescription("Members, offsets, lag per partition for a consumer group"),
 mcp.WithTemplateMIMEType("application/json"),
 ), s.handleGroupResource)
+
+s.mcpServer.AddResource(mcp.NewResource("kafka://replication/status", "Replication Status",
+mcp.WithResourceDescription("Cross-cluster replication status with lag per topic-partition"),
+mcp.WithMIMEType("application/json"),
+), s.handleReplicationStatus)
+
+s.mcpServer.AddResource(mcp.NewResource("kafka://plugins", "Plugin Registry",
+mcp.WithResourceDescription("Registered plugins and extensions"),
+mcp.WithMIMEType("application/json"),
+), s.handlePluginRegistry)
+
+s.mcpServer.AddResource(mcp.NewResource("kafka://watch/subscriptions", "Watch Subscriptions",
+mcp.WithResourceDescription("Active watch subscriptions for event-driven workflows"),
+mcp.WithMIMEType("application/json"),
+), s.handleWatchSubscriptionsResource)
 }
 
 // --- Auth & Rate Limit helpers ---
