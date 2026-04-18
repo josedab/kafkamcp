@@ -17,6 +17,7 @@ type Config struct {
 	SchemaCache CacheConfig    `yaml:"schema_cache" json:"schema_cache"`
 	Audit       AuditConfig    `yaml:"audit" json:"audit"`
 	Masking     MaskingConfig  `yaml:"masking,omitempty" json:"masking,omitempty"`
+	Telemetry   TelemetryConfig `yaml:"telemetry,omitempty" json:"telemetry,omitempty"`
 }
 
 // ServerConfig holds network transport and TLS settings for the MCP server.
@@ -143,6 +144,15 @@ type MaskingRule struct {
 	Pattern   string `yaml:"pattern,omitempty" json:"pattern,omitempty"` // Custom regex pattern (for type=regex)
 	Replace   string `yaml:"replace,omitempty" json:"replace,omitempty"` // Replacement string. Default: "***REDACTED***"
 	Agents    []string `yaml:"agents,omitempty" json:"agents,omitempty"` // Apply only to these agents. Empty = all.
+}
+
+// TelemetryConfig holds OpenTelemetry configuration for tracing.
+type TelemetryConfig struct {
+	Enabled     bool    `yaml:"enabled" json:"enabled"`
+	Endpoint    string  `yaml:"endpoint,omitempty" json:"endpoint,omitempty"`       // OTLP endpoint (e.g., "localhost:4318")
+	Insecure    bool    `yaml:"insecure,omitempty" json:"insecure,omitempty"`       // Use HTTP instead of HTTPS
+	ServiceName string  `yaml:"service_name,omitempty" json:"service_name,omitempty"` // Service name for traces
+	SampleRate  float64 `yaml:"sample_rate,omitempty" json:"sample_rate,omitempty"` // 0.0-1.0, default 1.0
 }
 
 var envVarPattern = regexp.MustCompile(`\$\{([^}]+)\}`)
