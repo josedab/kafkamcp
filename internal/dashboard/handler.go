@@ -21,7 +21,7 @@ var staticFS embed.FS
 
 // Dashboard serves the KafkaMCP web UI and REST API.
 type Dashboard struct {
-	kafkaManager *kafka.Manager
+	kafkaManager kafka.KafkaManager
 	auditLogger  *audit.Logger
 	rateLimiter  *ratelimit.Limiter
 	logger       *slog.Logger
@@ -32,7 +32,7 @@ type Dashboard struct {
 }
 
 // New creates a new dashboard server.
-func New(km *kafka.Manager, al *audit.Logger, rl *ratelimit.Limiter, logger *slog.Logger) *Dashboard {
+func New(km kafka.KafkaManager, al *audit.Logger, rl *ratelimit.Limiter, logger *slog.Logger) *Dashboard {
 	return &Dashboard{
 		kafkaManager: km,
 		auditLogger:  al,

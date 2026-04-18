@@ -88,7 +88,7 @@ func (r *Remediator) GetStats() RemediationStats {
 }
 
 // Remediate performs a remediation action on DLQ messages.
-func (r *Remediator) Remediate(ctx context.Context, mgr *kafka.Manager, cluster, topic, action, targetTopic string, limit int) (*RemediationResult, error) {
+func (r *Remediator) Remediate(ctx context.Context, mgr kafka.KafkaManager, cluster, topic, action, targetTopic string, limit int) (*RemediationResult, error) {
 	if limit <= 0 {
 		limit = 100
 	}
@@ -110,7 +110,7 @@ func (r *Remediator) Remediate(ctx context.Context, mgr *kafka.Manager, cluster,
 	}
 }
 
-func (r *Remediator) analyzeForRemediation(ctx context.Context, mgr *kafka.Manager, cluster, topic string, limit int) (*RemediationResult, error) {
+func (r *Remediator) analyzeForRemediation(ctx context.Context, mgr kafka.KafkaManager, cluster, topic string, limit int) (*RemediationResult, error) {
 	analysis, err := mgr.AnalyzeDLQ(ctx, cluster, topic, limit)
 	if err != nil {
 		return nil, fmt.Errorf("analyzing DLQ: %w", err)
@@ -144,7 +144,7 @@ func (r *Remediator) analyzeForRemediation(ctx context.Context, mgr *kafka.Manag
 	return result, nil
 }
 
-func (r *Remediator) retryMessages(ctx context.Context, mgr *kafka.Manager, cluster, topic string, limit int) (*RemediationResult, error) {
+func (r *Remediator) retryMessages(ctx context.Context, mgr kafka.KafkaManager, cluster, topic string, limit int) (*RemediationResult, error) {
 	// Determine the original topic by stripping DLQ suffix
 	originalTopic := deriveOriginalTopic(topic)
 
@@ -195,7 +195,7 @@ func (r *Remediator) retryMessages(ctx context.Context, mgr *kafka.Manager, clus
 	return result, nil
 }
 
-func (r *Remediator) routeMessages(ctx context.Context, mgr *kafka.Manager, cluster, topic, targetTopic string, limit int) (*RemediationResult, error) {
+func (r *Remediator) routeMessages(ctx context.Context, mgr kafka.KafkaManager, cluster, topic, targetTopic string, limit int) (*RemediationResult, error) {
 	msgs, err := mgr.Consume(ctx, cluster, topic, -1, "earliest", limit, 10000, "auto")
 	if err != nil {
 		return nil, fmt.Errorf("consuming DLQ messages: %w", err)
@@ -241,7 +241,7 @@ func (r *Remediator) routeMessages(ctx context.Context, mgr *kafka.Manager, clus
 	return result, nil
 }
 
-func (r *Remediator) suggestFixes(ctx context.Context, mgr *kafka.Manager, cluster, topic string, limit int) (*RemediationResult, error) {
+func (r *Remediator) suggestFixes(ctx context.Context, mgr kafka.KafkaManager, cluster, topic string, limit int) (*RemediationResult, error) {
 	analysis, err := mgr.AnalyzeDLQ(ctx, cluster, topic, limit)
 	if err != nil {
 		return nil, fmt.Errorf("analyzing DLQ for suggestions: %w", err)
