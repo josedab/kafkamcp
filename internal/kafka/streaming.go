@@ -1,0 +1,380 @@
+package kafka
+
+import (
+	"context"
+	"crypto/rand"
+	"encoding/hex"
+	"fmt"
+	"sync"
+	"sync/atomic"
+	"time"
+
+	"github.com/twmb/franz-go/pkg/kgo"
+)
+
+// StreamConfig defines parameters for a streaming consumer session.
+type StreamConfig struct {
+	Topic           string `json:"topic"`
+	GroupID         string `json:"group_id"`
+	BatchSize       int    `json:"batch_size"`
+	MaxMsgPerSec    int    `json:"max_msg_per_sec"`
+	MaxMessages     int    `json:"max_messages"`
+	TimeoutMs       int    `json:"timeout_ms"`
+	Deserializer    string `json:"deserializer"`
+	AutoCommit      bool   `json:"auto_commit"`
+}
+
+// StreamSession represents an active streaming consumer session.
+type StreamSession struct {
+	ID          string        `json:"id"`
+	Topic       string        `json:"topic"`
+	GroupID     string        `json:"group_id"`
+	Status      string        `json:"status"` // running, paused, stopped
+	StartedAt   string        `json:"started_at"`
+	MsgCount    int64         `json:"messages_delivered"`
+	BatchSize   int           `json:"batch_size"`
+
+	mu         sync.Mutex
+	cancel     context.CancelFunc
+	paused     atomic.Bool
+	stopped    atomic.Bool
+	messages   []Message
+	msgChan    chan []Message
+	errChan    chan error
+}
+
+// StreamResult contains the result of a stream poll or control operation.
+type StreamResult struct {
+	SessionID  string    `json:"session_id"`
+	Messages   []Message `json:"messages,omitempty"`
+	Count      int       `json:"count"`
+	Status     string    `json:"status"`
+	Topic      string    `json:"topic"`
+	GroupID    string    `json:"group_id"`
+	TotalSent  int64     `json:"total_delivered"`
+}
+
+// StreamManager manages active streaming sessions.
+type StreamManager struct {
+	mu       sync.RWMutex
+	sessions map[string]*StreamSession
+}
+
+// NewStreamManager creates a new stream session manager.
+func NewStreamManager() *StreamManager {
+	return &StreamManager{
+		sessions: make(map[string]*StreamSession),
+	}
+}
+
+func generateSessionID() string {
+	b := make([]byte, 8)
+	_, _ = rand.Read(b)
+	return "stream-" + hex.EncodeToString(b)
+}
+
+// StartStream creates and starts a new streaming consumer session.
+func (m *Manager) StartStream(ctx context.Context, cluster string, cfg StreamConfig) (*StreamResult, error) {
+	clCfg, err := m.GetClusterConfig(cluster)
+	if err != nil {
+		return nil, err
+	}
+
+	if cfg.BatchSize <= 0 {
+		cfg.BatchSize = 10
+	}
+	if cfg.BatchSize > 100 {
+		cfg.BatchSize = 100
+	}
+	if cfg.MaxMsgPerSec <= 0 {
+		cfg.MaxMsgPerSec = 1000
+	}
+	if cfg.MaxMessages <= 0 {
+		cfg.MaxMessages = 1000
+	}
+	if cfg.MaxMessages > 10000 {
+		cfg.MaxMessages = 10000
+	}
+	if cfg.TimeoutMs <= 0 {
+		cfg.TimeoutMs = 30000
+	}
+	if cfg.TimeoutMs > 60000 {
+		cfg.TimeoutMs = 60000
+	}
+	if cfg.Deserializer == "" {
+		cfg.Deserializer = "auto"
+	}
+
+	groupID := cfg.GroupID
+	if groupID == "" {
+		b := make([]byte, 8)
+		if _, err := rand.Read(b); err != nil {
+			return nil, fmt.Errorf("generating group ID: %w", err)
+		}
+		groupID = fmt.Sprintf("kafkamcp-stream-%s", hex.EncodeToString(b))
+	}
+
+	opts, err := m.clientOpts(clCfg)
+	if err != nil {
+		return nil, fmt.Errorf("building client options: %w", err)
+	}
+
+	opts = append(opts,
+		kgo.ConsumerGroup(groupID),
+		kgo.ConsumeTopics(cfg.Topic),
+		kgo.DisableAutoCommit(),
+	)
+
+	consumer, err := kgo.NewClient(opts...)
+	if err != nil {
+		return nil, fmt.Errorf("creating stream consumer: %w", err)
+	}
+
+	streamCtx, cancel := context.WithTimeout(ctx, time.Duration(cfg.TimeoutMs)*time.Millisecond)
+
+	session := &StreamSession{
+		ID:        generateSessionID(),
+		Topic:     cfg.Topic,
+		GroupID:   groupID,
+		Status:    "running",
+		StartedAt: time.Now().UTC().Format(time.RFC3339),
+		BatchSize: cfg.BatchSize,
+		cancel:    cancel,
+		msgChan:   make(chan []Message, 10),
+		errChan:   make(chan error, 1),
+	}
+
+	if m.streamMgr == nil {
+		m.streamMgr = NewStreamManager()
+	}
+	m.streamMgr.mu.Lock()
+	m.streamMgr.sessions[session.ID] = session
+	m.streamMgr.mu.Unlock()
+
+	// Background consumer goroutine
+	go func() {
+		defer consumer.Close()
+		defer cancel()
+		defer func() {
+			session.mu.Lock()
+			session.Status = "stopped"
+			session.mu.Unlock()
+		}()
+
+		var totalDelivered int64
+		ticker := time.NewTicker(time.Second / time.Duration(cfg.MaxMsgPerSec/cfg.BatchSize+1))
+		defer ticker.Stop()
+
+		for {
+			if session.stopped.Load() {
+				return
+			}
+			if session.paused.Load() {
+				select {
+				case <-streamCtx.Done():
+					return
+				case <-time.After(100 * time.Millisecond):
+					continue
+				}
+			}
+
+			select {
+			case <-streamCtx.Done():
+				return
+			case <-ticker.C:
+			}
+
+			if totalDelivered >= int64(cfg.MaxMessages) {
+				return
+			}
+
+			fetches := consumer.PollFetches(streamCtx)
+			if errs := fetches.Errors(); len(errs) > 0 {
+				for _, e := range errs {
+					if e.Err == context.DeadlineExceeded || e.Err == context.Canceled {
+						return
+					}
+				}
+			}
+
+			var batch []Message
+			fetches.EachRecord(func(r *kgo.Record) {
+				if totalDelivered >= int64(cfg.MaxMessages) {
+					return
+				}
+				headers := make(map[string]string)
+				for _, h := range r.Headers {
+					headers[h.Key] = string(h.Value)
+				}
+				batch = append(batch, Message{
+					Partition: r.Partition,
+					Offset:    r.Offset,
+					Timestamp: r.Timestamp.UTC().Format("2006-01-02T15:04:05.000Z"),
+					Key:       decodeValue(r.Key, cfg.Deserializer),
+					Value:     decodeValue(r.Value, cfg.Deserializer),
+					Headers:   headers,
+				})
+				if len(batch) >= cfg.BatchSize {
+					select {
+					case session.msgChan <- batch:
+						atomic.AddInt64(&session.MsgCount, int64(len(batch)))
+						totalDelivered += int64(len(batch))
+					case <-streamCtx.Done():
+						return
+					}
+					batch = nil
+				}
+			})
+
+			// Flush remaining batch
+			if len(batch) > 0 {
+				select {
+				case session.msgChan <- batch:
+					atomic.AddInt64(&session.MsgCount, int64(len(batch)))
+					totalDelivered += int64(len(batch))
+				case <-streamCtx.Done():
+					return
+				}
+			}
+
+			if cfg.AutoCommit {
+				if err := consumer.CommitUncommittedOffsets(streamCtx); err != nil {
+					m.logger.Warn("stream commit failed", "session", session.ID, "error", err)
+				}
+			}
+
+			if fetches.NumRecords() == 0 {
+				select {
+				case <-streamCtx.Done():
+					return
+				case <-time.After(100 * time.Millisecond):
+				}
+			}
+		}
+	}()
+
+	return &StreamResult{
+		SessionID: session.ID,
+		Status:    "started",
+		Topic:     cfg.Topic,
+		GroupID:   groupID,
+	}, nil
+}
+
+// PollStream retrieves available messages from an active stream session.
+func (m *Manager) PollStream(sessionID string, timeoutMs int) (*StreamResult, error) {
+	if m.streamMgr == nil {
+		return nil, fmt.Errorf("no active stream sessions")
+	}
+
+	m.streamMgr.mu.RLock()
+	session, ok := m.streamMgr.sessions[sessionID]
+	m.streamMgr.mu.RUnlock()
+
+	if !ok {
+		return nil, fmt.Errorf("stream session %q not found", sessionID)
+	}
+
+	if timeoutMs <= 0 {
+		timeoutMs = 5000
+	}
+
+	var messages []Message
+	timeout := time.After(time.Duration(timeoutMs) * time.Millisecond)
+
+	// Collect messages until timeout or batch full
+	for {
+		select {
+		case batch := <-session.msgChan:
+			messages = append(messages, batch...)
+			if len(messages) >= session.BatchSize {
+				goto done
+			}
+		case <-timeout:
+			goto done
+		}
+	}
+
+done:
+	return &StreamResult{
+		SessionID: sessionID,
+		Messages:  messages,
+		Count:     len(messages),
+		Status:    session.Status,
+		Topic:     session.Topic,
+		GroupID:   session.GroupID,
+		TotalSent: atomic.LoadInt64(&session.MsgCount),
+	}, nil
+}
+
+// ControlStream pauses, resumes, or stops a stream session.
+func (m *Manager) ControlStream(sessionID, action string) (*StreamResult, error) {
+	if m.streamMgr == nil {
+		return nil, fmt.Errorf("no active stream sessions")
+	}
+
+	m.streamMgr.mu.RLock()
+	session, ok := m.streamMgr.sessions[sessionID]
+	m.streamMgr.mu.RUnlock()
+
+	if !ok {
+		return nil, fmt.Errorf("stream session %q not found", sessionID)
+	}
+
+	switch action {
+	case "pause":
+		session.paused.Store(true)
+		session.mu.Lock()
+		session.Status = "paused"
+		session.mu.Unlock()
+	case "resume":
+		session.paused.Store(false)
+		session.mu.Lock()
+		session.Status = "running"
+		session.mu.Unlock()
+	case "stop":
+		session.stopped.Store(true)
+		session.cancel()
+		session.mu.Lock()
+		session.Status = "stopped"
+		session.mu.Unlock()
+		// Remove from manager
+		m.streamMgr.mu.Lock()
+		delete(m.streamMgr.sessions, sessionID)
+		m.streamMgr.mu.Unlock()
+	default:
+		return nil, fmt.Errorf("unknown action %q; must be: pause, resume, stop", action)
+	}
+
+	return &StreamResult{
+		SessionID: sessionID,
+		Status:    session.Status,
+		Topic:     session.Topic,
+		GroupID:   session.GroupID,
+		TotalSent: atomic.LoadInt64(&session.MsgCount),
+	}, nil
+}
+
+// ListStreams returns all active stream sessions.
+func (m *Manager) ListStreams() []StreamSession {
+	if m.streamMgr == nil {
+		return nil
+	}
+
+	m.streamMgr.mu.RLock()
+	defer m.streamMgr.mu.RUnlock()
+
+	var sessions []StreamSession
+	for _, s := range m.streamMgr.sessions {
+		sessions = append(sessions, StreamSession{
+			ID:        s.ID,
+			Topic:     s.Topic,
+			GroupID:   s.GroupID,
+			Status:    s.Status,
+			StartedAt: s.StartedAt,
+			MsgCount:  atomic.LoadInt64(&s.MsgCount),
+			BatchSize: s.BatchSize,
+		})
+	}
+	return sessions
+}

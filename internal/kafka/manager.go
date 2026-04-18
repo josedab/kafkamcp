@@ -24,12 +24,13 @@ import (
 
 // Manager manages Kafka client connections for multiple clusters.
 type Manager struct {
-	mu       sync.RWMutex
-	clients  map[string]*kgo.Client
-	admins   map[string]*kadm.Client
-	configs  map[string]*config.ClusterConfig
-	logger   *slog.Logger
-	defClust string
+	mu        sync.RWMutex
+	clients   map[string]*kgo.Client
+	admins    map[string]*kadm.Client
+	configs   map[string]*config.ClusterConfig
+	logger    *slog.Logger
+	defClust  string
+	streamMgr *StreamManager
 }
 
 // NewManager creates a new Kafka Manager from the provided config.
