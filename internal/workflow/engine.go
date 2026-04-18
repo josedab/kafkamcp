@@ -349,8 +349,9 @@ func (e *Engine) CompleteStep(execID string, result StepResult) error {
 }
 
 func (e *Engine) getStepOnError(exec *Execution) string {
-	tmpl, err := e.GetTemplate(exec.TemplateName)
-	if err != nil || exec.CurrentStep-1 < 0 || exec.CurrentStep-1 >= len(tmpl.Steps) {
+	// Caller must already hold e.mu — access templates directly.
+	tmpl, ok := e.templates[exec.TemplateName]
+	if !ok || exec.CurrentStep-1 < 0 || exec.CurrentStep-1 >= len(tmpl.Steps) {
 		return "stop"
 	}
 	onErr := tmpl.Steps[exec.CurrentStep-1].OnError
