@@ -43,6 +43,35 @@ type KafkaManager interface {
 	JoinTopics(ctx context.Context, cluster string, req JoinRequest) (*JoinResult, error)
 	NaturalLanguageQuery(ctx context.Context, cluster, query string, topics []TopicSummary) (*NaturalLanguageQueryResult, error)
 	AnalyzeDLQ(ctx context.Context, cluster, topic string, limit int) (*AnalyzeDLQResult, error)
+
+	// Streaming operations
+	StartStream(ctx context.Context, cluster string, cfg StreamConfig) (*StreamResult, error)
+	PollStream(sessionID string, timeoutMs int) (*StreamResult, error)
+	ControlStream(sessionID, action string) (*StreamResult, error)
+	ListStreams() []StreamSession
+
+	// Time-travel operations
+	TimeTravelSnapshot(ctx context.Context, cluster, topic, timestamp string, maxKeys int) (*TimeTravelSnapshot, error)
+	TimeTravelDiff(ctx context.Context, cluster, topic, tsFrom, tsTo string, maxKeys int) (*TimeTravelDiffResult, error)
+
+	// Recommendations
+	GetRecommendations(ctx context.Context, cluster, topic string) (*RecommendationResult, error)
+
+	// Message tracing
+	TraceMessage(ctx context.Context, cluster, correlationID, headerName string, topics []string, maxScan int) (*TraceResult, error)
+
+	// ACL operations
+	ListACLs(ctx context.Context, cluster, principal, resourceType string, includeAnalysis bool) (*ACLResult, error)
+
+	// Config drift
+	CompareConfigs(ctx context.Context, sourceCluster, targetCluster, topic string) (*ConfigCompareResult, error)
+	AuditConfigs(ctx context.Context, cluster, topic string, template map[string]string) (*ConfigAuditResult, error)
+
+	// Playground operations
+	PlaygroundCreate(ctx context.Context, cluster, agentID, name string, partitions int32) (*PlaygroundTopicResult, error)
+	PlaygroundProduceSample(ctx context.Context, cluster, agentID, name, pattern string, count int) (map[string]any, error)
+	PlaygroundList(ctx context.Context, cluster, agentID string) ([]TopicSummary, error)
+	PlaygroundCleanup(ctx context.Context, cluster, agentID string) (int, error)
 }
 
 // Verify Manager implements KafkaManager at compile time.
