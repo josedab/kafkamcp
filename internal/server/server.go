@@ -12,23 +12,30 @@ import (
 "github.com/kafkamcp/kafkamcp/internal/audit"
 "github.com/kafkamcp/kafkamcp/internal/auth"
 "github.com/kafkamcp/kafkamcp/internal/config"
+"github.com/kafkamcp/kafkamcp/internal/contracts"
 "github.com/kafkamcp/kafkamcp/internal/cost"
 "github.com/kafkamcp/kafkamcp/internal/dlq"
+"github.com/kafkamcp/kafkamcp/internal/forecast"
 "github.com/kafkamcp/kafkamcp/internal/gitops"
 "github.com/kafkamcp/kafkamcp/internal/graph"
 "github.com/kafkamcp/kafkamcp/internal/kafka"
+"github.com/kafkamcp/kafkamcp/internal/lagdiag"
+"github.com/kafkamcp/kafkamcp/internal/lineage"
 "github.com/kafkamcp/kafkamcp/internal/masking"
 "github.com/kafkamcp/kafkamcp/internal/match"
 "github.com/kafkamcp/kafkamcp/internal/metrics"
+"github.com/kafkamcp/kafkamcp/internal/migration"
 "github.com/kafkamcp/kafkamcp/internal/nlquery"
 "github.com/kafkamcp/kafkamcp/internal/platform"
 "github.com/kafkamcp/kafkamcp/internal/plugin"
 "github.com/kafkamcp/kafkamcp/internal/ratelimit"
 "github.com/kafkamcp/kafkamcp/internal/replication"
 "github.com/kafkamcp/kafkamcp/internal/schema"
+"github.com/kafkamcp/kafkamcp/internal/selfheal"
 "github.com/kafkamcp/kafkamcp/internal/telemetry"
 "github.com/kafkamcp/kafkamcp/internal/watch"
 "github.com/kafkamcp/kafkamcp/internal/workflow"
+"github.com/kafkamcp/kafkamcp/internal/persona"
 "github.com/mark3labs/mcp-go/mcp"
 "github.com/mark3labs/mcp-go/server"
 otelTrace "go.opentelemetry.io/otel/trace"
@@ -37,7 +44,7 @@ otelTrace "go.opentelemetry.io/otel/trace"
 // Server is the KafkaMCP MCP server.
 type Server struct {
 config       *config.Config
-kafkaManager *kafka.Manager
+kafkaManager kafka.KafkaManager
 schemaClients map[string]*schema.Client // per-cluster schema clients
 connectMu      sync.RWMutex
 connectClients map[string]*kafka.ConnectClient // cached per-cluster Connect clients
@@ -62,10 +69,17 @@ costAnalyzer   *cost.Analyzer        // Kafka cost analysis
 gitopsManager  *gitops.Manager       // GitOps configuration management
 knowledgeGraph *graph.KnowledgeGraph // embedded knowledge graph
 platformMgr    *platform.Manager     // multi-platform abstraction
+contractEngine *contracts.Engine     // schema-aware data contracts
+lagAnalyzer    *lagdiag.Analyzer     // consumer lag root cause analysis
+migrationPlanner *migration.Planner  // kafka migration assistant
+lineageTracker *lineage.Tracker      // topic data lineage
+selfHealMon    *selfheal.Monitor     // self-healing consumer groups
+personaEngine  *persona.Engine       // declarative agent personas
+forecaster     *forecast.Forecaster  // intelligent capacity forecasting
 }
 
 // New creates a new KafkaMCP server.
-func New(cfg *config.Config, kafkaManager *kafka.Manager, logger *slog.Logger, version string) (*Server, error) {
+func New(cfg *config.Config, kafkaManager kafka.KafkaManager, logger *slog.Logger, version string) (*Server, error) {
 // Per-cluster schema registry clients
 schemaClients := make(map[string]*schema.Client)
 for _, cl := range cfg.Clusters {
@@ -119,6 +133,13 @@ costAnalyzer:   cost.NewAnalyzer(logger),
 gitopsManager:  gitops.NewManager(logger),
 knowledgeGraph: graph.NewKnowledgeGraph(logger),
 platformMgr:    platform.NewManager(logger),
+contractEngine: contracts.NewEngine(),
+lagAnalyzer:    lagdiag.NewAnalyzer(),
+migrationPlanner: migration.NewPlanner(),
+lineageTracker: lineage.NewTracker(),
+selfHealMon:    selfheal.NewMonitor(),
+personaEngine:  persona.NewEngine(),
+forecaster:     forecast.NewForecaster(30),
 }
 
 mcpServer := server.NewMCPServer(
@@ -662,6 +683,63 @@ mcp.WithString("cluster", mcp.Description("Cluster name.")),
 s.mcpServer.AddTool(mcp.NewTool("kafka_platform_info",
 mcp.WithDescription("Get information about configured Kafka-compatible platforms (Apache Kafka, Redpanda, Confluent Cloud, MSK Serverless) and their capabilities."),
 ), s.handlePlatformInfo)
+
+// Data Contracts
+s.mcpServer.AddTool(mcp.NewTool("kafka_validate_contract",
+mcp.WithDescription("Validate messages against data contracts, register contracts, or get compliance reports. Actions: validate, register, get, list, compliance."),
+mcp.WithString("action", mcp.Required(), mcp.Description("Action: validate, register, get, list, compliance")),
+mcp.WithString("topic", mcp.Description("Topic name")),
+mcp.WithObject("contract", mcp.Description("Contract definition for register action")),
+mcp.WithObject("message", mcp.Description("Message value to validate")),
+mcp.WithString("cluster", mcp.Description("Cluster name.")),
+), s.handleDataContract)
+
+// Consumer Lag Diagnosis
+s.mcpServer.AddTool(mcp.NewTool("kafka_diagnose_lag",
+mcp.WithDescription("Deep diagnostic analysis of consumer group lag. Traces root cause: slow consumers, producer spikes, partition imbalance, or GC pressure."),
+mcp.WithString("group_id", mcp.Required(), mcp.Description("Consumer group ID")),
+mcp.WithString("cluster", mcp.Description("Cluster name.")),
+), s.handleDiagnoseLag)
+
+// Migration Planning
+s.mcpServer.AddTool(mcp.NewTool("kafka_migration_plan",
+mcp.WithDescription("Plan and validate Kafka migrations between clusters. Actions: plan (diff clusters), validate (check plan), list (show plans)."),
+mcp.WithString("action", mcp.Required(), mcp.Description("Action: plan, validate, list")),
+mcp.WithString("source_cluster", mcp.Description("Source cluster name")),
+mcp.WithString("target_cluster", mcp.Description("Target cluster name")),
+), s.handleMigrationPlan)
+
+// Data Lineage
+s.mcpServer.AddTool(mcp.NewTool("kafka_trace_lineage",
+mcp.WithDescription("Track data lineage through Kafka topics. Shows producer→topic→consumer relationships, PII annotations, and GDPR/CCPA compliance reports."),
+mcp.WithString("action", mcp.Required(), mcp.Description("Action: trace, annotate_pii, compliance_report, detect_pii")),
+mcp.WithString("topic", mcp.Description("Topic name")),
+mcp.WithString("framework", mcp.Description("Compliance framework: GDPR, CCPA")),
+mcp.WithString("cluster", mcp.Description("Cluster name.")),
+), s.handleTraceLineage)
+
+// Consumer Group Health
+s.mcpServer.AddTool(mcp.NewTool("kafka_group_health",
+mcp.WithDescription("Evaluate consumer group health with scoring (0-100), detect zombies, rebalance storms, stuck partitions, and suggest auto-remediation."),
+mcp.WithString("group_id", mcp.Required(), mcp.Description("Consumer group ID")),
+mcp.WithString("cluster", mcp.Description("Cluster name.")),
+), s.handleGroupHealth)
+
+// Agent Personas
+s.mcpServer.AddTool(mcp.NewTool("kafka_persona",
+mcp.WithDescription("Manage declarative agent personas. Actions: list (all personas), get (persona details), activate (set active persona)."),
+mcp.WithString("action", mcp.Required(), mcp.Description("Action: list, get, activate")),
+mcp.WithString("persona", mcp.Description("Persona name: sre, data-engineer, compliance, developer, admin")),
+), s.handlePersona)
+
+// Capacity Forecasting
+s.mcpServer.AddTool(mcp.NewTool("kafka_forecast",
+mcp.WithDescription("ML-based capacity forecasting using linear regression and seasonal decomposition. Predicts throughput growth and storage needs."),
+mcp.WithString("topic", mcp.Required(), mcp.Description("Topic name")),
+mcp.WithString("metric", mcp.Description("Metric to forecast: throughput, storage, lag. Default: throughput")),
+mcp.WithNumber("horizon_days", mcp.Description("Forecast horizon in days. Default: 7")),
+mcp.WithString("cluster", mcp.Description("Cluster name.")),
+), s.handleForecast)
 }
 
 func (s *Server) registerResources() {
