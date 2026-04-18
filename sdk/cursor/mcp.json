@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "kafkamcp": {
+      "command": "kafkamcp",
+      "args": ["--transport", "stdio"],
+      "env": {
+        "KAFKAMCP_CONFIG": "./kafkamcp.yaml"
+      }
+    }
+  }
+}
