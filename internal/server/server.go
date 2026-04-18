@@ -8,20 +8,27 @@ import (
 "sync"
 "time"
 
+"github.com/kafkamcp/kafkamcp/internal/anomaly"
 "github.com/kafkamcp/kafkamcp/internal/audit"
 "github.com/kafkamcp/kafkamcp/internal/auth"
 "github.com/kafkamcp/kafkamcp/internal/config"
+"github.com/kafkamcp/kafkamcp/internal/cost"
 "github.com/kafkamcp/kafkamcp/internal/dlq"
+"github.com/kafkamcp/kafkamcp/internal/gitops"
+"github.com/kafkamcp/kafkamcp/internal/graph"
 "github.com/kafkamcp/kafkamcp/internal/kafka"
 "github.com/kafkamcp/kafkamcp/internal/masking"
 "github.com/kafkamcp/kafkamcp/internal/match"
 "github.com/kafkamcp/kafkamcp/internal/metrics"
+"github.com/kafkamcp/kafkamcp/internal/nlquery"
+"github.com/kafkamcp/kafkamcp/internal/platform"
 "github.com/kafkamcp/kafkamcp/internal/plugin"
 "github.com/kafkamcp/kafkamcp/internal/ratelimit"
 "github.com/kafkamcp/kafkamcp/internal/replication"
 "github.com/kafkamcp/kafkamcp/internal/schema"
 "github.com/kafkamcp/kafkamcp/internal/telemetry"
 "github.com/kafkamcp/kafkamcp/internal/watch"
+"github.com/kafkamcp/kafkamcp/internal/workflow"
 "github.com/mark3labs/mcp-go/mcp"
 "github.com/mark3labs/mcp-go/server"
 otelTrace "go.opentelemetry.io/otel/trace"
@@ -48,6 +55,13 @@ replicationMon *replication.Monitor   // cross-cluster replication monitoring
 pluginRegistry *plugin.Registry      // plugin/extension system
 agentRegistry  *kafka.AgentRegistry  // multi-agent collaboration
 otelProvider   *telemetry.Provider   // OpenTelemetry trace provider
+anomalyDetector *anomaly.Detector    // AI-powered anomaly detection
+nlQueryEngine  *nlquery.Engine       // natural language query engine
+workflowEngine *workflow.Engine      // agent workflow templates
+costAnalyzer   *cost.Analyzer        // Kafka cost analysis
+gitopsManager  *gitops.Manager       // GitOps configuration management
+knowledgeGraph *graph.KnowledgeGraph // embedded knowledge graph
+platformMgr    *platform.Manager     // multi-platform abstraction
 }
 
 // New creates a new KafkaMCP server.
@@ -98,6 +112,13 @@ replicationMon: replication.NewMonitor(logger),
 pluginRegistry: plugin.NewRegistry(logger),
 agentRegistry:  kafka.NewAgentRegistry(),
 otelProvider:   nil, // set via SetOTelProvider after initialization
+anomalyDetector: anomaly.NewDetector(anomaly.DefaultConfig(), logger),
+nlQueryEngine:  nlquery.NewEngine(logger),
+workflowEngine: workflow.NewEngine(logger),
+costAnalyzer:   cost.NewAnalyzer(logger),
+gitopsManager:  gitops.NewManager(logger),
+knowledgeGraph: graph.NewKnowledgeGraph(logger),
+platformMgr:    platform.NewManager(logger),
 }
 
 mcpServer := server.NewMCPServer(
@@ -560,6 +581,87 @@ mcp.WithString("data_pattern", mcp.Description("Sample data pattern: ecommerce, 
 mcp.WithNumber("count", mcp.Description("Number of sample messages to produce. Default: 10")),
 mcp.WithString("cluster", mcp.Description("Cluster name.")),
 ), s.handlePlayground)
+
+// ===================== NEW FEATURE TOOLS =====================
+
+// Anomaly Detection
+s.mcpServer.AddTool(mcp.NewTool("kafka_anomalies",
+mcp.WithDescription("Get AI-detected anomalies in consumer lag, throughput, and error rates. Uses z-score and IQR statistical models with configurable sensitivity."),
+mcp.WithString("severity", mcp.Description("Filter by severity: warning, critical")),
+mcp.WithString("metric", mcp.Description("Filter by metric type: consumer_lag, throughput, error_rate")),
+mcp.WithNumber("limit", mcp.Description("Max alerts to return. Default: 50")),
+mcp.WithNumber("since_hours", mcp.Description("Look back period in hours. Default: 24")),
+), s.handleAnomalies)
+
+s.mcpServer.AddTool(mcp.NewTool("kafka_anomaly_ingest",
+mcp.WithDescription("Manually ingest a data point for anomaly detection analysis."),
+mcp.WithString("metric", mcp.Required(), mcp.Description("Metric type: consumer_lag, throughput, error_rate")),
+mcp.WithString("source", mcp.Required(), mcp.Description("Source name (topic or consumer group)")),
+mcp.WithNumber("value", mcp.Required(), mcp.Description("Metric value")),
+), s.handleIngestAnomaly)
+
+// Natural Language Query
+s.mcpServer.AddTool(mcp.NewTool("kafka_nl_query",
+mcp.WithDescription("Query Kafka with plain English. Parses natural language into consume + filter + aggregate pipelines. Examples: 'show me all failed orders in the last hour', 'count errors in logs', 'average latency for payments'."),
+mcp.WithString("query", mcp.Required(), mcp.Description("Natural language query")),
+mcp.WithString("cluster", mcp.Description("Cluster name.")),
+), s.handleNLQuery)
+
+// Cost Analysis
+s.mcpServer.AddTool(mcp.NewTool("kafka_cost_analyze",
+mcp.WithDescription("Analyze storage and compute costs for a Kafka topic. Estimates monthly cost based on retention, partitions, throughput, and replication."),
+mcp.WithString("topic", mcp.Required(), mcp.Description("Topic name")),
+mcp.WithString("provider", mcp.Description("Cost model: aws-msk, confluent-cloud, self-hosted. Default: aws-msk")),
+mcp.WithString("cluster", mcp.Description("Cluster name.")),
+), s.handleCostAnalyze)
+
+s.mcpServer.AddTool(mcp.NewTool("kafka_cost_waste",
+mcp.WithDescription("Detect cost waste across all topics: idle topics, over-replication, compression opportunities, excessive retention."),
+mcp.WithString("provider", mcp.Description("Cost model: aws-msk, confluent-cloud, self-hosted. Default: aws-msk")),
+mcp.WithString("cluster", mcp.Description("Cluster name.")),
+), s.handleCostWaste)
+
+s.mcpServer.AddTool(mcp.NewTool("kafka_cost_whatif",
+mcp.WithDescription("Simulate configuration changes and see cost impact. What-if analysis for retention, compression, partitions, and replication changes."),
+mcp.WithString("topic", mcp.Required(), mcp.Description("Topic name")),
+mcp.WithNumber("new_retention_ms", mcp.Description("New retention period in ms")),
+mcp.WithString("new_compression", mcp.Description("New compression type: gzip, snappy, lz4, zstd, none")),
+mcp.WithNumber("new_partitions", mcp.Description("New partition count")),
+mcp.WithNumber("new_replication_factor", mcp.Description("New replication factor")),
+mcp.WithString("provider", mcp.Description("Cost model. Default: aws-msk")),
+mcp.WithString("cluster", mcp.Description("Cluster name.")),
+), s.handleCostWhatIf)
+
+// Workflow Templates
+s.mcpServer.AddTool(mcp.NewTool("kafka_workflows",
+mcp.WithDescription("Manage pre-built workflow templates for common Kafka operations. Actions: list (browse templates), describe (get template details), execute (start a workflow)."),
+mcp.WithString("action", mcp.Required(), mcp.Description("Action: list, describe, execute")),
+mcp.WithString("template", mcp.Description("Template name (required for describe/execute)")),
+mcp.WithString("category", mcp.Description("Filter by category: operations, planning, development, monitoring, discovery, quality, debugging")),
+mcp.WithObject("params", mcp.Description("Parameters for template execution")),
+mcp.WithString("topic", mcp.Description("Topic parameter for workflow")),
+mcp.WithString("group_id", mcp.Description("Consumer group parameter for workflow")),
+mcp.WithString("subject", mcp.Description("Schema subject parameter for workflow")),
+), s.handleWorkflows)
+
+// GitOps
+s.mcpServer.AddTool(mcp.NewTool("kafka_gitops_diff",
+mcp.WithDescription("Compare desired Kafka configuration (declarative YAML) against live cluster state. Generates a diff and migration plan with dry-run support."),
+mcp.WithObject("topics", mcp.Description("Array of desired topic specs: [{name, partitions, replication_factor, configs}]")),
+mcp.WithString("cluster", mcp.Description("Cluster name.")),
+), s.handleGitOpsDiff)
+
+// Knowledge Graph
+s.mcpServer.AddTool(mcp.NewTool("kafka_knowledge_graph",
+mcp.WithDescription("Query the embedded knowledge graph of topic relationships, consumer group topologies, and schema dependencies. Supports: 'depends_on <node>', 'impacts <node>', 'path <from> to <to>', 'neighbors <node>', 'type <node_type>', or free-text search."),
+mcp.WithString("query", mcp.Required(), mcp.Description("Graph query (e.g., 'depends_on orders', 'impacts user-events', 'type consumer_group')")),
+mcp.WithString("cluster", mcp.Description("Cluster name.")),
+), s.handleKnowledgeGraphQuery)
+
+// Platform Info
+s.mcpServer.AddTool(mcp.NewTool("kafka_platform_info",
+mcp.WithDescription("Get information about configured Kafka-compatible platforms (Apache Kafka, Redpanda, Confluent Cloud, MSK Serverless) and their capabilities."),
+), s.handlePlatformInfo)
 }
 
 func (s *Server) registerResources() {
@@ -628,6 +730,32 @@ s.mcpServer.AddResource(mcp.NewResource("kafka://watch/subscriptions", "Watch Su
 mcp.WithResourceDescription("Active watch subscriptions for event-driven workflows"),
 mcp.WithMIMEType("application/json"),
 ), s.handleWatchSubscriptionsResource)
+
+// New Feature Resources
+s.mcpServer.AddResource(mcp.NewResource("kafka://anomalies", "Anomaly Alerts",
+mcp.WithResourceDescription("AI-detected anomalies in consumer lag, throughput, and error rates (last 24h)"),
+mcp.WithMIMEType("application/json"),
+), s.handleAnomalyResource)
+
+s.mcpServer.AddResource(mcp.NewResource("kafka://workflows", "Workflow Templates",
+mcp.WithResourceDescription("Pre-built workflow templates for common Kafka operations"),
+mcp.WithMIMEType("application/json"),
+), s.handleWorkflowsResource)
+
+s.mcpServer.AddResource(mcp.NewResource("kafka://knowledge_graph", "Knowledge Graph",
+mcp.WithResourceDescription("Topic relationships, schema dependencies, and consumer group topology graph"),
+mcp.WithMIMEType("application/json"),
+), s.handleKnowledgeGraphResource)
+
+s.mcpServer.AddResource(mcp.NewResource("kafka://flow_graph", "Message Flow Graph",
+mcp.WithResourceDescription("Real-time message flow visualization with throughput and latency data"),
+mcp.WithMIMEType("application/json"),
+), s.handleFlowGraphResource)
+
+s.mcpServer.AddResource(mcp.NewResource("kafka://platforms", "Platform Info",
+mcp.WithResourceDescription("Configured Kafka-compatible platforms and their capabilities"),
+mcp.WithMIMEType("application/json"),
+), s.handlePlatformResource)
 }
 
 // --- Auth & Rate Limit helpers ---
