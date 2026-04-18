@@ -1,0 +1,153 @@
+{
+  "name": "kafkamcp",
+  "displayName": "KafkaMCP",
+  "description": "Kafka tools powered by KafkaMCP - topic browsing, message inspection, schema management, and AI-powered operations directly in VS Code",
+  "version": "0.1.0",
+  "publisher": "kafkamcp",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Data Science",
+    "Other"
+  ],
+  "keywords": [
+    "kafka",
+    "mcp",
+    "streaming",
+    "schema-registry",
+    "consumer-groups"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "kafkamcp-explorer",
+          "title": "KafkaMCP",
+          "icon": "resources/kafka-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "kafkamcp-explorer": [
+        {
+          "id": "kafkamcp-topics",
+          "name": "Topics"
+        },
+        {
+          "id": "kafkamcp-schemas",
+          "name": "Schemas"
+        },
+        {
+          "id": "kafkamcp-groups",
+          "name": "Consumer Groups"
+        },
+        {
+          "id": "kafkamcp-workflows",
+          "name": "Workflows"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "kafkamcp.connect",
+        "title": "KafkaMCP: Connect to Server"
+      },
+      {
+        "command": "kafkamcp.refreshTopics",
+        "title": "KafkaMCP: Refresh Topics"
+      },
+      {
+        "command": "kafkamcp.consumeMessages",
+        "title": "KafkaMCP: Consume Messages"
+      },
+      {
+        "command": "kafkamcp.produceMessage",
+        "title": "KafkaMCP: Produce Message"
+      },
+      {
+        "command": "kafkamcp.describeTopic",
+        "title": "KafkaMCP: Describe Topic"
+      },
+      {
+        "command": "kafkamcp.searchMessages",
+        "title": "KafkaMCP: Search Messages"
+      },
+      {
+        "command": "kafkamcp.viewSchema",
+        "title": "KafkaMCP: View Schema"
+      },
+      {
+        "command": "kafkamcp.runWorkflow",
+        "title": "KafkaMCP: Run Workflow"
+      },
+      {
+        "command": "kafkamcp.analyzeCost",
+        "title": "KafkaMCP: Analyze Cost"
+      },
+      {
+        "command": "kafkamcp.nlQuery",
+        "title": "KafkaMCP: Natural Language Query"
+      }
+    ],
+    "configuration": {
+      "title": "KafkaMCP",
+      "properties": {
+        "kafkamcp.serverUrl": {
+          "type": "string",
+          "default": "http://localhost:8080",
+          "description": "KafkaMCP server URL"
+        },
+        "kafkamcp.agentId": {
+          "type": "string",
+          "default": "vscode-extension",
+          "description": "Agent ID for authentication"
+        },
+        "kafkamcp.autoRefresh": {
+          "type": "boolean",
+          "default": true,
+          "description": "Auto-refresh topic list"
+        },
+        "kafkamcp.refreshIntervalMs": {
+          "type": "number",
+          "default": 30000,
+          "description": "Auto-refresh interval in milliseconds"
+        }
+      }
+    },
+    "menus": {
+      "view/item/context": [
+        {
+          "command": "kafkamcp.consumeMessages",
+          "when": "viewItem == topic",
+          "group": "inline"
+        },
+        {
+          "command": "kafkamcp.describeTopic",
+          "when": "viewItem == topic"
+        },
+        {
+          "command": "kafkamcp.viewSchema",
+          "when": "viewItem == schema"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.56.0",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {}
+}
