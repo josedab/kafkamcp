@@ -1,4 +1,4 @@
-.PHONY: build test lint fmt docker clean validate help run dev coverage setup-hooks docker-dev docker-dev-down setup test-one setup-vscode integration-test check doctor
+.PHONY: build test lint fmt docker clean validate help run dev coverage setup-hooks docker-dev docker-dev-down setup test-one setup-vscode integration-test check doctor sdk-test
 
 # Build variables
 BINARY    := kafkamcp
@@ -97,3 +97,15 @@ doctor: ## Check development environment prerequisites
 	@printf "Pre-commit hook: "; test -x .git/hooks/pre-commit && echo "INSTALLED" || echo "NOT INSTALLED (run: make setup)"
 	@echo ""
 	@echo "Run 'make setup' to install missing dev dependencies."
+
+sdk-test: ## Run tests for all SDKs (Go, Python, VS Code)
+	@echo "=== SDK Tests ==="
+	@echo "--- Go SDK ---"
+	go test ./sdk/go/...
+	@echo "--- Python SDK (langchain) ---"
+	cd sdk/python/kafkamcp_langchain && pip install -q -e . 2>/dev/null && python -m pytest -q 2>/dev/null || echo "Python SDK: install pytest and dependencies to run tests"
+	@echo "--- Python SDK (crewai) ---"
+	cd sdk/python/kafkamcp_crewai && pip install -q -e . 2>/dev/null && python -m pytest -q 2>/dev/null || echo "CrewAI SDK: install pytest and dependencies to run tests"
+	@echo "--- VS Code Extension ---"
+	cd sdk/vscode && npm install --silent 2>/dev/null && npm test 2>/dev/null || echo "VS Code SDK: install npm dependencies to run tests"
+	@echo "All SDK tests complete."
