@@ -87,3 +87,12 @@ audit:
 #       type: regex
 #       pattern: "API_KEY_\\w+"
 #       replace: "[REDACTED_KEY]"
+
+# OpenTelemetry Tracing
+# Uncomment to enable distributed tracing via OTLP.
+# telemetry:
+#   enabled: true
+#   endpoint: "localhost:4317"     # OTLP gRPC collector endpoint
+#   insecure: true                 # Use insecure connection (disable TLS)
+#   service_name: "kafkamcp"       # Service name in traces
+#   sample_rate: 1.0               # Sampling rate (0.0 = none, 1.0 = all)
