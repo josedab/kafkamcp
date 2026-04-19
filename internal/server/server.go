@@ -277,7 +277,8 @@ return nil
 
 // --- Auth & Rate Limit helpers ---
 
-// toolAuthConfig defines auth requirements for a tool handler.
+// toolAuthConfig defines the authorization requirements for a tool handler,
+// specifying which resource type and action to check against the policy engine.
 type toolAuthConfig struct {
 	tool         string
 	resourceType auth.ResourceType
@@ -287,11 +288,13 @@ type toolAuthConfig struct {
 	resourceName func(mcp.CallToolRequest) string
 }
 
-// toolHandler is a handler function that receives pre-validated context.
+// toolHandler is a handler function that processes an MCP tool call after
+// agent identity, rate limiting, and authorization have been validated.
 type toolHandler func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error)
 
-// withToolAuth wraps a tool handler with agent ID extraction, rate limiting,
-// auth checking, and audit logging. It eliminates repeated boilerplate across handlers.
+// withToolAuth wraps a tool handler with cross-cutting concerns: agent ID
+// extraction, OpenTelemetry span creation, rate limiting, authorization
+// checks, and audit logging. It eliminates repeated boilerplate across handlers.
 func (s *Server) withToolAuth(cfg toolAuthConfig, handler toolHandler) func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		start := time.Now()
@@ -328,6 +331,8 @@ func (s *Server) withToolAuth(cfg toolAuthConfig, handler toolHandler) func(ctx 
 	}
 }
 
+// checkAuth verifies that the given agent is authorized to perform the specified
+// action on the resource. Returns a denial result if unauthorized, nil if allowed.
 func (s *Server) checkAuth(agentID, tool string, resource auth.ResourceType, resourceName string, action auth.Action) *mcp.CallToolResult {
 if deny := s.validateAgentID(agentID); deny != nil {
 	return deny
@@ -340,6 +345,8 @@ return mcp.NewToolResultError("Unauthorized: insufficient permission for this op
 return nil
 }
 
+// checkRateLimit checks whether the agent has exceeded its rate limit.
+// Returns a denial result if rate-limited, nil if the request is allowed.
 func (s *Server) checkRateLimit(agentID, tool string) *mcp.CallToolResult {
 if !s.rateLimiter.Allow(agentID) {
 s.metrics.RateLimitDenials.WithLabelValues(metrics.SanitizeAgentLabel(agentID), tool).Inc()
@@ -368,10 +375,13 @@ case <-ctx.Done():
 }
 }
 
+// releaseExpensiveOp releases a slot from the expensive operation semaphore.
 func (s *Server) releaseExpensiveOp() {
 <-s.expensiveOps
 }
 
+// resolveClusterName returns the given cluster name if it maps to a valid
+// configured cluster, otherwise falls back to the default cluster.
 func (s *Server) resolveClusterName(cluster string) string {
 if cluster != "" {
 	// Only return the cluster name if it's a valid configured cluster
@@ -384,6 +394,7 @@ if cluster != "" {
 return s.kafkaManager.DefaultClusterName()
 }
 
+// logAudit records a tool call in the audit log and increments Prometheus metrics.
 func (s *Server) logAudit(agentID, tool string, params map[string]any, cluster, status string, count int, err error, start time.Time) {
 latency := time.Since(start)
 entry := audit.Entry{
@@ -432,6 +443,7 @@ for _, key := range keys {
 return sanitized
 }
 
+// marshalResult serializes a value as indented JSON and wraps it in an MCP tool result.
 func marshalResult(v any) (*mcp.CallToolResult, error) {
 data, err := json.MarshalIndent(v, "", "  ")
 if err != nil {
@@ -440,6 +452,7 @@ return mcp.NewToolResultError(fmt.Sprintf("Failed to marshal result: %v", err)),
 return mcp.NewToolResultText(string(data)), nil
 }
 
+// marshalResourceJSON serializes a value as JSON resource contents for MCP resource responses.
 func marshalResourceJSON(uri string, v any) ([]mcp.ResourceContents, error) {
 data, err := json.MarshalIndent(v, "", "  ")
 if err != nil {
@@ -461,6 +474,7 @@ func (s *Server) validateResourceAgentID(agentID string) error {
 	return nil
 }
 
+// matchTopicFilter checks whether a topic name matches a glob pattern.
 func matchTopicFilter(pattern, name string) bool {
 	return match.Glob(pattern, name)
 }
@@ -485,7 +499,12 @@ func validateStringLength(name, value string) *mcp.CallToolResult {
 }
 
 // Tool and resource handler implementations are in:
-// - tools_p0.go  (P0 handlers: list topics, describe, consume, produce, schemas, consumer groups)
-// - tools_p1.go  (P1 handlers: create/alter/delete topic, search, reset offsets, DLQ, subscribe)
-// - tools_p2.go  (P2 handlers: aggregate, schema evolution, connectors, join, NL query)
-// - resources.go (Resource handlers: cluster, topics, schemas, groups, audit, graph)
+// - tools_p0.go           (P0 handlers: list topics, describe, consume, produce, schemas, consumer groups)
+// - tools_p1.go           (P1 handlers: create/alter/delete topic, search, reset offsets, DLQ, subscribe)
+// - tools_p2.go           (P2 handlers: aggregate, schema evolution, connectors, join, NL query)
+// - tools_p3.go           (P3 handlers: watch, DLQ remediation, schema diff, streaming, agent registry)
+// - tools_advanced.go     (Advanced handlers: connector CRUD, time travel, recommend, trace, ACLs, config drift, playground)
+// - tools_features.go     (Feature handlers: anomalies, NL query, cost analysis, workflows, GitOps, knowledge graph, contracts)
+// - tools_streaming.go    (Streaming consumer session management)
+// - tools_new_features.go (New features: lag diagnosis, migration, lineage, group health, personas, forecasting)
+// - resources.go          (Resource handlers: cluster, topics, schemas, groups, audit, graph)
