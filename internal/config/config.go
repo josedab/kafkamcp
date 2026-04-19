@@ -202,7 +202,7 @@ func Load(path string) (*Config, error) {
 	if info, err := os.Stat(path); err == nil {
 		mode := info.Mode().Perm()
 		if mode&0044 != 0 {
-			fmt.Fprintf(os.Stderr, "WARNING: config file %q has permissive permissions (%04o); consider chmod 600 if it contains credentials\n", path, mode)
+			fmt.Fprintf(os.Stderr, "SECURITY WARNING: config file %q has permissive permissions (%04o); run 'chmod 600 %s' if it contains credentials\n", path, mode, path)
 		}
 	}
 
