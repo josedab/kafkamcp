@@ -24,27 +24,31 @@ const defaultReplacement = "***REDACTED***"
 
 // Rule is a compiled masking rule ready for evaluation.
 type Rule struct {
-	Name      string
-	Type      string
-	FieldPath string
-	Pattern   *regexp.Regexp
-	Replace   string
-	Agents    map[string]bool // empty = apply to all
+	Name        string
+	Type        string
+	FieldPath   string
+	Pattern     *regexp.Regexp
+	Replace     string
+	Agents      map[string]bool // empty = apply to all
+	Sensitivity SensitivityLevel
+	Action      string // "redact", "hash", "mask_partial", "tokenize"
 }
 
 // Engine applies masking rules to message values before they reach agents.
 type Engine struct {
-	mu     sync.RWMutex
-	rules  []Rule
-	enabled bool
-	logger *slog.Logger
+	mu            sync.RWMutex
+	rules         []Rule
+	enabled       bool
+	logger        *slog.Logger
+	policyManager *PolicyManager
 }
 
 // NewEngine creates a masking engine from configuration.
 func NewEngine(cfg config.MaskingConfig, logger *slog.Logger) *Engine {
 	e := &Engine{
-		enabled: cfg.Enabled,
-		logger:  logger,
+		enabled:       cfg.Enabled,
+		logger:        logger,
+		policyManager: NewPolicyManager(),
 	}
 
 	for _, r := range cfg.Rules {
@@ -311,6 +315,51 @@ func luhnCheck(number string) bool {
 // Enabled returns whether the masking engine is active.
 func (e *Engine) Enabled() bool {
 	return e.enabled
+}
+
+// PolicyManager returns the engine's policy manager.
+func (e *Engine) PolicyManager() *PolicyManager {
+	return e.policyManager
+}
+
+// ApplyAction applies a specific masking action to a value.
+func (e *Engine) ApplyAction(action, value, replacement string) string {
+	switch action {
+	case "hash":
+		return HashValue(value)
+	case "mask_partial":
+		return MaskPartial(value, 4)
+	case "tokenize":
+		return HashValue(value)
+	case "redact":
+		if replacement == "" {
+			return defaultReplacement
+		}
+		return replacement
+	default:
+		if replacement == "" {
+			return defaultReplacement
+		}
+		return replacement
+	}
+}
+
+// DetectPIIInValue scans a value and returns detected PII types.
+func (e *Engine) DetectPIIInValue(value any) []PIIDetection {
+	switch v := value.(type) {
+	case string:
+		return DetectPII(v)
+	case map[string]any:
+		var all []PIIDetection
+		for _, val := range v {
+			if s, ok := val.(string); ok {
+				all = append(all, DetectPII(s)...)
+			}
+		}
+		return all
+	default:
+		return nil
+	}
 }
 
 // RuleCount returns the number of compiled masking rules.
