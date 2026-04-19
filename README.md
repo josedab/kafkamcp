@@ -4,7 +4,7 @@
 
 [![Go](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)](https://go.dev)
 [![CI](https://github.com/kafkamcp/kafkamcp/actions/workflows/ci.yml/badge.svg)](https://github.com/kafkamcp/kafkamcp/actions/workflows/ci.yml)
-[![Coverage](https://img.shields.io/badge/coverage-check%20locally-brightgreen?style=flat)](coverage.out)
+[![Coverage](https://codecov.io/gh/kafkamcp/kafkamcp/branch/main/graph/badge.svg)](https://codecov.io/gh/kafkamcp/kafkamcp)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 KafkaMCP is an MCP (Model Context Protocol) server that transforms Apache Kafka into a first-class, agent-accessible data layer. It exposes Kafka topics, consumer groups, schemas, and cluster metadata as MCP tools and resources — enabling any MCP-compatible AI agent to discover, read from, write to, and reason about Kafka data with zero custom integration code.
@@ -390,6 +390,10 @@ Another process is using the configured port. Either stop that process or change
 ### Permission denied
 
 If using access control (`default_deny: true`), ensure the connecting agent's ID is listed in your policies and has the required permissions for the topics/groups it needs to access. Check audit logs for denied requests.
+
+### More Help
+
+For additional troubleshooting guides, see the [full troubleshooting documentation](https://kafkamcp.dev/docs/troubleshooting).
 
 ## Documentation & Community
 
