@@ -35,3 +35,6 @@ coverage.html
 website/node_modules/
 website/.docusaurus/
 website/build/
+
+# Air hot-reload temp files
+tmp/
