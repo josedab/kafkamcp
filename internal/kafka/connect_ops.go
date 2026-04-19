@@ -292,7 +292,10 @@ func (c *ConnectClient) httpDelete(ctx context.Context, reqURL string) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode >= 400 {
-		body, _ := io.ReadAll(io.LimitReader(resp.Body, 10<<20))
+		body, readErr := io.ReadAll(io.LimitReader(resp.Body, 10<<20))
+		if readErr != nil {
+			return fmt.Errorf("Connect API error (HTTP %d): failed to read response body: %w", resp.StatusCode, readErr)
+		}
 		return fmt.Errorf("Connect API error (HTTP %d): %s", resp.StatusCode, string(body))
 	}
 	return nil
