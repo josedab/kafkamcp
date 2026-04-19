@@ -419,4 +419,4 @@ To report a vulnerability, please see [SECURITY.md](SECURITY.md).
 - [x] **v0.4**: All MCP resources (10 static + 3 templates)
 - [ ] **v1.0**: Cloud managed service, enterprise features (SSO, data masking)
 
-See the [PRD](PRD.md) for the complete roadmap.
+See the [PRD](docs/internal/PRD.md) for the complete roadmap.

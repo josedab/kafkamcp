@@ -68,7 +68,7 @@ kafkamcp/
 ├── examples/              # Example configs and docker-compose files
 ├── website/               # Docusaurus docs site
 ├── Dockerfile
-├── PRD.md
+├── docs/internal/PRD.md
 └── kafkamcp.yaml
 ```
 
