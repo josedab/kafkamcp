@@ -1,4 +1,4 @@
-.PHONY: build test lint fmt docker clean validate help run dev coverage setup-hooks docker-dev docker-dev-down setup test-one setup-vscode integration-test check doctor sdk-test
+.PHONY: build test lint fmt docker clean validate help run dev coverage setup-hooks docker-dev docker-dev-down setup test-one setup-vscode integration-test check doctor sdk-test quickstart benchmark docker-compose-full vet sdk-setup deps changelog
 
 # Build variables
 BINARY    := kafkamcp
@@ -72,7 +72,7 @@ setup: setup-hooks ## Install all dev dependencies (golangci-lint, air, goimport
 	@command -v goimports >/dev/null 2>&1 || { echo "  Installing goimports..."; go install golang.org/x/tools/cmd/goimports@latest; }
 	@echo "All dev dependencies installed."
 
-validate: fmt lint test build ## Run all checks (fmt, lint, test, build)
+validate: fmt vet lint test build ## Run all checks (fmt, vet, lint, test, build)
 
 check: validate ## Alias for validate
 
@@ -98,14 +98,49 @@ doctor: ## Check development environment prerequisites
 	@echo ""
 	@echo "Run 'make setup' to install missing dev dependencies."
 
+quickstart: setup docker-dev build run ## One-command setup: install deps, start Kafka, build, and run
+
+benchmark: ## Run Go benchmarks with memory stats
+	go test -bench=. -benchmem -run=^$$ ./...
+
+docker-compose-full: ## Start full Kafka + KafkaMCP stack
+	docker compose -f examples/docker-compose-kafkamcp.yaml up -d
+
+vet: ## Run go vet for static analysis
+	go vet ./...
+
+deps: ## Check for outdated and vulnerable Go dependencies
+	@echo "=== Outdated Dependencies ==="
+	@go list -m -u all 2>/dev/null | grep '\[' || echo "All dependencies up to date."
+	@echo ""
+	@echo "=== Vulnerability Check ==="
+	@command -v govulncheck >/dev/null 2>&1 || { echo "Installing govulncheck..."; go install golang.org/x/vuln/cmd/govulncheck@latest; }
+	govulncheck ./...
+
+changelog: ## Generate CHANGELOG.md from Conventional Commits
+	@command -v git-chglog >/dev/null 2>&1 || { echo "Installing git-chglog..."; go install github.com/git-chglog/git-chglog/cmd/git-chglog@latest; }
+	git-chglog -o CHANGELOG.md
+	@echo "CHANGELOG.md updated."
+
+sdk-setup: ## Install SDK test dependencies (Python, Node.js)
+	@echo "=== SDK Dependency Setup ==="
+	@echo "Prerequisites: Python 3.8+, pip, Node.js 18+, npm"
+	@echo "--- Python SDK (langchain) ---"
+	cd sdk/python/kafkamcp_langchain && pip install -q -e ".[test]" 2>/dev/null || pip install -q -e . 2>/dev/null || echo "FAILED: pip install for kafkamcp_langchain"
+	@echo "--- Python SDK (crewai) ---"
+	cd sdk/python/kafkamcp_crewai && pip install -q -e ".[test]" 2>/dev/null || pip install -q -e . 2>/dev/null || echo "FAILED: pip install for kafkamcp_crewai"
+	@echo "--- VS Code Extension ---"
+	cd sdk/vscode && npm install --silent 2>/dev/null || echo "FAILED: npm install for vscode extension"
+	@echo "SDK dependencies installed."
+
 sdk-test: ## Run tests for all SDKs (Go, Python, VS Code)
 	@echo "=== SDK Tests ==="
 	@echo "--- Go SDK ---"
 	go test ./sdk/go/...
 	@echo "--- Python SDK (langchain) ---"
-	cd sdk/python/kafkamcp_langchain && pip install -q -e . 2>/dev/null && python -m pytest -q 2>/dev/null || echo "Python SDK: install pytest and dependencies to run tests"
+	cd sdk/python/kafkamcp_langchain && pip install -q -e . && python -m pytest -q
 	@echo "--- Python SDK (crewai) ---"
-	cd sdk/python/kafkamcp_crewai && pip install -q -e . 2>/dev/null && python -m pytest -q 2>/dev/null || echo "CrewAI SDK: install pytest and dependencies to run tests"
+	cd sdk/python/kafkamcp_crewai && pip install -q -e . && python -m pytest -q
 	@echo "--- VS Code Extension ---"
-	cd sdk/vscode && npm install --silent 2>/dev/null && npm test 2>/dev/null || echo "VS Code SDK: install npm dependencies to run tests"
+	cd sdk/vscode && npm install --silent && npm test
 	@echo "All SDK tests complete."
