@@ -24,6 +24,7 @@ var (
 	version  = "0.1.0"
 	cfgFile  string
 	logLevel string
+	debug    bool
 )
 
 func main() {
@@ -41,6 +42,7 @@ and compose — with zero custom integration code.`,
 
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "kafkamcp.yaml", "Path to configuration file")
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "", "Override log level (debug, info, warn, error)")
+	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "Enable debug logging (shorthand for --log-level debug)")
 
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "version",
@@ -75,6 +77,9 @@ func runServer(cmd *cobra.Command, args []string) error {
 	}
 
 	// CLI flag overrides config file log level
+	if debug && logLevel == "" {
+		logLevel = "debug"
+	}
 	if logLevel != "" {
 		cfg.Server.LogLevel = logLevel
 	}
