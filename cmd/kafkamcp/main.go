@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -92,6 +93,12 @@ func runServer(cmd *cobra.Command, args []string) error {
 
 	kafkaManager, err := kafka.NewManager(cfg, logger)
 	if err != nil {
+		if isConnectionRefused(err) {
+			return fmt.Errorf("cannot connect to Kafka at %s: %w\n\n"+
+				"Hint: Run 'make docker-dev' to start a local Kafka cluster, "+
+				"or verify that bootstrap_servers in your config points to a running broker.",
+				cfg.Clusters[0].BootstrapServers, err)
+		}
 		return fmt.Errorf("creating kafka manager: %w", err)
 	}
 
@@ -208,6 +215,18 @@ func runServer(cmd *cobra.Command, args []string) error {
 	default:
 		return fmt.Errorf("unsupported transport: %s", cfg.Server.Transport)
 	}
+}
+
+// isConnectionRefused checks if an error indicates a Kafka connection failure.
+func isConnectionRefused(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	return strings.Contains(msg, "connection refused") ||
+		strings.Contains(msg, "no such host") ||
+		strings.Contains(msg, "i/o timeout") ||
+		strings.Contains(msg, "dial tcp")
 }
 
 // securityHeadersMiddleware adds standard security headers to HTTP responses.
