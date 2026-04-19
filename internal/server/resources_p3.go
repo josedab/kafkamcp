@@ -148,7 +148,7 @@ func extractSchemaFields(schema any) map[string]any {
 		if fieldsArr, ok := s["fields"].([]any); ok {
 			for _, f := range fieldsArr {
 				if field, ok := f.(map[string]any); ok {
-					name, _ := field["name"].(string)
+					name, _ := field["name"].(string) //nolint:errcheck // safe: zero value if not string
 					if name != "" {
 						fields[name] = field["type"]
 					}

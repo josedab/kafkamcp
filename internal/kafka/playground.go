@@ -142,7 +142,7 @@ func generateEcommerceMessage(rng *rand.Rand, idx int) ProduceMessage {
 		"timestamp":  time.Now().UTC().Format(time.RFC3339),
 	}
 
-	valueBytes, _ := json.Marshal(value)
+	valueBytes, _ := json.Marshal(value) //nolint:errcheck // marshaling simple map literals cannot fail
 	return ProduceMessage{Key: orderID, Value: json.RawMessage(valueBytes)}
 }
 
@@ -160,7 +160,7 @@ func generateIOTMessage(rng *rand.Rand, idx int) ProduceMessage {
 			"lon": -122.0 + rng.Float64()*5.0,
 		},
 	}
-	valueBytes, _ := json.Marshal(value)
+	valueBytes, _ := json.Marshal(value) //nolint:errcheck // marshaling simple map literals cannot fail
 	return ProduceMessage{Key: deviceID, Value: json.RawMessage(valueBytes)}
 }
 
@@ -179,7 +179,7 @@ func generateUserActivityMessage(rng *rand.Rand, idx int) ProduceMessage {
 		"timestamp":  time.Now().UTC().Format(time.RFC3339),
 		"user_agent": "Mozilla/5.0 (Sample Data)",
 	}
-	valueBytes, _ := json.Marshal(value)
+	valueBytes, _ := json.Marshal(value) //nolint:errcheck // marshaling simple map literals cannot fail
 	return ProduceMessage{Key: userID, Value: json.RawMessage(valueBytes)}
 }
 
@@ -208,6 +208,6 @@ func generateLogMessage(rng *rand.Rand, idx int) ProduceMessage {
 		"timestamp": time.Now().UTC().Format(time.RFC3339Nano),
 		"host":      fmt.Sprintf("%s-%d", service, rng.Intn(5)),
 	}
-	valueBytes, _ := json.Marshal(value)
+	valueBytes, _ := json.Marshal(value) //nolint:errcheck // marshaling simple map literals cannot fail
 	return ProduceMessage{Key: service, Value: json.RawMessage(valueBytes)}
 }

@@ -191,7 +191,7 @@ func (e *Engine) checkRule(rule QualityRule, value map[string]any) *Violation {
 		}
 
 	case "enum":
-		str, _ := fieldVal.(string)
+		str, _ := fieldVal.(string) //nolint:errcheck // safe: zero value if not string
 		if !exists || str == "" {
 			return &Violation{
 				Rule:     rule.Rule,
@@ -218,7 +218,7 @@ func (e *Engine) checkRule(rule QualityRule, value map[string]any) *Violation {
 		}
 
 	case "regex":
-		str, _ := fieldVal.(string)
+		str, _ := fieldVal.(string) //nolint:errcheck // safe: zero value if not string
 		if !exists {
 			return &Violation{
 				Rule:     rule.Rule,
@@ -246,7 +246,7 @@ func (e *Engine) checkRule(rule QualityRule, value map[string]any) *Violation {
 		}
 
 	case "min_length":
-		str, _ := fieldVal.(string)
+		str, _ := fieldVal.(string) //nolint:errcheck // safe: zero value if not string
 		minLen, err := strconv.Atoi(rule.Value)
 		if err != nil {
 			return &Violation{
@@ -266,7 +266,7 @@ func (e *Engine) checkRule(rule QualityRule, value map[string]any) *Violation {
 		}
 
 	case "max_length":
-		str, _ := fieldVal.(string)
+		str, _ := fieldVal.(string) //nolint:errcheck // safe: zero value if not string
 		maxLen, err := strconv.Atoi(rule.Value)
 		if err != nil {
 			return &Violation{
