@@ -262,7 +262,10 @@ func (s *Server) handleWorkflows(ctx context.Context, request mcp.CallToolReques
 				return mcp.NewToolResultError(err.Error()), nil
 			}
 
-			tmpl, _ := s.workflowEngine.GetTemplate(templateName)
+			tmpl, err := s.workflowEngine.GetTemplate(templateName)
+			if err != nil {
+				s.logger.Warn("failed to get workflow template for response", "template", templateName, "error", err)
+			}
 			s.logAudit(agentID, "kafka_workflows", args, "", "success", exec.TotalSteps, nil, start)
 			return marshalResult(map[string]any{
 				"execution":   exec,

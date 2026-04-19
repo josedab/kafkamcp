@@ -115,7 +115,11 @@ func (s *Server) handleKnowledgeGraphResource(ctx context.Context, request mcp.R
 		}
 	}
 
-	result, _ := s.knowledgeGraph.Query("all")
+	result, err := s.knowledgeGraph.Query("all")
+	if err != nil {
+		s.logAudit(agentID, "resource:kafka://knowledge_graph", nil, "", "error", 0, err, start)
+		return nil, fmt.Errorf("querying knowledge graph: %w", err)
+	}
 	graphStats := s.knowledgeGraph.GetStats()
 
 	s.logAudit(agentID, "resource:kafka://knowledge_graph", nil, "", "success", result.TotalNodes, nil, start)
@@ -142,8 +146,14 @@ func (s *Server) handleFlowGraphResource(ctx context.Context, request mcp.ReadRe
 	}
 
 	// Build a flow graph from current topic/group state
-	topics, _ := s.kafkaManager.ListTopics(ctx, "", false)
-	groups, _ := s.kafkaManager.ListConsumerGroups(ctx, "")
+	topics, err := s.kafkaManager.ListTopics(ctx, "", false)
+	if err != nil {
+		s.logger.Warn("failed to list topics for flow graph", "error", err)
+	}
+	groups, err := s.kafkaManager.ListConsumerGroups(ctx, "")
+	if err != nil {
+		s.logger.Warn("failed to list consumer groups for flow graph", "error", err)
+	}
 
 	var nodes []map[string]any
 	for _, t := range topics {
