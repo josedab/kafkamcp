@@ -158,3 +158,15 @@ deploy/             — Deployment (Helm chart)
 ## Questions?
 
 Open a [GitHub Discussion](https://github.com/kafkamcp/kafkamcp/discussions) or file an issue.
+
+## Troubleshooting
+
+If you run into build failures or unexpected behavior, start with:
+
+```bash
+make doctor
+```
+
+This checks your Go version, linting tools, Docker status, Kafka reachability, and pre-commit hook installation. It will tell you exactly what's missing or misconfigured.
+
+> **Note:** `make check` is an alias for `make validate` — both run the full fmt → lint → test → build pipeline.
