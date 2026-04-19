@@ -211,6 +211,23 @@ Once connected, your AI agent can:
 └──────────────────────────────────────────────────────────┘
 ```
 
+### Component Flow
+
+```mermaid
+graph LR
+    A["🤖 AI Agent<br/>(Claude, GPT, etc.)"] -->|MCP Protocol<br/>stdio / SSE| B["🔌 KafkaMCP<br/>MCP Server"]
+    B -->|franz-go| C["📨 Kafka Brokers"]
+    B -->|HTTP| D["📋 Schema Registry"]
+    B -->|HTTP| E["🔗 Kafka Connect"]
+
+    subgraph KafkaMCP Internals
+        B --> F[AuthZ & RBAC]
+        B --> G[Audit Logger]
+        B --> H[Rate Limiter]
+        B --> I[Metrics]
+    end
+```
+
 ## Configuration Reference
 
 ### Server
