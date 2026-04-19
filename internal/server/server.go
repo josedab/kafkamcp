@@ -78,8 +78,9 @@ personaEngine  *persona.Engine       // declarative agent personas
 forecaster     *forecast.Forecaster  // intelligent capacity forecasting
 }
 
-// New creates a new KafkaMCP server.
-func New(cfg *config.Config, kafkaManager kafka.KafkaManager, logger *slog.Logger, version string) (*Server, error) {
+// New creates a new KafkaMCP server. Functional options override default
+// subsystem instances (e.g., WithMetrics, WithAuditLogger).
+func New(cfg *config.Config, kafkaManager kafka.KafkaManager, logger *slog.Logger, version string, opts ...Option) (*Server, error) {
 // Per-cluster schema registry clients
 schemaClients := make(map[string]*schema.Client)
 for _, cl := range cfg.Clusters {
@@ -118,14 +119,14 @@ auditLogger:    auditLogger,
 rateLimiter:    rl,
 metrics:        metrics.New(),
 logger:         logger,
-expensiveOps:   make(chan struct{}, 5), // max 5 concurrent expensive operations
+expensiveOps:   make(chan struct{}, 5),
 watchManager:   watch.NewManager(logger),
 maskingEngine:  masking.NewEngine(cfg.Masking, logger),
 dlqRemediator:  dlq.NewRemediator(logger),
 replicationMon: replication.NewMonitor(logger),
 pluginRegistry: plugin.NewRegistry(logger),
 agentRegistry:  kafka.NewAgentRegistry(),
-otelProvider:   nil, // set via SetOTelProvider after initialization
+otelProvider:   nil,
 anomalyDetector: anomaly.NewDetector(anomaly.DefaultConfig(), logger),
 nlQueryEngine:  nlquery.NewEngine(logger),
 workflowEngine: workflow.NewEngine(logger),
@@ -140,6 +141,11 @@ lineageTracker: lineage.NewTracker(),
 selfHealMon:    selfheal.NewMonitor(),
 personaEngine:  persona.NewEngine(),
 forecaster:     forecast.NewForecaster(30),
+}
+
+// Apply functional options, overriding defaults
+for _, opt := range opts {
+	opt(s)
 }
 
 mcpServer := server.NewMCPServer(
