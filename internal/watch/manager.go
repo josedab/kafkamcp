@@ -25,6 +25,11 @@ type Subscription struct {
 	MaxRetries   int               `json:"max_retries"`
 	CreatedAt    time.Time         `json:"created_at"`
 	Active       bool              `json:"active"`
+	Filters      []FilterExpression `json:"filters,omitempty"`
+	Paused       bool              `json:"paused"`
+	ExpiresAt    *time.Time        `json:"expires_at,omitempty"`
+	DeliveryCount int64            `json:"delivery_count"`
+	LastMatchAt  *time.Time        `json:"last_match_at,omitempty"`
 }
 
 // Notification is a message pushed to an agent when a subscription matches.
@@ -188,6 +193,15 @@ func (m *Manager) ProcessMessage(ctx context.Context, event MessageEvent) []Deli
 
 		result := m.deliverNotification(ctx, sub, notif)
 		results = append(results, result)
+
+		// Update subscription delivery stats
+		m.mu.Lock()
+		if s, ok := m.subscriptions[sub.ID]; ok {
+			s.DeliveryCount++
+			now := time.Now()
+			s.LastMatchAt = &now
+		}
+		m.mu.Unlock()
 	}
 	return results
 }
@@ -199,6 +213,14 @@ func (m *Manager) NotificationChannel() <-chan Notification {
 
 // matchesSubscription checks if a message event matches a subscription's filters.
 func (m *Manager) matchesSubscription(sub *Subscription, event MessageEvent) bool {
+	if sub.Paused {
+		return false
+	}
+
+	if sub.ExpiresAt != nil && time.Now().After(*sub.ExpiresAt) {
+		return false
+	}
+
 	if !match.Glob(sub.TopicPattern, event.Topic) {
 		return false
 	}
@@ -222,6 +244,13 @@ func (m *Manager) matchesSubscription(sub *Subscription, event MessageEvent) boo
 			if ev, ok := event.Headers[k]; !ok || (v != "" && ev != v) {
 				return false
 			}
+		}
+	}
+
+	// Apply structured filter expressions
+	for _, f := range sub.Filters {
+		if !f.Match(event) {
+			return false
 		}
 	}
 
@@ -310,11 +339,75 @@ func (m *Manager) ActiveSubscriptionCount() int {
 	defer m.mu.RUnlock()
 	count := 0
 	for _, sub := range m.subscriptions {
-		if sub.Active {
+		if sub.Active && !sub.Paused {
 			count++
 		}
 	}
 	return count
+}
+
+// PauseSubscription temporarily pauses a subscription without removing it.
+func (m *Manager) PauseSubscription(subscriptionID, agentID string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	sub, ok := m.subscriptions[subscriptionID]
+	if !ok {
+		return fmt.Errorf("subscription %q not found", subscriptionID)
+	}
+	if sub.AgentID != agentID {
+		return fmt.Errorf("subscription %q belongs to a different agent", subscriptionID)
+	}
+	sub.Paused = true
+	m.logger.Info("watch subscription paused", "id", subscriptionID, "agent", agentID)
+	return nil
+}
+
+// ResumeSubscription resumes a paused subscription.
+func (m *Manager) ResumeSubscription(subscriptionID, agentID string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	sub, ok := m.subscriptions[subscriptionID]
+	if !ok {
+		return fmt.Errorf("subscription %q not found", subscriptionID)
+	}
+	if sub.AgentID != agentID {
+		return fmt.Errorf("subscription %q belongs to a different agent", subscriptionID)
+	}
+	sub.Paused = false
+	m.logger.Info("watch subscription resumed", "id", subscriptionID, "agent", agentID)
+	return nil
+}
+
+// ExpireStale removes subscriptions that have passed their expiration time.
+func (m *Manager) ExpireStale() int {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	now := time.Now()
+	expired := 0
+	for id, sub := range m.subscriptions {
+		if sub.ExpiresAt != nil && now.After(*sub.ExpiresAt) {
+			sub.Active = false
+			delete(m.subscriptions, id)
+			expired++
+			m.logger.Info("watch subscription expired", "id", id, "agent", sub.AgentID)
+		}
+	}
+	return expired
+}
+
+// GetSubscription returns a subscription by ID.
+func (m *Manager) GetSubscription(subscriptionID string) (*Subscription, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	sub, ok := m.subscriptions[subscriptionID]
+	if !ok {
+		return nil, fmt.Errorf("subscription %q not found", subscriptionID)
+	}
+	return sub, nil
 }
 
 // Close shuts down the manager.
