@@ -114,6 +114,16 @@ Keep commits focused — one logical change per commit.
 cmd/kafkamcp/       — CLI entrypoint
 internal/
   server/           — MCP server, tool handlers, resource handlers
+    tools_p0.go     — P0 handlers: list topics, describe, consume, produce, schemas, groups
+    tools_p1.go     — P1 handlers: create/alter/delete topic, search, offset reset, DLQ, subscribe
+    tools_p2.go     — P2 handlers: aggregate, schema evolution, connectors, join, NL query
+    tools_p3.go     — P3 handlers: watch, DLQ remediation, schema diff, streaming, agent registry
+    tools_advanced.go    — Advanced handlers: connector CRUD, time travel, recommend, trace, ACLs, config drift, playground
+    tools_features.go    — Feature handlers: anomalies, NL query, cost analysis, workflows, GitOps, knowledge graph, data contracts
+    tools_streaming.go   — Streaming consumer session management
+    tools_new_features.go — New feature handlers: lag diagnosis, migration, lineage, group health, personas, forecasting
+    register_tools.go    — Tool registration (all tiers)
+    resources.go         — Resource handlers
   kafka/            — Kafka client operations (consume, produce, admin)
   auth/             — Policy-based authorization engine
   config/           — YAML configuration parsing
@@ -122,7 +132,27 @@ internal/
   match/            — Topic pattern matching utilities
   metrics/          — Prometheus metrics
   ratelimit/        — Per-agent rate limiting
+  anomaly/          — AI-powered anomaly detection
+  cost/             — Kafka cost analysis
+  dlq/              — Dead-letter queue remediation
+  forecast/         — Capacity forecasting
+  gitops/           — GitOps configuration management
+  graph/            — Embedded knowledge graph
+  lagdiag/          — Consumer lag root cause analysis
+  lineage/          — Data lineage tracking
+  masking/          — PII redaction engine
+  migration/        — Migration planning
+  nlquery/          — Natural language query engine
+  persona/          — Declarative agent personas
+  platform/         — Multi-platform abstraction
+  plugin/           — Plugin/extension registry
+  selfheal/         — Self-healing consumer groups
+  telemetry/        — OpenTelemetry tracing
+  watch/            — Event-driven watch subscriptions
+  workflow/         — Agent workflow templates
+sdk/                — Client SDKs (Go, Python, VS Code, Cursor, IntelliJ)
 examples/           — Example configs (docker-compose, Confluent Cloud)
+deploy/             — Deployment (Helm chart)
 ```
 
 ## Questions?
