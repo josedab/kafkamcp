@@ -108,6 +108,10 @@ func runServer(cmd *cobra.Command, args []string) error {
 	}
 	defer srv.Close()
 
+	if !cfg.Policies.DefaultDeny {
+		logger.Warn("running with default_deny=false — all agents have unrestricted access; enable policies.default_deny for production use")
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
