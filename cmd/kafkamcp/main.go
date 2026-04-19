@@ -128,8 +128,9 @@ func runServer(cmd *cobra.Command, args []string) error {
 			checkCtx, checkCancel := context.WithTimeout(r.Context(), 5*time.Second)
 			defer checkCancel()
 			if err := srv.HealthCheck(checkCtx); err != nil {
+				logger.Error("health check failed", "error", err)
 				w.WriteHeader(http.StatusServiceUnavailable)
-				_, _ = w.Write([]byte(fmt.Sprintf("unhealthy: %v", err)))
+				_, _ = w.Write([]byte("unhealthy"))
 				return
 			}
 			w.WriteHeader(http.StatusOK)
