@@ -30,3 +30,8 @@ coverage.html
 # Environment files
 .env
 .env.local
+
+# Website
+website/node_modules/
+website/.docusaurus/
+website/build/
