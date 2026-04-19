@@ -17,37 +17,43 @@ git clone https://github.com/<your-username>/kafkamcp.git
 cd kafkamcp
 ```
 
-### 2. Build
+### 2. Setup
+
+```bash
+make setup
+```
+
+### 3. Build
 
 ```bash
 make build
 ```
 
-### 3. Setup VSCode (optional)
+### 4. Setup VSCode (optional)
 
 ```bash
 make setup-vscode
 ```
 
-### 4. Run Tests
+### 5. Run Tests
 
 ```bash
 make test
 ```
 
-### 4. Lint
+### 6. Lint
 
 ```bash
 make lint
 ```
 
-### 5. Format Code
+### 7. Format Code
 
 ```bash
 make fmt
 ```
 
-### 6. Run All Checks
+### 8. Run All Checks
 
 ```bash
 make validate
