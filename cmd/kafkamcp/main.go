@@ -237,6 +237,9 @@ func securityHeadersMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("X-Frame-Options", "DENY")
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("Content-Security-Policy", "default-src 'none'")
+		w.Header().Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
+		w.Header().Set("Referrer-Policy", "no-referrer")
+		w.Header().Set("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
 		// Restrict cross-origin requests — MCP servers are not browser-facing
 		w.Header().Set("Access-Control-Allow-Origin", "")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST")
