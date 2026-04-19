@@ -902,7 +902,7 @@ if deny := s.validateAgentID(agentID); deny != nil {
 if !s.policyEngine.Authorize(agentID, resource, resourceName, action) {
 s.metrics.AuthzDenials.WithLabelValues(metrics.SanitizeAgentLabel(agentID), tool, string(action)).Inc()
 s.logger.Warn("authorization denied", "agent", agentID, "tool", tool, "resource", resourceName, "action", action)
-return mcp.NewToolResultError(fmt.Sprintf("Unauthorized: agent %q lacks %s permission on %s", agentID, action, resourceName))
+return mcp.NewToolResultError("Unauthorized: insufficient permission for this operation")
 }
 return nil
 }
@@ -919,7 +919,7 @@ return nil
 func (s *Server) checkResourceRateLimit(agentID, resource string) error {
 if !s.rateLimiter.Allow(agentID) {
 s.metrics.RateLimitDenials.WithLabelValues(metrics.SanitizeAgentLabel(agentID), resource).Inc()
-return fmt.Errorf("rate limit exceeded for agent %q", agentID)
+return fmt.Errorf("rate limit exceeded")
 }
 return nil
 }

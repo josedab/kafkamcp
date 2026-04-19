@@ -26,7 +26,7 @@ func (s *Server) handleClusterMetadata(ctx context.Context, request mcp.ReadReso
 		return nil, err
 	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceCluster, "", auth.ActionRead) {
-		err := fmt.Errorf("unauthorized: agent %q cannot read cluster metadata", agentID)
+		err := fmt.Errorf("unauthorized: insufficient permission for this operation")
 		s.logAudit(agentID, "resource:kafka://cluster/metadata", nil, "", "error", 0, err, start)
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func (s *Server) handleClusterList(ctx context.Context, request mcp.ReadResource
 		return nil, err
 	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceCluster, "", auth.ActionRead) {
-		err := fmt.Errorf("unauthorized: agent %q cannot list clusters", agentID)
+		err := fmt.Errorf("unauthorized: insufficient permission for this operation")
 		s.logAudit(agentID, "resource:kafka://clusters", nil, "", "error", 0, err, start)
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func (s *Server) handleTopicCatalog(ctx context.Context, request mcp.ReadResourc
 		return nil, err
 	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceTopic, "*", auth.ActionRead) {
-		err := fmt.Errorf("unauthorized: agent %q cannot list topics", agentID)
+		err := fmt.Errorf("unauthorized: insufficient permission for this operation")
 		s.logAudit(agentID, "resource:kafka://topics", nil, "", "error", 0, err, start)
 		return nil, err
 	}
@@ -124,7 +124,7 @@ func (s *Server) handleSchemaCatalog(ctx context.Context, request mcp.ReadResour
 		return nil, err
 	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceSchema, "", auth.ActionRead) {
-		err := fmt.Errorf("unauthorized: agent %q cannot read schemas", agentID)
+		err := fmt.Errorf("unauthorized: insufficient permission for this operation")
 		s.logAudit(agentID, "resource:kafka://schemas", nil, "", "error", 0, err, start)
 		return nil, err
 	}
@@ -155,7 +155,7 @@ func (s *Server) handleGroupCatalog(ctx context.Context, request mcp.ReadResourc
 		return nil, err
 	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceConsumerGroup, "", auth.ActionDescribe) {
-		err := fmt.Errorf("unauthorized: agent %q cannot list consumer groups", agentID)
+		err := fmt.Errorf("unauthorized: insufficient permission for this operation")
 		s.logAudit(agentID, "resource:kafka://groups", nil, "", "error", 0, err, start)
 		return nil, err
 	}
@@ -182,7 +182,7 @@ func (s *Server) handleAuditLogResource(ctx context.Context, request mcp.ReadRes
 		return nil, err
 	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceCluster, "", auth.ActionAdmin) {
-		err := fmt.Errorf("unauthorized: agent %q cannot access audit logs", agentID)
+		err := fmt.Errorf("unauthorized: insufficient permission for this operation")
 		s.logAudit(agentID, "resource:kafka://audit/log", nil, "", "error", 0, err, start)
 		return nil, err
 	}
@@ -203,7 +203,7 @@ func (s *Server) handleTopicGraphResource(ctx context.Context, request mcp.ReadR
 		return nil, err
 	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceCluster, "", auth.ActionRead) {
-		err := fmt.Errorf("unauthorized: agent %q cannot access topic graph", agentID)
+		err := fmt.Errorf("unauthorized: insufficient permission for this operation")
 		s.logAudit(agentID, "resource:kafka://topic_graph", nil, "", "error", 0, err, start)
 		return nil, err
 	}
@@ -238,7 +238,7 @@ func (s *Server) handleTopicResource(ctx context.Context, request mcp.ReadResour
 		return nil, fmt.Errorf("topic name exceeds maximum length of %d characters", maxInputLength)
 	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceTopic, name, auth.ActionRead) {
-		err := fmt.Errorf("unauthorized: agent %q cannot read topic %q", agentID, name)
+		err := fmt.Errorf("unauthorized: insufficient permission for this operation")
 		s.logAudit(agentID, "resource:kafka://topics/"+name, nil, "", "error", 0, err, start)
 		return nil, err
 	}
@@ -277,7 +277,7 @@ func (s *Server) handleSchemaResource(ctx context.Context, request mcp.ReadResou
 		return nil, fmt.Errorf("schema subject exceeds maximum length of %d characters", maxInputLength)
 	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceSchema, "", auth.ActionRead) {
-		err := fmt.Errorf("unauthorized: agent %q cannot read schemas", agentID)
+		err := fmt.Errorf("unauthorized: insufficient permission for this operation")
 		s.logAudit(agentID, "resource:kafka://schemas/"+subject, nil, "", "error", 0, err, start)
 		return nil, err
 	}
@@ -312,7 +312,7 @@ func (s *Server) handleGroupResource(ctx context.Context, request mcp.ReadResour
 		return nil, fmt.Errorf("group ID exceeds maximum length of %d characters", maxInputLength)
 	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceConsumerGroup, "", auth.ActionDescribe) {
-		err := fmt.Errorf("unauthorized: agent %q cannot describe consumer groups", agentID)
+		err := fmt.Errorf("unauthorized: insufficient permission for this operation")
 		s.logAudit(agentID, "resource:kafka://groups/"+groupID, nil, "", "error", 0, err, start)
 		return nil, err
 	}
