@@ -166,6 +166,12 @@ func (m *Manager) StartStream(ctx context.Context, cluster string, cfg StreamCon
 		defer ticker.Stop()
 
 		for {
+			select {
+			case <-streamCtx.Done():
+				return
+			default:
+			}
+
 			if session.stopped.Load() {
 				return
 			}
