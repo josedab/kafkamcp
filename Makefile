@@ -1,4 +1,4 @@
-.PHONY: build test lint fmt docker clean validate help run dev coverage setup-hooks docker-dev docker-dev-down setup test-one setup-vscode
+.PHONY: build test lint fmt docker clean validate help run dev coverage setup-hooks docker-dev docker-dev-down setup test-one setup-vscode integration-test check doctor
 
 # Build variables
 BINARY    := kafkamcp
@@ -27,8 +27,11 @@ dev: ## Run with auto-reload (requires air: go install github.com/air-verse/air@
 	@command -v air >/dev/null 2>&1 || { echo "Installing air..."; go install github.com/air-verse/air@latest; }
 	air
 
-test: ## Run tests with race detection
+test: ## Run unit tests with race detection
 	go test -race -coverprofile=coverage.out ./...
+
+integration-test: ## Run integration tests (requires Kafka cluster)
+	go test -race -tags integration -v ./...
 
 coverage: test ## Generate and open HTML coverage report
 	go tool cover -html=coverage.out -o coverage.html
@@ -62,7 +65,7 @@ setup-hooks: ## Install git pre-commit hook running make validate
 	@chmod +x .git/hooks/pre-commit
 	@echo "Pre-commit hook installed."
 
-setup: ## Install all dev dependencies (golangci-lint, air, goimports)
+setup: setup-hooks ## Install all dev dependencies (golangci-lint, air, goimports)
 	@echo "Installing dev dependencies..."
 	@command -v golangci-lint >/dev/null 2>&1 || { echo "  Installing golangci-lint..."; go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest; }
 	@command -v air >/dev/null 2>&1 || { echo "  Installing air..."; go install github.com/air-verse/air@latest; }
@@ -70,6 +73,8 @@ setup: ## Install all dev dependencies (golangci-lint, air, goimports)
 	@echo "All dev dependencies installed."
 
 validate: fmt lint test build ## Run all checks (fmt, lint, test, build)
+
+check: validate ## Alias for validate
 
 test-one: ## Run a single test: make test-one TEST=TestName PKG=./internal/...
 	go test -race -v -run $(TEST) $(PKG)
@@ -79,3 +84,16 @@ setup-vscode: ## Copy .vscode example configs (if not already present)
 	@test -f .vscode/launch.json || (cp .vscode/launch.json.example .vscode/launch.json && echo "Created .vscode/launch.json")
 	@test -f .vscode/settings.json || (cp .vscode/settings.json.example .vscode/settings.json && echo "Created .vscode/settings.json")
 	@echo "VSCode setup complete."
+
+doctor: ## Check development environment prerequisites
+	@echo "=== KafkaMCP Doctor ==="
+	@echo ""
+	@printf "Go:              "; command -v go >/dev/null 2>&1 && go version | sed 's/go version //' || echo "NOT FOUND (required)"
+	@printf "golangci-lint:   "; command -v golangci-lint >/dev/null 2>&1 && echo "OK ($(golangci-lint --version 2>&1 | head -1))" || echo "NOT FOUND (run: make setup)"
+	@printf "air:             "; command -v air >/dev/null 2>&1 && echo "OK" || echo "NOT FOUND (optional, run: make setup)"
+	@printf "goimports:       "; command -v goimports >/dev/null 2>&1 && echo "OK" || echo "NOT FOUND (optional, run: make setup)"
+	@printf "Docker:          "; command -v docker >/dev/null 2>&1 && (docker info >/dev/null 2>&1 && echo "OK (running)" || echo "INSTALLED but not running") || echo "NOT FOUND (needed for integration tests)"
+	@printf "Kafka (localhost:9092): "; (echo > /dev/tcp/localhost/9092) 2>/dev/null && echo "REACHABLE" || echo "NOT REACHABLE (run: make docker-dev)"
+	@printf "Pre-commit hook: "; test -x .git/hooks/pre-commit && echo "INSTALLED" || echo "NOT INSTALLED (run: make setup)"
+	@echo ""
+	@echo "Run 'make setup' to install missing dev dependencies."
