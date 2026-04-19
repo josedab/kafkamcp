@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-var planCounter uint64
+var planCounter atomic.Uint64
 
 // TopicInfo describes a topic in a Kafka cluster.
 type TopicInfo struct {
@@ -132,7 +132,7 @@ func (p *Planner) CreatePlan(sourceCluster, targetCluster string, sourceTopics, 
 	}
 
 	plan := &MigrationPlan{
-		ID:            fmt.Sprintf("plan-%d-%d", time.Now().UnixNano(), atomic.AddUint64(&planCounter, 1)),
+		ID:            fmt.Sprintf("plan-%d-%d", time.Now().UnixNano(), planCounter.Add(1)),
 		SourceCluster: sourceCluster,
 		TargetCluster: targetCluster,
 		Status:        "pending",
