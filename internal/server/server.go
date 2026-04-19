@@ -267,11 +267,8 @@ func (s *Server) validateAgentID(agentID string) *mcp.CallToolResult {
 if !s.policyEngine.DefaultDeny() {
 	return nil
 }
-if agentID == "anonymous" {
-	return mcp.NewToolResultError("Authentication required: X-Agent-ID header must be provided")
-}
-if !s.policyEngine.AgentExists(agentID) {
-	return mcp.NewToolResultError(fmt.Sprintf("Unknown agent %q: not configured in policy", agentID))
+if agentID == "anonymous" || !s.policyEngine.AgentExists(agentID) {
+	return mcp.NewToolResultError("Authentication required: valid X-Agent-ID header must be provided")
 }
 return nil
 }
@@ -1022,11 +1019,8 @@ func (s *Server) validateResourceAgentID(agentID string) error {
 	if !s.policyEngine.DefaultDeny() {
 		return nil
 	}
-	if agentID == "anonymous" {
-		return fmt.Errorf("authentication required: X-Agent-ID header must be provided")
-	}
-	if !s.policyEngine.AgentExists(agentID) {
-		return fmt.Errorf("unknown agent %q: not configured in policy", agentID)
+	if agentID == "anonymous" || !s.policyEngine.AgentExists(agentID) {
+		return fmt.Errorf("authentication required: valid X-Agent-ID header must be provided")
 	}
 	return nil
 }
