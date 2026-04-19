@@ -78,6 +78,18 @@ jobs:
       - name: Run govulncheck
         run: govulncheck ./...
 
+  helm-lint:
+    name: Helm Chart Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      - name: Lint Helm chart
+        run: helm lint deploy/helm/kafkamcp
+
   build:
     name: Build
     runs-on: ubuntu-latest
