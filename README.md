@@ -105,11 +105,38 @@ Once connected, your AI agent can:
 
 ```
 "List all Kafka topics in my cluster"
+```
+> **Example response:** Found 12 topics: `orders.created` (6 partitions), `payments.completed` (3 partitions), `users.updated` (3 partitions), ...
+
+```
 "Show me the last 10 messages from the orders.created topic"
+```
+> **Example response:** 10 messages from `orders.created` (partition 2, offsets 4521–4530):
+> ```json
+> {"order_id": "ord-9842", "customer": "acme-corp", "amount": 149.99, "status": "created"}
+> {"order_id": "ord-9843", "customer": "globex", "amount": 89.50, "status": "created"}
+> ...
+> ```
+
+```
 "Describe the consumer group order-processor and show me the lag"
+```
+> **Example response:** Consumer group `order-processor` — State: **Stable**, Members: 3, Total lag: **142 messages**
+> | Topic | Partition | Current Offset | End Offset | Lag |
+> |-------|-----------|---------------|------------|-----|
+> | orders.created | 0 | 4510 | 4532 | 22 |
+> | orders.created | 1 | 4488 | 4529 | 41 |
+
+```
 "What schema does the payments.completed topic use?"
+```
+> **Example response:** Subject `payments.completed-value` (Avro, version 3, BACKWARD compatible):
+> Fields: `payment_id` (string), `order_id` (string), `amount` (double), `currency` (string), `processed_at` (long/timestamp-millis)
+
+```
 "Publish a test message to the test-events topic"
 ```
+> **Example response:** ✅ Message delivered to `test-events` partition 0 at offset 847 (timestamp: 2025-01-15T10:32:01Z)
 
 ## MCP Tools
 
@@ -147,7 +174,52 @@ Once connected, your AI agent can:
 | `kafka_list_connectors` | List Kafka Connect connectors with status |
 | `kafka_describe_connector` | Full connector config, tasks, and errors |
 
-> **Note:** Schema tools (`kafka_list_schemas`, `kafka_get_schema`, `kafka_check_schema_compatibility`) require `schema_registry.url` in cluster config.
+### P3 — Event-Driven & Remediation
+| Tool | Description |
+|------|-------------|
+| `kafka_watch` | Register event-driven watch subscriptions on topic patterns |
+| `kafka_remediate_dlq` | Auto-remediate DLQ messages: retry, route, or suggest fixes |
+| `kafka_schema_diff` | Field-by-field diff between two schema versions |
+| `kafka_stream` | Manage streaming consumer sessions for real-time delivery |
+| `kafka_agent_registry` | Multi-agent collaboration: register, claim partitions, handoff |
+
+### Advanced — Connector Management & Intelligence
+| Tool | Description |
+|------|-------------|
+| `kafka_create_connector` | Create a new Kafka Connect connector |
+| `kafka_update_connector` | Update an existing connector configuration |
+| `kafka_delete_connector` | Delete a Kafka Connect connector |
+| `kafka_restart_connector` | Restart a connector or specific failed tasks |
+| `kafka_connector_health` | Health score and diagnostics for a connector |
+| `kafka_time_travel` | Point-in-time topic queries: snapshot or diff state |
+| `kafka_recommend` | Intelligent topic optimization recommendations |
+| `kafka_trace_message` | End-to-end message tracing via correlation IDs |
+| `kafka_list_acls` | List Kafka ACLs with security analysis |
+| `kafka_config_drift` | Detect configuration drift across clusters |
+| `kafka_playground` | Sandboxed environment for safe Kafka experimentation |
+
+### Feature — AI & Analytics
+| Tool | Description |
+|------|-------------|
+| `kafka_anomalies` | AI-detected anomalies in lag, throughput, and error rates |
+| `kafka_anomaly_ingest` | Manually ingest data points for anomaly detection |
+| `kafka_nl_query` | Query Kafka with plain English (NL → pipeline) |
+| `kafka_cost_analyze` | Analyze storage and compute costs for a topic |
+| `kafka_cost_waste` | Detect cost waste: idle topics, over-replication, etc. |
+| `kafka_cost_whatif` | Simulate config changes and see cost impact |
+| `kafka_workflows` | Pre-built workflow templates for common operations |
+| `kafka_gitops_diff` | Compare declarative YAML config against live cluster state |
+| `kafka_knowledge_graph` | Query topic relationships and schema dependencies |
+| `kafka_platform_info` | Get info about configured Kafka-compatible platforms |
+| `kafka_validate_contract` | Validate messages against data contracts |
+| `kafka_diagnose_lag` | Deep diagnostic analysis of consumer group lag |
+| `kafka_migration_plan` | Plan and validate Kafka migrations between clusters |
+| `kafka_trace_lineage` | Track data lineage and PII/compliance annotations |
+| `kafka_group_health` | Consumer group health scoring with auto-remediation hints |
+| `kafka_persona` | Declarative agent personas (SRE, data-engineer, etc.) |
+| `kafka_forecast` | ML-based capacity forecasting (throughput, storage, lag) |
+
+> **Note:** Schema tools (`kafka_list_schemas`, `kafka_get_schema`, `kafka_check_schema_compatibility`, `kafka_schema_diff`) require `schema_registry.url` in cluster config.
 > Kafka Connect tools require `connect_url` in cluster config.
 
 ## MCP Resources
@@ -180,6 +252,44 @@ Once connected, your AI agent can:
 - **Prometheus metrics** at `/metrics` (port+1, bound to `127.0.0.1`) — tool call counts, latencies, message throughput, auth denials, rate limit denials
 - **Health check** at `/healthz`
 - **Structured JSON logging** via `slog`
+- **OpenTelemetry tracing** — optional OTLP export for distributed trace analysis (see [Telemetry config](#telemetry-opentelemetry))
+
+## SDKs & Editor Integrations
+
+| SDK / Integration | Path | Description |
+|-------------------|------|-------------|
+| **Go SDK** | [`sdk/go/`](sdk/go/) | Programmatic Go client for KafkaMCP — list topics, consume, produce, search, watch |
+| **Python LangChain** | [`sdk/python/kafkamcp_langchain/`](sdk/python/kafkamcp_langchain/) | LangChain toolkit — use Kafka tools in any LangChain agent |
+| **Python CrewAI** | [`sdk/python/kafkamcp_crewai/`](sdk/python/kafkamcp_crewai/) | CrewAI tools — build Kafka-aware multi-agent crews |
+| **VS Code Extension** | [`sdk/vscode/`](sdk/vscode/) | Topic explorer, schema browser, NL query, and workflow templates inside VS Code |
+| **Cursor Integration** | [`sdk/cursor/`](sdk/cursor/) | Native MCP support — configure `.cursor/mcp.json` and use all tools directly |
+| **IntelliJ Plugin** | [`sdk/intellij/`](sdk/intellij/) | IntelliJ/JetBrains IDE integration |
+
+**Go SDK quick example:**
+```go
+import "github.com/kafkamcp/kafkamcp/sdk/go/kafkamcpsdk"
+
+client := kafkamcpsdk.New(transport, kafkamcpsdk.WithAgentID("my-agent"))
+topics, _ := client.ListTopics(ctx, "orders.*")
+```
+
+**Python LangChain quick example:**
+```bash
+pip install kafkamcp-langchain
+```
+```python
+from kafkamcp_langchain import KafkaMCPToolkit
+tools = KafkaMCPToolkit(mcp_client=session)
+```
+
+**Python CrewAI quick example:**
+```bash
+pip install kafkamcp-crewai
+```
+```python
+from kafkamcp_crewai import create_kafka_tools
+tools = create_kafka_tools(mcp_client=session)
+```
 
 ## Architecture
 
@@ -285,6 +395,15 @@ graph LR
 | `audit.max_entries` | int | `10000` | Max in-memory audit entries |
 | `audit.log_file` | string | — | Path to audit log file |
 
+### Telemetry (OpenTelemetry)
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `telemetry.enabled` | bool | `false` | Enable OpenTelemetry tracing |
+| `telemetry.endpoint` | string | — | OTLP collector endpoint (e.g., `localhost:4317`) |
+| `telemetry.insecure` | bool | `false` | Use insecure (non-TLS) connection to collector |
+| `telemetry.service_name` | string | `kafkamcp` | Service name reported in traces |
+| `telemetry.sample_rate` | float | `1.0` | Trace sampling rate (0.0–1.0) |
+
 ### Environment Variables
 
 Config values support `${VAR}` and `${VAR:-default}` syntax:
@@ -353,15 +472,48 @@ kafkamcp/
 ├── cmd/kafkamcp/          # CLI entrypoint
 │   └── main.go
 ├── internal/
-│   ├── config/            # YAML config loader with env var expansion
-│   ├── kafka/             # Kafka client manager (admin, consume, produce)
-│   ├── schema/            # Schema Registry client with LRU cache
-│   ├── auth/              # Policy engine (per-agent access control)
+│   ├── anomaly/           # AI-powered anomaly detection (z-score, IQR)
 │   ├── audit/             # Structured JSON audit logger
-│   ├── server/            # MCP server, tool/resource handlers
+│   ├── auth/              # Policy engine (per-agent access control)
+│   ├── cloud/             # Cloud provider integrations
+│   ├── config/            # YAML config loader with env var expansion
+│   ├── contracts/         # Schema-aware data contracts
+│   ├── cost/              # Kafka cost analysis and waste detection
+│   ├── dashboard/         # Dashboard data aggregation
+│   ├── dlq/               # Dead-letter queue remediation
+│   ├── evolution/         # Schema evolution advisor
+│   ├── flowdebug/         # Message flow debugging
+│   ├── forecast/          # ML-based capacity forecasting
+│   ├── gitops/            # GitOps configuration management
+│   ├── graph/             # Embedded knowledge graph
+│   ├── kafka/             # Kafka client manager (admin, consume, produce)
+│   ├── lagdiag/           # Consumer lag root cause analysis
+│   ├── lineage/           # Topic data lineage tracking
+│   ├── masking/           # PII redaction and data masking engine
 │   ├── match/             # Topic pattern matching utilities
 │   ├── metrics/           # Prometheus metrics collection
-│   └── ratelimit/         # Per-agent rate limiting
+│   ├── migration/         # Kafka migration planning assistant
+│   ├── nlquery/           # Natural language query engine
+│   ├── persona/           # Declarative agent personas
+│   ├── platform/          # Multi-platform abstraction (Kafka, Redpanda, MSK)
+│   ├── plugin/            # Plugin/extension registry
+│   ├── ratelimit/         # Per-agent rate limiting
+│   ├── replication/       # Cross-cluster replication monitoring
+│   ├── schema/            # Schema Registry client with LRU cache
+│   ├── selfheal/          # Self-healing consumer group monitor
+│   ├── server/            # MCP server, tool/resource handlers
+│   ├── telemetry/         # OpenTelemetry tracing provider
+│   ├── tenant/            # Multi-tenant isolation
+│   ├── watch/             # Event-driven watch subscriptions
+│   └── workflow/          # Agent workflow templates
+├── sdk/
+│   ├── go/                # Go client SDK
+│   ├── python/            # Python SDKs (LangChain, CrewAI)
+│   ├── vscode/            # VS Code extension
+│   ├── cursor/            # Cursor editor integration
+│   └── intellij/          # IntelliJ plugin
+├── deploy/
+│   └── helm/              # Helm chart for Kubernetes
 ├── examples/              # Example configurations
 ├── .github/workflows/     # CI/CD
 ├── Dockerfile
