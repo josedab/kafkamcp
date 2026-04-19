@@ -189,7 +189,11 @@ func (a *Analyzer) DetectWaste(topics []TopicCostInput, consumerGroups map[strin
 		if lastActive, ok := consumerGroups[topic.Name]; ok {
 			idleDays := int(time.Since(lastActive).Hours() / 24)
 			if idleDays > 7 {
-				costResult, _ := a.AnalyzeTopic(topic, provider)
+				costResult, err := a.AnalyzeTopic(topic, provider)
+				if err != nil {
+					slog.Warn("cost analysis failed for idle topic", "topic", topic.Name, "error", err)
+					continue
+				}
 				report.IdleTopics = append(report.IdleTopics, IdleTopic{
 					Name:        topic.Name,
 					DaysIdle:    idleDays,
@@ -202,10 +206,18 @@ func (a *Analyzer) DetectWaste(topics []TopicCostInput, consumerGroups map[strin
 
 		// Over-replication detection
 		if topic.ReplicationFactor > 3 {
-			currentCost, _ := a.AnalyzeTopic(topic, provider)
+			currentCost, err := a.AnalyzeTopic(topic, provider)
+			if err != nil {
+				slog.Warn("cost analysis failed for over-replicated topic", "topic", topic.Name, "error", err)
+				continue
+			}
 			reduced := topic
 			reduced.ReplicationFactor = 3
-			reducedCost, _ := a.AnalyzeTopic(reduced, provider)
+			reducedCost, err := a.AnalyzeTopic(reduced, provider)
+			if err != nil {
+				slog.Warn("cost analysis failed for reduced replication", "topic", topic.Name, "error", err)
+				continue
+			}
 			savings := currentCost.TotalCostMonth - reducedCost.TotalCostMonth
 			report.OverReplicated = append(report.OverReplicated, OverReplica{
 				Name:          topic.Name,
@@ -230,10 +242,18 @@ func (a *Analyzer) DetectWaste(topics []TopicCostInput, consumerGroups map[strin
 		// Excessive retention
 		retDays := float64(topic.RetentionMs) / (1000 * 60 * 60 * 24)
 		if retDays > 30 && topic.MsgsPerSecond > 100 {
-			currentCost, _ := a.AnalyzeTopic(topic, provider)
+			currentCost, err := a.AnalyzeTopic(topic, provider)
+			if err != nil {
+				slog.Warn("cost analysis failed for retention check", "topic", topic.Name, "error", err)
+				continue
+			}
 			reduced := topic
 			reduced.RetentionMs = 7 * 24 * 60 * 60 * 1000 // 7 days
-			reducedCost, _ := a.AnalyzeTopic(reduced, provider)
+			reducedCost, err := a.AnalyzeTopic(reduced, provider)
+			if err != nil {
+				slog.Warn("cost analysis failed for reduced retention", "topic", topic.Name, "error", err)
+				continue
+			}
 			savings := currentCost.TotalCostMonth - reducedCost.TotalCostMonth
 			if savings > 0 {
 				report.RetentionOpps = append(report.RetentionOpps, RetentionOpp{
