@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"sync"
+	"sync/atomic"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -15,7 +16,7 @@ const maxUniqueAgents = 1000
 // If the agent is already known or the allowlist has capacity, the original ID is returned.
 // Otherwise, the ID is hashed into a fixed number of overflow buckets.
 func SanitizeAgentLabel(agentID string) string {
-	return defaultMetrics.SanitizeAgentLabel(agentID)
+	return defaultMetrics.Load().SanitizeAgentLabel(agentID)
 }
 
 // Metrics holds all KafkaMCP Prometheus metrics.
@@ -97,7 +98,7 @@ func New() *Metrics {
 		}, []string{"agent_id", "tool"}),
 	}
 
-	defaultMetrics = m
+	defaultMetrics.Store(m)
 	return m
 }
 
@@ -138,4 +139,8 @@ func (m *Metrics) SetKnownAgents(agents map[string]struct{}) {
 
 // defaultMetrics is a package-level Metrics instance used by the
 // package-level SanitizeAgentLabel function for backward compatibility.
-var defaultMetrics = &Metrics{knownAgents: make(map[string]struct{})}
+var defaultMetrics atomic.Pointer[Metrics]
+
+func init() {
+	defaultMetrics.Store(&Metrics{knownAgents: make(map[string]struct{})})
+}
