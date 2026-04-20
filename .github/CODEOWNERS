@@ -3,6 +3,24 @@
 
 # Security-sensitive code
 /internal/auth/ @kafkamcp/security
+/internal/masking/ @kafkamcp/security
+/internal/audit/ @kafkamcp/security
 
 # Kafka client code
 /internal/kafka/ @kafkamcp/kafka
+
+# Core server and configuration
+/internal/config/ @kafkamcp/maintainers
+/internal/server/ @kafkamcp/maintainers
+
+# Schema Registry integration
+/internal/schema/ @kafkamcp/kafka
+
+# Infrastructure and deployment
+/deploy/helm/ @kafkamcp/infra
+
+# SDKs
+/sdk/ @kafkamcp/sdk
+
+# CI/CD workflows
+/.github/workflows/ @kafkamcp/maintainers
