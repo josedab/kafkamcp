@@ -1,4 +1,4 @@
-.PHONY: build test lint fmt docker clean validate help run dev coverage setup-hooks docker-dev docker-dev-down setup test-one setup-vscode integration-test check doctor sdk-test quickstart benchmark docker-compose-full vet sdk-setup deps changelog
+.PHONY: build test lint lint-fix fmt docker clean validate help run dev dev-sse dev-http coverage setup-hooks docker-dev docker-dev-down setup test-one setup-vscode integration-test check doctor sdk-test quickstart benchmark docker-compose-full vet sdk-setup deps changelog test-coverage-check test-short
 
 # Build variables
 BINARY    := kafkamcp
@@ -27,6 +27,14 @@ dev: ## Run with auto-reload (requires air: go install github.com/air-verse/air@
 	@command -v air >/dev/null 2>&1 || { echo "Installing air..."; go install github.com/air-verse/air@latest; }
 	air
 
+dev-sse: ## Run with SSE transport and auto-reload
+	@command -v air >/dev/null 2>&1 || { echo "Installing air..."; go install github.com/air-verse/air@latest; }
+	KAFKAMCP_TRANSPORT=sse air
+
+dev-http: ## Run with streamable-http transport and auto-reload
+	@command -v air >/dev/null 2>&1 || { echo "Installing air..."; go install github.com/air-verse/air@latest; }
+	KAFKAMCP_TRANSPORT=streamable-http air
+
 test: ## Run unit tests with race detection
 	go test -race -coverprofile=coverage.out ./...
 
@@ -38,9 +46,27 @@ coverage: test ## Generate and open HTML coverage report
 	@echo "Coverage report: coverage.html"
 	@command -v open >/dev/null 2>&1 && open coverage.html || command -v xdg-open >/dev/null 2>&1 && xdg-open coverage.html || true
 
+MIN_COVERAGE ?= 70
+
+test-coverage-check: test ## Fail if total test coverage is below MIN_COVERAGE (default: 70%)
+	@total=$$(go tool cover -func=coverage.out | tail -1 | awk '{print $$NF}' | tr -d '%'); \
+	echo "Total coverage: $${total}%"; \
+	if [ $$(echo "$${total} < $(MIN_COVERAGE)" | bc -l) -eq 1 ]; then \
+		echo "FAIL: coverage $${total}% is below minimum $(MIN_COVERAGE)%"; \
+		exit 1; \
+	fi; \
+	echo "OK: coverage $${total}% meets minimum $(MIN_COVERAGE)%"
+
+test-short: ## Run tests without -race for fast iteration (respects testing.Short)
+	go test -short ./...
+
 lint: ## Run golangci-lint
 	@command -v golangci-lint >/dev/null 2>&1 || { echo "Installing golangci-lint..."; go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest; }
 	golangci-lint run ./...
+
+lint-fix: ## Run golangci-lint with auto-fix
+	@command -v golangci-lint >/dev/null 2>&1 || { echo "Installing golangci-lint..."; go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest; }
+	golangci-lint run --fix ./...
 
 fmt: ## Format code
 	gofmt -s -w .
