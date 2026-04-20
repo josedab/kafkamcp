@@ -65,7 +65,7 @@ setup-hooks: ## Install git pre-commit hook running make validate
 	@chmod +x .git/hooks/pre-commit
 	@echo "Pre-commit hook installed."
 
-setup: setup-hooks ## Install all dev dependencies (golangci-lint, air, goimports)
+setup: setup-hooks setup-vscode ## Install all dev dependencies (golangci-lint, air, goimports)
 	@echo "Installing dev dependencies..."
 	@command -v golangci-lint >/dev/null 2>&1 || { echo "  Installing golangci-lint..."; go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest; }
 	@command -v air >/dev/null 2>&1 || { echo "  Installing air..."; go install github.com/air-verse/air@latest; }
@@ -95,6 +95,8 @@ doctor: ## Check development environment prerequisites
 	@printf "Docker:          "; command -v docker >/dev/null 2>&1 && (docker info >/dev/null 2>&1 && echo "OK (running)" || echo "INSTALLED but not running") || echo "NOT FOUND (needed for integration tests)"
 	@printf "Kafka (localhost:9092): "; (echo > /dev/tcp/localhost/9092) 2>/dev/null && echo "REACHABLE" || echo "NOT REACHABLE (run: make docker-dev)"
 	@printf "Pre-commit hook: "; test -x .git/hooks/pre-commit && echo "INSTALLED" || echo "NOT INSTALLED (run: make setup)"
+	@printf "Python 3.8+:     "; command -v python3 >/dev/null 2>&1 && echo "OK ($$(python3 --version 2>&1))" || echo "NOT FOUND (needed for SDK tests: make sdk-test)"
+	@printf "Node.js 18+:     "; command -v node >/dev/null 2>&1 && echo "OK ($$(node --version 2>&1))" || echo "NOT FOUND (needed for SDK setup: make sdk-setup)"
 	@echo ""
 	@echo "Run 'make setup' to install missing dev dependencies."
 
