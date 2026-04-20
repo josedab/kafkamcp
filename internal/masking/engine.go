@@ -18,6 +18,7 @@ var (
 	ssnRegex        = regexp.MustCompile(`\b\d{3}-\d{2}-\d{4}\b`)
 	phoneRegex      = regexp.MustCompile(`\b(\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b`)
 	creditCardRegex = regexp.MustCompile(`\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b`)
+	digitSeqRegex   = regexp.MustCompile(`\b\d{13,19}\b`)
 )
 
 const defaultReplacement = "***REDACTED***"
@@ -275,8 +276,6 @@ func matchParts(pattern, path []string) bool {
 
 // maskLuhnNumbers finds digit sequences and masks those passing the Luhn check.
 func maskLuhnNumbers(value, replacement string) string {
-	// Find sequences of 13-19 digits (card number length)
-	digitSeqRegex := regexp.MustCompile(`\b\d{13,19}\b`)
 	return digitSeqRegex.ReplaceAllStringFunc(value, func(s string) string {
 		if luhnCheck(s) {
 			return replacement
