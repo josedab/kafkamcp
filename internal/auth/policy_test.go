@@ -8,6 +8,7 @@ import (
 )
 
 func TestMatchPattern(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		pattern string
 		name    string
@@ -25,6 +26,7 @@ func TestMatchPattern(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.pattern+"_"+tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := match.Glob(tt.pattern, tt.name)
 			if got != tt.want {
 				t.Errorf("match.Glob(%q, %q) = %v, want %v", tt.pattern, tt.name, got, tt.want)
@@ -34,6 +36,7 @@ func TestMatchPattern(t *testing.T) {
 }
 
 func TestPolicyEngine(t *testing.T) {
+	t.Parallel()
 	cfg := config.PolicyConfig{
 		DefaultDeny: true,
 		Agents: []config.AgentPolicy{
@@ -83,6 +86,7 @@ func TestPolicyEngine(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := pe.Authorize(tt.agentID, tt.resource, tt.resName, tt.action)
 			if got != tt.want {
 				t.Errorf("Authorize(%q, %v, %q, %v) = %v, want %v",
@@ -93,6 +97,7 @@ func TestPolicyEngine(t *testing.T) {
 }
 
 func TestFilterTopics(t *testing.T) {
+	t.Parallel()
 	cfg := config.PolicyConfig{
 		DefaultDeny: true,
 		Agents: []config.AgentPolicy{
@@ -120,6 +125,7 @@ func TestFilterTopics(t *testing.T) {
 }
 
 func TestNoPolicies(t *testing.T) {
+	t.Parallel()
 	pe := NewPolicyEngine(config.PolicyConfig{DefaultDeny: false})
 	if !pe.Authorize("anyone", ResourceTopic, "any.topic", ActionRead) {
 		t.Error("expected allow when no policies and default-deny=false")

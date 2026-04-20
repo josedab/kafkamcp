@@ -7,6 +7,7 @@ import (
 )
 
 func TestEmailMasking(t *testing.T) {
+	t.Parallel()
 	cfg := config.MaskingConfig{
 		Enabled: true,
 		Rules: []config.MaskingRule{
@@ -33,6 +34,7 @@ func TestEmailMasking(t *testing.T) {
 }
 
 func TestSSNMasking(t *testing.T) {
+	t.Parallel()
 	cfg := config.MaskingConfig{
 		Enabled: true,
 		Rules: []config.MaskingRule{
@@ -52,6 +54,7 @@ func TestSSNMasking(t *testing.T) {
 }
 
 func TestCreditCardMasking(t *testing.T) {
+	t.Parallel()
 	cfg := config.MaskingConfig{
 		Enabled: true,
 		Rules: []config.MaskingRule{
@@ -71,6 +74,7 @@ func TestCreditCardMasking(t *testing.T) {
 }
 
 func TestNERMasking(t *testing.T) {
+	t.Parallel()
 	cfg := config.MaskingConfig{
 		Enabled: true,
 		Rules: []config.MaskingRule{
@@ -90,6 +94,7 @@ func TestNERMasking(t *testing.T) {
 }
 
 func TestAgentSpecificRules(t *testing.T) {
+	t.Parallel()
 	cfg := config.MaskingConfig{
 		Enabled: true,
 		Rules: []config.MaskingRule{
@@ -112,6 +117,7 @@ func TestAgentSpecificRules(t *testing.T) {
 }
 
 func TestDisabledEngine(t *testing.T) {
+	t.Parallel()
 	cfg := config.MaskingConfig{Enabled: false}
 	e := NewEngine(cfg, testLogger())
 
@@ -122,6 +128,7 @@ func TestDisabledEngine(t *testing.T) {
 }
 
 func TestLuhnCheck(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		number string
 		valid  bool
@@ -138,6 +145,7 @@ func TestLuhnCheck(t *testing.T) {
 }
 
 func TestFieldPathMatching(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		pattern, path string
 		expected      bool
@@ -158,6 +166,7 @@ func TestFieldPathMatching(t *testing.T) {
 }
 
 func TestRegexMasking(t *testing.T) {
+	t.Parallel()
 	cfg := config.MaskingConfig{
 		Enabled: true,
 		Rules: []config.MaskingRule{
@@ -177,6 +186,7 @@ func TestRegexMasking(t *testing.T) {
 }
 
 func TestNestedMapMasking(t *testing.T) {
+	t.Parallel()
 	cfg := config.MaskingConfig{
 		Enabled: true,
 		Rules: []config.MaskingRule{

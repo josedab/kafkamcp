@@ -6,6 +6,7 @@ import (
 )
 
 func TestRegisterSchema(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	e.RegisterSchema(SchemaInfo{
 		Topic:  "orders",
@@ -23,6 +24,7 @@ func TestRegisterSchema(t *testing.T) {
 }
 
 func TestRegisterMultipleSchemas(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	e.RegisterSchema(SchemaInfo{
 		Topic:  "orders",
@@ -43,6 +45,7 @@ func TestRegisterMultipleSchemas(t *testing.T) {
 }
 
 func TestResolveFieldsWithSchema(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	e.RegisterSchema(SchemaInfo{
 		Topic:  "orders",
@@ -66,6 +69,7 @@ func TestResolveFieldsWithSchema(t *testing.T) {
 }
 
 func TestParseDurationVariants(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 
 	tests := []struct {
@@ -81,6 +85,7 @@ func TestParseDurationVariants(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.query, func(t *testing.T) {
+			t.Parallel()
 			plan, err := e.Parse(tt.query, []string{tt.topic})
 			if err != nil {
 				t.Fatalf("parse failed for %q: %v", tt.query, err)
@@ -93,6 +98,7 @@ func TestParseDurationVariants(t *testing.T) {
 }
 
 func TestParseWithLimit(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	plan, err := e.Parse("show last 50 orders", []string{"orders"})
 	if err != nil {

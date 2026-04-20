@@ -7,6 +7,7 @@ import (
 )
 
 func TestDefaultDeny(t *testing.T) {
+	t.Parallel()
 	pe := NewPolicyEngine(config.PolicyConfig{DefaultDeny: true})
 	if !pe.DefaultDeny() {
 		t.Error("expected DefaultDeny=true")
@@ -19,6 +20,7 @@ func TestDefaultDeny(t *testing.T) {
 }
 
 func TestAgentExists(t *testing.T) {
+	t.Parallel()
 	pe := NewPolicyEngine(config.PolicyConfig{
 		DefaultDeny: true,
 		Agents: []config.AgentPolicy{
@@ -35,6 +37,7 @@ func TestAgentExists(t *testing.T) {
 }
 
 func TestAuthorizeClusterAction(t *testing.T) {
+	t.Parallel()
 	pe := NewPolicyEngine(config.PolicyConfig{
 		DefaultDeny: true,
 		Agents: []config.AgentPolicy{
@@ -72,6 +75,7 @@ func TestAuthorizeClusterAction(t *testing.T) {
 }
 
 func TestAuthorizeSchemaAction(t *testing.T) {
+	t.Parallel()
 	pe := NewPolicyEngine(config.PolicyConfig{
 		DefaultDeny: true,
 		Agents: []config.AgentPolicy{

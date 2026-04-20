@@ -5,6 +5,7 @@ import (
 )
 
 func TestParseFilterRecent(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	plan, err := e.Parse("show me all failed orders in the last 2 hours", []string{"orders", "payments"})
 	if err != nil {
@@ -19,6 +20,7 @@ func TestParseFilterRecent(t *testing.T) {
 }
 
 func TestParseCount(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	plan, err := e.Parse("count errors in error-logs in the last 1 hour", []string{"error-logs", "access-logs"})
 	if err != nil {
@@ -33,6 +35,7 @@ func TestParseCount(t *testing.T) {
 }
 
 func TestParseFilterWhere(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	plan, err := e.Parse("show me orders where status is failed", []string{"orders"})
 	if err != nil {
@@ -47,6 +50,7 @@ func TestParseFilterWhere(t *testing.T) {
 }
 
 func TestFuzzyFieldMatch(t *testing.T) {
+	t.Parallel()
 	fields := map[string]string{"order_status": "string", "user_email": "string", "amount": "number"}
 
 	if got := fuzzyFieldMatch("status", fields); got != "order_status" {
@@ -58,6 +62,7 @@ func TestFuzzyFieldMatch(t *testing.T) {
 }
 
 func TestResolveTopics(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	topics := []string{"user-events", "order-events", "payment-transactions"}
 
@@ -68,6 +73,7 @@ func TestResolveTopics(t *testing.T) {
 }
 
 func TestEmptyQuery(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	_, err := e.Parse("", nil)
 	if err == nil {

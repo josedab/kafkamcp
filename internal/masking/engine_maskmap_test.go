@@ -9,6 +9,7 @@ import (
 // ===================== maskMap: nested map masking =====================
 
 func TestMaskMap_NestedFieldPathTraversal(t *testing.T) {
+	t.Parallel()
 	cfg := config.MaskingConfig{
 		Enabled: true,
 		Rules: []config.MaskingRule{
@@ -36,6 +37,7 @@ func TestMaskMap_NestedFieldPathTraversal(t *testing.T) {
 // ===================== maskMap: array field masking =====================
 
 func TestMaskMap_ArrayOfStrings(t *testing.T) {
+	t.Parallel()
 	cfg := config.MaskingConfig{
 		Enabled: true,
 		Rules: []config.MaskingRule{
@@ -65,6 +67,7 @@ func TestMaskMap_ArrayOfStrings(t *testing.T) {
 }
 
 func TestMaskMap_ArrayOfMaps(t *testing.T) {
+	t.Parallel()
 	cfg := config.MaskingConfig{
 		Enabled: true,
 		Rules: []config.MaskingRule{
@@ -99,6 +102,7 @@ func TestMaskMap_ArrayOfMaps(t *testing.T) {
 // ===================== maskMap: mixed types =====================
 
 func TestMaskMap_MixedTypes(t *testing.T) {
+	t.Parallel()
 	cfg := config.MaskingConfig{
 		Enabled: true,
 		Rules: []config.MaskingRule{
@@ -128,6 +132,7 @@ func TestMaskMap_MixedTypes(t *testing.T) {
 // ===================== maskMap: deeply nested (3+ levels) =====================
 
 func TestMaskMap_DeeplyNested(t *testing.T) {
+	t.Parallel()
 	cfg := config.MaskingConfig{
 		Enabled: true,
 		Rules: []config.MaskingRule{
@@ -161,6 +166,7 @@ func TestMaskMap_DeeplyNested(t *testing.T) {
 // ===================== maskMap: wildcard field path =====================
 
 func TestMaskMap_WildcardFieldPath(t *testing.T) {
+	t.Parallel()
 	cfg := config.MaskingConfig{
 		Enabled: true,
 		Rules: []config.MaskingRule{
@@ -185,6 +191,7 @@ func TestMaskMap_WildcardFieldPath(t *testing.T) {
 // ===================== maskMap: NER-based detection =====================
 
 func TestMaskMap_NERDetectionInNestedStrings(t *testing.T) {
+	t.Parallel()
 	cfg := config.MaskingConfig{
 		Enabled: true,
 		Rules: []config.MaskingRule{
@@ -209,6 +216,7 @@ func TestMaskMap_NERDetectionInNestedStrings(t *testing.T) {
 // ===================== maskMap: no matching fields =====================
 
 func TestMaskMap_NoMatchingFields(t *testing.T) {
+	t.Parallel()
 	cfg := config.MaskingConfig{
 		Enabled: true,
 		Rules: []config.MaskingRule{
@@ -233,6 +241,7 @@ func TestMaskMap_NoMatchingFields(t *testing.T) {
 // ===================== maskMap: nil/empty map =====================
 
 func TestMaskMap_EmptyMap(t *testing.T) {
+	t.Parallel()
 	cfg := config.MaskingConfig{
 		Enabled: true,
 		Rules: []config.MaskingRule{
@@ -249,6 +258,7 @@ func TestMaskMap_EmptyMap(t *testing.T) {
 // ===================== maskMap: array with non-string/non-map items =====================
 
 func TestMaskMap_ArrayWithPrimitives(t *testing.T) {
+	t.Parallel()
 	cfg := config.MaskingConfig{
 		Enabled: true,
 		Rules: []config.MaskingRule{

@@ -8,6 +8,7 @@ import (
 // --- PII Detection tests ---
 
 func TestDetectPII_Email(t *testing.T) {
+	t.Parallel()
 	detections := DetectPII("Contact us at user@example.com for info")
 	found := false
 	for _, d := range detections {
@@ -24,6 +25,7 @@ func TestDetectPII_Email(t *testing.T) {
 }
 
 func TestDetectPII_SSN(t *testing.T) {
+	t.Parallel()
 	detections := DetectPII("SSN: 123-45-6789")
 	found := false
 	for _, d := range detections {
@@ -40,6 +42,7 @@ func TestDetectPII_SSN(t *testing.T) {
 }
 
 func TestDetectPII_CreditCard(t *testing.T) {
+	t.Parallel()
 	// Valid Visa number (passes Luhn)
 	detections := DetectPII("Card: 4111 1111 1111 1111")
 	found := false
@@ -57,6 +60,7 @@ func TestDetectPII_CreditCard(t *testing.T) {
 }
 
 func TestDetectPII_CreditCard_InvalidLuhn(t *testing.T) {
+	t.Parallel()
 	// Number that looks like credit card but fails Luhn
 	detections := DetectPII("Card: 1234 5678 9012 3456")
 	for _, d := range detections {
@@ -67,6 +71,7 @@ func TestDetectPII_CreditCard_InvalidLuhn(t *testing.T) {
 }
 
 func TestDetectPII_Phone(t *testing.T) {
+	t.Parallel()
 	detections := DetectPII("Call me at (555) 123-4567")
 	found := false
 	for _, d := range detections {
@@ -83,6 +88,7 @@ func TestDetectPII_Phone(t *testing.T) {
 }
 
 func TestDetectPII_MultipleTypes(t *testing.T) {
+	t.Parallel()
 	detections := DetectPII("user@test.com SSN: 123-45-6789")
 	types := make(map[string]bool)
 	for _, d := range detections {
@@ -97,6 +103,7 @@ func TestDetectPII_MultipleTypes(t *testing.T) {
 }
 
 func TestDetectPII_NoPII(t *testing.T) {
+	t.Parallel()
 	detections := DetectPII("Hello world, no PII here")
 	if len(detections) != 0 {
 		t.Errorf("expected no detections, got %d", len(detections))
@@ -106,6 +113,7 @@ func TestDetectPII_NoPII(t *testing.T) {
 // --- MaskPartial tests ---
 
 func TestMaskPartial(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		value   string
 		visible int
@@ -129,6 +137,7 @@ func TestMaskPartial(t *testing.T) {
 // --- HashValue tests ---
 
 func TestHashValue(t *testing.T) {
+	t.Parallel()
 	h1 := HashValue("test")
 	if !strings.HasPrefix(h1, "tok_") {
 		t.Errorf("expected tok_ prefix, got %s", h1)
@@ -150,6 +159,7 @@ func TestHashValue(t *testing.T) {
 // --- PolicyManager tests ---
 
 func TestPolicyManager_LoadFromYAML(t *testing.T) {
+	t.Parallel()
 	pm := NewPolicyManager()
 	yaml := `
 version: "1.0"
@@ -183,6 +193,7 @@ agent_policies:
 }
 
 func TestPolicyManager_LoadFromYAML_InvalidYAML(t *testing.T) {
+	t.Parallel()
 	pm := NewPolicyManager()
 	err := pm.LoadFromYAML([]byte("{{invalid yaml"))
 	if err == nil {
@@ -191,6 +202,7 @@ func TestPolicyManager_LoadFromYAML_InvalidYAML(t *testing.T) {
 }
 
 func TestPolicyManager_LoadFromYAML_InvalidRegex(t *testing.T) {
+	t.Parallel()
 	pm := NewPolicyManager()
 	yaml := `
 version: "1.0"
@@ -209,6 +221,7 @@ rules:
 }
 
 func TestPolicyManager_Apply(t *testing.T) {
+	t.Parallel()
 	pm := NewPolicyManager()
 	policy := &MaskingPolicy{
 		Version: "1.0",
@@ -231,6 +244,7 @@ func TestPolicyManager_Apply(t *testing.T) {
 }
 
 func TestPolicyManager_GetAgentPolicy(t *testing.T) {
+	t.Parallel()
 	pm := NewPolicyManager()
 	pm.Apply(&MaskingPolicy{
 		AgentPolicies: []AgentPolicy{
@@ -249,6 +263,7 @@ func TestPolicyManager_GetAgentPolicy(t *testing.T) {
 }
 
 func TestPolicyManager_ShouldMaskForAgent_UnknownAgent(t *testing.T) {
+	t.Parallel()
 	pm := NewPolicyManager()
 	pm.Apply(&MaskingPolicy{})
 
@@ -259,6 +274,7 @@ func TestPolicyManager_ShouldMaskForAgent_UnknownAgent(t *testing.T) {
 }
 
 func TestPolicyManager_ShouldMaskForAgent_DeniedField(t *testing.T) {
+	t.Parallel()
 	pm := NewPolicyManager()
 	pm.Apply(&MaskingPolicy{
 		AgentPolicies: []AgentPolicy{
@@ -272,6 +288,7 @@ func TestPolicyManager_ShouldMaskForAgent_DeniedField(t *testing.T) {
 }
 
 func TestPolicyManager_ShouldMaskForAgent_AllowedField(t *testing.T) {
+	t.Parallel()
 	pm := NewPolicyManager()
 	pm.Apply(&MaskingPolicy{
 		AgentPolicies: []AgentPolicy{
@@ -285,6 +302,7 @@ func TestPolicyManager_ShouldMaskForAgent_AllowedField(t *testing.T) {
 }
 
 func TestPolicyManager_ShouldMaskForAgent_SensitivityThreshold(t *testing.T) {
+	t.Parallel()
 	pm := NewPolicyManager()
 	pm.Apply(&MaskingPolicy{
 		AgentPolicies: []AgentPolicy{
@@ -311,6 +329,7 @@ func TestPolicyManager_ShouldMaskForAgent_SensitivityThreshold(t *testing.T) {
 // --- sensitivityOrd tests ---
 
 func TestSensitivityOrd(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		level SensitivityLevel
 		want  int

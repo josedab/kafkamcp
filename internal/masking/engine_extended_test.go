@@ -8,6 +8,7 @@ import (
 )
 
 func TestMatchFieldPath(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		pattern string
 		path    string
@@ -25,6 +26,7 @@ func TestMatchFieldPath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.pattern+"_"+tt.path, func(t *testing.T) {
+			t.Parallel()
 			got := matchFieldPath(tt.pattern, tt.path)
 			if got != tt.want {
 				t.Errorf("matchFieldPath(%q, %q) = %v, want %v", tt.pattern, tt.path, got, tt.want)
@@ -34,6 +36,7 @@ func TestMatchFieldPath(t *testing.T) {
 }
 
 func TestMatchParts(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		pattern []string
@@ -49,6 +52,7 @@ func TestMatchParts(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := matchParts(tt.pattern, tt.path)
 			if got != tt.want {
 				t.Errorf("matchParts(%v, %v) = %v, want %v", tt.pattern, tt.path, got, tt.want)
@@ -58,6 +62,7 @@ func TestMatchParts(t *testing.T) {
 }
 
 func TestLuhnCheckExtended(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		number string
 		want   bool
@@ -72,6 +77,7 @@ func TestLuhnCheckExtended(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.number, func(t *testing.T) {
+			t.Parallel()
 			got := luhnCheck(tt.number)
 			if got != tt.want {
 				t.Errorf("luhnCheck(%q) = %v, want %v", tt.number, got, tt.want)
@@ -81,6 +87,7 @@ func TestLuhnCheckExtended(t *testing.T) {
 }
 
 func TestMaskLuhnNumbers(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name  string
 		value string
@@ -93,6 +100,7 @@ func TestMaskLuhnNumbers(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := maskLuhnNumbers(tt.value, "****REDACTED****")
 			if got != tt.want {
 				t.Errorf("maskLuhnNumbers(%q) = %q, want %q", tt.value, got, tt.want)
@@ -102,6 +110,7 @@ func TestMaskLuhnNumbers(t *testing.T) {
 }
 
 func TestEngineEnabled(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(config.MaskingConfig{Enabled: true}, slog.Default())
 	if !e.Enabled() {
 		t.Error("expected engine to be enabled")
@@ -109,6 +118,7 @@ func TestEngineEnabled(t *testing.T) {
 }
 
 func TestEngineRuleCount(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(config.MaskingConfig{
 		Enabled: true,
 		Rules: []config.MaskingRule{
@@ -122,6 +132,7 @@ func TestEngineRuleCount(t *testing.T) {
 }
 
 func TestAddRule(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(config.MaskingConfig{Enabled: true}, slog.Default())
 	err := e.AddRule("phone", "phone", "*.phone", "", "***-***-****", nil)
 	if err != nil {
@@ -133,6 +144,7 @@ func TestAddRule(t *testing.T) {
 }
 
 func TestRuleApplies(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(config.MaskingConfig{
 		Enabled: true,
 		Rules: []config.MaskingRule{
@@ -156,6 +168,7 @@ func TestRuleApplies(t *testing.T) {
 }
 
 func TestMaskValueNil(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(config.MaskingConfig{Enabled: true}, slog.Default())
 	result := e.MaskValue("agent", nil)
 	if result != nil {
@@ -164,6 +177,7 @@ func TestMaskValueNil(t *testing.T) {
 }
 
 func TestMaskValueString(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(config.MaskingConfig{
 		Enabled: true,
 		Rules: []config.MaskingRule{
@@ -181,6 +195,7 @@ func TestMaskValueString(t *testing.T) {
 }
 
 func TestMaskValueDisabled(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(config.MaskingConfig{Enabled: false}, slog.Default())
 	input := "user@example.com"
 	result := e.MaskValue("agent", input)
@@ -190,6 +205,7 @@ func TestMaskValueDisabled(t *testing.T) {
 }
 
 func TestMaskMap(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(config.MaskingConfig{
 		Enabled: true,
 		Rules: []config.MaskingRule{
@@ -212,6 +228,7 @@ func TestMaskMap(t *testing.T) {
 }
 
 func TestPhoneMasking(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(config.MaskingConfig{
 		Enabled: true,
 		Rules: []config.MaskingRule{

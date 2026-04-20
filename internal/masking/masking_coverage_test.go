@@ -8,6 +8,7 @@ import (
 )
 
 func TestAddRuleAllTypes(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(config.MaskingConfig{Enabled: true}, slog.Default())
 
 	tests := []struct {
@@ -29,6 +30,7 @@ func TestAddRuleAllTypes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			err := e.AddRule(tt.name, tt.ruleType, "field", tt.pattern, "", nil)
 			if tt.wantErr && err == nil {
 				t.Error("expected error")
@@ -41,6 +43,7 @@ func TestAddRuleAllTypes(t *testing.T) {
 }
 
 func TestAddRuleWithAgents(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(config.MaskingConfig{Enabled: true}, slog.Default())
 	err := e.AddRule("agent-email", "email", "email", "", "***", []string{"agent-1", "agent-2"})
 	if err != nil {
@@ -49,6 +52,7 @@ func TestAddRuleWithAgents(t *testing.T) {
 }
 
 func TestAddRuleDefaultReplace(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(config.MaskingConfig{Enabled: true}, slog.Default())
 	err := e.AddRule("default-replace", "email", "email", "", "", nil)
 	if err != nil {
@@ -57,6 +61,7 @@ func TestAddRuleDefaultReplace(t *testing.T) {
 }
 
 func TestMaskValueNotEnabled(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(config.MaskingConfig{Enabled: false}, slog.Default())
 	result := e.MaskValue("agent", "test@example.com")
 	if result != "test@example.com" {
@@ -65,6 +70,7 @@ func TestMaskValueNotEnabled(t *testing.T) {
 }
 
 func TestMaskValueNoRules(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(config.MaskingConfig{Enabled: true}, slog.Default())
 	result := e.MaskValue("agent", "test@example.com")
 	if result != "test@example.com" {
@@ -73,6 +79,7 @@ func TestMaskValueNoRules(t *testing.T) {
 }
 
 func TestMaskValueWithMapValue(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(config.MaskingConfig{Enabled: true}, slog.Default())
 	e.AddRule("email-mask", "email", "email", "", "***", nil)
 
@@ -91,6 +98,7 @@ func TestMaskValueWithMapValue(t *testing.T) {
 }
 
 func TestMaskValueWithNonMapNonString(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(config.MaskingConfig{Enabled: true}, slog.Default())
 	e.AddRule("email-mask", "email", "", "", "***", nil)
 

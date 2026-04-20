@@ -64,6 +64,7 @@ func TestExpandEnvVars(t *testing.T) {
 }
 
 func TestConfigValidation(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		cfg     Config
@@ -124,6 +125,7 @@ func TestConfigValidation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			err := tt.cfg.validate()
 			if tt.wantErr && err == nil {
 				t.Fatal("expected error, got nil")
@@ -136,6 +138,7 @@ func TestConfigValidation(t *testing.T) {
 }
 
 func TestConfigDefaults(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		Clusters: []ClusterConfig{
 			{Name: "test", BootstrapServers: "localhost:9092"},

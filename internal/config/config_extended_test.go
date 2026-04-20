@@ -7,6 +7,7 @@ import (
 )
 
 func TestServerAddress(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name string
 		cfg  ServerConfig
@@ -19,6 +20,7 @@ func TestServerAddress(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := tt.cfg.Address()
 			if got != tt.want {
 				t.Errorf("Address() = %q, want %q", got, tt.want)
@@ -28,6 +30,7 @@ func TestServerAddress(t *testing.T) {
 }
 
 func TestDefaultCluster(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		cfg      Config
@@ -65,6 +68,7 @@ func TestDefaultCluster(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := tt.cfg.DefaultCluster()
 			if tt.wantNil {
 				if got != nil {
@@ -83,6 +87,7 @@ func TestDefaultCluster(t *testing.T) {
 }
 
 func TestFindCluster(t *testing.T) {
+	t.Parallel()
 	cfg := Config{Clusters: []ClusterConfig{
 		{Name: "prod", BootstrapServers: "prod:9092", Default: true},
 		{Name: "staging", BootstrapServers: "staging:9092"},
@@ -100,6 +105,7 @@ func TestFindCluster(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got, err := cfg.FindCluster(tt.search)
 			if tt.wantErr {
 				if err == nil {
@@ -118,6 +124,7 @@ func TestFindCluster(t *testing.T) {
 }
 
 func TestFindClusterNoClusters(t *testing.T) {
+	t.Parallel()
 	cfg := Config{}
 	_, err := cfg.FindCluster("")
 	if err == nil {
@@ -126,6 +133,7 @@ func TestFindClusterNoClusters(t *testing.T) {
 }
 
 func TestApplyDefaultsSetsFirstClusterAsDefault(t *testing.T) {
+	t.Parallel()
 	cfg := Config{Clusters: []ClusterConfig{
 		{Name: "a", BootstrapServers: "a:9092"},
 		{Name: "b", BootstrapServers: "b:9092"},
@@ -141,6 +149,7 @@ func TestApplyDefaultsSetsFirstClusterAsDefault(t *testing.T) {
 }
 
 func TestApplyDefaultsPreservesExistingDefault(t *testing.T) {
+	t.Parallel()
 	cfg := Config{Clusters: []ClusterConfig{
 		{Name: "a", BootstrapServers: "a:9092"},
 		{Name: "b", BootstrapServers: "b:9092", Default: true},
@@ -156,6 +165,7 @@ func TestApplyDefaultsPreservesExistingDefault(t *testing.T) {
 }
 
 func TestApplyDefaultsMaxMessageSize(t *testing.T) {
+	t.Parallel()
 	cfg := Config{Clusters: []ClusterConfig{{Name: "t", BootstrapServers: "l:9092"}}}
 	cfg.applyDefaults()
 
@@ -174,6 +184,7 @@ func TestApplyDefaultsMaxMessageSize(t *testing.T) {
 }
 
 func TestValidateTransports(t *testing.T) {
+	t.Parallel()
 	base := Config{Clusters: []ClusterConfig{{Name: "t", BootstrapServers: "l:9092"}}}
 
 	validTransports := []string{"stdio", "sse", "streamable-http", ""}
@@ -196,6 +207,7 @@ func TestValidateTransports(t *testing.T) {
 }
 
 func TestValidateClusterNameRequired(t *testing.T) {
+	t.Parallel()
 	cfg := Config{Clusters: []ClusterConfig{{BootstrapServers: "l:9092"}}}
 	err := cfg.validate()
 	if err == nil {
@@ -204,6 +216,7 @@ func TestValidateClusterNameRequired(t *testing.T) {
 }
 
 func TestValidateSASLPartialCredentials(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		cluster ClusterConfig
@@ -227,6 +240,7 @@ func TestValidateSASLPartialCredentials(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			cfg := Config{Clusters: []ClusterConfig{tt.cluster}}
 			err := cfg.validate()
 			if tt.wantErr && err == nil {
@@ -240,6 +254,7 @@ func TestValidateSASLPartialCredentials(t *testing.T) {
 }
 
 func TestExpandEnvVarsCommentSkip(t *testing.T) {
+	t.Parallel()
 	input := "# ${SHOULD_NOT_EXPAND}\nvalue: plain"
 	got, err := expandEnvVars([]byte(input))
 	if err != nil {
@@ -266,6 +281,7 @@ func TestExpandEnvVarsSetVarOverridesDefault(t *testing.T) {
 }
 
 func TestLoadValidConfigFile(t *testing.T) {
+	t.Parallel()
 	content := `
 clusters:
   - name: test-cluster
@@ -292,6 +308,7 @@ server:
 }
 
 func TestLoadMissingFile(t *testing.T) {
+	t.Parallel()
 	_, err := Load("/nonexistent/path/config.yaml")
 	if err == nil {
 		t.Fatal("expected error for missing file")
@@ -299,6 +316,7 @@ func TestLoadMissingFile(t *testing.T) {
 }
 
 func TestLoadInvalidYAML(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	path := filepath.Join(dir, "bad.yaml")
 	if err := os.WriteFile(path, []byte(":::not yaml:::"), 0600); err != nil {
@@ -312,6 +330,7 @@ func TestLoadInvalidYAML(t *testing.T) {
 }
 
 func TestLoadValidationFailure(t *testing.T) {
+	t.Parallel()
 	content := `
 clusters: []
 `
