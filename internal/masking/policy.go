@@ -103,10 +103,10 @@ func (pm *PolicyManager) Apply(policy *MaskingPolicy) error {
 	}
 
 	pm.mu.Lock()
+	defer pm.mu.Unlock()
 	pm.policy = policy
 	pm.compiledRules = compiled
 	pm.agentPolicies = agentMap
-	pm.mu.Unlock()
 
 	return nil
 }

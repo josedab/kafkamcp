@@ -412,7 +412,7 @@ func (e *Engine) AddRule(name, ruleType, fieldPath, pattern, replace string, age
 	}
 
 	e.mu.Lock()
+	defer e.mu.Unlock()
 	e.rules = append(e.rules, compiled)
-	e.mu.Unlock()
 	return nil
 }
