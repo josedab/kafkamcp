@@ -75,8 +75,10 @@ func (l *Logger) Log(entry Entry) {
 		entry.Timestamp = time.Now().UTC().Format(time.RFC3339Nano)
 	}
 
-	// Write to ring buffer
+	// Write to ring buffer and file under lock
 	l.mu.Lock()
+	defer l.mu.Unlock()
+
 	if len(l.entries) < l.maxEntries {
 		l.entries = append(l.entries, entry)
 		l.pos = len(l.entries)
@@ -100,7 +102,6 @@ func (l *Logger) Log(entry Entry) {
 			l.slogger.Error("failed to marshal audit entry", "error", err)
 		}
 	}
-	l.mu.Unlock()
 
 	// Also emit via slog at debug level
 	l.slogger.Debug("audit",
