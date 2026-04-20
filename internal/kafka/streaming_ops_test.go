@@ -248,7 +248,8 @@ func TestListStreams_MultipleActiveSessions(t *testing.T) {
 	}
 
 	found := map[string]bool{}
-	for _, s := range sessions {
+	for i := range sessions {
+		s := &sessions[i]
 		found[s.ID] = true
 		if s.ID == "session-1" {
 			if s.Topic != "orders" || s.GroupID != "group-1" || s.Status != "running" {

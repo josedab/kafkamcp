@@ -217,8 +217,8 @@ func TestListStreams_WithSessions(t *testing.T) {
 	}
 
 	found := map[string]bool{}
-	for _, s := range sessions {
-		found[s.ID] = true
+	for i := range sessions {
+		found[sessions[i].ID] = true
 	}
 	if !found["s1"] || !found["s2"] {
 		t.Error("expected both sessions to be listed")
