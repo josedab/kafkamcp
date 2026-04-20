@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/kafkamcp/kafkamcp/internal/kafka"
+	"github.com/kafkamcp/kafkamcp/internal/urlutil"
 )
 
 // RemediationPolicy defines configurable per-DLQ-topic remediation policies.
@@ -81,8 +82,9 @@ func NewPolicyManager(logger *slog.Logger) *PolicyManager {
 	}
 }
 
-// AddPolicy adds or updates a remediation policy.
-func (pm *PolicyManager) AddPolicy(policy RemediationPolicy) {
+// AddPolicy adds or updates a remediation policy. Returns an error if the
+// escalation webhook URL is invalid.
+func (pm *PolicyManager) AddPolicy(policy RemediationPolicy) error {
 	if policy.MaxRetries <= 0 {
 		policy.MaxRetries = 3
 	}
@@ -92,6 +94,11 @@ func (pm *PolicyManager) AddPolicy(policy RemediationPolicy) {
 	if policy.BackoffMaxMs <= 0 {
 		policy.BackoffMaxMs = 30000
 	}
+	if policy.EscalationWebhook != "" {
+		if err := urlutil.ValidateWebhookURL(policy.EscalationWebhook); err != nil {
+			return fmt.Errorf("invalid escalation webhook: %w", err)
+		}
+	}
 
 	pm.mu.Lock()
 	defer pm.mu.Unlock()
@@ -100,10 +107,11 @@ func (pm *PolicyManager) AddPolicy(policy RemediationPolicy) {
 	for i, p := range pm.policies {
 		if p.TopicPattern == policy.TopicPattern {
 			pm.policies[i] = policy
-			return
+			return nil
 		}
 	}
 	pm.policies = append(pm.policies, policy)
+	return nil
 }
 
 // RemovePolicy removes a policy by topic pattern.
@@ -329,7 +337,7 @@ func (r *Remediator) Escalate(ctx context.Context, topic, errorType string, fail
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("User-Agent", "KafkaMCP-DLQ-Remediator/1.0")
 
-	client := &http.Client{Timeout: 10 * time.Second}
+	client := r.httpClient
 	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("sending escalation webhook: %w", err)

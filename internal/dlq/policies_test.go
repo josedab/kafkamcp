@@ -245,7 +245,7 @@ func TestEscalate_WebhookSuccess(t *testing.T) {
 	logger := testDLQLogger()
 	r := NewRemediator(logger)
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer server.Close()
@@ -260,7 +260,7 @@ func TestEscalate_WebhookError(t *testing.T) {
 	logger := testDLQLogger()
 	r := NewRemediator(logger)
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}))
 	defer server.Close()

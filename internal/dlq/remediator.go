@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -43,10 +44,11 @@ type Policy struct {
 
 // Remediator handles DLQ auto-remediation with configurable policies.
 type Remediator struct {
-	mu       sync.RWMutex
-	policies []Policy
-	stats    RemediationStats
-	logger   *slog.Logger
+	mu         sync.RWMutex
+	policies   []Policy
+	stats      RemediationStats
+	logger     *slog.Logger
+	httpClient *http.Client
 }
 
 // RemediationStats tracks remediation outcomes for observability.
@@ -61,6 +63,7 @@ type RemediationStats struct {
 func NewRemediator(logger *slog.Logger) *Remediator {
 	return &Remediator{
 		logger: logger,
+		httpClient: &http.Client{Timeout: 10 * time.Second},
 		stats: RemediationStats{
 			ByTopic: make(map[string]int64),
 		},
