@@ -404,6 +404,17 @@ graph LR
 | `telemetry.service_name` | string | `kafkamcp` | Service name reported in traces |
 | `telemetry.sample_rate` | float | `1.0` | Trace sampling rate (0.0–1.0) |
 
+### Masking
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `masking.enabled` | bool | `false` | Enable data masking / PII redaction |
+| `masking.rules[].name` | string | — | Rule identifier |
+| `masking.rules[].type` | string | — | Rule type: `email`, `ssn`, `credit_card`, `phone`, `regex`, `ner` |
+| `masking.rules[].field_path` | string | — | JSON path pattern (e.g., `$.user.email`, `**email**`) |
+| `masking.rules[].pattern` | string | — | Custom regex pattern (required when `type=regex`) |
+| `masking.rules[].replace` | string | `***REDACTED***` | Replacement string for masked values |
+| `masking.rules[].agents` | []string | `[]` (all) | Apply only to these agent IDs; empty means all agents |
+
 ### Environment Variables
 
 Config values support `${VAR}` and `${VAR:-default}` syntax:
