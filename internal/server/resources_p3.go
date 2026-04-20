@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
-	"strings"
 	"time"
 
 	"github.com/kafkamcp/kafkamcp/internal/masking"
@@ -192,6 +191,3 @@ func formatDuration(d time.Duration) string {
 	}
 	return fmt.Sprintf("%.1fm", d.Minutes())
 }
-
-// Ensure unused imports are used
-var _ = strings.Contains

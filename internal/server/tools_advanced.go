@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/kafkamcp/kafkamcp/internal/auth"
-	"github.com/kafkamcp/kafkamcp/internal/kafka"
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
@@ -428,6 +427,3 @@ func (s *Server) handlePlayground(ctx context.Context, request mcp.CallToolReque
 		return mcp.NewToolResultError(fmt.Sprintf("unknown action %q; must be: create, produce_sample, list, cleanup", action)), nil
 	}
 }
-
-// Ensure imports are used.
-var _ = kafka.StreamConfig{}
