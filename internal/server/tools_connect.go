@@ -34,7 +34,7 @@ func (s *Server) handleCreateConnector(ctx context.Context, request mcp.CallTool
 
 	clCfg, err := s.kafkaManager.GetClusterConfig(cluster)
 	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("Cluster error: %v", err)), nil
+		return s.toolError("Cluster error", err), nil
 	}
 
 	client, err := s.getConnectClient(clCfg)
@@ -54,7 +54,7 @@ func (s *Server) handleCreateConnector(ctx context.Context, request mcp.CallTool
 	result, err := client.CreateConnector(ctx, name, config)
 	if err != nil {
 		s.logAudit(agentID, "kafka_create_connector", args, cluster, "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to create connector: %v", err)), nil
+		return s.toolError("Failed to create connector", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_create_connector", args, cluster, "success", 0, nil, start)
@@ -84,7 +84,7 @@ func (s *Server) handleUpdateConnector(ctx context.Context, request mcp.CallTool
 
 	clCfg, err := s.kafkaManager.GetClusterConfig(cluster)
 	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("Cluster error: %v", err)), nil
+		return s.toolError("Cluster error", err), nil
 	}
 
 	client, err := s.getConnectClient(clCfg)
@@ -104,7 +104,7 @@ func (s *Server) handleUpdateConnector(ctx context.Context, request mcp.CallTool
 	result, err := client.UpdateConnector(ctx, name, config)
 	if err != nil {
 		s.logAudit(agentID, "kafka_update_connector", args, cluster, "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to update connector: %v", err)), nil
+		return s.toolError("Failed to update connector", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_update_connector", args, cluster, "success", 0, nil, start)
@@ -134,7 +134,7 @@ func (s *Server) handleDeleteConnector(ctx context.Context, request mcp.CallTool
 
 	clCfg, err := s.kafkaManager.GetClusterConfig(cluster)
 	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("Cluster error: %v", err)), nil
+		return s.toolError("Cluster error", err), nil
 	}
 
 	client, err := s.getConnectClient(clCfg)
@@ -148,7 +148,7 @@ func (s *Server) handleDeleteConnector(ctx context.Context, request mcp.CallTool
 
 	if err := client.DeleteConnector(ctx, name); err != nil {
 		s.logAudit(agentID, "kafka_delete_connector", args, cluster, "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to delete connector: %v", err)), nil
+		return s.toolError("Failed to delete connector", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_delete_connector", args, cluster, "success", 0, nil, start)
@@ -178,7 +178,7 @@ func (s *Server) handleRestartConnector(ctx context.Context, request mcp.CallToo
 
 	clCfg, err := s.kafkaManager.GetClusterConfig(cluster)
 	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("Cluster error: %v", err)), nil
+		return s.toolError("Cluster error", err), nil
 	}
 
 	client, err := s.getConnectClient(clCfg)
@@ -196,7 +196,7 @@ func (s *Server) handleRestartConnector(ctx context.Context, request mcp.CallToo
 	result, err := client.RestartConnector(ctx, name, taskID, failedOnly)
 	if err != nil {
 		s.logAudit(agentID, "kafka_restart_connector", args, cluster, "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to restart: %v", err)), nil
+		return s.toolError("Failed to restart", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_restart_connector", args, cluster, "success", 0, nil, start)
@@ -226,7 +226,7 @@ func (s *Server) handleConnectorHealth(ctx context.Context, request mcp.CallTool
 
 	clCfg, err := s.kafkaManager.GetClusterConfig(cluster)
 	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("Cluster error: %v", err)), nil
+		return s.toolError("Cluster error", err), nil
 	}
 
 	client, err := s.getConnectClient(clCfg)
@@ -241,7 +241,7 @@ func (s *Server) handleConnectorHealth(ctx context.Context, request mcp.CallTool
 	health, err := client.ConnectorHealth(ctx, name)
 	if err != nil {
 		s.logAudit(agentID, "kafka_connector_health", args, cluster, "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to get health: %v", err)), nil
+		return s.toolError("Failed to get health", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_connector_health", args, cluster, "success", 0, nil, start)

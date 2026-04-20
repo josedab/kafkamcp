@@ -50,10 +50,10 @@ func (s *Server) handleCreateTopic(ctx context.Context, request mcp.CallToolRequ
 			if cfgRaw, ok := m["configs"]; ok {
 				b, err := json.Marshal(cfgRaw)
 				if err != nil {
-					return mcp.NewToolResultError(fmt.Sprintf("Failed to marshal configs: %v", err)), nil
+					return s.toolError("Failed to marshal configs", err), nil
 				}
 				if err := json.Unmarshal(b, &configs); err != nil {
-					return mcp.NewToolResultError(fmt.Sprintf("Invalid configs format: %v", err)), nil
+					return s.toolError("Invalid configs format", err), nil
 				}
 			}
 		}
@@ -64,7 +64,7 @@ func (s *Server) handleCreateTopic(ctx context.Context, request mcp.CallToolRequ
 	})
 	if err != nil {
 		s.logAudit(agentID, "kafka_create_topic", args, cluster, "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to create topic: %v", err)), nil
+		return s.toolError("Failed to create topic", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_create_topic", args, cluster, "success", 0, nil, start)
@@ -98,10 +98,10 @@ func (s *Server) handleAlterTopic(ctx context.Context, request mcp.CallToolReque
 			if cfgRaw, ok := m["configs"]; ok {
 				b, err := json.Marshal(cfgRaw)
 				if err != nil {
-					return mcp.NewToolResultError(fmt.Sprintf("Failed to marshal configs: %v", err)), nil
+					return s.toolError("Failed to marshal configs", err), nil
 				}
 				if err := json.Unmarshal(b, &configs); err != nil {
-					return mcp.NewToolResultError(fmt.Sprintf("Invalid configs format: %v", err)), nil
+					return s.toolError("Invalid configs format", err), nil
 				}
 			}
 		}
@@ -113,7 +113,7 @@ func (s *Server) handleAlterTopic(ctx context.Context, request mcp.CallToolReque
 	err := s.kafkaManager.AlterTopic(ctx, cluster, kafka.AlterTopicRequest{Name: name, Configs: configs})
 	if err != nil {
 		s.logAudit(agentID, "kafka_alter_topic", args, cluster, "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to alter topic: %v", err)), nil
+		return s.toolError("Failed to alter topic", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_alter_topic", args, cluster, "success", 0, nil, start)
@@ -144,7 +144,7 @@ func (s *Server) handleDeleteTopic(ctx context.Context, request mcp.CallToolRequ
 	err := s.kafkaManager.DeleteTopic(ctx, cluster, name)
 	if err != nil {
 		s.logAudit(agentID, "kafka_delete_topic", args, cluster, "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to delete topic: %v", err)), nil
+		return s.toolError("Failed to delete topic", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_delete_topic", args, cluster, "success", 0, nil, start)
@@ -173,7 +173,7 @@ func (s *Server) handleSearch(ctx context.Context, request mcp.CallToolRequest) 
 	}
 
 	if err := s.acquireExpensiveOp(ctx); err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
+		return s.toolError("operation capacity exceeded", err), nil
 	}
 	defer s.releaseExpensiveOp()
 
@@ -209,7 +209,7 @@ func (s *Server) handleSearch(ctx context.Context, request mcp.CallToolRequest) 
 	matched, scanned, err := s.kafkaManager.SearchMessages(ctx, cluster, req)
 	if err != nil {
 		s.logAudit(agentID, "kafka_search", args, cluster, "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to search: %v", err)), nil
+		return s.toolError("Failed to search", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_search", args, cluster, "success", len(matched), nil, start)
@@ -260,7 +260,7 @@ func (s *Server) handleResetOffsets(ctx context.Context, request mcp.CallToolReq
 	})
 	if err != nil {
 		s.logAudit(agentID, "kafka_reset_offsets", args, cluster, "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to reset offsets: %v", err)), nil
+		return s.toolError("Failed to reset offsets", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_reset_offsets", args, cluster, "success", len(result.Offsets), nil, start)
@@ -297,7 +297,7 @@ func (s *Server) handleCheckSchemaCompatibility(ctx context.Context, request mcp
 	result, err := s.getSchemaClient("").CheckCompatibility(ctx, subject, version, schemaStr, schemaType)
 	if err != nil {
 		s.logAudit(agentID, "kafka_check_schema_compatibility", args, "", "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to check compatibility: %v", err)), nil
+		return s.toolError("Failed to check compatibility", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_check_schema_compatibility", args, "", "success", 0, nil, start)
@@ -332,7 +332,7 @@ func (s *Server) handleAnalyzeDLQ(ctx context.Context, request mcp.CallToolReque
 	result, err := s.kafkaManager.AnalyzeDLQ(ctx, cluster, topic, limit)
 	if err != nil {
 		s.logAudit(agentID, "kafka_analyze_dlq", args, cluster, "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to analyze DLQ: %v", err)), nil
+		return s.toolError("Failed to analyze DLQ", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_analyze_dlq", args, cluster, "success", result.TotalMessages, nil, start)
@@ -375,7 +375,7 @@ func (s *Server) handleSubscribe(ctx context.Context, request mcp.CallToolReques
 	})
 	if err != nil {
 		s.logAudit(agentID, "kafka_subscribe", args, cluster, "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to subscribe: %v", err)), nil
+		return s.toolError("Failed to subscribe", err), nil
 	}
 
 	s.metrics.MessagesConsumed.WithLabelValues(topic, metrics.SanitizeAgentLabel(agentID), s.resolveClusterName(cluster)).Add(float64(result.Count))

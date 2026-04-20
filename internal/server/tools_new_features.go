@@ -36,14 +36,14 @@ func (s *Server) handleDataContract(ctx context.Context, request mcp.CallToolReq
 		}
 		data, err := json.Marshal(contractData)
 		if err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("invalid contract: %v", err)), nil
+			return s.toolError("invalid contract", err), nil
 		}
 		var c contracts.Contract
 		if err := json.Unmarshal(data, &c); err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("invalid contract format: %v", err)), nil
+			return s.toolError("invalid contract format", err), nil
 		}
 		if err := s.contractEngine.RegisterContract(c); err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("failed to register contract: %v", err)), nil
+			return s.toolError("failed to register contract", err), nil
 		}
 		s.logAudit(agentID, "kafka_validate_contract", args, cluster, "success", 1, nil, start)
 		return marshalResult(map[string]any{"status": "registered", "contract": c.Name, "topic": c.Topic})
@@ -70,7 +70,7 @@ func (s *Server) handleDataContract(ctx context.Context, request mcp.CallToolReq
 		}
 		c, err := s.contractEngine.GetContract(topic)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("contract not found", err), nil
 		}
 		s.logAudit(agentID, "kafka_validate_contract", args, cluster, "success", 1, nil, start)
 		return marshalResult(c)
@@ -86,7 +86,7 @@ func (s *Server) handleDataContract(ctx context.Context, request mcp.CallToolReq
 		}
 		report, err := s.contractEngine.GetComplianceReport(topic)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("compliance report failed", err), nil
 		}
 		s.logAudit(agentID, "kafka_validate_contract", args, cluster, "success", 1, nil, start)
 		return marshalResult(report)
@@ -120,7 +120,7 @@ func (s *Server) handleDiagnoseLag(ctx context.Context, request mcp.CallToolRequ
 	groupDetail, err := s.kafkaManager.DescribeConsumerGroup(ctx, cluster, groupID)
 	if err != nil {
 		s.logAudit(agentID, "kafka_diagnose_lag", args, cluster, "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("failed to describe consumer group: %v", err)), nil
+		return s.toolError("failed to describe consumer group", err), nil
 	}
 
 	// Build partition lag snapshots
@@ -164,11 +164,11 @@ func (s *Server) handleMigrationPlan(ctx context.Context, request mcp.CallToolRe
 
 		sourceTopics, err := s.kafkaManager.ListTopics(ctx, sourceCluster, false)
 		if err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("failed to list source topics: %v", err)), nil
+			return s.toolError("failed to list source topics", err), nil
 		}
 		targetTopics, err := s.kafkaManager.ListTopics(ctx, targetCluster, false)
 		if err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("failed to list target topics: %v", err)), nil
+			return s.toolError("failed to list target topics", err), nil
 		}
 
 		var srcInfo, tgtInfo []migration.TopicInfo
@@ -302,7 +302,7 @@ func (s *Server) handleGroupHealth(ctx context.Context, request mcp.CallToolRequ
 	groupDetail, err := s.kafkaManager.DescribeConsumerGroup(ctx, cluster, groupID)
 	if err != nil {
 		s.logAudit(agentID, "kafka_group_health", args, cluster, "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("failed to describe consumer group: %v", err)), nil
+		return s.toolError("failed to describe consumer group", err), nil
 	}
 
 	health := s.selfHealMon.EvaluateHealth(
@@ -346,7 +346,7 @@ func (s *Server) handlePersona(ctx context.Context, request mcp.CallToolRequest)
 		}
 		p, err := s.personaEngine.GetPersona(personaName)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("persona not found", err), nil
 		}
 		s.logAudit(agentID, "kafka_persona", args, "", "success", 1, nil, start)
 		return marshalResult(p)
@@ -356,7 +356,7 @@ func (s *Server) handlePersona(ctx context.Context, request mcp.CallToolRequest)
 			return mcp.NewToolResultError("persona name is required"), nil
 		}
 		if err := s.personaEngine.SetActive(personaName); err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("persona activation failed", err), nil
 		}
 		s.logAudit(agentID, "kafka_persona", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]any{"status": "activated", "persona": personaName})
@@ -392,7 +392,7 @@ func (s *Server) handleForecast(ctx context.Context, request mcp.CallToolRequest
 	detail, err := s.kafkaManager.DescribeTopic(ctx, cluster, topic)
 	if err != nil {
 		s.logAudit(agentID, "kafka_forecast", args, cluster, "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("failed to describe topic: %v", err)), nil
+		return s.toolError("failed to describe topic", err), nil
 	}
 
 	throughput := estimateThroughput(detail)
@@ -406,7 +406,7 @@ func (s *Server) handleForecast(ctx context.Context, request mcp.CallToolRequest
 	result, err := s.forecaster.ForecastTopic(topic, metricName, horizonDays)
 	if err != nil {
 		s.logAudit(agentID, "kafka_forecast", args, cluster, "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("forecast failed: %v", err)), nil
+		return s.toolError("forecast failed", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_forecast", args, cluster, "success", 1, nil, start)

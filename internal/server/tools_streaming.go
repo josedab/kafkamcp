@@ -70,7 +70,7 @@ func (s *Server) handleStreamStart(ctx context.Context, request mcp.CallToolRequ
 	result, err := s.kafkaManager.StartStream(ctx, cluster, cfg)
 	if err != nil {
 		s.logAudit(agentID, "kafka_stream", args, cluster, "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to start stream: %v", err)), nil
+		return s.toolError("Failed to start stream", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_stream", args, cluster, "success", 0, nil, start)
@@ -87,7 +87,7 @@ func (s *Server) handleStreamPoll(_ context.Context, request mcp.CallToolRequest
 	result, err := s.kafkaManager.PollStream(sessionID, timeoutMs)
 	if err != nil {
 		s.logAudit(agentID, "kafka_stream", args, "", "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to poll stream: %v", err)), nil
+		return s.toolError("Failed to poll stream", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_stream", args, "", "success", result.Count, nil, start)
@@ -103,7 +103,7 @@ func (s *Server) handleStreamControl(_ context.Context, request mcp.CallToolRequ
 	result, err := s.kafkaManager.ControlStream(sessionID, action)
 	if err != nil {
 		s.logAudit(agentID, "kafka_stream", args, "", "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to %s stream: %v", action, err)), nil
+		return s.toolError(fmt.Sprintf("Failed to %s stream", action), err), nil
 	}
 
 	s.logAudit(agentID, "kafka_stream", args, "", "success", 0, nil, start)

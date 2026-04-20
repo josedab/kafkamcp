@@ -66,7 +66,7 @@ func TestHandleCostWaste_ListTopicsError(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	assertIsError(t, result)
-	if !strings.Contains(resultText(t, result), "broker unavailable") {
+	if !strings.Contains(resultText(t, result), "Failed to list topics") {
 		t.Error("expected error message in result")
 	}
 }

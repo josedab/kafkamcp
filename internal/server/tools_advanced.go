@@ -39,7 +39,7 @@ func (s *Server) handleAgentRegistry(ctx context.Context, request mcp.CallToolRe
 	case "heartbeat":
 		if err := s.agentRegistry.Heartbeat(agentID); err != nil {
 			s.logAudit(agentID, "kafka_agent_registry", args, "", "error", 0, err, start)
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("agent heartbeat failed", err), nil
 		}
 		s.logAudit(agentID, "kafka_agent_registry", args, "", "success", 0, nil, start)
 		return marshalResult(map[string]any{"status": "heartbeat_updated"})
@@ -52,7 +52,7 @@ func (s *Server) handleAgentRegistry(ctx context.Context, request mcp.CallToolRe
 		}
 		if err := s.agentRegistry.ClaimPartition(agentID, topic, partition); err != nil {
 			s.logAudit(agentID, "kafka_agent_registry", args, "", "error", 0, err, start)
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("partition claim failed", err), nil
 		}
 		s.logAudit(agentID, "kafka_agent_registry", args, "", "success", 0, nil, start)
 		return marshalResult(map[string]any{"status": "claimed", "topic": topic, "partition": partition})
@@ -65,7 +65,7 @@ func (s *Server) handleAgentRegistry(ctx context.Context, request mcp.CallToolRe
 		}
 		if err := s.agentRegistry.ReleasePartition(agentID, topic, partition); err != nil {
 			s.logAudit(agentID, "kafka_agent_registry", args, "", "error", 0, err, start)
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("partition release failed", err), nil
 		}
 		s.logAudit(agentID, "kafka_agent_registry", args, "", "success", 0, nil, start)
 		return marshalResult(map[string]any{"status": "released", "topic": topic, "partition": partition})
@@ -90,7 +90,7 @@ func (s *Server) handleAgentRegistry(ctx context.Context, request mcp.CallToolRe
 		msg, err := s.agentRegistry.QueueHandoff(agentID, targetAgent, msgData)
 		if err != nil {
 			s.logAudit(agentID, "kafka_agent_registry", args, "", "error", 0, err, start)
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("agent handoff failed", err), nil
 		}
 		s.logAudit(agentID, "kafka_agent_registry", args, "", "success", 0, nil, start)
 		return marshalResult(map[string]any{"status": "handoff_queued", "handoff": msg})
@@ -137,7 +137,7 @@ func (s *Server) handleTimeTravel(ctx context.Context, request mcp.CallToolReque
 	}
 
 	if err := s.acquireExpensiveOp(ctx); err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
+		return s.toolError("operation capacity exceeded", err), nil
 	}
 	defer s.releaseExpensiveOp()
 
@@ -155,7 +155,7 @@ func (s *Server) handleTimeTravel(ctx context.Context, request mcp.CallToolReque
 		result, err := s.kafkaManager.TimeTravelSnapshot(ctx, cluster, topic, ts, maxKeys)
 		if err != nil {
 			s.logAudit(agentID, "kafka_time_travel", args, cluster, "error", 0, err, start)
-			return mcp.NewToolResultError(fmt.Sprintf("Failed: %v", err)), nil
+			return s.toolError("Failed", err), nil
 		}
 		s.logAudit(agentID, "kafka_time_travel", args, cluster, "success", result.KeyCount, nil, start)
 		return marshalResult(result)
@@ -169,7 +169,7 @@ func (s *Server) handleTimeTravel(ctx context.Context, request mcp.CallToolReque
 		result, err := s.kafkaManager.TimeTravelDiff(ctx, cluster, topic, tsFrom, tsTo, maxKeys)
 		if err != nil {
 			s.logAudit(agentID, "kafka_time_travel", args, cluster, "error", 0, err, start)
-			return mcp.NewToolResultError(fmt.Sprintf("Failed: %v", err)), nil
+			return s.toolError("Failed", err), nil
 		}
 		s.logAudit(agentID, "kafka_time_travel", args, cluster, "success", result.TotalChanges, nil, start)
 		return marshalResult(result)
@@ -199,7 +199,7 @@ func (s *Server) handleRecommend(ctx context.Context, request mcp.CallToolReques
 	result, err := s.kafkaManager.GetRecommendations(ctx, cluster, topic)
 	if err != nil {
 		s.logAudit(agentID, "kafka_recommend", args, cluster, "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed: %v", err)), nil
+		return s.toolError("Failed", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_recommend", args, cluster, "success", len(result.Recommendations), nil, start)
@@ -230,7 +230,7 @@ func (s *Server) handleTraceMessage(ctx context.Context, request mcp.CallToolReq
 	}
 
 	if err := s.acquireExpensiveOp(ctx); err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
+		return s.toolError("operation capacity exceeded", err), nil
 	}
 	defer s.releaseExpensiveOp()
 
@@ -259,7 +259,7 @@ func (s *Server) handleTraceMessage(ctx context.Context, request mcp.CallToolReq
 		topics, err := s.kafkaManager.ListTopics(ctx, cluster, false)
 		if err != nil {
 			s.logAudit(agentID, "kafka_trace_message", args, cluster, "error", 0, err, start)
-			return mcp.NewToolResultError(fmt.Sprintf("Failed to list topics: %v", err)), nil
+			return s.toolError("Failed to list topics", err), nil
 		}
 		for _, t := range topics {
 			topicNames = append(topicNames, t.Name)
@@ -269,7 +269,7 @@ func (s *Server) handleTraceMessage(ctx context.Context, request mcp.CallToolReq
 	result, err := s.kafkaManager.TraceMessage(ctx, cluster, correlationID, headerName, topicNames, maxScan)
 	if err != nil {
 		s.logAudit(agentID, "kafka_trace_message", args, cluster, "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed: %v", err)), nil
+		return s.toolError("Failed", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_trace_message", args, cluster, "success", len(result.Hops), nil, start)
@@ -299,7 +299,7 @@ func (s *Server) handleListACLs(ctx context.Context, request mcp.CallToolRequest
 	result, err := s.kafkaManager.ListACLs(ctx, cluster, principal, resourceType, includeAnalysis)
 	if err != nil {
 		s.logAudit(agentID, "kafka_list_acls", args, cluster, "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed: %v", err)), nil
+		return s.toolError("Failed", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_list_acls", args, cluster, "success", result.TotalACLs, nil, start)
@@ -334,7 +334,7 @@ func (s *Server) handleConfigDrift(ctx context.Context, request mcp.CallToolRequ
 		result, err := s.kafkaManager.CompareConfigs(ctx, sourceCluster, targetCluster, topic)
 		if err != nil {
 			s.logAudit(agentID, "kafka_config_drift", args, cluster, "error", 0, err, start)
-			return mcp.NewToolResultError(fmt.Sprintf("Failed: %v", err)), nil
+			return s.toolError("Failed", err), nil
 		}
 		s.logAudit(agentID, "kafka_config_drift", args, cluster, "success", len(result.Diffs), nil, start)
 		return marshalResult(result)
@@ -345,7 +345,7 @@ func (s *Server) handleConfigDrift(ctx context.Context, request mcp.CallToolRequ
 		result, err := s.kafkaManager.AuditConfigs(ctx, cluster, topic, template)
 		if err != nil {
 			s.logAudit(agentID, "kafka_config_drift", args, cluster, "error", 0, err, start)
-			return mcp.NewToolResultError(fmt.Sprintf("Failed: %v", err)), nil
+			return s.toolError("Failed", err), nil
 		}
 		s.logAudit(agentID, "kafka_config_drift", args, cluster, "success", len(result.Deviations), nil, start)
 		return marshalResult(result)
@@ -385,7 +385,7 @@ func (s *Server) handlePlayground(ctx context.Context, request mcp.CallToolReque
 		result, err := s.kafkaManager.PlaygroundCreate(ctx, cluster, agentID, name, partitions)
 		if err != nil {
 			s.logAudit(agentID, "kafka_playground", args, cluster, "error", 0, err, start)
-			return mcp.NewToolResultError(fmt.Sprintf("Failed: %v", err)), nil
+			return s.toolError("Failed", err), nil
 		}
 		s.logAudit(agentID, "kafka_playground", args, cluster, "success", 0, nil, start)
 		return marshalResult(result)
@@ -400,7 +400,7 @@ func (s *Server) handlePlayground(ctx context.Context, request mcp.CallToolReque
 		result, err := s.kafkaManager.PlaygroundProduceSample(ctx, cluster, agentID, name, pattern, count)
 		if err != nil {
 			s.logAudit(agentID, "kafka_playground", args, cluster, "error", 0, err, start)
-			return mcp.NewToolResultError(fmt.Sprintf("Failed: %v", err)), nil
+			return s.toolError("Failed", err), nil
 		}
 		s.logAudit(agentID, "kafka_playground", args, cluster, "success", count, nil, start)
 		return marshalResult(result)
@@ -409,7 +409,7 @@ func (s *Server) handlePlayground(ctx context.Context, request mcp.CallToolReque
 		topics, err := s.kafkaManager.PlaygroundList(ctx, cluster, agentID)
 		if err != nil {
 			s.logAudit(agentID, "kafka_playground", args, cluster, "error", 0, err, start)
-			return mcp.NewToolResultError(fmt.Sprintf("Failed: %v", err)), nil
+			return s.toolError("Failed", err), nil
 		}
 		s.logAudit(agentID, "kafka_playground", args, cluster, "success", len(topics), nil, start)
 		return marshalResult(map[string]any{"playground_topics": topics, "count": len(topics)})
@@ -418,7 +418,7 @@ func (s *Server) handlePlayground(ctx context.Context, request mcp.CallToolReque
 		count, err := s.kafkaManager.PlaygroundCleanup(ctx, cluster, agentID)
 		if err != nil {
 			s.logAudit(agentID, "kafka_playground", args, cluster, "error", 0, err, start)
-			return mcp.NewToolResultError(fmt.Sprintf("Failed: %v", err)), nil
+			return s.toolError("Failed", err), nil
 		}
 		s.logAudit(agentID, "kafka_playground", args, cluster, "success", count, nil, start)
 		return marshalResult(map[string]any{"status": "cleaned_up", "topics_deleted": count})

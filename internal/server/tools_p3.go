@@ -57,7 +57,7 @@ func (s *Server) handleWatchSubscribe(ctx context.Context, request mcp.CallToolR
 	sub, err := s.watchManager.Subscribe(agentID, topicPattern, keyFilter, valueFilter, webhookURL, nil)
 	if err != nil {
 		s.logAudit(agentID, "kafka_watch", args, "", "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to create watch: %v", err)), nil
+		return s.toolError("Failed to create watch", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_watch", args, "", "success", 0, nil, start)
@@ -67,7 +67,7 @@ func (s *Server) handleWatchSubscribe(ctx context.Context, request mcp.CallToolR
 		"topic_pattern":   sub.TopicPattern,
 		"key_filter":      sub.KeyFilter,
 		"value_filter":    sub.ValueFilter,
-		"webhook_url":     sub.WebhookURL,
+		"webhook_url":     redactURL(sub.WebhookURL),
 	})
 }
 
@@ -84,7 +84,7 @@ func (s *Server) handleWatchUnsubscribe(_ context.Context, request mcp.CallToolR
 	err := s.watchManager.Unsubscribe(subscriptionID, agentID)
 	if err != nil {
 		s.logAudit(agentID, "kafka_watch", args, "", "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to unsubscribe: %v", err)), nil
+		return s.toolError("Failed to unsubscribe", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_watch", args, "", "success", 0, nil, start)
@@ -139,7 +139,7 @@ func (s *Server) handleRemediateDLQ(ctx context.Context, request mcp.CallToolReq
 	result, err := s.dlqRemediator.Remediate(ctx, s.kafkaManager, cluster, topic, action, targetTopic, limit)
 	if err != nil {
 		s.logAudit(agentID, "kafka_remediate_dlq", args, cluster, "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("DLQ remediation failed: %v", err)), nil
+		return s.toolError("DLQ remediation failed", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_remediate_dlq", args, cluster, "success", result.ProcessedCount, nil, start)
@@ -181,13 +181,13 @@ func (s *Server) handleSchemaDiff(ctx context.Context, request mcp.CallToolReque
 	schemaFrom, err := schemaClient.GetSchema(ctx, subject, versionFrom)
 	if err != nil {
 		s.logAudit(agentID, "kafka_schema_diff", args, "", "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to get schema version %s: %v", versionFrom, err)), nil
+		return s.toolError(fmt.Sprintf("Failed to get schema version %s", versionFrom), err), nil
 	}
 
 	schemaTo, err := schemaClient.GetSchema(ctx, subject, versionTo)
 	if err != nil {
 		s.logAudit(agentID, "kafka_schema_diff", args, "", "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to get schema version %s: %v", versionTo, err)), nil
+		return s.toolError(fmt.Sprintf("Failed to get schema version %s", versionTo), err), nil
 	}
 
 	diff := computeSchemaDiff(schemaFrom.Schema, schemaTo.Schema)

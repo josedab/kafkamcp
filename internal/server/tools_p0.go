@@ -32,7 +32,7 @@ func (s *Server) handleListTopics(ctx context.Context, request mcp.CallToolReque
 		topics, err := s.kafkaManager.ListTopics(ctx, cluster, includeInternal)
 		if err != nil {
 			s.logAudit(agentID, "kafka_list_topics", args, cluster, "error", 0, err, start)
-			return mcp.NewToolResultError(fmt.Sprintf("Failed to list topics: %v", err)), nil
+			return s.toolError("Failed to list topics", err), nil
 		}
 
 		if filter != "" {
@@ -81,7 +81,7 @@ func (s *Server) handleDescribeTopic(ctx context.Context, request mcp.CallToolRe
 		detail, err := s.kafkaManager.DescribeTopic(ctx, cluster, topic)
 		if err != nil {
 			s.logAudit(agentID, "kafka_describe_topic", args, cluster, "error", 0, err, start)
-			return mcp.NewToolResultError(fmt.Sprintf("Failed to describe topic: %v", err)), nil
+			return s.toolError("Failed to describe topic", err), nil
 		}
 
 		s.logAudit(agentID, "kafka_describe_topic", args, cluster, "success", 0, nil, start)
@@ -129,7 +129,7 @@ func (s *Server) handleConsume(ctx context.Context, request mcp.CallToolRequest)
 		messages, err := s.kafkaManager.Consume(ctx, cluster, topic, partition, offset, limit, timeoutMs, deserializer)
 		if err != nil {
 			s.logAudit(agentID, "kafka_consume", args, cluster, "error", 0, err, start)
-			return mcp.NewToolResultError(fmt.Sprintf("Failed to consume: %v", err)), nil
+			return s.toolError("Failed to consume", err), nil
 		}
 
 		s.metrics.MessagesConsumed.WithLabelValues(topic, metrics.SanitizeAgentLabel(agentID), s.resolveClusterName(cluster)).Add(float64(len(messages)))
@@ -167,12 +167,12 @@ func (s *Server) handleProduce(ctx context.Context, request mcp.CallToolRequest)
 		var messages []kafka.ProduceMessage
 		msgBytes, err := json.Marshal(msgData)
 		if err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("Invalid messages: %v", err)), nil
+			return s.toolError("Invalid messages", err), nil
 		}
 		if err := json.Unmarshal(msgBytes, &messages); err != nil {
 			var single kafka.ProduceMessage
 			if err := json.Unmarshal(msgBytes, &single); err != nil {
-				return mcp.NewToolResultError(fmt.Sprintf("Invalid messages format: %v", err)), nil
+				return s.toolError("Invalid messages format", err), nil
 			}
 			messages = []kafka.ProduceMessage{single}
 		}
@@ -189,7 +189,7 @@ func (s *Server) handleProduce(ctx context.Context, request mcp.CallToolRequest)
 			for i, msg := range messages {
 				b, err := json.Marshal(msg.Value)
 				if err != nil {
-					return mcp.NewToolResultError(fmt.Sprintf("message %d: failed to marshal value: %v", i, err)), nil
+					return s.toolError(fmt.Sprintf("message %d: failed to marshal value", i), err), nil
 				}
 				if len(b) > maxSize {
 					return mcp.NewToolResultError(fmt.Sprintf("message %d exceeds maximum size of %d bytes", i, maxSize)), nil
@@ -206,7 +206,7 @@ func (s *Server) handleProduce(ctx context.Context, request mcp.CallToolRequest)
 		})
 		if err != nil {
 			s.logAudit(agentID, "kafka_produce", args, cluster, "error", 0, err, start)
-			return mcp.NewToolResultError(fmt.Sprintf("Failed to produce: %v", err)), nil
+			return s.toolError("Failed to produce", err), nil
 		}
 
 		s.metrics.MessagesProduced.WithLabelValues(topic, metrics.SanitizeAgentLabel(agentID), s.resolveClusterName(cluster)).Add(float64(len(deliveries)))
@@ -241,7 +241,7 @@ func (s *Server) handleListSchemas(ctx context.Context, request mcp.CallToolRequ
 	subjects, err := sc.ListSubjectsDetailed(ctx)
 	if err != nil {
 		s.logAudit(agentID, "kafka_list_schemas", args, "", "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to list schemas: %v", err)), nil
+		return s.toolError("Failed to list schemas", err), nil
 	}
 
 	if filter != "" {
@@ -282,7 +282,7 @@ func (s *Server) handleGetSchema(ctx context.Context, request mcp.CallToolReques
 	info, err := s.getSchemaClient("").GetSchema(ctx, subject, version)
 	if err != nil {
 		s.logAudit(agentID, "kafka_get_schema", args, "", "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to get schema: %v", err)), nil
+		return s.toolError("Failed to get schema", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_get_schema", args, "", "success", 0, nil, start)
@@ -307,7 +307,7 @@ func (s *Server) handleDescribeConsumerGroup(ctx context.Context, request mcp.Ca
 		detail, err := s.kafkaManager.DescribeConsumerGroup(ctx, cluster, groupID)
 		if err != nil {
 			s.logAudit(agentID, "kafka_describe_consumer_group", args, cluster, "error", 0, err, start)
-			return mcp.NewToolResultError(fmt.Sprintf("Failed to describe group: %v", err)), nil
+			return s.toolError("Failed to describe group", err), nil
 		}
 
 		s.logAudit(agentID, "kafka_describe_consumer_group", args, cluster, "success", 0, nil, start)
@@ -336,7 +336,7 @@ func (s *Server) handleListConsumerGroups(ctx context.Context, request mcp.CallT
 	groups, err := s.kafkaManager.ListConsumerGroups(ctx, cluster)
 	if err != nil {
 		s.logAudit(agentID, "kafka_list_consumer_groups", args, cluster, "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to list groups: %v", err)), nil
+		return s.toolError("Failed to list groups", err), nil
 	}
 
 	if stateFilter != "" {

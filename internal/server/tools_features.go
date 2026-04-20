@@ -98,7 +98,7 @@ func (s *Server) handleNLQuery(ctx context.Context, request mcp.CallToolRequest)
 		topics, err := s.kafkaManager.ListTopics(ctx, cluster, false)
 		if err != nil {
 			s.logAudit(agentID, "kafka_nl_query", args, cluster, "error", 0, err, start)
-			return mcp.NewToolResultError(fmt.Sprintf("Failed to list topics: %v", err)), nil
+			return s.toolError("Failed to list topics", err), nil
 		}
 
 		topicNames := make([]string, len(topics))
@@ -109,7 +109,7 @@ func (s *Server) handleNLQuery(ctx context.Context, request mcp.CallToolRequest)
 		plan, err := s.nlQueryEngine.Parse(query, topicNames)
 		if err != nil {
 			s.logAudit(agentID, "kafka_nl_query", args, cluster, "error", 0, err, start)
-			return mcp.NewToolResultError(fmt.Sprintf("Failed to parse query: %v", err)), nil
+			return s.toolError("Failed to parse query", err), nil
 		}
 
 		// Execute the query plan against matching topics
@@ -238,7 +238,7 @@ func (s *Server) handleWorkflows(ctx context.Context, request mcp.CallToolReques
 			}
 			tmpl, err := s.workflowEngine.GetTemplate(templateName)
 			if err != nil {
-				return mcp.NewToolResultError(err.Error()), nil
+				return s.toolError("workflow template not found", err), nil
 			}
 			return marshalResult(tmpl)
 
@@ -259,7 +259,7 @@ func (s *Server) handleWorkflows(ctx context.Context, request mcp.CallToolReques
 
 			exec, err := s.workflowEngine.StartExecution(templateName, params)
 			if err != nil {
-				return mcp.NewToolResultError(err.Error()), nil
+				return s.toolError("workflow execution failed", err), nil
 			}
 
 			tmpl, err := s.workflowEngine.GetTemplate(templateName)
@@ -292,7 +292,7 @@ func (s *Server) handleGitOpsDiff(ctx context.Context, request mcp.CallToolReque
 		topics, err := s.kafkaManager.ListTopics(ctx, cluster, false)
 		if err != nil {
 			s.logAudit(agentID, "kafka_gitops_diff", args, cluster, "error", 0, err, start)
-			return mcp.NewToolResultError(fmt.Sprintf("Failed to list topics: %v", err)), nil
+			return s.toolError("Failed to list topics", err), nil
 		}
 
 		live := gitops.LiveState{Topics: make(map[string]gitops.TopicSpec)}
@@ -331,13 +331,14 @@ func (s *Server) handleGitOpsDiff(ctx context.Context, request mcp.CallToolReque
 		}
 
 		if errs := s.gitopsManager.ValidateDesiredState(desired); len(errs) > 0 {
-			return mcp.NewToolResultError(fmt.Sprintf("Validation errors: %v", errs)), nil
+			s.logger.Error("GitOps validation failed", "errors", errs)
+			return mcp.NewToolResultError("GitOps desired state validation failed"), nil
 		}
 
 		diff, err := s.gitopsManager.Diff(desired, live)
 		if err != nil {
 			s.logAudit(agentID, "kafka_gitops_diff", args, cluster, "error", 0, err, start)
-			return mcp.NewToolResultError(fmt.Sprintf("Failed to compute diff: %v", err)), nil
+			return s.toolError("Failed to compute diff", err), nil
 		}
 
 		plan := s.gitopsManager.GeneratePlan(diff, true)
@@ -377,7 +378,7 @@ func (s *Server) handleKnowledgeGraphQuery(ctx context.Context, request mcp.Call
 		result, err := s.knowledgeGraph.Query(queryStr)
 		if err != nil {
 			s.logAudit(agentID, "kafka_knowledge_graph", args, "", "error", 0, err, start)
-			return mcp.NewToolResultError(fmt.Sprintf("Query failed: %v", err)), nil
+			return s.toolError("Query failed", err), nil
 		}
 
 		s.logAudit(agentID, "kafka_knowledge_graph", args, "", "success", result.TotalNodes, nil, start)

@@ -112,7 +112,7 @@ func TestHandleListTopics_Error(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	assertIsError(t, result)
-	if !strings.Contains(resultText(t, result), "connection refused") {
+	if !strings.Contains(resultText(t, result), "Failed to list topics") {
 		t.Error("expected error message in result")
 	}
 }
@@ -280,8 +280,8 @@ func TestHandleDescribeTopic_NotFound(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	assertIsError(t, result)
-	if !strings.Contains(resultText(t, result), "not found") {
-		t.Error("expected 'not found' in error")
+	if !strings.Contains(resultText(t, result), "Failed to describe topic") {
+		t.Error("expected 'Failed to describe topic' in error")
 	}
 }
 
@@ -462,7 +462,7 @@ func TestHandleConsume_ErrorPropagation(t *testing.T) {
 	s := newTestServerWithMock(t, mock)
 	result, _ := s.handleConsume(context.Background(), makeToolRequest(map[string]any{"topic": "nonexistent"}))
 	assertIsError(t, result)
-	if !strings.Contains(resultText(t, result), "not found") {
+	if !strings.Contains(resultText(t, result), "Failed to consume") {
 		t.Error("expected error message to propagate")
 	}
 }
