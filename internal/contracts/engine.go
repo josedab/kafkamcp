@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -335,7 +336,8 @@ func (e *Engine) GetComplianceReport(topic string) (*ComplianceReport, error) {
 // splitCSV splits a comma-separated string into trimmed parts.
 func splitCSV(s string) []string {
 	parts := make([]string, 0)
-	for _, p := range regexp.MustCompile(`,\s*`).Split(s, -1) {
+	for _, p := range strings.Split(s, ",") {
+		p = strings.TrimSpace(p)
 		if p != "" {
 			parts = append(parts, p)
 		}
