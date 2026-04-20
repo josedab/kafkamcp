@@ -13,6 +13,7 @@ KafkaMCP is distributed as a single binary named `kafkamcp`. This page documents
 |---|---|---|---|
 | `--config` | `-c` | `kafkamcp.yaml` | Path to configuration file. |
 | `--log-level` | — | — | Override log level (`debug`, `info`, `warn`, `error`). When set, this takes precedence over `server.log_level` in the config file. |
+| `--debug` | — | `false` | Enable debug logging (shorthand for `--log-level debug`). |
 
 ## Commands
 
@@ -69,6 +70,23 @@ Error: configuration validation failed: at least one cluster is required
 ```
 
 Use this before deploying config changes to catch errors early.
+
+### `kafkamcp init`
+
+Generate a starter configuration file. Writes to stdout by default or to a file with `--output`.
+
+```bash
+kafkamcp init
+kafkamcp init --transport sse --schema-registry http://localhost:8081
+kafkamcp init --output kafkamcp.yaml
+```
+
+| Flag | Short | Default | Description |
+|---|---|---|---|
+| `--output` | `-o` | — | Write config to file instead of stdout. |
+| `--transport` | — | `stdio` | Transport type (`stdio`, `sse`, `streamable-http`). |
+| `--bootstrap-servers` | — | `localhost:9092` | Kafka bootstrap servers. |
+| `--schema-registry` | — | — | Schema Registry URL (optional). |
 
 ## Examples
 
