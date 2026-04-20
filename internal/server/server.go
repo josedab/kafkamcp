@@ -5,6 +5,7 @@ import (
 "encoding/json"
 "fmt"
 "log/slog"
+"strings"
 "sync"
 "time"
 
@@ -178,11 +179,24 @@ func (s *Server) SetOTelProvider(p *telemetry.Provider) {
 	s.otelProvider = p
 }
 
-// Close shuts down the server.
+// Close shuts down the server and all subsystems.
 func (s *Server) Close() error {
 s.kafkaManager.Close()
 if s.watchManager != nil {
 	s.watchManager.Close()
+}
+if s.anomalyDetector != nil {
+	s.anomalyDetector.Stop()
+}
+if s.otelProvider != nil {
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := s.otelProvider.Shutdown(shutdownCtx); err != nil {
+		s.logger.Error("failed to shutdown OTel provider", "error", err)
+	}
+}
+if s.pluginRegistry != nil {
+	s.pluginRegistry.Close()
 }
 return s.auditLogger.Close()
 }
@@ -415,10 +429,13 @@ s.metrics.ToolLatencySeconds.WithLabelValues(tool, safeAgent, entry.Cluster).Obs
 }
 
 // sanitizeAuditParams redacts sensitive data from audit log parameters.
+// It applies tool-specific redactions and deep-inspects all parameters for
+// sensitive key patterns (password, secret, token, key, credential).
 func sanitizeAuditParams(tool string, params map[string]any) map[string]any {
 if params == nil {
 	return nil
 }
+
 sensitiveTools := map[string][]string{
 	"kafka_produce":                  {"messages"},
 	"kafka_consume":                  {"messages"},
@@ -427,20 +444,76 @@ sensitiveTools := map[string][]string{
 	"kafka_check_schema_compatibility": {"schema"},
 	"kafka_describe_connector":       {"name"},
 }
-keys, ok := sensitiveTools[tool]
-if !ok {
-	return params
-}
+
 sanitized := make(map[string]any, len(params))
 for k, v := range params {
 	sanitized[k] = v
 }
-for _, key := range keys {
-	if _, exists := sanitized[key]; exists {
-		sanitized[key] = "**REDACTED**"
+
+// Tool-specific redactions
+if keys, ok := sensitiveTools[tool]; ok {
+	for _, key := range keys {
+		if _, exists := sanitized[key]; exists {
+			sanitized[key] = "**REDACTED**"
+		}
 	}
 }
+
+// Deep-redact any parameter whose key matches sensitive patterns
+deepRedactSensitiveKeys(sanitized)
+
 return sanitized
+}
+
+// sensitiveKeyPatterns contains substrings that indicate a parameter key holds sensitive data.
+var sensitiveKeyPatterns = []string{"password", "secret", "token", "key", "credential", "api_key", "apikey", "webhook_url"}
+
+// deepRedactSensitiveKeys recursively inspects map values and redacts any key
+// matching sensitive patterns.
+func deepRedactSensitiveKeys(m map[string]any) {
+for k, v := range m {
+	lower := strings.ToLower(k)
+	isSensitive := false
+	for _, pat := range sensitiveKeyPatterns {
+		if strings.Contains(lower, pat) {
+			isSensitive = true
+			break
+		}
+	}
+	if isSensitive {
+		m[k] = "**REDACTED**"
+		continue
+	}
+	// Recurse into nested maps
+	if nested, ok := v.(map[string]any); ok {
+		deepRedactSensitiveKeys(nested)
+	}
+}
+}
+
+// toolError logs the raw error server-side and returns a generic error message
+// to the client, preventing leakage of internal details like broker IPs,
+// TLS certificate info, connection strings, and file system paths.
+func (s *Server) toolError(msg string, err error) *mcp.CallToolResult {
+	s.logger.Error(msg, "error", err)
+	return mcp.NewToolResultError(msg)
+}
+
+// redactURL masks a URL for safe inclusion in responses and audit logs,
+// preserving only the scheme and host.
+func redactURL(rawURL string) string {
+	if rawURL == "" {
+		return ""
+	}
+	// Show scheme + host, redact path/query
+	if idx := strings.Index(rawURL, "://"); idx >= 0 {
+		rest := rawURL[idx+3:]
+		if slashIdx := strings.Index(rest, "/"); slashIdx >= 0 {
+			return rawURL[:idx+3+slashIdx] + "/***"
+		}
+		return rawURL + "/***"
+	}
+	return "***"
 }
 
 // marshalResult serializes a value as indented JSON and wraps it in an MCP tool result.
