@@ -15,6 +15,7 @@ linters:
     - misspell
     - unconvert
     - gocritic
+    - revive
 
 linters-settings:
   gocritic:
@@ -27,6 +28,12 @@ linters-settings:
     locale: US
   goimports:
     local-prefixes: github.com/kafkamcp/kafkamcp
+  revive:
+    rules:
+      - name: exported
+        arguments:
+          - checkPrivateReceivers
+        severity: warning
 
 issues:
   exclude-use-default: false
