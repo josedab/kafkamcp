@@ -23,6 +23,9 @@ func (s *Server) handleDataContract(ctx context.Context, request mcp.CallToolReq
 	if deny := s.checkRateLimit(agentID, "kafka_validate_contract"); deny != nil {
 		return deny, nil
 	}
+	if deny := s.checkAuth(agentID, "kafka_validate_contract", auth.ResourceCluster, "", auth.ActionRead); deny != nil {
+		return deny, nil
+	}
 
 	action := request.GetString("action", "")
 	topic := request.GetString("topic", "")
@@ -150,6 +153,9 @@ func (s *Server) handleMigrationPlan(ctx context.Context, request mcp.CallToolRe
 	if deny := s.checkRateLimit(agentID, "kafka_migration_plan"); deny != nil {
 		return deny, nil
 	}
+	if deny := s.checkAuth(agentID, "kafka_migration_plan", auth.ResourceCluster, "", auth.ActionAdmin); deny != nil {
+		return deny, nil
+	}
 
 	action := request.GetString("action", "")
 	cluster := request.GetString("cluster", "")
@@ -209,6 +215,9 @@ func (s *Server) handleTraceLineage(ctx context.Context, request mcp.CallToolReq
 	args := request.GetArguments()
 
 	if deny := s.checkRateLimit(agentID, "kafka_trace_lineage"); deny != nil {
+		return deny, nil
+	}
+	if deny := s.checkAuth(agentID, "kafka_trace_lineage", auth.ResourceCluster, "", auth.ActionRead); deny != nil {
 		return deny, nil
 	}
 
@@ -323,6 +332,9 @@ func (s *Server) handlePersona(ctx context.Context, request mcp.CallToolRequest)
 	args := request.GetArguments()
 
 	if deny := s.checkRateLimit(agentID, "kafka_persona"); deny != nil {
+		return deny, nil
+	}
+	if deny := s.checkAuth(agentID, "kafka_persona", auth.ResourceCluster, "", auth.ActionRead); deny != nil {
 		return deny, nil
 	}
 

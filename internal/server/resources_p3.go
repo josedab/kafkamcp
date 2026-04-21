@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/kafkamcp/kafkamcp/internal/auth"
 	"github.com/kafkamcp/kafkamcp/internal/masking"
 	"github.com/kafkamcp/kafkamcp/internal/watch"
 	"github.com/mark3labs/mcp-go/mcp"
@@ -23,6 +24,11 @@ func (s *Server) handleReplicationStatus(ctx context.Context, request mcp.ReadRe
 		return nil, err
 	}
 	if err := s.checkResourceRateLimit(agentID, "resource:kafka://replication/status"); err != nil {
+		s.logAudit(agentID, "resource:kafka://replication/status", nil, "", "error", 0, err, start)
+		return nil, err
+	}
+	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceCluster, "", auth.ActionRead) {
+		err := fmt.Errorf("unauthorized: agent %q cannot access replication status", agentID)
 		s.logAudit(agentID, "resource:kafka://replication/status", nil, "", "error", 0, err, start)
 		return nil, err
 	}
@@ -50,6 +56,11 @@ func (s *Server) handlePluginRegistry(ctx context.Context, request mcp.ReadResou
 		s.logAudit(agentID, "resource:kafka://plugins", nil, "", "error", 0, err, start)
 		return nil, err
 	}
+	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceCluster, "", auth.ActionRead) {
+		err := fmt.Errorf("unauthorized: agent %q cannot access plugins", agentID)
+		s.logAudit(agentID, "resource:kafka://plugins", nil, "", "error", 0, err, start)
+		return nil, err
+	}
 
 	if s.pluginRegistry == nil {
 		return marshalResourceJSON("kafka://plugins", map[string]any{"plugins": []any{}, "total_count": 0})
@@ -72,6 +83,11 @@ func (s *Server) handleWatchSubscriptionsResource(ctx context.Context, request m
 		return nil, err
 	}
 	if err := s.checkResourceRateLimit(agentID, "resource:kafka://watch/subscriptions"); err != nil {
+		s.logAudit(agentID, "resource:kafka://watch/subscriptions", nil, "", "error", 0, err, start)
+		return nil, err
+	}
+	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceCluster, "", auth.ActionRead) {
+		err := fmt.Errorf("unauthorized: agent %q cannot access watch subscriptions", agentID)
 		s.logAudit(agentID, "resource:kafka://watch/subscriptions", nil, "", "error", 0, err, start)
 		return nil, err
 	}

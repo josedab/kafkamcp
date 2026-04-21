@@ -59,6 +59,11 @@ func (s *Server) handleWorkflowsResource(ctx context.Context, request mcp.ReadRe
 		s.logAudit(agentID, "resource:kafka://workflows", nil, "", "error", 0, err, start)
 		return nil, err
 	}
+	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceCluster, "", auth.ActionRead) {
+		err := fmt.Errorf("unauthorized: agent %q cannot access workflows", agentID)
+		s.logAudit(agentID, "resource:kafka://workflows", nil, "", "error", 0, err, start)
+		return nil, err
+	}
 
 	templates := s.workflowEngine.ListTemplates("")
 
@@ -144,6 +149,11 @@ func (s *Server) handleFlowGraphResource(ctx context.Context, request mcp.ReadRe
 		s.logAudit(agentID, "resource:kafka://flow_graph", nil, "", "error", 0, err, start)
 		return nil, err
 	}
+	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceCluster, "", auth.ActionRead) {
+		err := fmt.Errorf("unauthorized: agent %q cannot access flow graph", agentID)
+		s.logAudit(agentID, "resource:kafka://flow_graph", nil, "", "error", 0, err, start)
+		return nil, err
+	}
 
 	// Build a flow graph from current topic/group state
 	topics, err := s.kafkaManager.ListTopics(ctx, "", false)
@@ -212,6 +222,11 @@ func (s *Server) handlePlatformResource(ctx context.Context, request mcp.ReadRes
 		return nil, err
 	}
 	if err := s.checkResourceRateLimit(agentID, "resource:kafka://platforms"); err != nil {
+		s.logAudit(agentID, "resource:kafka://platforms", nil, "", "error", 0, err, start)
+		return nil, err
+	}
+	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceCluster, "", auth.ActionRead) {
+		err := fmt.Errorf("unauthorized: agent %q cannot access platforms", agentID)
 		s.logAudit(agentID, "resource:kafka://platforms", nil, "", "error", 0, err, start)
 		return nil, err
 	}
