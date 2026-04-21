@@ -241,8 +241,8 @@ func runServer(cmd *cobra.Command, args []string) error {
 			handler = server.NewStreamableHTTPServer(srv.MCPServer())
 		}
 
-		// Wrap handler with security headers
-		secureHandler := securityHeadersMiddleware(handler)
+		// Wrap handler with security headers and body size limit (10 MB)
+		secureHandler := http.MaxBytesHandler(securityHeadersMiddleware(handler), 10<<20)
 
 		httpServer := &http.Server{
 			Addr:              addr,
