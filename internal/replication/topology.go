@@ -8,6 +8,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/kafkamcp/kafkamcp/internal/urlutil"
 )
 
 // Topology represents the discovered replication topology across clusters.
@@ -195,18 +197,25 @@ type AlertManager struct {
 	cooldowns     map[string]time.Time // key -> last alert time
 	alertCounter  int
 	httpClient    *http.Client
+	webhookSem    chan struct{} // bounds concurrent webhook goroutines
 }
 
 // NewAlertManager creates a new alert manager.
-func NewAlertManager(config NotificationConfig) *AlertManager {
+func NewAlertManager(config NotificationConfig) (*AlertManager, error) {
 	if config.CooldownMins <= 0 {
 		config.CooldownMins = 5
+	}
+	if config.WebhookURL != "" {
+		if err := urlutil.ValidateWebhookURL(config.WebhookURL); err != nil {
+			return nil, fmt.Errorf("invalid alert webhook: %w", err)
+		}
 	}
 	return &AlertManager{
 		config:     config,
 		cooldowns:  make(map[string]time.Time),
 		httpClient: &http.Client{Timeout: 10 * time.Second},
-	}
+		webhookSem: make(chan struct{}, 10),
+	}, nil
 }
 
 // ProcessAlert evaluates a replication alert and sends notifications if needed.
@@ -243,9 +252,17 @@ func (am *AlertManager) ProcessAlert(alert Alert) *AlertNotification {
 
 	am.cooldowns[key] = time.Now()
 
-	// Send webhook if configured
+	// Send webhook if configured (bounded concurrency)
 	if am.config.WebhookURL != "" {
-		go am.sendWebhook(notif)
+		select {
+		case am.webhookSem <- struct{}{}:
+			go func() {
+				defer func() { <-am.webhookSem }()
+				am.sendWebhook(notif)
+			}()
+		default:
+			// Drop webhook if all slots are busy
+		}
 	}
 
 	return notif
