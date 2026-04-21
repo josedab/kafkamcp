@@ -23,6 +23,8 @@ var (
 
 const defaultReplacement = "***REDACTED***"
 
+const maxRegexPatternLength = 256
+
 // Rule is a compiled masking rule ready for evaluation.
 type Rule struct {
 	Name        string
@@ -81,6 +83,14 @@ func NewEngine(cfg config.MaskingConfig, logger *slog.Logger) *Engine {
 			compiled.Pattern = creditCardRegex
 		case "regex":
 			if r.Pattern != "" {
+				if len(r.Pattern) > maxRegexPatternLength {
+					logger.Warn("masking regex pattern too long, skipping rule", "rule", r.Name, "length", len(r.Pattern), "max", maxRegexPatternLength)
+					continue
+				}
+				if strings.Contains(r.Pattern, "(?") && (strings.Contains(r.Pattern, "(?i)") == false) {
+					logger.Warn("masking regex contains potentially dangerous constructs, skipping rule", "rule", r.Name)
+					continue
+				}
 				p, err := regexp.Compile(r.Pattern)
 				if err != nil {
 					logger.Warn("invalid masking regex, skipping rule", "rule", r.Name, "error", err)
