@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/kafkamcp/kafkamcp/internal/match"
+	"github.com/kafkamcp/kafkamcp/internal/urlutil"
 )
 
 // Subscription represents a registered watch on topic patterns.
@@ -95,6 +96,12 @@ func NewManager(logger *slog.Logger) *Manager {
 func (m *Manager) Subscribe(agentID string, topicPattern, keyFilter, valueFilter, webhookURL string, headers map[string]string) (*Subscription, error) {
 	if topicPattern == "" {
 		return nil, fmt.Errorf("topic_pattern is required")
+	}
+
+	if webhookURL != "" {
+		if err := urlutil.ValidateWebhookURL(webhookURL); err != nil {
+			return nil, err
+		}
 	}
 
 	m.mu.Lock()

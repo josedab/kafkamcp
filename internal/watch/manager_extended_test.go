@@ -239,7 +239,15 @@ func TestWebhookDeliverySuccess(t *testing.T) {
 	m := NewManager(testLogger())
 	defer m.Close()
 
-	m.Subscribe("agent-1", "test.*", "", "", srv.URL, nil)
+	// Bypass URL validation for test (localhost webhook)
+	m.mu.Lock()
+	m.counter++
+	m.subscriptions["watch-agent-1-1"] = &Subscription{
+		ID: "watch-agent-1-1", AgentID: "agent-1",
+		TopicPattern: "test.*", WebhookURL: srv.URL,
+		MaxRetries: 5, CreatedAt: time.Now(), Active: true,
+	}
+	m.mu.Unlock()
 
 	ctx := context.Background()
 	results := m.ProcessMessage(ctx, MessageEvent{
@@ -264,7 +272,15 @@ func TestWebhookDeliveryFailure(t *testing.T) {
 	m.maxRetries = 1 // reduce retries for speed
 	defer m.Close()
 
-	m.Subscribe("agent-1", "test.*", "", "", srv.URL, nil)
+	// Bypass URL validation for test (localhost webhook)
+	m.mu.Lock()
+	m.counter++
+	m.subscriptions["watch-agent-1-1"] = &Subscription{
+		ID: "watch-agent-1-1", AgentID: "agent-1",
+		TopicPattern: "test.*", WebhookURL: srv.URL,
+		MaxRetries: 1, CreatedAt: time.Now(), Active: true,
+	}
+	m.mu.Unlock()
 
 	ctx := context.Background()
 	results := m.ProcessMessage(ctx, MessageEvent{
