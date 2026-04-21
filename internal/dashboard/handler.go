@@ -154,7 +154,8 @@ func (d *Dashboard) handleTopics(w http.ResponseWriter, r *http.Request) {
 
 	topics, err := d.kafkaManager.ListTopics(ctx, "", false)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("failed to list topics: %v", err), http.StatusInternalServerError)
+		d.logger.Error("failed to list topics", "error", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -172,7 +173,8 @@ func (d *Dashboard) handleTopology(w http.ResponseWriter, r *http.Request) {
 
 	graph, err := d.kafkaManager.GetTopicGraph(ctx, "")
 	if err != nil {
-		http.Error(w, fmt.Sprintf("failed to get topology: %v", err), http.StatusInternalServerError)
+		d.logger.Error("failed to get topology", "error", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 

@@ -324,7 +324,7 @@ func TestHandleConsumerLag_EmbedMode(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Errorf("expected 200, got %d", w.Code)
 	}
-	if w.Header().Get("X-Frame-Options") != "ALLOWALL" {
-		t.Error("expected X-Frame-Options ALLOWALL for embed mode")
+	if w.Header().Get("X-Frame-Options") != "DENY" {
+		t.Error("expected X-Frame-Options DENY (embed override removed for security)")
 	}
 }

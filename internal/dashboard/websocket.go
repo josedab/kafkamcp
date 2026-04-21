@@ -3,7 +3,6 @@ package dashboard
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"sort"
 	"sync"
@@ -258,7 +257,8 @@ func (d *Dashboard) handleConsumerLag(w http.ResponseWriter, r *http.Request) {
 
 	groups, err := d.kafkaManager.ListConsumerGroups(ctx, "")
 	if err != nil {
-		http.Error(w, fmt.Sprintf("failed to list groups: %v", err), http.StatusInternalServerError)
+		d.logger.Error("failed to list consumer groups", "error", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -276,12 +276,7 @@ func (d *Dashboard) handleConsumerLag(w http.ResponseWriter, r *http.Request) {
 		snapshot.Groups = append(snapshot.Groups, groupLag)
 	}
 
-	// Embed iframe support via CORS headers
-	if r.URL.Query().Get("embed") == "true" {
-		w.Header().Set("X-Frame-Options", "ALLOWALL")
-		w.Header().Set("Content-Security-Policy", "frame-ancestors *")
-	}
-
+	w.Header().Set("X-Frame-Options", "DENY")
 	writeJSON(w, snapshot)
 }
 
@@ -334,7 +329,8 @@ func (d *Dashboard) handleFlowRates(w http.ResponseWriter, r *http.Request) {
 
 	topics, err := d.kafkaManager.ListTopics(ctx, "", false)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("failed to list topics: %v", err), http.StatusInternalServerError)
+		d.logger.Error("failed to list topics", "error", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -356,11 +352,7 @@ func (d *Dashboard) handleDashboardSummary(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// Embeddable iframe mode
-	if r.URL.Query().Get("embed") == "true" {
-		w.Header().Set("X-Frame-Options", "ALLOWALL")
-		w.Header().Set("Content-Security-Policy", "frame-ancestors *")
-	}
+	w.Header().Set("X-Frame-Options", "DENY")
 
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
