@@ -2,12 +2,14 @@ package dashboard
 
 import (
 	"context"
+	"crypto/subtle"
 	"embed"
 	"encoding/json"
 	"fmt"
 	"io/fs"
 	"log/slog"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -25,6 +27,7 @@ type Dashboard struct {
 	auditLogger  *audit.Logger
 	rateLimiter  *ratelimit.Limiter
 	logger       *slog.Logger
+	apiKey       string
 
 	mu         sync.RWMutex
 	sseClients map[string]chan []byte
@@ -42,21 +45,53 @@ func New(km kafka.KafkaManager, al *audit.Logger, rl *ratelimit.Limiter, logger 
 	}
 }
 
+// SetAPIKey configures a required API key for dashboard endpoints.
+// When set, all API requests must include a valid Authorization header
+// (Bearer token) or X-API-Key header.
+func (d *Dashboard) SetAPIKey(key string) {
+	d.apiKey = key
+}
+
+// requireAuth is middleware that validates bearer token or API key before
+// allowing access to the wrapped handler.
+func (d *Dashboard) requireAuth(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if d.apiKey == "" {
+			next(w, r)
+			return
+		}
+
+		token := ""
+		if auth := r.Header.Get("Authorization"); strings.HasPrefix(auth, "Bearer ") {
+			token = strings.TrimPrefix(auth, "Bearer ")
+		} else {
+			token = r.Header.Get("X-API-Key")
+		}
+
+		if subtle.ConstantTimeCompare([]byte(token), []byte(d.apiKey)) != 1 {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		next(w, r)
+	}
+}
+
 // Handler returns the HTTP handler for the dashboard.
 func (d *Dashboard) Handler() http.Handler {
 	mux := http.NewServeMux()
 
-	// REST API endpoints
-	mux.HandleFunc("/api/v1/activity", d.handleActivity)
-	mux.HandleFunc("/api/v1/audit", d.handleAuditTrail)
-	mux.HandleFunc("/api/v1/topics", d.handleTopics)
-	mux.HandleFunc("/api/v1/topology", d.handleTopology)
-	mux.HandleFunc("/api/v1/ratelimits", d.handleRateLimits)
-	mux.HandleFunc("/api/v1/schemas", d.handleSchemas)
-	mux.HandleFunc("/api/v1/health", d.handleHealth)
+	// REST API endpoints (protected by auth middleware)
+	mux.HandleFunc("/api/v1/activity", d.requireAuth(d.handleActivity))
+	mux.HandleFunc("/api/v1/audit", d.requireAuth(d.handleAuditTrail))
+	mux.HandleFunc("/api/v1/topics", d.requireAuth(d.handleTopics))
+	mux.HandleFunc("/api/v1/topology", d.requireAuth(d.handleTopology))
+	mux.HandleFunc("/api/v1/ratelimits", d.requireAuth(d.handleRateLimits))
+	mux.HandleFunc("/api/v1/schemas", d.requireAuth(d.handleSchemas))
+	mux.HandleFunc("/api/v1/health", d.requireAuth(d.handleHealth))
 
-	// SSE endpoint for live updates
-	mux.HandleFunc("/api/v1/events", d.handleSSE)
+	// SSE endpoint for live updates (protected by auth middleware)
+	mux.HandleFunc("/api/v1/events", d.requireAuth(d.handleSSE))
 
 	// Embedded SPA
 	staticContent, err := fs.Sub(staticFS, "static")
