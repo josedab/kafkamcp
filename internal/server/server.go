@@ -424,12 +424,41 @@ Result:     audit.Result{Status: status, MessageCount: count},
 LatencyMs:  latency.Milliseconds(),
 }
 if err != nil {
-entry.Result.Error = err.Error()
+entry.Result.Error = categorizeError(err)
 }
 s.auditLogger.Log(entry)
 safeAgent := metrics.SanitizeAgentLabel(agentID)
 s.metrics.ToolCallsTotal.WithLabelValues(tool, safeAgent, entry.Cluster, status).Inc()
 s.metrics.ToolLatencySeconds.WithLabelValues(tool, safeAgent, entry.Cluster).Observe(latency.Seconds())
+}
+
+// categorizeError maps raw errors to safe category strings to prevent
+// leaking internal details (broker IPs, TLS info, connection strings)
+// in audit logs and dashboard responses.
+func categorizeError(err error) string {
+msg := err.Error()
+lower := strings.ToLower(msg)
+
+switch {
+case strings.Contains(lower, "context deadline exceeded") || strings.Contains(lower, "timeout") || strings.Contains(lower, "timed out"):
+	return "timeout"
+case strings.Contains(lower, "connection refused") || strings.Contains(lower, "connection reset") || strings.Contains(lower, "broken pipe") || strings.Contains(lower, "no such host") || strings.Contains(lower, "dial tcp"):
+	return "connection_error"
+case strings.Contains(lower, "sasl") || strings.Contains(lower, "authentication") || strings.Contains(lower, "unauthorized") || strings.Contains(lower, "credential"):
+	return "auth_error"
+case strings.Contains(lower, "tls") || strings.Contains(lower, "certificate") || strings.Contains(lower, "x509"):
+	return "tls_error"
+case strings.Contains(lower, "permission") || strings.Contains(lower, "forbidden") || strings.Contains(lower, "not authorized") || strings.Contains(lower, "acl"):
+	return "permission_denied"
+case strings.Contains(lower, "not found") || strings.Contains(lower, "unknown topic") || strings.Contains(lower, "does not exist"):
+	return "not_found"
+case strings.Contains(lower, "already exists") || strings.Contains(lower, "duplicate"):
+	return "already_exists"
+case strings.Contains(lower, "invalid") || strings.Contains(lower, "malformed"):
+	return "invalid_request"
+default:
+	return "internal_error"
+}
 }
 
 // sanitizeAuditParams redacts sensitive data from audit log parameters.
