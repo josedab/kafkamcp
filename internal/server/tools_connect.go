@@ -25,6 +25,9 @@ func (s *Server) handleCreateConnector(ctx context.Context, request mcp.CallTool
 	if deny := validateStringLength("name", name); deny != nil {
 		return deny, nil
 	}
+	if deny := validateStringLength("cluster", cluster); deny != nil {
+		return deny, nil
+	}
 	if deny := s.checkRateLimit(agentID, "kafka_create_connector"); deny != nil {
 		return deny, nil
 	}
@@ -73,6 +76,9 @@ func (s *Server) handleUpdateConnector(ctx context.Context, request mcp.CallTool
 		return mcp.NewToolResultError("name is required"), nil
 	}
 	if deny := validateStringLength("name", name); deny != nil {
+		return deny, nil
+	}
+	if deny := validateStringLength("cluster", cluster); deny != nil {
 		return deny, nil
 	}
 	if deny := s.checkRateLimit(agentID, "kafka_update_connector"); deny != nil {
@@ -125,6 +131,9 @@ func (s *Server) handleDeleteConnector(ctx context.Context, request mcp.CallTool
 	if deny := validateStringLength("name", name); deny != nil {
 		return deny, nil
 	}
+	if deny := validateStringLength("cluster", cluster); deny != nil {
+		return deny, nil
+	}
 	if deny := s.checkRateLimit(agentID, "kafka_delete_connector"); deny != nil {
 		return deny, nil
 	}
@@ -167,6 +176,9 @@ func (s *Server) handleRestartConnector(ctx context.Context, request mcp.CallToo
 		return mcp.NewToolResultError("name is required"), nil
 	}
 	if deny := validateStringLength("name", name); deny != nil {
+		return deny, nil
+	}
+	if deny := validateStringLength("cluster", cluster); deny != nil {
 		return deny, nil
 	}
 	if deny := s.checkRateLimit(agentID, "kafka_restart_connector"); deny != nil {
@@ -215,6 +227,9 @@ func (s *Server) handleConnectorHealth(ctx context.Context, request mcp.CallTool
 		return mcp.NewToolResultError("name is required"), nil
 	}
 	if deny := validateStringLength("name", name); deny != nil {
+		return deny, nil
+	}
+	if deny := validateStringLength("cluster", cluster); deny != nil {
 		return deny, nil
 	}
 	if deny := s.checkRateLimit(agentID, "kafka_connector_health"); deny != nil {

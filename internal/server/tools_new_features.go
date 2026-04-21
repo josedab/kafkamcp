@@ -31,6 +31,16 @@ func (s *Server) handleDataContract(ctx context.Context, request mcp.CallToolReq
 	topic := request.GetString("topic", "")
 	cluster := request.GetString("cluster", "")
 
+	if deny := validateStringLength("action", action); deny != nil {
+		return deny, nil
+	}
+	if deny := validateStringLength("topic", topic); deny != nil {
+		return deny, nil
+	}
+	if deny := validateStringLength("cluster", cluster); deny != nil {
+		return deny, nil
+	}
+
 	switch action {
 	case "register":
 		contractData, ok := args["contract"]
@@ -114,6 +124,12 @@ func (s *Server) handleDiagnoseLag(ctx context.Context, request mcp.CallToolRequ
 	if groupID == "" {
 		return mcp.NewToolResultError("group_id is required"), nil
 	}
+	if deny := validateStringLength("group_id", groupID); deny != nil {
+		return deny, nil
+	}
+	if deny := validateStringLength("cluster", cluster); deny != nil {
+		return deny, nil
+	}
 
 	if deny := s.checkAuth(agentID, "kafka_diagnose_lag", auth.ResourceConsumerGroup, groupID, auth.ActionRead); deny != nil {
 		return deny, nil
@@ -160,12 +176,25 @@ func (s *Server) handleMigrationPlan(ctx context.Context, request mcp.CallToolRe
 	action := request.GetString("action", "")
 	cluster := request.GetString("cluster", "")
 
+	if deny := validateStringLength("action", action); deny != nil {
+		return deny, nil
+	}
+	if deny := validateStringLength("cluster", cluster); deny != nil {
+		return deny, nil
+	}
+
 	switch action {
 	case "plan":
 		sourceCluster := request.GetString("source_cluster", "")
 		targetCluster := request.GetString("target_cluster", "")
 		if sourceCluster == "" || targetCluster == "" {
 			return mcp.NewToolResultError("source_cluster and target_cluster are required"), nil
+		}
+		if deny := validateStringLength("source_cluster", sourceCluster); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("target_cluster", targetCluster); deny != nil {
+			return deny, nil
 		}
 
 		sourceTopics, err := s.kafkaManager.ListTopics(ctx, sourceCluster, false)
@@ -225,6 +254,16 @@ func (s *Server) handleTraceLineage(ctx context.Context, request mcp.CallToolReq
 	topic := request.GetString("topic", "")
 	cluster := request.GetString("cluster", "")
 
+	if deny := validateStringLength("action", action); deny != nil {
+		return deny, nil
+	}
+	if deny := validateStringLength("topic", topic); deny != nil {
+		return deny, nil
+	}
+	if deny := validateStringLength("cluster", cluster); deny != nil {
+		return deny, nil
+	}
+
 	switch action {
 	case "trace":
 		if topic == "" {
@@ -259,6 +298,12 @@ func (s *Server) handleTraceLineage(ctx context.Context, request mcp.CallToolReq
 		if field == "" {
 			return mcp.NewToolResultError("field is required for annotate_pii"), nil
 		}
+		if deny := validateStringLength("pii_type", piiType); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("field", field); deny != nil {
+			return deny, nil
+		}
 		s.lineageTracker.AnnotatePII(lineage.PIIAnnotation{
 			Topic: topic, Field: field, PIIType: piiType, DetectedBy: "manual",
 		})
@@ -279,6 +324,9 @@ func (s *Server) handleTraceLineage(ctx context.Context, request mcp.CallToolReq
 
 	case "compliance_report":
 		framework := request.GetString("framework", "GDPR")
+		if deny := validateStringLength("framework", framework); deny != nil {
+			return deny, nil
+		}
 		report := s.lineageTracker.GenerateComplianceReport(framework)
 		s.logAudit(agentID, "kafka_trace_lineage", args, cluster, "success", 1, nil, start)
 		return marshalResult(report)
@@ -302,6 +350,12 @@ func (s *Server) handleGroupHealth(ctx context.Context, request mcp.CallToolRequ
 
 	if groupID == "" {
 		return mcp.NewToolResultError("group_id is required"), nil
+	}
+	if deny := validateStringLength("group_id", groupID); deny != nil {
+		return deny, nil
+	}
+	if deny := validateStringLength("cluster", cluster); deny != nil {
+		return deny, nil
 	}
 
 	if deny := s.checkAuth(agentID, "kafka_group_health", auth.ResourceConsumerGroup, groupID, auth.ActionRead); deny != nil {
@@ -340,6 +394,13 @@ func (s *Server) handlePersona(ctx context.Context, request mcp.CallToolRequest)
 
 	action := request.GetString("action", "")
 	personaName := request.GetString("persona", "")
+
+	if deny := validateStringLength("action", action); deny != nil {
+		return deny, nil
+	}
+	if deny := validateStringLength("persona", personaName); deny != nil {
+		return deny, nil
+	}
 
 	switch action {
 	case "list":
@@ -394,6 +455,15 @@ func (s *Server) handleForecast(ctx context.Context, request mcp.CallToolRequest
 
 	if topic == "" {
 		return mcp.NewToolResultError("topic is required"), nil
+	}
+	if deny := validateStringLength("topic", topic); deny != nil {
+		return deny, nil
+	}
+	if deny := validateStringLength("metric", metricName); deny != nil {
+		return deny, nil
+	}
+	if deny := validateStringLength("cluster", cluster); deny != nil {
+		return deny, nil
 	}
 
 	if deny := s.checkAuth(agentID, "kafka_forecast", auth.ResourceTopic, topic, auth.ActionRead); deny != nil {

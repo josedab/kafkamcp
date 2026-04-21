@@ -121,6 +121,9 @@ func (s *Server) handleRemediateDLQ(ctx context.Context, request mcp.CallToolReq
 	if deny := validateStringLength("topic", topic); deny != nil {
 		return deny, nil
 	}
+	if deny := validateStringLength("cluster", cluster); deny != nil {
+		return deny, nil
+	}
 	if deny := s.checkRateLimit(agentID, "kafka_remediate_dlq"); deny != nil {
 		return deny, nil
 	}
@@ -131,6 +134,15 @@ func (s *Server) handleRemediateDLQ(ctx context.Context, request mcp.CallToolReq
 	action := request.GetString("action", "analyze")
 	limit := int(clampInt64(int64(request.GetInt("limit", 100)), 1, MaxDLQMessages))
 	targetTopic := request.GetString("target_topic", "")
+
+	if targetTopic != "" {
+		if deny := validateStringLength("target_topic", targetTopic); deny != nil {
+			return deny, nil
+		}
+		if deny := s.checkAuth(agentID, "kafka_remediate_dlq", auth.ResourceTopic, targetTopic, auth.ActionWrite); deny != nil {
+			return deny, nil
+		}
+	}
 
 	if s.dlqRemediator == nil {
 		return mcp.NewToolResultError("DLQ remediator not initialized"), nil
