@@ -42,7 +42,8 @@ func TestHandleSchemaDiff_NoSchemaRegistry(t *testing.T) {
 func TestHandleSchemaDiff_MissingVersionFrom(t *testing.T) {
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
-	s.schemaClients["default"] = schema.NewClient("http://localhost:8081", "", "", 100, 60)
+	sc, _ := schema.NewClient("http://localhost:8081", "", "", 100, 60)
+	s.schemaClients["default"] = sc
 	result, err := s.handleSchemaDiff(context.Background(), makeToolRequest(map[string]any{
 		"subject": "orders-value",
 	}))

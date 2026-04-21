@@ -121,7 +121,8 @@ func TestHasSchemaRegistry_Empty(t *testing.T) {
 
 func TestHasSchemaRegistry_WithClient(t *testing.T) {
 	s := newTestServer(t)
-	s.schemaClients["test-cluster"] = schema.NewClient("http://localhost:8081", "", "", 100, 60)
+	sc, _ := schema.NewClient("http://localhost:8081", "", "", 100, 60)
+	s.schemaClients["test-cluster"] = sc
 	if !s.hasSchemaRegistry() {
 		t.Error("expected true with a schema client")
 	}

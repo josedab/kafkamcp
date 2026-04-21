@@ -20,7 +20,7 @@ func TestListSubjects_Success(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := NewClient(srv.URL, "", "", 100, 300)
+	c, _ := NewClient(srv.URL, "", "", 100, 300)
 	subjects, err := c.ListSubjects(context.Background())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -40,7 +40,7 @@ func TestListSubjects_EmptyRegistry(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := NewClient(srv.URL, "", "", 100, 300)
+	c, _ := NewClient(srv.URL, "", "", 100, 300)
 	subjects, err := c.ListSubjects(context.Background())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -51,7 +51,7 @@ func TestListSubjects_EmptyRegistry(t *testing.T) {
 }
 
 func TestListSubjects_NetworkError(t *testing.T) {
-	c := NewClient("http://127.0.0.1:1", "", "", 100, 300)
+	c, _ := NewClient("http://127.0.0.1:1", "", "", 100, 300)
 	_, err := c.ListSubjects(context.Background())
 	if err == nil {
 		t.Fatal("expected error for invalid URL, got nil")
@@ -65,7 +65,9 @@ func TestListSubjects_Unauthorized(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := NewClient(srv.URL, "user", "wrong-pass", 100, 300)
+	c, _ := NewClient(srv.URL, "", "", 100, 300)
+	c.username = "user"
+	c.password = "wrong-pass"
 	_, err := c.ListSubjects(context.Background())
 	if err == nil {
 		t.Fatal("expected error for 401, got nil")
@@ -97,7 +99,7 @@ func TestGetSchema_CacheMiss(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := NewClient(srv.URL, "", "", 100, 300)
+	c, _ := NewClient(srv.URL, "", "", 100, 300)
 	info, err := c.GetSchema(context.Background(), "user-value", "1")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -123,7 +125,7 @@ func TestGetSchema_NotFound(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := NewClient(srv.URL, "", "", 100, 300)
+	c, _ := NewClient(srv.URL, "", "", 100, 300)
 	_, err := c.GetSchema(context.Background(), "nonexistent", "1")
 	if err == nil {
 		t.Fatal("expected error for 404, got nil")
@@ -155,7 +157,7 @@ func TestGetSchema_CacheHit(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := NewClient(srv.URL, "", "", 100, 300)
+	c, _ := NewClient(srv.URL, "", "", 100, 300)
 	ctx := context.Background()
 
 	// First call — cache miss
@@ -186,7 +188,7 @@ func TestCheckCompatibility_Compatible(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := NewClient(srv.URL, "", "", 100, 300)
+	c, _ := NewClient(srv.URL, "", "", 100, 300)
 	result, err := c.CheckCompatibility(context.Background(), "user-value", "latest",
 		`{"type":"record","name":"User","fields":[{"name":"id","type":"int"}]}`, "AVRO")
 	if err != nil {
@@ -207,7 +209,7 @@ func TestCheckCompatibility_Incompatible(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := NewClient(srv.URL, "", "", 100, 300)
+	c, _ := NewClient(srv.URL, "", "", 100, 300)
 	result, err := c.CheckCompatibility(context.Background(), "user-value", "latest",
 		`{"type":"record","name":"User","fields":[]}`, "AVRO")
 	if err != nil {
@@ -228,7 +230,7 @@ func TestCheckCompatibility_MalformedJSON(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := NewClient(srv.URL, "", "", 100, 300)
+	c, _ := NewClient(srv.URL, "", "", 100, 300)
 	_, err := c.CheckCompatibility(context.Background(), "user-value", "latest",
 		`{"type":"record","name":"User","fields":[]}`, "AVRO")
 	if err == nil {
@@ -243,7 +245,7 @@ func TestHTTPErrors_400(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := NewClient(srv.URL, "", "", 100, 300)
+	c, _ := NewClient(srv.URL, "", "", 100, 300)
 	_, err := c.ListSubjects(context.Background())
 	if err == nil {
 		t.Fatal("expected error for HTTP 400")
@@ -257,7 +259,7 @@ func TestHTTPErrors_404(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := NewClient(srv.URL, "", "", 100, 300)
+	c, _ := NewClient(srv.URL, "", "", 100, 300)
 	_, err := c.ListSubjects(context.Background())
 	if err == nil {
 		t.Fatal("expected error for HTTP 404")
@@ -271,7 +273,7 @@ func TestHTTPErrors_500(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := NewClient(srv.URL, "", "", 100, 300)
+	c, _ := NewClient(srv.URL, "", "", 100, 300)
 	_, err := c.ListSubjects(context.Background())
 	if err == nil {
 		t.Fatal("expected error for HTTP 500")
@@ -287,7 +289,9 @@ func TestDoRequest_BasicAuth(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := NewClient(srv.URL, "myuser", "mypass", 100, 300)
+	c, _ := NewClient(srv.URL, "", "", 100, 300)
+	c.username = "myuser"
+	c.password = "mypass"
 	_, _ = c.ListSubjects(context.Background())
 
 	if gotUser != "myuser" || gotPass != "mypass" {
@@ -304,7 +308,7 @@ func TestDoRequest_AcceptHeader(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := NewClient(srv.URL, "", "", 100, 300)
+	c, _ := NewClient(srv.URL, "", "", 100, 300)
 	_, _ = c.ListSubjects(context.Background())
 
 	expected := "application/vnd.schemaregistry.v1+json"
@@ -314,7 +318,7 @@ func TestDoRequest_AcceptHeader(t *testing.T) {
 }
 
 func TestGetSchema_InvalidVersion(t *testing.T) {
-	c := NewClient("http://localhost:1", "", "", 100, 300)
+	c, _ := NewClient("http://localhost:1", "", "", 100, 300)
 	_, err := c.GetSchema(context.Background(), "test", "abc")
 	if err == nil {
 		t.Fatal("expected error for invalid version")
@@ -322,7 +326,7 @@ func TestGetSchema_InvalidVersion(t *testing.T) {
 }
 
 func TestCheckCompatibility_InvalidVersion(t *testing.T) {
-	c := NewClient("http://localhost:1", "", "", 100, 300)
+	c, _ := NewClient("http://localhost:1", "", "", 100, 300)
 	_, err := c.CheckCompatibility(context.Background(), "test", "abc", `{}`, "AVRO")
 	if err == nil {
 		t.Fatal("expected error for invalid version")
@@ -341,7 +345,7 @@ func TestCheckCompatibility_DefaultVersionAndType(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := NewClient(srv.URL, "", "", 100, 300)
+	c, _ := NewClient(srv.URL, "", "", 100, 300)
 	result, err := c.CheckCompatibility(context.Background(), "user-value", "", `{"type":"record"}`, "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -358,7 +362,7 @@ func TestCheckCompatibility_HTTPError(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := NewClient(srv.URL, "", "", 100, 300)
+	c, _ := NewClient(srv.URL, "", "", 100, 300)
 	_, err := c.CheckCompatibility(context.Background(), "test", "latest", `{}`, "AVRO")
 	if err == nil {
 		t.Fatal("expected error for HTTP 500")

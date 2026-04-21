@@ -51,7 +51,7 @@ func TestListSubjectsDetailed_AllSucceed(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := NewClient(srv.URL, "", "", 100, 300)
+	c, _ := NewClient(srv.URL, "", "", 100, 300)
 	subjects, err := c.ListSubjectsDetailed(context.Background())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -124,7 +124,7 @@ func TestListSubjectsDetailed_PartialFailure(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := NewClient(srv.URL, "", "", 100, 300)
+	c, _ := NewClient(srv.URL, "", "", 100, 300)
 	subjects, err := c.ListSubjectsDetailed(context.Background())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -151,7 +151,7 @@ func TestListSubjectsDetailed_EmptySubjects(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := NewClient(srv.URL, "", "", 100, 300)
+	c, _ := NewClient(srv.URL, "", "", 100, 300)
 	subjects, err := c.ListSubjectsDetailed(context.Background())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -206,7 +206,7 @@ func TestListSubjectsDetailed_SemaphoreLimiting(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := NewClient(srv.URL, "", "", 100, 300)
+	c, _ := NewClient(srv.URL, "", "", 100, 300)
 	subjects, err := c.ListSubjectsDetailed(context.Background())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -250,7 +250,7 @@ func TestListSubjectsDetailed_CompatibilityParsing(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := NewClient(srv.URL, "", "", 100, 300)
+	c, _ := NewClient(srv.URL, "", "", 100, 300)
 	subjects, err := c.ListSubjectsDetailed(context.Background())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -272,7 +272,7 @@ func TestListSubjectsDetailed_ListError(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := NewClient(srv.URL, "", "", 100, 300)
+	c, _ := NewClient(srv.URL, "", "", 100, 300)
 	_, err := c.ListSubjectsDetailed(context.Background())
 	if err == nil {
 		t.Fatal("expected error when ListSubjects fails")

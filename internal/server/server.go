@@ -86,13 +86,17 @@ func New(cfg *config.Config, kafkaManager kafka.KafkaManager, logger *slog.Logge
 schemaClients := make(map[string]*schema.Client)
 for _, cl := range cfg.Clusters {
 	if cl.SchemaRegistry.URL != "" {
-		schemaClients[cl.Name] = schema.NewClient(
+		sc, err := schema.NewClient(
 			cl.SchemaRegistry.URL,
 			cl.SchemaRegistry.Auth.Username,
 			cl.SchemaRegistry.Auth.Password,
 			cfg.SchemaCache.MaxEntries,
 			cfg.SchemaCache.TTLSeconds,
 		)
+		if err != nil {
+			return nil, fmt.Errorf("schema registry for cluster %s: %w", cl.Name, err)
+		}
+		schemaClients[cl.Name] = sc
 	}
 }
 

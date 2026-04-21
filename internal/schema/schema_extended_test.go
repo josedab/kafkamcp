@@ -10,7 +10,7 @@ import (
 )
 
 func TestNewClient(t *testing.T) {
-	client := NewClient("http://localhost:8081", "", "", 100, 300)
+	client, _ := NewClient("http://localhost:8081", "", "", 100, 300)
 	if client == nil {
 		t.Fatal("expected non-nil client")
 	}
@@ -20,21 +20,21 @@ func TestNewClient(t *testing.T) {
 }
 
 func TestNewClientTrimsSlash(t *testing.T) {
-	client := NewClient("http://localhost:8081/", "", "", 100, 300)
+	client, _ := NewClient("http://localhost:8081/", "", "", 100, 300)
 	if client.baseURL != "http://localhost:8081" {
 		t.Errorf("expected trailing slash trimmed, got %s", client.baseURL)
 	}
 }
 
 func TestIsAvailableNoURL(t *testing.T) {
-	client := NewClient("", "", "", 100, 300)
+	client, _ := NewClient("", "", "", 100, 300)
 	if client.IsAvailable() {
 		t.Error("expected IsAvailable=false for empty URL")
 	}
 }
 
 func TestIsAvailableUnreachable(t *testing.T) {
-	client := NewClient("http://localhost:1", "", "", 100, 300)
+	client, _ := NewClient("http://localhost:1", "", "", 100, 300)
 	if client.IsAvailable() {
 		t.Error("expected IsAvailable=false for unreachable server")
 	}
@@ -46,7 +46,7 @@ func TestIsAvailableReachable(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	client := NewClient(srv.URL, "", "", 100, 300)
+	client, _ := NewClient(srv.URL, "", "", 100, 300)
 	if !client.IsAvailable() {
 		t.Error("expected IsAvailable=true for reachable server")
 	}
@@ -62,7 +62,7 @@ func TestListSubjects(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	client := NewClient(srv.URL, "", "", 100, 300)
+	client, _ := NewClient(srv.URL, "", "", 100, 300)
 	subjects, err := client.ListSubjects(context.Background())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -80,7 +80,9 @@ func TestListSubjectsWithAuth(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	client := NewClient(srv.URL, "user", "pass", 100, 300)
+	client, _ := NewClient(srv.URL, "", "", 100, 300)
+	client.username = "user"
+	client.password = "pass"
 	_, err := client.ListSubjects(context.Background())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -96,7 +98,7 @@ func TestListSubjectsHTTPError(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	client := NewClient(srv.URL, "", "", 100, 300)
+	client, _ := NewClient(srv.URL, "", "", 100, 300)
 	_, err := client.ListSubjects(context.Background())
 	if err == nil {
 		t.Error("expected error for 500 response")
@@ -109,7 +111,7 @@ func TestGetSubjectVersions(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	client := NewClient(srv.URL, "", "", 100, 300)
+	client, _ := NewClient(srv.URL, "", "", 100, 300)
 	versions, err := client.GetSubjectVersions(context.Background(), "orders-value")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -126,7 +128,7 @@ func TestGetSchemaVersionValidation(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	client := NewClient(srv.URL, "", "", 100, 300)
+	client, _ := NewClient(srv.URL, "", "", 100, 300)
 
 	// Invalid version
 	_, err := client.GetSchema(context.Background(), "test", "abc")
@@ -154,7 +156,7 @@ func TestGetSchemaLatest(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	client := NewClient(srv.URL, "", "", 100, 300)
+	client, _ := NewClient(srv.URL, "", "", 100, 300)
 	schema, err := client.GetLatestSchema(context.Background(), "test-value")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -189,7 +191,7 @@ func TestGetSchemaDefaultType(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	client := NewClient(srv.URL, "", "", 100, 300)
+	client, _ := NewClient(srv.URL, "", "", 100, 300)
 	schema, err := client.GetSchema(context.Background(), "test", "1")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -214,7 +216,7 @@ func TestGetSchemaCaching(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	client := NewClient(srv.URL, "", "", 100, 300)
+	client, _ := NewClient(srv.URL, "", "", 100, 300)
 	client.GetSchema(context.Background(), "cached", "1")
 	client.GetSchema(context.Background(), "cached", "1")
 
@@ -401,7 +403,7 @@ func TestCheckCompatibilityInvalidVersion(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
 	defer srv.Close()
 
-	client := NewClient(srv.URL, "", "", 100, 300)
+	client, _ := NewClient(srv.URL, "", "", 100, 300)
 	_, err := client.CheckCompatibility(context.Background(), "test", "abc", `"string"`, "")
 	if err == nil {
 		t.Error("expected error for non-numeric version")
@@ -414,7 +416,7 @@ func TestCheckCompatibilityDefaultVersion(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	client := NewClient(srv.URL, "", "", 100, 300)
+	client, _ := NewClient(srv.URL, "", "", 100, 300)
 	result, err := client.CheckCompatibility(context.Background(), "test", "", `"string"`, "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -433,7 +435,7 @@ func TestCheckCompatibilityNotCompatible(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	client := NewClient(srv.URL, "", "", 100, 300)
+	client, _ := NewClient(srv.URL, "", "", 100, 300)
 	result, err := client.CheckCompatibility(context.Background(), "test", "latest", `"int"`, "AVRO")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

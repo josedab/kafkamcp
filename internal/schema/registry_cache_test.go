@@ -13,7 +13,7 @@ import (
 
 func TestNewClient_HTTPSWarning(t *testing.T) {
 	// Non-HTTPS with credentials should still create a client (just logs warning)
-	c := NewClient("http://localhost:8081", "user", "pass", 100, 60)
+	c, _ := NewClient("http://localhost:8081", "", "", 100, 60)
 	if c == nil {
 		t.Fatal("expected non-nil client")
 	}
@@ -23,14 +23,14 @@ func TestNewClient_HTTPSWarning(t *testing.T) {
 }
 
 func TestNewClient_TrailingSlash(t *testing.T) {
-	c := NewClient("http://localhost:8081/", "", "", 0, 0)
+	c, _ := NewClient("http://localhost:8081/", "", "", 0, 0)
 	if c.baseURL != "http://localhost:8081" {
 		t.Errorf("baseURL = %q, want trailing slash trimmed", c.baseURL)
 	}
 }
 
 func TestNewClient_DefaultCacheParams(t *testing.T) {
-	c := NewClient("http://localhost:8081", "", "", 0, 0)
+	c, _ := NewClient("http://localhost:8081", "", "", 0, 0)
 	stats := c.cache.Stats()
 	if stats.MaxEntries != 10000 {
 		t.Errorf("cache max = %d, want 10000", stats.MaxEntries)
@@ -49,7 +49,7 @@ func TestGetSubjectVersions_Success(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := NewClient(srv.URL, "", "", 100, 60)
+	c, _ := NewClient(srv.URL, "", "", 100, 60)
 	versions, err := c.GetSubjectVersions(context.Background(), "orders-value")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -68,7 +68,7 @@ func TestGetSubjectVersions_NotFound(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := NewClient(srv.URL, "", "", 100, 60)
+	c, _ := NewClient(srv.URL, "", "", 100, 60)
 	_, err := c.GetSubjectVersions(context.Background(), "nonexistent")
 	if err == nil {
 		t.Error("expected error for 404")
@@ -96,7 +96,7 @@ func TestGetLatestSchema_Success(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := NewClient(srv.URL, "", "", 100, 60)
+	c, _ := NewClient(srv.URL, "", "", 100, 60)
 	schema, err := c.GetLatestSchema(context.Background(), "orders-value")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -123,14 +123,14 @@ func TestIsAvailable_True(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := NewClient(srv.URL, "", "", 100, 60)
+	c, _ := NewClient(srv.URL, "", "", 100, 60)
 	if !c.IsAvailable() {
 		t.Error("expected IsAvailable to return true")
 	}
 }
 
 func TestIsAvailable_False(t *testing.T) {
-	c := NewClient("http://127.0.0.1:1", "", "", 100, 60)
+	c, _ := NewClient("http://127.0.0.1:1", "", "", 100, 60)
 	c.httpClient.Timeout = 100 * time.Millisecond
 	if c.IsAvailable() {
 		t.Error("expected IsAvailable to return false for unreachable server")

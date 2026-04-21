@@ -44,9 +44,10 @@ type SchemaInfo struct {
 }
 
 // NewClient creates a new Schema Registry client.
-func NewClient(baseURL, username, password string, cacheMaxEntries, cacheTTLSeconds int) *Client {
+// Returns an error if credentials are configured with a non-HTTPS URL.
+func NewClient(baseURL, username, password string, cacheMaxEntries, cacheTTLSeconds int) (*Client, error) {
 	if username != "" && !strings.HasPrefix(baseURL, "https://") {
-		slog.Warn("Schema Registry credentials configured over non-HTTPS connection — credentials will be sent in plaintext", "url", baseURL)
+		return nil, fmt.Errorf("schema registry credentials require HTTPS; refusing to send credentials in plaintext to %s", baseURL)
 	}
 	return &Client{
 		baseURL:  strings.TrimRight(baseURL, "/"),
@@ -56,7 +57,7 @@ func NewClient(baseURL, username, password string, cacheMaxEntries, cacheTTLSeco
 			Timeout: 10 * time.Second,
 		},
 		cache: NewCache(cacheMaxEntries, time.Duration(cacheTTLSeconds)*time.Second),
-	}
+	}, nil
 }
 
 func (c *Client) doRequest(ctx context.Context, method, path string) ([]byte, error) {

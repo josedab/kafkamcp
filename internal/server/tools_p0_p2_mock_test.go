@@ -25,7 +25,8 @@ func TestHandleListSchemas_NoSchemaRegistry(t *testing.T) {
 func TestHandleListSchemas_WithClient(t *testing.T) {
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
-	s.schemaClients["default"] = schema.NewClient("http://localhost:8081", "", "", 100, 60)
+	sc, _ := schema.NewClient("http://localhost:8081", "", "", 100, 60)
+	s.schemaClients["default"] = sc
 	// The schema registry won't actually be available in test, so this tests the path
 	result, err := s.handleListSchemas(context.Background(), makeToolRequest(nil))
 	if err != nil {
