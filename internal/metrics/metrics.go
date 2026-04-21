@@ -104,18 +104,14 @@ func New() *Metrics {
 
 // SanitizeAgentLabel on a Metrics instance caps unique agent_id label values.
 func (m *Metrics) SanitizeAgentLabel(agentID string) string {
-	m.agentMu.RLock()
-	_, ok := m.knownAgents[agentID]
-	n := len(m.knownAgents)
-	m.agentMu.RUnlock()
+	m.agentMu.Lock()
+	defer m.agentMu.Unlock()
 
-	if ok {
+	if _, ok := m.knownAgents[agentID]; ok {
 		return agentID
 	}
-	if n < maxUniqueAgents {
-		m.agentMu.Lock()
+	if len(m.knownAgents) < maxUniqueAgents {
 		m.knownAgents[agentID] = struct{}{}
-		m.agentMu.Unlock()
 		return agentID
 	}
 	h := sha256.Sum256([]byte(agentID))
