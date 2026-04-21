@@ -6,6 +6,8 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 )
@@ -55,7 +57,11 @@ func NewLogger(enabled bool, maxEntries int, logFile string, logger *slog.Logger
 	}
 
 	if logFile != "" {
-		f, err := os.OpenFile(logFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
+		cleanPath := filepath.Clean(logFile)
+		if strings.Contains(cleanPath, "..") {
+			return nil, fmt.Errorf("audit log file path must not contain '..': %s", logFile)
+		}
+		f, err := os.OpenFile(cleanPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
 		if err != nil {
 			return nil, fmt.Errorf("opening audit log file: %w", err)
 		}
