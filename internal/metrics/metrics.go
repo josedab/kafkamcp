@@ -16,7 +16,7 @@ const maxUniqueAgents = 1000
 // If the agent is already known or the allowlist has capacity, the original ID is returned.
 // Otherwise, the ID is hashed into a fixed number of overflow buckets.
 func SanitizeAgentLabel(agentID string) string {
-	return defaultMetrics.Load().SanitizeAgentLabel(agentID)
+	return ensureDefaultMetrics().SanitizeAgentLabel(agentID)
 }
 
 // Metrics holds all KafkaMCP Prometheus metrics.
@@ -135,8 +135,14 @@ func (m *Metrics) SetKnownAgents(agents map[string]struct{}) {
 
 // defaultMetrics is a package-level Metrics instance used by the
 // package-level SanitizeAgentLabel function for backward compatibility.
+// Lazily initialized on first use via ensureDefaultMetrics.
 var defaultMetrics atomic.Pointer[Metrics]
 
-func init() {
-	defaultMetrics.Store(&Metrics{knownAgents: make(map[string]struct{})})
+func ensureDefaultMetrics() *Metrics {
+	if m := defaultMetrics.Load(); m != nil {
+		return m
+	}
+	m := &Metrics{knownAgents: make(map[string]struct{})}
+	defaultMetrics.CompareAndSwap(nil, m)
+	return defaultMetrics.Load()
 }
