@@ -205,7 +205,7 @@ func runServer(cmd *cobra.Command, args []string) error {
 		})
 		metricsServer := &http.Server{
 			Addr:              metricsAddr,
-			Handler:           metricsMux,
+			Handler:           securityHeadersMiddleware(metricsMux),
 			ReadHeaderTimeout: 10 * time.Second,
 			ReadTimeout:       30 * time.Second,
 			IdleTimeout:       120 * time.Second,
