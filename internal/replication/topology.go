@@ -258,7 +258,7 @@ func (am *AlertManager) ProcessAlert(alert Alert) *AlertNotification {
 		case am.webhookSem <- struct{}{}:
 			go func() {
 				defer func() { <-am.webhookSem }()
-				am.sendWebhook(notif)
+				am.sendWebhook(context.Background(), notif)
 			}()
 		default:
 			// Drop webhook if all slots are busy
@@ -287,13 +287,13 @@ func (am *AlertManager) GetRecentNotifications(limit int) []AlertNotification {
 	return result
 }
 
-func (am *AlertManager) sendWebhook(notif *AlertNotification) {
+func (am *AlertManager) sendWebhook(ctx context.Context, notif *AlertNotification) {
 	body, err := json.Marshal(notif)
 	if err != nil {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, am.config.WebhookURL, strings.NewReader(string(body)))
