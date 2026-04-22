@@ -41,6 +41,7 @@ type MockKafkaManager struct {
 	PollStreamFn             func(sessionID string, timeoutMs int) (*StreamResult, error)
 	ControlStreamFn          func(sessionID, action string) (*StreamResult, error)
 	ListStreamsFn            func() []StreamSession
+	GetStreamSessionFn       func(string) (*StreamSession, bool)
 	TimeTravelSnapshotFn     func(ctx context.Context, cluster, topic, timestamp string, maxKeys int) (*TimeTravelSnapshot, error)
 	TimeTravelDiffFn         func(ctx context.Context, cluster, topic, tsFrom, tsTo string, maxKeys int) (*TimeTravelDiffResult, error)
 	GetRecommendationsFn     func(ctx context.Context, cluster, topic string) (*RecommendationResult, error)
@@ -307,6 +308,14 @@ func (m *MockKafkaManager) ListStreams() []StreamSession {
 		return m.ListStreamsFn()
 	}
 	return nil
+}
+
+func (m *MockKafkaManager) GetStreamSession(sessionID string) (*StreamSession, bool) {
+	m.record("GetStreamSession", sessionID)
+	if m.GetStreamSessionFn != nil {
+		return m.GetStreamSessionFn(sessionID)
+	}
+	return nil, false
 }
 
 func (m *MockKafkaManager) TimeTravelSnapshot(ctx context.Context, cluster, topic, timestamp string, maxKeys int) (*TimeTravelSnapshot, error) {

@@ -407,6 +407,7 @@ func (m *Manager) ListStreams() []StreamSession {
 			ID:        s.ID,
 			Topic:     s.Topic,
 			GroupID:   s.GroupID,
+			AgentID:   s.AgentID,
 			Status:    s.Status,
 			StartedAt: s.StartedAt,
 			MsgCount:  atomic.LoadInt64(&s.MsgCount),
@@ -414,4 +415,26 @@ func (m *Manager) ListStreams() []StreamSession {
 		})
 	}
 	return sessions
+}
+
+// GetStreamSession returns the agent ID for a given stream session.
+func (m *Manager) GetStreamSession(sessionID string) (*StreamSession, bool) {
+	if m.streamMgr == nil {
+		return nil, false
+	}
+
+	m.streamMgr.mu.RLock()
+	defer m.streamMgr.mu.RUnlock()
+
+	s, ok := m.streamMgr.sessions[sessionID]
+	if !ok {
+		return nil, false
+	}
+	return &StreamSession{
+		ID:      s.ID,
+		AgentID: s.AgentID,
+		Topic:   s.Topic,
+		GroupID:  s.GroupID,
+		Status:  s.Status,
+	}, true
 }

@@ -49,6 +49,7 @@ type KafkaManager interface {
 	PollStream(sessionID string, timeoutMs int) (*StreamResult, error)
 	ControlStream(sessionID, action string) (*StreamResult, error)
 	ListStreams() []StreamSession
+	GetStreamSession(sessionID string) (*StreamSession, bool)
 
 	// Time-travel operations
 	TimeTravelSnapshot(ctx context.Context, cluster, topic, timestamp string, maxKeys int) (*TimeTravelSnapshot, error)
