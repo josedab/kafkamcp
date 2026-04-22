@@ -124,7 +124,7 @@ func TestIsAvailable_True(t *testing.T) {
 	defer srv.Close()
 
 	c, _ := NewClient(srv.URL, "", "", 100, 60)
-	if !c.IsAvailable() {
+	if !c.IsAvailable(context.Background()) {
 		t.Error("expected IsAvailable to return true")
 	}
 }
@@ -132,14 +132,14 @@ func TestIsAvailable_True(t *testing.T) {
 func TestIsAvailable_False(t *testing.T) {
 	c, _ := NewClient("http://127.0.0.1:1", "", "", 100, 60)
 	c.httpClient.Timeout = 100 * time.Millisecond
-	if c.IsAvailable() {
+	if c.IsAvailable(context.Background()) {
 		t.Error("expected IsAvailable to return false for unreachable server")
 	}
 }
 
 func TestIsAvailable_EmptyURL(t *testing.T) {
 	c := &Client{baseURL: ""}
-	if c.IsAvailable() {
+	if c.IsAvailable(context.Background()) {
 		t.Error("expected IsAvailable to return false for empty URL")
 	}
 }

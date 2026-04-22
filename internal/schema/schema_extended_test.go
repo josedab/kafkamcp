@@ -28,14 +28,14 @@ func TestNewClientTrimsSlash(t *testing.T) {
 
 func TestIsAvailableNoURL(t *testing.T) {
 	client, _ := NewClient("", "", "", 100, 300)
-	if client.IsAvailable() {
+	if client.IsAvailable(context.Background()) {
 		t.Error("expected IsAvailable=false for empty URL")
 	}
 }
 
 func TestIsAvailableUnreachable(t *testing.T) {
 	client, _ := NewClient("http://localhost:1", "", "", 100, 300)
-	if client.IsAvailable() {
+	if client.IsAvailable(context.Background()) {
 		t.Error("expected IsAvailable=false for unreachable server")
 	}
 }
@@ -47,7 +47,7 @@ func TestIsAvailableReachable(t *testing.T) {
 	defer srv.Close()
 
 	client, _ := NewClient(srv.URL, "", "", 100, 300)
-	if !client.IsAvailable() {
+	if !client.IsAvailable(context.Background()) {
 		t.Error("expected IsAvailable=true for reachable server")
 	}
 }

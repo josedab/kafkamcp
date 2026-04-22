@@ -287,11 +287,11 @@ func (c *Client) ListSubjectsDetailed(ctx context.Context) ([]Subject, error) {
 }
 
 // IsAvailable checks if the Schema Registry is reachable.
-func (c *Client) IsAvailable() bool {
+func (c *Client) IsAvailable(ctx context.Context) bool {
 	if c.baseURL == "" {
 		return false
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 	_, err := c.doRequest(ctx, http.MethodGet, "/subjects")
 	return err == nil
