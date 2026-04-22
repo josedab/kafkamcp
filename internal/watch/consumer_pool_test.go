@@ -1,6 +1,7 @@
 package watch
 
 import (
+	"context"
 	"log/slog"
 	"os"
 	"testing"
@@ -146,7 +147,7 @@ func TestNewConsumerPool_DefaultMax(t *testing.T) {
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
-	pool := NewConsumerPool(mgr, nil, "default", 0)
+	pool := NewConsumerPool(context.Background(), mgr, nil, "default", 0)
 	defer pool.Stop()
 
 	if pool.maxConsumers != 100 {
@@ -158,7 +159,7 @@ func TestConsumerPool_ActiveCount(t *testing.T) {
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
-	pool := NewConsumerPool(mgr, nil, "default", 10)
+	pool := NewConsumerPool(context.Background(), mgr, nil, "default", 10)
 	defer pool.Stop()
 
 	if pool.ActiveCount() != 0 {
@@ -170,7 +171,7 @@ func TestConsumerPool_Stop(t *testing.T) {
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
-	pool := NewConsumerPool(mgr, nil, "default", 10)
+	pool := NewConsumerPool(context.Background(), mgr, nil, "default", 10)
 	pool.Stop()
 
 	// After stop, pool should be empty
@@ -186,7 +187,7 @@ func TestConsumerPool_EnsureConsumer_PoolLimitReached(t *testing.T) {
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
-	pool := NewConsumerPool(mgr, nil, "default", 1)
+	pool := NewConsumerPool(context.Background(), mgr, nil, "default", 1)
 	defer pool.Stop()
 
 	// Manually set active consumers to max

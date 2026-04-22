@@ -90,11 +90,11 @@ type topicConsumer struct {
 }
 
 // NewConsumerPool creates a pool of background consumers for subscription delivery.
-func NewConsumerPool(mgr *Manager, km kafka.KafkaManager, cluster string, maxConsumers int) *ConsumerPool {
+func NewConsumerPool(ctx context.Context, mgr *Manager, km kafka.KafkaManager, cluster string, maxConsumers int) *ConsumerPool {
 	if maxConsumers <= 0 {
 		maxConsumers = 100
 	}
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(ctx)
 	return &ConsumerPool{
 		consumers:    make(map[string]*topicConsumer),
 		manager:      mgr,
