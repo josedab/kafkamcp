@@ -91,6 +91,14 @@ func (h *WebSocketHub) ClientCount() int {
 	return len(h.clients)
 }
 
+// Stop closes hub channels to release resources and prevent goroutine leaks.
+// Must only be called after the Run loop has exited (i.e., after ctx is cancelled).
+func (h *WebSocketHub) Stop() {
+	close(h.broadcast)
+	close(h.register)
+	close(h.unregister)
+}
+
 // ConsumerLagSnapshot captures lag for all consumer groups at a point in time.
 type ConsumerLagSnapshot struct {
 	Timestamp string                `json:"timestamp"`
