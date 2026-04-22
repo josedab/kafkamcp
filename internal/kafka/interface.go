@@ -6,33 +6,54 @@ import (
 	"github.com/kafkamcp/kafkamcp/internal/config"
 )
 
-// KafkaManager defines the interface for Kafka operations used by server handlers.
-// This enables mock-based testing of handler logic without a live Kafka cluster.
-type KafkaManager interface {
-	// Cluster management
+// ClusterManager defines cluster-level operations.
+type ClusterManager interface {
 	DefaultClusterName() string
 	ClusterNames() []string
 	GetClusterConfig(clusterName string) (*config.ClusterConfig, error)
 	Ping(ctx context.Context) error
 	Close()
+}
 
-	// Topic operations
+// TopicManager defines topic CRUD and metadata operations.
+type TopicManager interface {
 	ListTopics(ctx context.Context, cluster string, includeInternal bool) ([]TopicSummary, error)
 	DescribeTopic(ctx context.Context, cluster, topicName string) (*TopicDetail, error)
 	CreateTopic(ctx context.Context, cluster string, req CreateTopicRequest) error
 	AlterTopic(ctx context.Context, cluster string, req AlterTopicRequest) error
 	DeleteTopic(ctx context.Context, cluster, topicName string) error
+}
+
+// GroupManager defines consumer group operations.
+type GroupManager interface {
+	ListConsumerGroups(ctx context.Context, cluster string) ([]ConsumerGroupSummary, error)
+	DescribeConsumerGroup(ctx context.Context, cluster, groupID string) (*ConsumerGroupDetail, error)
+	ResetOffsets(ctx context.Context, cluster string, req ResetOffsetsRequest) (*ResetOffsetsResult, error)
+}
+
+// StreamManager defines streaming session operations.
+type StreamManager interface {
+	StartStream(ctx context.Context, cluster string, cfg StreamConfig) (*StreamResult, error)
+	PollStream(sessionID string, timeoutMs int) (*StreamResult, error)
+	ControlStream(sessionID, action string) (*StreamResult, error)
+	ListStreams() []StreamSession
+	GetStreamSession(sessionID string) (*StreamSession, bool)
+}
+
+// KafkaManager defines the interface for Kafka operations used by server handlers.
+// This enables mock-based testing of handler logic without a live Kafka cluster.
+// It composes sub-interfaces for cluster, topic, group, and stream management.
+type KafkaManager interface {
+	ClusterManager
+	TopicManager
+	GroupManager
+	StreamManager
 
 	// Message operations
 	Consume(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]Message, error)
 	Produce(ctx context.Context, cluster, topic string, messages []ProduceMessage, opts ProduceOptions) ([]DeliveryResult, error)
 	Subscribe(ctx context.Context, cluster string, req SubscribeRequest) (*SubscribeResult, error)
 	SearchMessages(ctx context.Context, cluster string, req SearchRequest) ([]SearchMessage, int, error)
-
-	// Consumer group operations
-	ListConsumerGroups(ctx context.Context, cluster string) ([]ConsumerGroupSummary, error)
-	DescribeConsumerGroup(ctx context.Context, cluster, groupID string) (*ConsumerGroupDetail, error)
-	ResetOffsets(ctx context.Context, cluster string, req ResetOffsetsRequest) (*ResetOffsetsResult, error)
 
 	// Cluster metadata
 	GetClusterMetadata(ctx context.Context, cluster string) (*ClusterMetadata, error)
@@ -43,13 +64,6 @@ type KafkaManager interface {
 	JoinTopics(ctx context.Context, cluster string, req JoinRequest) (*JoinResult, error)
 	NaturalLanguageQuery(ctx context.Context, cluster, query string, topics []TopicSummary) (*NaturalLanguageQueryResult, error)
 	AnalyzeDLQ(ctx context.Context, cluster, topic string, limit int) (*AnalyzeDLQResult, error)
-
-	// Streaming operations
-	StartStream(ctx context.Context, cluster string, cfg StreamConfig) (*StreamResult, error)
-	PollStream(sessionID string, timeoutMs int) (*StreamResult, error)
-	ControlStream(sessionID, action string) (*StreamResult, error)
-	ListStreams() []StreamSession
-	GetStreamSession(sessionID string) (*StreamSession, bool)
 
 	// Time-travel operations
 	TimeTravelSnapshot(ctx context.Context, cluster, topic, timestamp string, maxKeys int) (*TimeTravelSnapshot, error)
