@@ -2,9 +2,11 @@ package tenant
 
 import (
 	"crypto/rand"
+	"crypto/subtle"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 	"sync"
@@ -288,14 +290,34 @@ func (api *ControlPlaneAPI) Handler() http.Handler {
 	mux.HandleFunc("/api/v1/billing/", api.authMiddleware(api.handleBilling))
 	mux.HandleFunc("/api/v1/quotas/", api.authMiddleware(api.handleQuotas))
 
-	return mux
+	// Wrap with security headers and body size limit (10 MB)
+	return controlPlaneSecurityHeaders(http.MaxBytesHandler(mux, 10<<20))
+}
+
+// controlPlaneSecurityHeaders adds standard security headers to control plane HTTP responses.
+func controlPlaneSecurityHeaders(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("X-Frame-Options", "DENY")
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("Content-Security-Policy", "default-src 'none'")
+		w.Header().Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
+		w.Header().Set("Referrer-Policy", "no-referrer")
+		w.Header().Set("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+		next.ServeHTTP(w, r)
+	})
 }
 
 func (api *ControlPlaneAPI) authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if api.apiKey != "" {
 			authHeader := r.Header.Get("Authorization")
-			if !strings.HasPrefix(authHeader, "Bearer ") || strings.TrimPrefix(authHeader, "Bearer ") != api.apiKey {
+			if !strings.HasPrefix(authHeader, "Bearer ") {
+				http.Error(w, "unauthorized", http.StatusUnauthorized)
+				return
+			}
+			provided := strings.TrimPrefix(authHeader, "Bearer ")
+			if subtle.ConstantTimeCompare([]byte(provided), []byte(api.apiKey)) != 1 {
 				http.Error(w, "unauthorized", http.StatusUnauthorized)
 				return
 			}
@@ -322,7 +344,8 @@ func (api *ControlPlaneAPI) handleTenants(w http.ResponseWriter, r *http.Request
 		}
 		tenant, apiKey, err := api.cp.tenantMgr.CreateTenant(req.Name, req.Email, req.Plan)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			slog.Error("failed to create tenant", "error", err)
+			http.Error(w, "failed to create tenant", http.StatusBadRequest)
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
@@ -342,7 +365,8 @@ func (api *ControlPlaneAPI) handleTenantByID(w http.ResponseWriter, r *http.Requ
 
 	tenant, err := api.cp.tenantMgr.GetTenant(tenantID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		slog.Error("tenant not found", "tenant_id", tenantID, "error", err)
+		http.Error(w, "tenant not found", http.StatusNotFound)
 		return
 	}
 
@@ -374,7 +398,8 @@ func (api *ControlPlaneAPI) handleBilling(w http.ResponseWriter, r *http.Request
 	case http.MethodGet:
 		billing, err := api.cp.GetBilling(tenantID)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusNotFound)
+			slog.Error("billing not found", "tenant_id", tenantID, "error", err)
+			http.Error(w, "billing information not found", http.StatusNotFound)
 			return
 		}
 		usage := api.cp.GetUsageRecords(tenantID)
@@ -387,7 +412,8 @@ func (api *ControlPlaneAPI) handleBilling(w http.ResponseWriter, r *http.Request
 			return
 		}
 		if err := api.cp.SetupBilling(tenantID, billing); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			slog.Error("failed to setup billing", "tenant_id", tenantID, "error", err)
+			http.Error(w, "failed to configure billing", http.StatusBadRequest)
 			return
 		}
 		api.writeJSON(w, map[string]any{"status": "billing configured"})
@@ -416,7 +442,8 @@ func (api *ControlPlaneAPI) handleQuotas(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		if err := api.cp.SetResourceQuota(tenantID, quota); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			slog.Error("failed to set quota", "tenant_id", tenantID, "error", err)
+			http.Error(w, "failed to update quota", http.StatusBadRequest)
 			return
 		}
 		api.writeJSON(w, map[string]any{"status": "quota updated"})
