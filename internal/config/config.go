@@ -52,7 +52,7 @@ type ClusterConfig struct {
 	SecurityProtocol string               `yaml:"security_protocol" json:"security_protocol"`                // e.g. "PLAINTEXT", "SSL", "SASL_SSL"
 	SASLMechanism    string               `yaml:"sasl_mechanism,omitempty" json:"sasl_mechanism,omitempty"`   // e.g. "PLAIN", "SCRAM-SHA-256"
 	SASLUsername     string               `yaml:"sasl_username,omitempty" json:"sasl_username,omitempty"`     // SASL username (required when mechanism is set)
-	SASLPassword     string               `yaml:"sasl_password,omitempty" json:"sasl_password,omitempty"`     // SASL password (required when mechanism is set)
+	SASLPassword     string               `yaml:"sasl_password,omitempty" json:"-"`                          // SASL password (required when mechanism is set)
 	SSLCALocation    string               `yaml:"ssl_ca_location,omitempty" json:"ssl_ca_location,omitempty"` // Path to CA certificate bundle
 	SchemaRegistry   SchemaRegistryConfig `yaml:"schema_registry,omitempty" json:"schema_registry,omitempty"` // Optional Schema Registry connection
 	ConnectURL       string               `yaml:"connect_url,omitempty" json:"connect_url,omitempty"`         // Kafka Connect REST API base URL
@@ -76,7 +76,7 @@ type ConnectTLSConfig struct {
 // BasicAuth holds username/password credentials for HTTP basic authentication.
 type BasicAuth struct {
 	Username string `yaml:"username" json:"username"`
-	Password string `yaml:"password" json:"password"`
+	Password string `yaml:"password" json:"-"`
 }
 
 // CacheConfig controls the in-memory schema cache size and TTL.
