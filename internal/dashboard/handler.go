@@ -205,7 +205,8 @@ func (d *Dashboard) handleHealth(w http.ResponseWriter, r *http.Request) {
 
 	err := d.kafkaManager.Ping(ctx)
 	if err != nil {
-		writeJSON(w, map[string]any{"status": "unhealthy", "error": err.Error()})
+		d.logger.Error("health check failed", "error", err)
+		writeJSON(w, map[string]any{"status": "unhealthy"})
 		return
 	}
 	writeJSON(w, map[string]any{"status": "healthy"})

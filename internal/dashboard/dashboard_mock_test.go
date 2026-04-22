@@ -231,8 +231,8 @@ func TestHandleHealth_Unhealthy(t *testing.T) {
 	if result["status"] != "unhealthy" {
 		t.Errorf("expected status 'unhealthy', got %v", result["status"])
 	}
-	if result["error"] != "connection refused" {
-		t.Errorf("expected error 'connection refused', got %v", result["error"])
+	if _, hasError := result["error"]; hasError {
+		t.Error("unhealthy response should not expose error details")
 	}
 }
 
