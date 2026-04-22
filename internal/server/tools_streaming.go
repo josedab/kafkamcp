@@ -65,6 +65,7 @@ func (s *Server) handleStreamStart(ctx context.Context, request mcp.CallToolRequ
 		TimeoutMs:    request.GetInt("timeout_ms", 30000),
 		Deserializer: request.GetString("deserializer", "auto"),
 		AutoCommit:   request.GetBool("auto_commit", true),
+		AgentID:      agentID,
 	}
 
 	result, err := s.kafkaManager.StartStream(ctx, cluster, cfg)

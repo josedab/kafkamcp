@@ -22,6 +22,7 @@ type StreamConfig struct {
 	TimeoutMs       int    `json:"timeout_ms"`
 	Deserializer    string `json:"deserializer"`
 	AutoCommit      bool   `json:"auto_commit"`
+	AgentID         string `json:"agent_id,omitempty"`
 }
 
 // StreamSession represents an active streaming consumer session.
@@ -29,6 +30,7 @@ type StreamSession struct {
 	ID          string        `json:"id"`
 	Topic       string        `json:"topic"`
 	GroupID     string        `json:"group_id"`
+	AgentID     string        `json:"agent_id,omitempty"`
 	Status      string        `json:"status"` // running, paused, stopped
 	StartedAt   string        `json:"started_at"`
 	MsgCount    int64         `json:"messages_delivered"`
@@ -66,6 +68,11 @@ func NewStreamManager() *StreamManager {
 		sessions: make(map[string]*StreamSession),
 	}
 }
+
+const (
+	maxSessionsPerAgent = 10
+	maxSessionsGlobal   = 100
+)
 
 func generateSessionID() string {
 	b := make([]byte, 8)
@@ -136,6 +143,7 @@ func (m *Manager) StartStream(ctx context.Context, cluster string, cfg StreamCon
 		ID:        generateSessionID(),
 		Topic:     cfg.Topic,
 		GroupID:   groupID,
+		AgentID:   cfg.AgentID,
 		Status:    "running",
 		StartedAt: time.Now().UTC().Format(time.RFC3339),
 		BatchSize: cfg.BatchSize,
@@ -148,6 +156,29 @@ func (m *Manager) StartStream(ctx context.Context, cluster string, cfg StreamCon
 		m.streamMgr = NewStreamManager()
 	}
 	m.streamMgr.mu.Lock()
+	// Check global session cap
+	activeCount := 0
+	agentCount := 0
+	for _, s := range m.streamMgr.sessions {
+		if s.Status != "stopped" {
+			activeCount++
+			if s.AgentID == cfg.AgentID {
+				agentCount++
+			}
+		}
+	}
+	if activeCount >= maxSessionsGlobal {
+		m.streamMgr.mu.Unlock()
+		cancel()
+		consumer.Close()
+		return nil, fmt.Errorf("global streaming session limit (%d) reached", maxSessionsGlobal)
+	}
+	if cfg.AgentID != "" && agentCount >= maxSessionsPerAgent {
+		m.streamMgr.mu.Unlock()
+		cancel()
+		consumer.Close()
+		return nil, fmt.Errorf("per-agent streaming session limit (%d) reached", maxSessionsPerAgent)
+	}
 	m.streamMgr.sessions[session.ID] = session
 	m.streamMgr.mu.Unlock()
 
