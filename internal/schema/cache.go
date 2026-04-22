@@ -39,18 +39,16 @@ func NewCache(maxEntries int, ttl time.Duration) *Cache {
 
 // Get retrieves a cached schema entry.
 func (c *Cache) Get(key string) (*SchemaInfo, bool) {
-	c.mu.RLock()
-	elem, ok := c.entries[key]
-	c.mu.RUnlock()
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
+	elem, ok := c.entries[key]
 	if !ok {
 		return nil, false
 	}
 	entry := elem.Value.(*cacheEntry)
 	if time.Now().After(entry.expiresAt) {
-		c.mu.Lock()
 		c.removeElement(elem)
-		c.mu.Unlock()
 		return nil, false
 	}
 	return entry.value, true
