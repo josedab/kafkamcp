@@ -198,6 +198,8 @@ type AlertManager struct {
 	alertCounter  int
 	httpClient    *http.Client
 	webhookSem    chan struct{} // bounds concurrent webhook goroutines
+	ctx           context.Context
+	cancel        context.CancelFunc
 }
 
 // NewAlertManager creates a new alert manager.
@@ -210,11 +212,14 @@ func NewAlertManager(config NotificationConfig) (*AlertManager, error) {
 			return nil, fmt.Errorf("invalid alert webhook: %w", err)
 		}
 	}
+	ctx, cancel := context.WithCancel(context.Background())
 	return &AlertManager{
 		config:     config,
 		cooldowns:  make(map[string]time.Time),
 		httpClient: &http.Client{Timeout: 10 * time.Second},
 		webhookSem: make(chan struct{}, 10),
+		ctx:        ctx,
+		cancel:     cancel,
 	}, nil
 }
 
@@ -258,7 +263,7 @@ func (am *AlertManager) ProcessAlert(alert Alert) *AlertNotification {
 		case am.webhookSem <- struct{}{}:
 			go func() {
 				defer func() { <-am.webhookSem }()
-				am.sendWebhook(context.Background(), notif)
+				am.sendWebhook(am.ctx, notif)
 			}()
 		default:
 			// Drop webhook if all slots are busy
@@ -266,6 +271,11 @@ func (am *AlertManager) ProcessAlert(alert Alert) *AlertNotification {
 	}
 
 	return notif
+}
+
+// Stop cancels the alert manager context, terminating any in-flight webhook requests.
+func (am *AlertManager) Stop() {
+	am.cancel()
 }
 
 // GetRecentNotifications returns recent alert notifications.
