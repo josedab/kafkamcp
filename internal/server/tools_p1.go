@@ -58,6 +58,14 @@ func (s *Server) handleCreateTopic(ctx context.Context, request mcp.CallToolRequ
 			}
 		}
 	}
+	for k, v := range configs {
+		if deny := validateStringLength("config key", k); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("config value", v); deny != nil {
+			return deny, nil
+		}
+	}
 
 	err := s.kafkaManager.CreateTopic(ctx, cluster, kafka.CreateTopicRequest{
 		Name: name, Partitions: partitions, ReplicationFactor: replFactor, Configs: configs,
@@ -104,6 +112,14 @@ func (s *Server) handleAlterTopic(ctx context.Context, request mcp.CallToolReque
 					return s.toolError("Invalid configs format", err), nil
 				}
 			}
+		}
+	}
+	for k, v := range configs {
+		if deny := validateStringLength("config key", k); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("config value", v); deny != nil {
+			return deny, nil
 		}
 	}
 	if len(configs) == 0 {
