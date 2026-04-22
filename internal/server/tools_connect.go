@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/kafkamcp/kafkamcp/internal/auth"
@@ -53,6 +54,9 @@ func (s *Server) handleCreateConnector(ctx context.Context, request mcp.CallTool
 	if len(config) == 0 {
 		return mcp.NewToolResultError("config is required"), nil
 	}
+	if deny, _ := validateConnectorConfig(config); deny != nil {
+		return deny, nil
+	}
 
 	result, err := client.CreateConnector(ctx, name, config)
 	if err != nil {
@@ -60,6 +64,8 @@ func (s *Server) handleCreateConnector(ctx context.Context, request mcp.CallTool
 		return s.toolError("Failed to create connector", err), nil
 	}
 
+	_, redactedConfig := validateConnectorConfig(config)
+	s.logger.Info("connector created", "name", name, "config", redactedConfig)
 	s.logAudit(agentID, "kafka_create_connector", args, cluster, "success", 0, nil, start)
 	return marshalResult(result)
 }
@@ -106,6 +112,9 @@ func (s *Server) handleUpdateConnector(ctx context.Context, request mcp.CallTool
 	if len(config) == 0 {
 		return mcp.NewToolResultError("config is required"), nil
 	}
+	if deny, _ := validateConnectorConfig(config); deny != nil {
+		return deny, nil
+	}
 
 	result, err := client.UpdateConnector(ctx, name, config)
 	if err != nil {
@@ -113,6 +122,8 @@ func (s *Server) handleUpdateConnector(ctx context.Context, request mcp.CallTool
 		return s.toolError("Failed to update connector", err), nil
 	}
 
+	_, redactedConfig := validateConnectorConfig(config)
+	s.logger.Info("connector updated", "name", name, "config", redactedConfig)
 	s.logAudit(agentID, "kafka_update_connector", args, cluster, "success", 0, nil, start)
 	return marshalResult(result)
 }
@@ -287,4 +298,35 @@ func extractStringMapArg(request mcp.CallToolRequest, key string) map[string]str
 		return nil
 	}
 	return result
+}
+
+// sensitiveConnectorConfigKeys lists connector config keys whose values should be redacted in logs.
+var sensitiveConnectorConfigKeys = []string{
+	"password", "secret", "token", "credential", "api.key", "aws.secret",
+	"ssl.keystore.password", "ssl.truststore.password", "ssl.key.password",
+	"sasl.jaas.config", "consumer.override.sasl.jaas.config",
+	"producer.override.sasl.jaas.config",
+}
+
+// validateConnectorConfig validates connector config keys and values for length,
+// and returns a redacted copy suitable for audit logging.
+func validateConnectorConfig(config map[string]string) (*mcp.CallToolResult, map[string]string) {
+	redacted := make(map[string]string, len(config))
+	for k, v := range config {
+		if deny := validateStringLength("config key", k); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("config value", v); deny != nil {
+			return deny, nil
+		}
+		redacted[k] = v
+		lk := strings.ToLower(k)
+		for _, sensitive := range sensitiveConnectorConfigKeys {
+			if strings.Contains(lk, sensitive) {
+				redacted[k] = "***REDACTED***"
+				break
+			}
+		}
+	}
+	return nil, redacted
 }
