@@ -9,12 +9,12 @@ import (
 	"github.com/twmb/franz-go/pkg/kgo"
 )
 
-// --------------- StreamManager ---------------
+// --------------- streamSessionManager ---------------
 
 func TestNewStreamManager_EmptySessions(t *testing.T) {
-	sm := NewStreamManager()
+	sm := newStreamSessionManager()
 	if sm == nil {
-		t.Fatal("expected non-nil StreamManager")
+		t.Fatal("expected non-nil streamSessionManager")
 	}
 	if len(sm.sessions) != 0 {
 		t.Errorf("expected empty sessions map, got %d entries", len(sm.sessions))

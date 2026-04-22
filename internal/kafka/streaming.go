@@ -56,15 +56,15 @@ type StreamResult struct {
 	TotalSent  int64     `json:"total_delivered"`
 }
 
-// StreamManager manages active streaming sessions.
-type StreamManager struct {
+// streamSessionManager manages active streaming sessions.
+type streamSessionManager struct {
 	mu       sync.RWMutex
 	sessions map[string]*StreamSession
 }
 
-// NewStreamManager creates a new stream session manager.
-func NewStreamManager() *StreamManager {
-	return &StreamManager{
+// newStreamSessionManager creates a new stream session manager.
+func newStreamSessionManager() *streamSessionManager {
+	return &streamSessionManager{
 		sessions: make(map[string]*StreamSession),
 	}
 }
@@ -156,7 +156,7 @@ func (m *Manager) StartStream(ctx context.Context, cluster string, cfg StreamCon
 	}
 
 	if m.streamMgr == nil {
-		m.streamMgr = NewStreamManager()
+		m.streamMgr = newStreamSessionManager()
 	}
 	m.streamMgr.mu.Lock()
 	// Check global session cap
@@ -193,6 +193,8 @@ func (m *Manager) StartStream(ctx context.Context, cluster string, cfg StreamCon
 			session.mu.Lock()
 			session.Status = "stopped"
 			session.mu.Unlock()
+			close(session.msgChan)
+			close(session.errChan)
 		}()
 
 		var totalDelivered int64

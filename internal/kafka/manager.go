@@ -25,7 +25,7 @@ type Manager struct {
 	configs   map[string]*config.ClusterConfig
 	logger    *slog.Logger
 	defClust  string
-	streamMgr *StreamManager
+	streamMgr *streamSessionManager
 }
 
 // NewManager creates a new Kafka Manager from the provided config.

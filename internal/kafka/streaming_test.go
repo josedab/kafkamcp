@@ -6,7 +6,7 @@ import (
 )
 
 func TestNewStreamManager(t *testing.T) {
-	sm := NewStreamManager()
+	sm := newStreamSessionManager()
 	if sm == nil {
 		t.Fatal("expected non-nil stream manager")
 	}

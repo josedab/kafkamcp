@@ -23,7 +23,7 @@ func testManager() *Manager {
 		},
 		logger:    slog.Default(),
 		defClust:  "prod",
-		streamMgr: NewStreamManager(),
+		streamMgr: newStreamSessionManager(),
 	}
 }
 
