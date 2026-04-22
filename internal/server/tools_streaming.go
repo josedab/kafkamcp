@@ -83,6 +83,18 @@ func (s *Server) handleStreamPoll(_ context.Context, request mcp.CallToolRequest
 	if sessionID == "" {
 		return mcp.NewToolResultError("session_id is required for poll action"), nil
 	}
+	if deny := validateStringLength("session_id", sessionID); deny != nil {
+		return deny, nil
+	}
+
+	// Verify session ownership
+	session, ok := s.kafkaManager.GetStreamSession(sessionID)
+	if !ok {
+		return mcp.NewToolResultError("stream session not found"), nil
+	}
+	if session.AgentID != "" && session.AgentID != agentID {
+		return mcp.NewToolResultError("access denied: session belongs to another agent"), nil
+	}
 
 	timeoutMs := request.GetInt("poll_timeout_ms", 5000)
 	result, err := s.kafkaManager.PollStream(sessionID, timeoutMs)
@@ -100,6 +112,18 @@ func (s *Server) handleStreamControl(_ context.Context, request mcp.CallToolRequ
 	if sessionID == "" {
 		return mcp.NewToolResultError("session_id is required"), nil
 	}
+	if deny := validateStringLength("session_id", sessionID); deny != nil {
+		return deny, nil
+	}
+
+	// Verify session ownership
+	session, ok := s.kafkaManager.GetStreamSession(sessionID)
+	if !ok {
+		return mcp.NewToolResultError("stream session not found"), nil
+	}
+	if session.AgentID != "" && session.AgentID != agentID {
+		return mcp.NewToolResultError("access denied: session belongs to another agent"), nil
+	}
 
 	result, err := s.kafkaManager.ControlStream(sessionID, action)
 	if err != nil {
@@ -112,7 +136,14 @@ func (s *Server) handleStreamControl(_ context.Context, request mcp.CallToolRequ
 }
 
 func (s *Server) handleStreamList(agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
-	sessions := s.kafkaManager.ListStreams()
+	allSessions := s.kafkaManager.ListStreams()
+	// Filter sessions to only those owned by the calling agent
+	var sessions []kafka.StreamSession
+	for _, sess := range allSessions {
+		if sess.AgentID == "" || sess.AgentID == agentID {
+			sessions = append(sessions, sess)
+		}
+	}
 	s.logAudit(agentID, "kafka_stream", args, "", "success", len(sessions), nil, start)
 	return marshalResult(map[string]any{
 		"sessions":    sessions,
