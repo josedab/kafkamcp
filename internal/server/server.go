@@ -553,7 +553,8 @@ func redactURL(rawURL string) string {
 func marshalResult(v any) (*mcp.CallToolResult, error) {
 data, err := json.MarshalIndent(v, "", "  ")
 if err != nil {
-return mcp.NewToolResultError(fmt.Sprintf("Failed to marshal result: %v", err)), nil
+slog.Error("failed to marshal tool result", "error", err)
+return mcp.NewToolResultError("internal error: failed to format response"), nil
 }
 return mcp.NewToolResultText(string(data)), nil
 }
