@@ -32,6 +32,9 @@ func (s *Server) handleAgentRegistry(ctx context.Context, request mcp.CallToolRe
 	switch action {
 	case "register":
 		name := request.GetString("agent_name", agentID)
+		if deny := validateStringLength("agent_name", name); deny != nil {
+			return deny, nil
+		}
 		agent := s.agentRegistry.RegisterAgent(agentID, name)
 		s.logAudit(agentID, "kafka_agent_registry", args, "", "success", 0, nil, start)
 		return marshalResult(map[string]any{"status": "registered", "agent": agent})
@@ -50,6 +53,9 @@ func (s *Server) handleAgentRegistry(ctx context.Context, request mcp.CallToolRe
 		if topic == "" || partition < 0 {
 			return mcp.NewToolResultError("topic and partition are required for claim"), nil
 		}
+		if deny := validateStringLength("topic", topic); deny != nil {
+			return deny, nil
+		}
 		if err := s.agentRegistry.ClaimPartition(agentID, topic, partition); err != nil {
 			s.logAudit(agentID, "kafka_agent_registry", args, "", "error", 0, err, start)
 			return s.toolError("partition claim failed", err), nil
@@ -62,6 +68,9 @@ func (s *Server) handleAgentRegistry(ctx context.Context, request mcp.CallToolRe
 		partition := int32(request.GetFloat("partition", -1))
 		if topic == "" || partition < 0 {
 			return mcp.NewToolResultError("topic and partition are required for release"), nil
+		}
+		if deny := validateStringLength("topic", topic); deny != nil {
+			return deny, nil
 		}
 		if err := s.agentRegistry.ReleasePartition(agentID, topic, partition); err != nil {
 			s.logAudit(agentID, "kafka_agent_registry", args, "", "error", 0, err, start)
@@ -77,6 +86,9 @@ func (s *Server) handleAgentRegistry(ctx context.Context, request mcp.CallToolRe
 		if topic == "" || partition < 0 || offset < 0 {
 			return mcp.NewToolResultError("topic, partition, and offset are required for share_cursor"), nil
 		}
+		if deny := validateStringLength("topic", topic); deny != nil {
+			return deny, nil
+		}
 		cursor := s.agentRegistry.ShareCursor(agentID, topic, partition, offset)
 		s.logAudit(agentID, "kafka_agent_registry", args, "", "success", 0, nil, start)
 		return marshalResult(map[string]any{"status": "cursor_shared", "cursor": cursor})
@@ -86,6 +98,12 @@ func (s *Server) handleAgentRegistry(ctx context.Context, request mcp.CallToolRe
 		msgData := request.GetString("message_data", "")
 		if targetAgent == "" {
 			return mcp.NewToolResultError("target_agent is required for handoff"), nil
+		}
+		if deny := validateStringLength("target_agent", targetAgent); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("message_data", msgData); deny != nil {
+			return deny, nil
 		}
 		msg, err := s.agentRegistry.QueueHandoff(agentID, targetAgent, msgData)
 		if err != nil {
@@ -292,8 +310,18 @@ func (s *Server) handleListACLs(ctx context.Context, request mcp.CallToolRequest
 		return deny, nil
 	}
 
+	if deny := validateStringLength("cluster", cluster); deny != nil {
+		return deny, nil
+	}
+
 	principal := request.GetString("principal", "")
 	resourceType := request.GetString("resource_type", "")
+	if deny := validateStringLength("principal", principal); deny != nil {
+		return deny, nil
+	}
+	if deny := validateStringLength("resource_type", resourceType); deny != nil {
+		return deny, nil
+	}
 	includeAnalysis := request.GetBool("include_analysis", true)
 
 	result, err := s.kafkaManager.ListACLs(ctx, cluster, principal, resourceType, includeAnalysis)
@@ -322,6 +350,9 @@ func (s *Server) handleConfigDrift(ctx context.Context, request mcp.CallToolRequ
 	if deny := s.checkAuth(agentID, "kafka_config_drift", auth.ResourceCluster, "", auth.ActionRead); deny != nil {
 		return deny, nil
 	}
+	if deny := validateStringLength("cluster", cluster); deny != nil {
+		return deny, nil
+	}
 
 	switch action {
 	case "compare":
@@ -330,6 +361,15 @@ func (s *Server) handleConfigDrift(ctx context.Context, request mcp.CallToolRequ
 		topic := request.GetString("topic", "")
 		if sourceCluster == "" || targetCluster == "" {
 			return mcp.NewToolResultError("source_cluster and target_cluster are required for compare"), nil
+		}
+		if deny := validateStringLength("source_cluster", sourceCluster); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("target_cluster", targetCluster); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("topic", topic); deny != nil {
+			return deny, nil
 		}
 		result, err := s.kafkaManager.CompareConfigs(ctx, sourceCluster, targetCluster, topic)
 		if err != nil {
@@ -341,6 +381,9 @@ func (s *Server) handleConfigDrift(ctx context.Context, request mcp.CallToolRequ
 
 	case "audit":
 		topic := request.GetString("topic", "")
+		if deny := validateStringLength("topic", topic); deny != nil {
+			return deny, nil
+		}
 		template := extractStringMapArg(request, "template")
 		result, err := s.kafkaManager.AuditConfigs(ctx, cluster, topic, template)
 		if err != nil {
