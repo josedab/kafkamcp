@@ -4,12 +4,30 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
+	"math/rand/v2"
+	"regexp"
 	"strings"
 	"time"
 )
 
 const playgroundPrefix = "_playground_"
+
+const maxAgentIDLength = 64
+
+var agentIDSanitizer = regexp.MustCompile(`[^a-zA-Z0-9_-]`)
+
+// sanitizeAgentID restricts agent IDs to alphanumeric, hyphen, and underscore
+// characters and enforces a maximum length.
+func sanitizeAgentID(agentID string) string {
+	s := agentIDSanitizer.ReplaceAllString(agentID, "")
+	if len(s) > maxAgentIDLength {
+		s = s[:maxAgentIDLength]
+	}
+	if s == "" {
+		s = "unknown"
+	}
+	return s
+}
 
 // PlaygroundTopicResult is the result of creating a playground topic.
 type PlaygroundTopicResult struct {
@@ -21,7 +39,7 @@ type PlaygroundTopicResult struct {
 
 // PlaygroundCreate creates a temporary playground topic.
 func (m *Manager) PlaygroundCreate(ctx context.Context, cluster, agentID, name string, partitions int32) (*PlaygroundTopicResult, error) {
-	topicName := fmt.Sprintf("%s%s_%s", playgroundPrefix, agentID, name)
+	topicName := fmt.Sprintf("%s%s_%s", playgroundPrefix, sanitizeAgentID(agentID), name)
 	if partitions <= 0 {
 		partitions = 3
 	}
@@ -50,7 +68,7 @@ func (m *Manager) PlaygroundCreate(ctx context.Context, cluster, agentID, name s
 
 // PlaygroundProduceSample produces sample data to a playground topic.
 func (m *Manager) PlaygroundProduceSample(ctx context.Context, cluster, agentID, name, pattern string, count int) (map[string]any, error) {
-	topicName := fmt.Sprintf("%s%s_%s", playgroundPrefix, agentID, name)
+	topicName := fmt.Sprintf("%s%s_%s", playgroundPrefix, sanitizeAgentID(agentID), name)
 
 	messages := generateSampleData(pattern, count)
 
@@ -76,10 +94,10 @@ func (m *Manager) PlaygroundList(ctx context.Context, cluster, agentID string) (
 		return nil, err
 	}
 
-	prefix := playgroundPrefix + agentID
+	prefix := playgroundPrefix + sanitizeAgentID(agentID)
 	var result []TopicSummary
 	for _, t := range topics {
-		if strings.HasPrefix(t.Name, prefix) || strings.HasPrefix(t.Name, playgroundPrefix) {
+		if strings.HasPrefix(t.Name, prefix) {
 			result = append(result, t)
 		}
 	}
@@ -105,40 +123,39 @@ func (m *Manager) PlaygroundCleanup(ctx context.Context, cluster, agentID string
 }
 
 func generateSampleData(pattern string, count int) []ProduceMessage {
-	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 	messages := make([]ProduceMessage, 0, count)
 
 	for i := 0; i < count; i++ {
 		var msg ProduceMessage
 		switch pattern {
 		case "iot":
-			msg = generateIOTMessage(rng, i)
+			msg = generateIOTMessage(i)
 		case "user_activity":
-			msg = generateUserActivityMessage(rng, i)
+			msg = generateUserActivityMessage(i)
 		case "logs":
-			msg = generateLogMessage(rng, i)
+			msg = generateLogMessage(i)
 		default: // ecommerce
-			msg = generateEcommerceMessage(rng, i)
+			msg = generateEcommerceMessage(i)
 		}
 		messages = append(messages, msg)
 	}
 	return messages
 }
 
-func generateEcommerceMessage(rng *rand.Rand, idx int) ProduceMessage {
+func generateEcommerceMessage(idx int) ProduceMessage {
 	products := []string{"laptop", "phone", "headphones", "keyboard", "monitor", "tablet", "camera"}
 	statuses := []string{"created", "paid", "shipped", "delivered", "cancelled"}
-	product := products[rng.Intn(len(products))]
-	status := statuses[rng.Intn(len(statuses))]
+	product := products[rand.IntN(len(products))]
+	status := statuses[rand.IntN(len(statuses))]
 	orderID := fmt.Sprintf("ORD-%06d", idx+1)
 
 	value := map[string]any{
 		"order_id":   orderID,
 		"product":    product,
-		"quantity":   rng.Intn(5) + 1,
-		"price":      float64(rng.Intn(100000)) / 100.0,
+		"quantity":   rand.IntN(5) + 1,
+		"price":      float64(rand.IntN(100000)) / 100.0,
 		"status":     status,
-		"customer_id": fmt.Sprintf("CUST-%04d", rng.Intn(1000)),
+		"customer_id": fmt.Sprintf("CUST-%04d", rand.IntN(1000)),
 		"timestamp":  time.Now().UTC().Format(time.RFC3339),
 	}
 
@@ -146,36 +163,36 @@ func generateEcommerceMessage(rng *rand.Rand, idx int) ProduceMessage {
 	return ProduceMessage{Key: orderID, Value: json.RawMessage(valueBytes)}
 }
 
-func generateIOTMessage(rng *rand.Rand, idx int) ProduceMessage {
-	deviceID := fmt.Sprintf("device-%03d", rng.Intn(50))
+func generateIOTMessage(idx int) ProduceMessage {
+	deviceID := fmt.Sprintf("device-%03d", rand.IntN(50))
 	value := map[string]any{
 		"device_id":   deviceID,
-		"temperature": 15.0 + rng.Float64()*25.0,
-		"humidity":    30.0 + rng.Float64()*60.0,
-		"pressure":    980.0 + rng.Float64()*40.0,
-		"battery":     rng.Intn(100),
+		"temperature": 15.0 + rand.Float64()*25.0,
+		"humidity":    30.0 + rand.Float64()*60.0,
+		"pressure":    980.0 + rand.Float64()*40.0,
+		"battery":     rand.IntN(100),
 		"timestamp":   time.Now().UTC().Format(time.RFC3339),
 		"location": map[string]any{
-			"lat": 37.0 + rng.Float64()*10.0,
-			"lon": -122.0 + rng.Float64()*5.0,
+			"lat": 37.0 + rand.Float64()*10.0,
+			"lon": -122.0 + rand.Float64()*5.0,
 		},
 	}
 	valueBytes, _ := json.Marshal(value) //nolint:errcheck // marshaling simple map literals cannot fail
 	return ProduceMessage{Key: deviceID, Value: json.RawMessage(valueBytes)}
 }
 
-func generateUserActivityMessage(rng *rand.Rand, idx int) ProduceMessage {
+func generateUserActivityMessage(idx int) ProduceMessage {
 	actions := []string{"page_view", "click", "scroll", "form_submit", "search", "purchase", "logout"}
 	pages := []string{"/home", "/products", "/cart", "/checkout", "/profile", "/search", "/about"}
-	userID := fmt.Sprintf("user-%04d", rng.Intn(200))
-	action := actions[rng.Intn(len(actions))]
+	userID := fmt.Sprintf("user-%04d", rand.IntN(200))
+	action := actions[rand.IntN(len(actions))]
 
 	value := map[string]any{
 		"user_id":    userID,
 		"action":     action,
-		"page":       pages[rng.Intn(len(pages))],
-		"session_id": fmt.Sprintf("sess-%08d", rng.Intn(100000)),
-		"duration_ms": rng.Intn(30000),
+		"page":       pages[rand.IntN(len(pages))],
+		"session_id": fmt.Sprintf("sess-%08d", rand.IntN(100000)),
+		"duration_ms": rand.IntN(30000),
 		"timestamp":  time.Now().UTC().Format(time.RFC3339),
 		"user_agent": "Mozilla/5.0 (Sample Data)",
 	}
@@ -183,7 +200,7 @@ func generateUserActivityMessage(rng *rand.Rand, idx int) ProduceMessage {
 	return ProduceMessage{Key: userID, Value: json.RawMessage(valueBytes)}
 }
 
-func generateLogMessage(rng *rand.Rand, idx int) ProduceMessage {
+func generateLogMessage(idx int) ProduceMessage {
 	levels := []string{"INFO", "WARN", "ERROR", "DEBUG"}
 	services := []string{"api-gateway", "user-service", "payment-service", "order-service", "notification-service"}
 	messages := []string{
@@ -196,17 +213,17 @@ func generateLogMessage(rng *rand.Rand, idx int) ProduceMessage {
 		"Health check passed",
 	}
 
-	level := levels[rng.Intn(len(levels))]
-	service := services[rng.Intn(len(services))]
+	level := levels[rand.IntN(len(levels))]
+	service := services[rand.IntN(len(services))]
 
 	value := map[string]any{
 		"level":     level,
 		"service":   service,
-		"message":   messages[rng.Intn(len(messages))],
-		"trace_id":  fmt.Sprintf("trace-%012d", rng.Int63n(1000000000000)),
-		"span_id":   fmt.Sprintf("span-%08d", rng.Intn(100000000)),
+		"message":   messages[rand.IntN(len(messages))],
+		"trace_id":  fmt.Sprintf("trace-%012d", rand.Int64N(1000000000000)),
+		"span_id":   fmt.Sprintf("span-%08d", rand.IntN(100000000)),
 		"timestamp": time.Now().UTC().Format(time.RFC3339Nano),
-		"host":      fmt.Sprintf("%s-%d", service, rng.Intn(5)),
+		"host":      fmt.Sprintf("%s-%d", service, rand.IntN(5)),
 	}
 	valueBytes, _ := json.Marshal(value) //nolint:errcheck // marshaling simple map literals cannot fail
 	return ProduceMessage{Key: service, Value: json.RawMessage(valueBytes)}
