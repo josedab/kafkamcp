@@ -32,6 +32,25 @@ func (s *Server) handleAnomalies(ctx context.Context, request mcp.CallToolReques
 		limit := request.GetInt("limit", 50)
 		sinceHours := request.GetInt("since_hours", 24)
 
+		if deny := validateStringLength("severity", severity); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("metric", metric); deny != nil {
+			return deny, nil
+		}
+		if limit < 1 {
+			limit = 1
+		}
+		if limit > 1000 {
+			limit = 1000
+		}
+		if sinceHours < 1 {
+			sinceHours = 1
+		}
+		if sinceHours > 8760 {
+			sinceHours = 8760
+		}
+
 		since := time.Now().Add(-time.Duration(sinceHours) * time.Hour)
 		alerts := s.anomalyDetector.GetAlerts(since, severity, metric, limit)
 		status := s.anomalyDetector.GetStatus()
@@ -62,6 +81,12 @@ func (s *Server) handleIngestAnomaly(ctx context.Context, request mcp.CallToolRe
 
 		if metric == "" || source == "" {
 			return mcp.NewToolResultError("metric and source are required"), nil
+		}
+		if deny := validateStringLength("metric", metric); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("source", source); deny != nil {
+			return deny, nil
 		}
 
 		dp := anomaly.DataPoint{
@@ -226,6 +251,16 @@ func (s *Server) handleWorkflows(ctx context.Context, request mcp.CallToolReques
 		category := request.GetString("category", "")
 		templateName := request.GetString("template", "")
 
+		if deny := validateStringLength("action", action); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("category", category); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("template", templateName); deny != nil {
+			return deny, nil
+		}
+
 		switch action {
 		case "list":
 			templates := s.workflowEngine.ListTemplates(category)
@@ -253,6 +288,9 @@ func (s *Server) handleWorkflows(ctx context.Context, request mcp.CallToolReques
 			// Also check for common params passed directly
 			for _, key := range []string{"topic", "group_id", "subject", "change", "correlation_id", "source_cluster", "target_cluster"} {
 				if v := request.GetString(key, ""); v != "" {
+					if deny := validateStringLength(key, v); deny != nil {
+						return deny, nil
+					}
 					params[key] = v
 				}
 			}
@@ -314,14 +352,21 @@ func (s *Server) handleGitOpsDiff(ctx context.Context, request mcp.CallToolReque
 		if desiredTopics, ok := args["topics"].([]any); ok {
 			for _, dt := range desiredTopics {
 				if tm, ok := dt.(map[string]any); ok {
+					topicName := fmt.Sprintf("%v", tm["name"])
+					if deny := validateStringLength("topic_name", topicName); deny != nil {
+						return deny, nil
+					}
 					spec := gitops.TopicSpec{
-						Name:              fmt.Sprintf("%v", tm["name"]),
+						Name:              topicName,
 						Partitions:        intFromAny(tm["partitions"], 1),
 						ReplicationFactor: intFromAny(tm["replication_factor"], 1),
 					}
 					if configs, ok := tm["configs"].(map[string]any); ok {
 						spec.Configs = make(map[string]string)
 						for k, v := range configs {
+							if deny := validateStringLength("config_key", k); deny != nil {
+								return deny, nil
+							}
 							spec.Configs[k] = fmt.Sprintf("%v", v)
 						}
 					}

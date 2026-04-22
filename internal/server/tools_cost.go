@@ -72,6 +72,10 @@ func (s *Server) handleCostWaste(ctx context.Context, request mcp.CallToolReques
 		cluster := request.GetString("cluster", "")
 		provider := request.GetString("provider", "aws-msk")
 
+		if deny := validateStringLength("provider", provider); deny != nil {
+			return deny, nil
+		}
+
 		topics, err := s.kafkaManager.ListTopics(ctx, cluster, false)
 		if err != nil {
 			s.logAudit(agentID, "kafka_cost_waste", args, cluster, "error", 0, err, start)
@@ -115,6 +119,12 @@ func (s *Server) handleCostWhatIf(ctx context.Context, request mcp.CallToolReque
 		if topic == "" {
 			return mcp.NewToolResultError("topic is required"), nil
 		}
+		if deny := validateStringLength("topic", topic); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("provider", provider); deny != nil {
+			return deny, nil
+		}
 
 		detail, err := s.kafkaManager.DescribeTopic(ctx, cluster, topic)
 		if err != nil {
@@ -141,6 +151,9 @@ func (s *Server) handleCostWhatIf(ctx context.Context, request mcp.CallToolReque
 			scenario.NewRetentionMs = &newRet
 		}
 		if newComp := request.GetString("new_compression", ""); newComp != "" {
+			if deny := validateStringLength("new_compression", newComp); deny != nil {
+				return deny, nil
+			}
 			scenario.NewCompression = newComp
 		}
 		if newPart := request.GetInt("new_partitions", 0); newPart > 0 {

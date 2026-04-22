@@ -22,6 +22,9 @@ func (s *Server) handleStream(ctx context.Context, request mcp.CallToolRequest) 
 	if deny := s.checkRateLimit(agentID, "kafka_stream"); deny != nil {
 		return deny, nil
 	}
+	if deny := s.validateAgentID(agentID); deny != nil {
+		return deny, nil
+	}
 
 	switch action {
 	case "start":
