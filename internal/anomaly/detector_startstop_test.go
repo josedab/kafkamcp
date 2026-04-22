@@ -48,7 +48,7 @@ func TestStartStop_CleanShutdown(t *testing.T) {
 		},
 	}
 
-	d.Start(collector, "default")
+	d.Start(context.Background(), collector, "default")
 
 	// Let it run briefly
 	time.Sleep(100 * time.Millisecond)
@@ -126,7 +126,7 @@ func TestCollectionLoop_FiresOnInterval(t *testing.T) {
 		},
 	}
 
-	d.Start(collector, "default")
+	d.Start(context.Background(), collector, "default")
 	time.Sleep(2500 * time.Millisecond)
 	d.Stop()
 
@@ -169,7 +169,7 @@ func TestMultipleStartStop_Idempotency(t *testing.T) {
 	collector := &mockCollector{}
 
 	for i := 0; i < 3; i++ {
-		d.Start(collector, "default")
+		d.Start(context.Background(), collector, "default")
 		time.Sleep(50 * time.Millisecond)
 		d.Stop()
 	}
@@ -183,7 +183,7 @@ func TestStartStop_ContextCancel(t *testing.T) {
 
 	collector := &mockCollector{}
 
-	d.Start(collector, "default")
+	d.Start(context.Background(), collector, "default")
 
 	// Cancel via Stop (which calls d.cancel())
 	done := make(chan struct{})

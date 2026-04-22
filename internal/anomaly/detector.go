@@ -162,8 +162,8 @@ func NewDetector(cfg DetectorConfig, logger *slog.Logger) *Detector {
 }
 
 // Start begins background metric collection.
-func (d *Detector) Start(collector MetricCollector, cluster string) {
-	ctx, cancel := context.WithCancel(context.Background())
+func (d *Detector) Start(ctx context.Context, collector MetricCollector, cluster string) {
+	ctx, cancel := context.WithCancel(ctx)
 	d.cancel = cancel
 	d.wg.Add(1)
 	go d.collectionLoop(ctx, collector, cluster)
