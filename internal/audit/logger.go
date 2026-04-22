@@ -39,6 +39,8 @@ type Logger struct {
 	pos        int
 	full       bool
 	fileWriter io.Writer
+	writeCh    chan []byte // buffered channel for async file writes
+	done       chan struct{}
 	slogger    *slog.Logger
 	enabled    bool
 }
@@ -66,9 +68,22 @@ func NewLogger(enabled bool, maxEntries int, logFile string, logger *slog.Logger
 			return nil, fmt.Errorf("opening audit log file: %w", err)
 		}
 		l.fileWriter = f
+		l.writeCh = make(chan []byte, 256)
+		l.done = make(chan struct{})
+		go l.fileWriteLoop()
 	}
 
 	return l, nil
+}
+
+// fileWriteLoop drains the write channel and writes to the file writer.
+func (l *Logger) fileWriteLoop() {
+	defer close(l.done)
+	for data := range l.writeCh {
+		if _, err := l.fileWriter.Write(data); err != nil {
+			l.slogger.Error("audit write failed", "error", err)
+		}
+	}
 }
 
 // Log records an audit entry.
@@ -81,10 +96,8 @@ func (l *Logger) Log(entry Entry) {
 		entry.Timestamp = time.Now().UTC().Format(time.RFC3339Nano)
 	}
 
-	// Write to ring buffer and file under lock
+	// Write to ring buffer under lock (fast in-memory operation only)
 	l.mu.Lock()
-	defer l.mu.Unlock()
-
 	if len(l.entries) < l.maxEntries {
 		l.entries = append(l.entries, entry)
 		l.pos = len(l.entries)
@@ -95,14 +108,17 @@ func (l *Logger) Log(entry Entry) {
 			l.full = true
 		}
 	}
+	l.mu.Unlock()
 
-	// Write to file (durable) — inside mutex to prevent interleaved writes
-	if l.fileWriter != nil {
+	// Async file write via buffered channel (non-blocking)
+	if l.writeCh != nil {
 		data, err := json.Marshal(entry)
 		if err == nil {
 			data = append(data, '\n')
-			if _, err := l.fileWriter.Write(data); err != nil {
-				l.slogger.Error("audit write failed", "error", err)
+			select {
+			case l.writeCh <- data:
+			default:
+				l.slogger.Warn("audit write channel full, dropping entry")
 			}
 		} else {
 			l.slogger.Error("failed to marshal audit entry", "error", err)
@@ -152,8 +168,12 @@ func (l *Logger) Recent(n int) []Entry {
 	return l.RecentEntries(n)
 }
 
-// Close closes the audit logger.
+// Close closes the audit logger, draining any pending writes.
 func (l *Logger) Close() error {
+	if l.writeCh != nil {
+		close(l.writeCh)
+		<-l.done // wait for pending writes to complete
+	}
 	if closer, ok := l.fileWriter.(io.Closer); ok {
 		return closer.Close()
 	}
