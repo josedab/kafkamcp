@@ -254,7 +254,10 @@ func (m *Manager) AddCluster(tenantID string, cluster TenantCluster) error {
 
 func generateID(prefix string) string {
 	b := make([]byte, 8)
-	_, _ = rand.Read(b)
+	if _, err := rand.Read(b); err != nil {
+		// Fallback: use timestamp-based ID if crypto/rand fails
+		return fmt.Sprintf("%s_%d", prefix, time.Now().UnixNano())
+	}
 	return fmt.Sprintf("%s_%s", prefix, hex.EncodeToString(b))
 }
 

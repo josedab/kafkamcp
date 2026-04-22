@@ -76,7 +76,10 @@ const (
 
 func generateSessionID() string {
 	b := make([]byte, 8)
-	_, _ = rand.Read(b)
+	if _, err := rand.Read(b); err != nil {
+		// Fallback: use timestamp-based ID if crypto/rand fails
+		return fmt.Sprintf("stream-%d", time.Now().UnixNano())
+	}
 	return "stream-" + hex.EncodeToString(b)
 }
 
