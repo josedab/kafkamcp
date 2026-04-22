@@ -42,41 +42,64 @@ import (
 otelTrace "go.opentelemetry.io/otel/trace"
 )
 
+// Analytics groups AI-powered analysis and intelligence subsystems.
+type Analytics struct {
+	anomalyDetector *anomaly.Detector    // AI-powered anomaly detection
+	nlQueryEngine   *nlquery.Engine      // natural language query engine
+	costAnalyzer    *cost.Analyzer       // Kafka cost analysis
+	forecaster      *forecast.Forecaster // intelligent capacity forecasting
+	knowledgeGraph  *graph.KnowledgeGraph // embedded knowledge graph
+	lagAnalyzer     *lagdiag.Analyzer    // consumer lag root cause analysis
+}
+
+// Governance groups policy, audit, security, and compliance subsystems.
+type Governance struct {
+	policyEngine   *auth.PolicyEngine
+	auditLogger    *audit.Logger
+	rateLimiter    *ratelimit.Limiter
+	maskingEngine  *masking.Engine    // PII redaction engine
+	contractEngine *contracts.Engine  // schema-aware data contracts
+	personaEngine  *persona.Engine    // declarative agent personas
+}
+
+// Streaming groups event-driven and stream-processing subsystems.
+type Streaming struct {
+	watchManager   *watch.Manager      // event-driven watch subscriptions
+	dlqRemediator  *dlq.Remediator     // DLQ auto-remediation
+	replicationMon *replication.Monitor // cross-cluster replication monitoring
+	selfHealMon    *selfheal.Monitor   // self-healing consumer groups
+	lineageTracker *lineage.Tracker    // topic data lineage
+}
+
+// Platform groups infrastructure, orchestration, and extensibility subsystems.
+type Platform struct {
+	pluginRegistry   *plugin.Registry    // plugin/extension system
+	agentRegistry    *kafka.AgentRegistry // multi-agent collaboration
+	otelProvider     *telemetry.Provider // OpenTelemetry trace provider
+	platformMgr      *platform.Manager   // multi-platform abstraction
+	gitopsManager    *gitops.Manager     // GitOps configuration management
+	migrationPlanner *migration.Planner  // kafka migration assistant
+	workflowEngine   *workflow.Engine    // agent workflow templates
+}
+
 // Server is the KafkaMCP MCP server.
 type Server struct {
-config       *config.Config
-kafkaManager kafka.KafkaManager
-schemaClients map[string]*schema.Client // per-cluster schema clients
-connectMu      sync.RWMutex
-connectClients map[string]*kafka.ConnectClient // cached per-cluster Connect clients
-policyEngine *auth.PolicyEngine
-auditLogger  *audit.Logger
-rateLimiter  *ratelimit.Limiter
-metrics      *metrics.Metrics
-logger       *slog.Logger
-mcpServer    *server.MCPServer
-expensiveOps chan struct{} // semaphore for expensive operations (aggregate, join, search)
-watchManager   *watch.Manager       // event-driven watch subscriptions
-maskingEngine  *masking.Engine       // PII redaction engine
-dlqRemediator  *dlq.Remediator       // DLQ auto-remediation
-replicationMon *replication.Monitor   // cross-cluster replication monitoring
-pluginRegistry *plugin.Registry      // plugin/extension system
-agentRegistry  *kafka.AgentRegistry  // multi-agent collaboration
-otelProvider   *telemetry.Provider   // OpenTelemetry trace provider
-anomalyDetector *anomaly.Detector    // AI-powered anomaly detection
-nlQueryEngine  *nlquery.Engine       // natural language query engine
-workflowEngine *workflow.Engine      // agent workflow templates
-costAnalyzer   *cost.Analyzer        // Kafka cost analysis
-gitopsManager  *gitops.Manager       // GitOps configuration management
-knowledgeGraph *graph.KnowledgeGraph // embedded knowledge graph
-platformMgr    *platform.Manager     // multi-platform abstraction
-contractEngine *contracts.Engine     // schema-aware data contracts
-lagAnalyzer    *lagdiag.Analyzer     // consumer lag root cause analysis
-migrationPlanner *migration.Planner  // kafka migration assistant
-lineageTracker *lineage.Tracker      // topic data lineage
-selfHealMon    *selfheal.Monitor     // self-healing consumer groups
-personaEngine  *persona.Engine       // declarative agent personas
-forecaster     *forecast.Forecaster  // intelligent capacity forecasting
+	// Core fields
+	config         *config.Config
+	kafkaManager   kafka.KafkaManager
+	schemaClients  map[string]*schema.Client      // per-cluster schema clients
+	connectMu      sync.RWMutex
+	connectClients map[string]*kafka.ConnectClient // cached per-cluster Connect clients
+	metrics        *metrics.Metrics
+	logger         *slog.Logger
+	mcpServer      *server.MCPServer
+	expensiveOps   chan struct{} // semaphore for expensive operations (aggregate, join, search)
+
+	// Composite subsystems (embedded for direct field access)
+	Analytics
+	Governance
+	Streaming
+	Platform
 }
 
 // New creates a new KafkaMCP server. Functional options override default
@@ -119,33 +142,41 @@ config:         cfg,
 kafkaManager:   kafkaManager,
 schemaClients:  schemaClients,
 connectClients: make(map[string]*kafka.ConnectClient),
-policyEngine:   policyEngine,
-auditLogger:    auditLogger,
-rateLimiter:    rl,
 metrics:        metrics.New(),
 logger:         logger,
 expensiveOps:   make(chan struct{}, 5),
-watchManager:   watch.NewManager(logger),
-maskingEngine:  masking.NewEngine(cfg.Masking, logger),
-dlqRemediator:  dlq.NewRemediator(logger),
-replicationMon: replication.NewMonitor(logger),
-pluginRegistry: plugin.NewRegistry(logger),
-agentRegistry:  kafka.NewAgentRegistry(),
-otelProvider:   nil,
-anomalyDetector: anomaly.NewDetector(anomaly.DefaultConfig(), logger),
-nlQueryEngine:  nlquery.NewEngine(logger),
-workflowEngine: workflow.NewEngine(logger),
-costAnalyzer:   cost.NewAnalyzer(logger),
-gitopsManager:  gitops.NewManager(logger),
-knowledgeGraph: graph.NewKnowledgeGraph(logger),
-platformMgr:    platform.NewManager(logger),
-contractEngine: contracts.NewEngine(),
-lagAnalyzer:    lagdiag.NewAnalyzer(),
-migrationPlanner: migration.NewPlanner(),
-lineageTracker: lineage.NewTracker(),
-selfHealMon:    selfheal.NewMonitor(),
-personaEngine:  persona.NewEngine(),
-forecaster:     forecast.NewForecaster(30),
+Analytics: Analytics{
+	anomalyDetector: anomaly.NewDetector(anomaly.DefaultConfig(), logger),
+	nlQueryEngine:   nlquery.NewEngine(logger),
+	costAnalyzer:    cost.NewAnalyzer(logger),
+	forecaster:      forecast.NewForecaster(30),
+	knowledgeGraph:  graph.NewKnowledgeGraph(logger),
+	lagAnalyzer:     lagdiag.NewAnalyzer(),
+},
+Governance: Governance{
+	policyEngine:   policyEngine,
+	auditLogger:    auditLogger,
+	rateLimiter:    rl,
+	maskingEngine:  masking.NewEngine(cfg.Masking, logger),
+	contractEngine: contracts.NewEngine(),
+	personaEngine:  persona.NewEngine(),
+},
+Streaming: Streaming{
+	watchManager:   watch.NewManager(logger),
+	dlqRemediator:  dlq.NewRemediator(logger),
+	replicationMon: replication.NewMonitor(logger),
+	selfHealMon:    selfheal.NewMonitor(),
+	lineageTracker: lineage.NewTracker(),
+},
+Platform: Platform{
+	pluginRegistry:   plugin.NewRegistry(logger),
+	agentRegistry:    kafka.NewAgentRegistry(),
+	otelProvider:     nil,
+	platformMgr:      platform.NewManager(logger),
+	gitopsManager:    gitops.NewManager(logger),
+	migrationPlanner: migration.NewPlanner(),
+	workflowEngine:   workflow.NewEngine(logger),
+},
 }
 
 // Apply functional options, overriding defaults
@@ -247,6 +278,9 @@ func (s *Server) getConnectClient(clCfg *config.ClusterConfig) (*kafka.ConnectCl
 	c, err := kafka.NewConnectClient(clCfg.ConnectURL, connectTLSOpts(clCfg)...)
 	if err != nil {
 		return nil, err
+	}
+	if clCfg.ConnectTLS.InsecureSkipVerify {
+		s.logger.Warn("Kafka Connect client using InsecureSkipVerify - not recommended for production", "cluster", clCfg.Name)
 	}
 	if c != nil {
 		s.connectClients[clCfg.Name] = c
