@@ -384,6 +384,8 @@ func formatAvroType(t any, depth int) string {
 }
 
 // CompatibilityResult represents the result of a schema compatibility check.
+// It is returned by [Client.CheckCompatibility] and indicates whether a proposed
+// schema is compatible with the subject's compatibility policy.
 type CompatibilityResult struct {
 	IsCompatible bool     `json:"is_compatible"`
 	Messages     []string `json:"messages,omitempty"`
