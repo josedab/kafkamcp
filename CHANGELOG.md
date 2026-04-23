@@ -2,9 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.1.0] - YYYY-MM-DD
 
 ### Added
 - YAML configuration loader with environment variable expansion
@@ -60,3 +63,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Schema Registry safe fallback on JSON escape failure
 - Offset list failure logging improved
 - Schema error handling in field summary improved
+
+[Unreleased]: https://github.com/kafkamcp/kafkamcp/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/kafkamcp/kafkamcp/releases/tag/v0.1.0
