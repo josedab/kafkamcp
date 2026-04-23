@@ -23,13 +23,13 @@ service:
   port: 3100
 
 config:
-  transport: sse
+  server:
+    transport: sse
   clusters:
     - name: production
-      bootstrapServers: "kafka-headless.kafka:9092"
-      securityProtocol: SASL_SSL
-      saslMechanism: SCRAM-SHA-512
-  policyConfigMap: kafkamcp-policies
+      bootstrap_servers: "kafka-headless.kafka:9092"
+      security_protocol: SASL_SSL
+      sasl_mechanism: SCRAM-SHA-512
 
 resources:
   requests:
