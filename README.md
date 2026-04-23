@@ -180,6 +180,10 @@ Once connected, your AI agent can:
 | `kafka_watch` | Register event-driven watch subscriptions on topic patterns |
 | `kafka_remediate_dlq` | Auto-remediate DLQ messages: retry, route, or suggest fixes |
 | `kafka_schema_diff` | Field-by-field diff between two schema versions |
+
+### Streaming
+| Tool | Description |
+|------|-------------|
 | `kafka_stream` | Manage streaming consumer sessions for real-time delivery |
 | `kafka_agent_registry` | Multi-agent collaboration: register, claim partitions, handoff |
 
@@ -515,6 +519,7 @@ kafkamcp/
 │   ├── server/            # MCP server, tool/resource handlers
 │   ├── telemetry/         # OpenTelemetry tracing provider
 │   ├── tenant/            # Multi-tenant isolation
+│   ├── urlutil/           # URL validation utilities
 │   ├── watch/             # Event-driven watch subscriptions
 │   └── workflow/          # Agent workflow templates
 ├── sdk/
@@ -578,6 +583,7 @@ For additional troubleshooting guides, see the [full troubleshooting documentati
 ## Documentation & Community
 
 - 📖 **Website & Docs** — [kafkamcp.dev](https://kafkamcp.dev)
+- 📋 **Changelog** — [CHANGELOG.md](CHANGELOG.md)
 - 💬 **Discord** — [discord.gg/kafkamcp](https://discord.gg/kafkamcp)
 
 ## Contributing
