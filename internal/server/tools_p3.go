@@ -13,25 +13,22 @@ import (
 
 // handleWatch registers or manages a watch subscription for event-driven agent workflows.
 func (s *Server) handleWatch(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	start := time.Now()
-	agentID := extractAgentID(request)
-	args := request.GetArguments()
-	action := request.GetString("action", "subscribe")
+	return s.withToolAuth(toolAuthConfig{
+		tool: "kafka_watch", resourceType: auth.ResourceTopic, action: auth.ActionRead,
+	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+		action := request.GetString("action", "subscribe")
 
-	if deny := s.checkRateLimit(agentID, "kafka_watch"); deny != nil {
-		return deny, nil
-	}
-
-	switch action {
-	case "subscribe":
-		return s.handleWatchSubscribe(ctx, request, agentID, args, start)
-	case "unsubscribe":
-		return s.handleWatchUnsubscribe(ctx, request, agentID, args, start)
-	case "list":
-		return s.handleWatchList(ctx, agentID, args, start)
-	default:
-		return mcp.NewToolResultError(fmt.Sprintf("unknown action %q; must be: subscribe, unsubscribe, list", action)), nil
-	}
+		switch action {
+		case "subscribe":
+			return s.handleWatchSubscribe(ctx, request, agentID, args, start)
+		case "unsubscribe":
+			return s.handleWatchUnsubscribe(ctx, request, agentID, args, start)
+		case "list":
+			return s.handleWatchList(ctx, agentID, args, start)
+		default:
+			return mcp.NewToolResultError(fmt.Sprintf("unknown action %q; must be: subscribe, unsubscribe, list", action)), nil
+		}
+	})(ctx, request)
 }
 
 func (s *Server) handleWatchSubscribe(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
@@ -109,105 +106,97 @@ func (s *Server) handleWatchList(_ context.Context, agentID string, args map[str
 
 // handleRemediateDLQ performs auto-remediation actions on DLQ messages.
 func (s *Server) handleRemediateDLQ(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	start := time.Now()
-	agentID := extractAgentID(request)
-	topic := request.GetString("topic", "")
-	cluster := request.GetString("cluster", "")
-	args := request.GetArguments()
+	return s.withToolAuth(toolAuthConfig{
+		tool: "kafka_remediate_dlq", resourceType: auth.ResourceTopic, action: auth.ActionAdmin,
+		resourceName: func(r mcp.CallToolRequest) string { return r.GetString("topic", "") },
+	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+		topic := request.GetString("topic", "")
+		cluster := request.GetString("cluster", "")
 
-	if topic == "" {
-		return mcp.NewToolResultError("topic is required"), nil
-	}
-	if deny := validateStringLength("topic", topic); deny != nil {
-		return deny, nil
-	}
-	if deny := validateStringLength("cluster", cluster); deny != nil {
-		return deny, nil
-	}
-	if deny := s.checkRateLimit(agentID, "kafka_remediate_dlq"); deny != nil {
-		return deny, nil
-	}
-	if deny := s.checkAuth(agentID, "kafka_remediate_dlq", auth.ResourceTopic, topic, auth.ActionAdmin); deny != nil {
-		return deny, nil
-	}
-
-	action := request.GetString("action", "analyze")
-	limit := int(clampInt64(int64(request.GetInt("limit", 100)), 1, MaxDLQMessages))
-	targetTopic := request.GetString("target_topic", "")
-
-	if targetTopic != "" {
-		if deny := validateStringLength("target_topic", targetTopic); deny != nil {
+		if topic == "" {
+			return mcp.NewToolResultError("topic is required"), nil
+		}
+		if deny := validateStringLength("topic", topic); deny != nil {
 			return deny, nil
 		}
-		if deny := s.checkAuth(agentID, "kafka_remediate_dlq", auth.ResourceTopic, targetTopic, auth.ActionWrite); deny != nil {
+		if deny := validateStringLength("cluster", cluster); deny != nil {
 			return deny, nil
 		}
-	}
 
-	if s.dlqRemediator == nil {
-		return mcp.NewToolResultError("DLQ remediator not initialized"), nil
-	}
+		action := request.GetString("action", "analyze")
+		limit := int(clampInt64(int64(request.GetInt("limit", 100)), 1, MaxDLQMessages))
+		targetTopic := request.GetString("target_topic", "")
 
-	result, err := s.dlqRemediator.Remediate(ctx, s.kafkaManager, cluster, topic, action, targetTopic, limit)
-	if err != nil {
-		s.logAudit(agentID, "kafka_remediate_dlq", args, cluster, "error", 0, err, start)
-		return s.toolError("DLQ remediation failed", err), nil
-	}
+		if targetTopic != "" {
+			if deny := validateStringLength("target_topic", targetTopic); deny != nil {
+				return deny, nil
+			}
+			if deny := s.checkAuth(agentID, "kafka_remediate_dlq", auth.ResourceTopic, targetTopic, auth.ActionWrite); deny != nil {
+				return deny, nil
+			}
+		}
 
-	s.logAudit(agentID, "kafka_remediate_dlq", args, cluster, "success", result.ProcessedCount, nil, start)
-	return marshalResult(result)
+		if s.dlqRemediator == nil {
+			return mcp.NewToolResultError("DLQ remediator not initialized"), nil
+		}
+
+		result, err := s.dlqRemediator.Remediate(ctx, s.kafkaManager, cluster, topic, action, targetTopic, limit)
+		if err != nil {
+			s.logAudit(agentID, "kafka_remediate_dlq", args, cluster, "error", 0, err, start)
+			return s.toolError("DLQ remediation failed", err), nil
+		}
+
+		s.logAudit(agentID, "kafka_remediate_dlq", args, cluster, "success", result.ProcessedCount, nil, start)
+		return marshalResult(result)
+	})(ctx, request)
 }
 
 // handleSchemaDiff computes field-by-field diff between two schema versions.
 func (s *Server) handleSchemaDiff(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	start := time.Now()
-	agentID := extractAgentID(request)
-	args := request.GetArguments()
-	subject := request.GetString("subject", "")
+	return s.withToolAuth(toolAuthConfig{
+		tool: "kafka_schema_diff", resourceType: auth.ResourceSchema, action: auth.ActionRead,
+		resourceName: func(r mcp.CallToolRequest) string { return r.GetString("subject", "") },
+	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+		subject := request.GetString("subject", "")
 
-	if subject == "" {
-		return mcp.NewToolResultError("subject is required"), nil
-	}
-	if deny := validateStringLength("subject", subject); deny != nil {
-		return deny, nil
-	}
-	if deny := s.checkRateLimit(agentID, "kafka_schema_diff"); deny != nil {
-		return deny, nil
-	}
-	if deny := s.checkAuth(agentID, "kafka_schema_diff", auth.ResourceSchema, subject, auth.ActionRead); deny != nil {
-		return deny, nil
-	}
+		if subject == "" {
+			return mcp.NewToolResultError("subject is required"), nil
+		}
+		if deny := validateStringLength("subject", subject); deny != nil {
+			return deny, nil
+		}
 
-	schemaClient := s.getSchemaClient("")
-	if schemaClient == nil {
-		return mcp.NewToolResultError("No Schema Registry configured"), nil
-	}
+		schemaClient := s.getSchemaClient("")
+		if schemaClient == nil {
+			return mcp.NewToolResultError("No Schema Registry configured"), nil
+		}
 
-	versionFrom := request.GetString("version_from", "")
-	versionTo := request.GetString("version_to", "latest")
+		versionFrom := request.GetString("version_from", "")
+		versionTo := request.GetString("version_to", "latest")
 
-	if versionFrom == "" {
-		return mcp.NewToolResultError("version_from is required"), nil
-	}
+		if versionFrom == "" {
+			return mcp.NewToolResultError("version_from is required"), nil
+		}
 
-	schemaFrom, err := schemaClient.GetSchema(ctx, subject, versionFrom)
-	if err != nil {
-		s.logAudit(agentID, "kafka_schema_diff", args, "", "error", 0, err, start)
-		return s.toolError(fmt.Sprintf("Failed to get schema version %s", versionFrom), err), nil
-	}
+		schemaFrom, err := schemaClient.GetSchema(ctx, subject, versionFrom)
+		if err != nil {
+			s.logAudit(agentID, "kafka_schema_diff", args, "", "error", 0, err, start)
+			return s.toolError(fmt.Sprintf("Failed to get schema version %s", versionFrom), err), nil
+		}
 
-	schemaTo, err := schemaClient.GetSchema(ctx, subject, versionTo)
-	if err != nil {
-		s.logAudit(agentID, "kafka_schema_diff", args, "", "error", 0, err, start)
-		return s.toolError(fmt.Sprintf("Failed to get schema version %s", versionTo), err), nil
-	}
+		schemaTo, err := schemaClient.GetSchema(ctx, subject, versionTo)
+		if err != nil {
+			s.logAudit(agentID, "kafka_schema_diff", args, "", "error", 0, err, start)
+			return s.toolError(fmt.Sprintf("Failed to get schema version %s", versionTo), err), nil
+		}
 
-	diff := computeSchemaDiff(schemaFrom.Schema, schemaTo.Schema)
-	s.logAudit(agentID, "kafka_schema_diff", args, "", "success", 0, nil, start)
-	return marshalResult(map[string]any{
-		"subject":      subject,
-		"version_from": versionFrom,
-		"version_to":   versionTo,
-		"diff":         diff,
-	})
+		diff := computeSchemaDiff(schemaFrom.Schema, schemaTo.Schema)
+		s.logAudit(agentID, "kafka_schema_diff", args, "", "success", 0, nil, start)
+		return marshalResult(map[string]any{
+			"subject":      subject,
+			"version_from": versionFrom,
+			"version_to":   versionTo,
+			"diff":         diff,
+		})
+	})(ctx, request)
 }
