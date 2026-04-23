@@ -1,6 +1,7 @@
 package replication
 
 import (
+	"context"
 	"log/slog"
 	"os"
 	"testing"
@@ -135,7 +136,7 @@ func TestTopologyDetector_GetTopology_CachedAfterDetect(t *testing.T) {
 // --- AlertManager tests ---
 
 func TestAlertManager_ProcessAlert(t *testing.T) {
-	am, _ := NewAlertManager(NotificationConfig{CooldownMins: 5})
+	am, _ := NewAlertManager(context.Background(), NotificationConfig{CooldownMins: 5})
 
 	alert := Alert{
 		Source:    "cluster-a",
@@ -160,7 +161,7 @@ func TestAlertManager_ProcessAlert(t *testing.T) {
 }
 
 func TestAlertManager_ProcessAlert_CooldownDedup(t *testing.T) {
-	am, _ := NewAlertManager(NotificationConfig{CooldownMins: 60})
+	am, _ := NewAlertManager(context.Background(), NotificationConfig{CooldownMins: 60})
 
 	alert := Alert{Source: "a", Target: "b", Topic: "t1", Partition: 0, Lag: 5000, Threshold: 1000, Severity: "warning"}
 
@@ -177,7 +178,7 @@ func TestAlertManager_ProcessAlert_CooldownDedup(t *testing.T) {
 }
 
 func TestAlertManager_ProcessAlert_DifferentKey(t *testing.T) {
-	am, _ := NewAlertManager(NotificationConfig{CooldownMins: 60})
+	am, _ := NewAlertManager(context.Background(), NotificationConfig{CooldownMins: 60})
 
 	alert1 := Alert{Source: "a", Target: "b", Topic: "t1", Partition: 0, Lag: 5000, Threshold: 1000, Severity: "warning"}
 	alert2 := Alert{Source: "a", Target: "b", Topic: "t2", Partition: 0, Lag: 5000, Threshold: 1000, Severity: "warning"}
@@ -190,14 +191,14 @@ func TestAlertManager_ProcessAlert_DifferentKey(t *testing.T) {
 }
 
 func TestAlertManager_DefaultCooldown(t *testing.T) {
-	am, _ := NewAlertManager(NotificationConfig{CooldownMins: 0})
+	am, _ := NewAlertManager(context.Background(), NotificationConfig{CooldownMins: 0})
 	if am.config.CooldownMins != 5 {
 		t.Errorf("expected default cooldown 5, got %d", am.config.CooldownMins)
 	}
 }
 
 func TestAlertManager_GetRecentNotifications(t *testing.T) {
-	am, _ := NewAlertManager(NotificationConfig{CooldownMins: 0})
+	am, _ := NewAlertManager(context.Background(), NotificationConfig{CooldownMins: 0})
 
 	for i := 0; i < 5; i++ {
 		am.ProcessAlert(Alert{
@@ -222,7 +223,7 @@ func TestAlertManager_GetRecentNotifications(t *testing.T) {
 }
 
 func TestAlertManager_NotificationsCap1000(t *testing.T) {
-	am, _ := NewAlertManager(NotificationConfig{CooldownMins: 0})
+	am, _ := NewAlertManager(context.Background(), NotificationConfig{CooldownMins: 0})
 
 	for i := 0; i < 1005; i++ {
 		am.mu.Lock()

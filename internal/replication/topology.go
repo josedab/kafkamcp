@@ -203,7 +203,7 @@ type AlertManager struct {
 }
 
 // NewAlertManager creates a new alert manager.
-func NewAlertManager(config NotificationConfig) (*AlertManager, error) {
+func NewAlertManager(ctx context.Context, config NotificationConfig) (*AlertManager, error) {
 	if config.CooldownMins <= 0 {
 		config.CooldownMins = 5
 	}
@@ -212,7 +212,7 @@ func NewAlertManager(config NotificationConfig) (*AlertManager, error) {
 			return nil, fmt.Errorf("invalid alert webhook: %w", err)
 		}
 	}
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(ctx)
 	return &AlertManager{
 		config:     config,
 		cooldowns:  make(map[string]time.Time),
