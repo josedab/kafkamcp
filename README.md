@@ -431,6 +431,25 @@ sasl_username: "${KAFKA_USERNAME}"
 sasl_password: "${KAFKA_PASSWORD:-changeme}"
 ```
 
+The `KAFKAMCP_TRANSPORT` environment variable overrides `server.transport` from the config file at runtime. Valid values: `stdio`, `sse`, `streamable-http`.
+
+```bash
+KAFKAMCP_TRANSPORT=sse ./bin/kafkamcp --config kafkamcp.yaml
+```
+
+### Config Validation
+
+KafkaMCP validates the configuration at startup and refuses to start if any rule fails:
+
+| Rule | Error Message |
+|------|---------------|
+| At least one cluster required | `at least one cluster must be configured` |
+| Cluster name required | `cluster[N]: name is required` |
+| Cluster names must be unique | `cluster[N]: duplicate cluster name "X"` |
+| Bootstrap servers required per cluster | `cluster[N] (name): bootstrap_servers is required` |
+| SASL credentials required when mechanism set | `cluster[N] (name): sasl_username and sasl_password are required when sasl_mechanism is set` |
+| Transport must be valid | `invalid transport "X"; must be one of: stdio, sse, streamable-http` |
+
 ## Development
 
 ### Prerequisites
@@ -483,6 +502,19 @@ make validate
 make help
 ```
 
+### Additional Developer Targets
+
+| Target | Description |
+|--------|-------------|
+| `make dev` | Run with auto-reload via [air](https://github.com/air-verse/air) (stdio transport) |
+| `make dev-sse` | Run with auto-reload using SSE transport |
+| `make dev-http` | Run with auto-reload using streamable-http transport |
+| `make quickstart` | One-command setup: install deps, start Kafka, build, and run |
+| `make docker-dev` | Start local Kafka + KafkaMCP dev stack via docker compose |
+| `make docker-dev-down` | Stop local dev stack |
+| `make doctor` | Check development environment prerequisites |
+| `make test-one TEST=TestName PKG=./internal/...` | Run a single test by name |
+
 ## Project Structure
 
 ```
@@ -533,6 +565,11 @@ kafkamcp/
 │   └── intellij/          # IntelliJ plugin (placeholder — VS Code and Cursor are prioritized)
 ├── deploy/
 │   └── helm/              # Helm chart for Kubernetes
+├── docs/
+│   ├── adr/               # Architecture Decision Records (001–003)
+│   └── internal/          # Internal docs (PRD.md, GTM.md)
+├── blog/                  # Blog posts & content strategy
+├── website/               # Docusaurus documentation site (kafkamcp.dev)
 ├── examples/              # Example configurations
 ├── .github/workflows/     # CI/CD
 ├── Dockerfile
@@ -588,6 +625,10 @@ For additional troubleshooting guides, see the [full troubleshooting documentati
 - 📖 **Website & Docs** — [kafkamcp.dev](https://kafkamcp.dev)
 - 📋 **Changelog** — [CHANGELOG.md](CHANGELOG.md)
 - 💬 **Discord** — [discord.gg/kafkamcp](https://discord.gg/kafkamcp)
+- 📝 **Blog**:
+  - [Your AI Agents Are Blind to Kafka — And That's Costing You Weeks](blog/01-agents-blind-to-kafka.md)
+  - [Connect Claude to Your Kafka Cluster in 5 Minutes](blog/02-connect-claude-to-kafka.md)
+  - [The Schema Blindness Problem: Why Your Agent Hallucinates Field Names](blog/03-schema-blindness.md)
 
 ## Contributing
 
