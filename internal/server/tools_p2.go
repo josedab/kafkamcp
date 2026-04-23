@@ -201,7 +201,9 @@ func (s *Server) handleJoin(ctx context.Context, request mcp.CallToolRequest) (*
 		if deny := validateStringLength("right_topic", rightTopic); deny != nil {
 			return deny, nil
 		}
-		// Additional auth check for the right topic
+		// Dual-topic authorization: withToolAuth already authorized the left topic,
+		// but joins read from two independent topics, so we must separately authorize
+		// the right topic to prevent agents from joining topics they lack access to.
 		if deny := s.checkAuth(agentID, "kafka_join", auth.ResourceTopic, rightTopic, auth.ActionRead); deny != nil {
 			return deny, nil
 		}
