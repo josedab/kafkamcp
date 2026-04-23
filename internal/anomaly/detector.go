@@ -246,6 +246,13 @@ func (d *Detector) IngestPoint(dp DataPoint) {
 	d.ingest(dp)
 }
 
+// detectAnomaly performs dual-method anomaly detection on a data point against
+// a baseline window. It first checks the Z-score (standard deviations from the
+// mean) with sensitivity-adjusted thresholds: High=2.0, Medium=3.0 (default),
+// Low=4.0. If the Z-score is below threshold, it falls back to IQR outlier
+// detection for robustness against non-normal distributions. Returns an Alert
+// with severity "warning" or "critical" (when Z-score exceeds 1.5× threshold),
+// or nil if no anomaly is detected.
 func (d *Detector) detectAnomaly(current DataPoint, baseline []DataPoint) *Alert {
 	values := make([]float64, len(baseline))
 	for i, p := range baseline {
@@ -294,6 +301,10 @@ func (d *Detector) detectAnomaly(current DataPoint, baseline []DataPoint) *Alert
 	}
 }
 
+// iqrOutlier checks whether a value is an outlier using the Interquartile Range
+// method. It computes Q1 (25th percentile) and Q3 (75th percentile), then flags
+// values outside [Q1 - multiplier×IQR, Q3 + multiplier×IQR] as outliers. The
+// IQR multiplier is configured via Detector.config.IQRMultiplier.
 func (d *Detector) iqrOutlier(value float64, data []float64) bool {
 	sorted := make([]float64, len(data))
 	copy(sorted, data)
