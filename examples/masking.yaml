@@ -60,13 +60,16 @@ masking:
         - analytics-agent
         - reporting-agent
 
-auth:
-  enabled: true
-  default_policy: deny
+policies:
+  default_deny: true
   agents:
     - id: analytics-agent
-      allow_topics: ["events.*"]
-      allow_tools: ["list_topics", "consume_messages"]
+      role: reader
+      topics:
+        - pattern: "events.*"
+          permissions: [read]
     - id: reporting-agent
-      allow_topics: ["reports.*"]
-      allow_tools: ["list_topics", "consume_messages"]
+      role: reader
+      topics:
+        - pattern: "reports.*"
+          permissions: [read]
