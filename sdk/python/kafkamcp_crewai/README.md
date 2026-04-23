@@ -56,8 +56,24 @@ async with stdio_client(server_params) as (read, write):
 | `KafkaConsumeTool` | `kafka_consume` | Read messages from a topic |
 | `KafkaProduceTool` | `kafka_produce` | Publish messages to a topic |
 | `KafkaListTopicsTool` | `kafka_list_topics` | List all topics with metadata |
+| `KafkaDescribeTopicTool` | `kafka_describe_topic` | Get detailed topic metadata including partitions and config |
+| `KafkaCreateTopicTool` | `kafka_create_topic` | Create a new topic with partitions and replication factor |
+| `KafkaDeleteTopicTool` | `kafka_delete_topic` | Delete a Kafka topic (destructive) |
 | `KafkaSearchTool` | `kafka_search` | Search messages by content |
 | `KafkaWatchTool` | `kafka_watch` | Subscribe to topic patterns for notifications |
+| `KafkaDescribeGroupTool` | `kafka_describe_consumer_group` | Get consumer group state, members, and lag |
+| `KafkaListGroupsTool` | `kafka_list_consumer_groups` | List all consumer groups with state and lag |
+| `KafkaGetSchemaTool` | `kafka_get_schema` | Get schema definition for a Schema Registry subject |
+| `KafkaDLQRemediateTool` | `kafka_remediate_dlq` | Analyze and remediate DLQ messages |
+| `KafkaAggregateTool` | `kafka_aggregate` | Aggregate messages with count, sum, avg, min, max |
+
+### Factory Functions
+
+| Function | Description |
+|----------|-------------|
+| `create_kafka_tools(mcp_client)` | Create all 13 tools |
+| `create_monitoring_tools(mcp_client)` | Monitoring subset (list, describe, groups, search, watch) |
+| `create_remediation_tools(mcp_client)` | DLQ remediation subset (consume, remediate, search, schema) |
 
 Use `create_kafka_tools(mcp_client)` to get all tools at once, or instantiate individual tool classes for selective use.
 
