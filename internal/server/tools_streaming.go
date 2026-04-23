@@ -44,6 +44,8 @@ func (s *Server) handleStreamStart(ctx context.Context, request mcp.CallToolRequ
 	if deny := validateStringLength("topic", topic); deny != nil {
 		return deny, nil
 	}
+	// Intentional secondary auth check: the outer withToolAuth validates general stream tool
+	// access, but we also need to authorize the specific topic the agent wants to stream from.
 	if deny := s.checkAuth(agentID, "kafka_stream", auth.ResourceTopic, topic, auth.ActionRead); deny != nil {
 		return deny, nil
 	}

@@ -39,6 +39,8 @@ func (s *Server) handleWatchSubscribe(ctx context.Context, request mcp.CallToolR
 	if deny := validateStringLength("topic_pattern", topicPattern); deny != nil {
 		return deny, nil
 	}
+	// Intentional secondary auth check: the outer withToolAuth validates general tool access,
+	// but we also need to authorize the specific topic pattern the agent wants to watch.
 	if deny := s.checkAuth(agentID, "kafka_watch", auth.ResourceTopic, topicPattern, auth.ActionRead); deny != nil {
 		return deny, nil
 	}
@@ -131,6 +133,8 @@ func (s *Server) handleRemediateDLQ(ctx context.Context, request mcp.CallToolReq
 			if deny := validateStringLength("target_topic", targetTopic); deny != nil {
 				return deny, nil
 			}
+			// Intentional secondary auth check: the outer withToolAuth authorizes the source DLQ
+			// topic, but replaying messages requires separate write permission on the target topic.
 			if deny := s.checkAuth(agentID, "kafka_remediate_dlq", auth.ResourceTopic, targetTopic, auth.ActionWrite); deny != nil {
 				return deny, nil
 			}
