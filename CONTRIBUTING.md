@@ -59,6 +59,18 @@ make fmt
 make validate
 ```
 
+### 9. Hot-Reload Development (recommended)
+
+Use `make dev` for a fast edit-save-test loop with [air](https://github.com/air-verse/air). Air watches for file changes and automatically rebuilds and restarts the server:
+
+```bash
+make dev          # stdio transport (default)
+make dev-sse      # SSE transport
+make dev-http     # streamable-http transport
+```
+
+Run `make doctor` to verify your environment has all required tools installed.
+
 ## Local Kafka Environment
 
 Start a local Kafka cluster for integration testing:
