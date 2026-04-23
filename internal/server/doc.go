@@ -4,7 +4,13 @@
 // request through rate limiting, authorization, audit logging, and metrics
 // collection before delegating to the kafka, schema, or connect layers.
 //
-// Tool handlers are organized by priority tier:
+// # Server Configuration
+//
+// The server is constructed with [New] and configured via functional [Option]
+// values (see options.go). Options inject subsystems such as audit logging,
+// rate limiting, metrics, watch subscriptions, masking, telemetry, and more.
+//
+// # Tool handlers are organized by priority tier:
 //   - P0 (tools_p0.go): core read operations — list topics, describe topic,
 //     consume, produce, schemas, consumer groups.
 //   - P1 (tools_p1.go): administrative and search operations — create/alter/delete
@@ -12,6 +18,15 @@
 //     subscribe.
 //   - P2 (tools_p2.go): advanced analytics and connectors — aggregate, join,
 //     natural-language query, schema evolution, Kafka Connect integration.
+//   - P3 (tools_p3.go): event-driven operations — watch subscriptions, DLQ
+//     remediation, schema diffs.
+//   - Advanced (tools_advanced.go): connector management, time travel, recommendations,
+//     message tracing, ACLs, config drift, playground.
+//   - Feature (tools_features.go): anomaly detection, cost analysis, workflows,
+//     GitOps, knowledge graph, contracts, lag diagnosis, migration, lineage,
+//     personas, forecasting.
+//   - Streaming (tools_streaming.go): real-time streaming sessions and multi-agent
+//     collaboration.
 //
 // Resource handlers (resources.go) expose read-only MCP resources such as
 // cluster metadata, topic catalogs, schema catalogs, consumer group lists,
