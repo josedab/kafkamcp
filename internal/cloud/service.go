@@ -237,6 +237,74 @@ func (cs *CloudService) ListWorkspaces() []*Workspace {
 	return result
 }
 
+// DeleteWorkspace marks a workspace as deleted.
+func (cs *CloudService) DeleteWorkspace(id string) error {
+	cs.mu.Lock()
+	defer cs.mu.Unlock()
+	ws, ok := cs.workspaces[id]
+	if !ok {
+		return fmt.Errorf("workspace %q not found", id)
+	}
+	ws.Status = "deleted"
+	return nil
+}
+
+// AddMember adds a member to a workspace.
+func (cs *CloudService) AddMember(workspaceID, email, role string) error {
+	cs.mu.Lock()
+	defer cs.mu.Unlock()
+
+	ws, ok := cs.workspaces[workspaceID]
+	if !ok {
+		return fmt.Errorf("workspace %q not found", workspaceID)
+	}
+
+	if email == "" {
+		return fmt.Errorf("email is required")
+	}
+	if role == "" {
+		role = "member"
+	}
+
+	limits := GetPlanLimits(ws.Plan)
+	if limits.MaxMembers > 0 && len(ws.Members) >= limits.MaxMembers {
+		return fmt.Errorf("member limit reached for %s plan (max %d)", ws.Plan, limits.MaxMembers)
+	}
+
+	for _, m := range ws.Members {
+		if m.Email == email {
+			return fmt.Errorf("member %q already exists", email)
+		}
+	}
+
+	ws.Members = append(ws.Members, Member{
+		Email:    email,
+		Role:     role,
+		JoinedAt: time.Now(),
+	})
+	return nil
+}
+
+// UpgradePlan upgrades a workspace's plan.
+func (cs *CloudService) UpgradePlan(workspaceID, newPlan string) error {
+	cs.mu.Lock()
+	defer cs.mu.Unlock()
+
+	ws, ok := cs.workspaces[workspaceID]
+	if !ok {
+		return fmt.Errorf("workspace %q not found", workspaceID)
+	}
+
+	validPlans := map[string]bool{"free": true, "pro": true, "enterprise": true}
+	if !validPlans[newPlan] {
+		return fmt.Errorf("invalid plan: %s", newPlan)
+	}
+
+	ws.Plan = newPlan
+	cs.logger.Info("workspace plan upgraded", "workspace", workspaceID, "plan", newPlan)
+	return nil
+}
+
 // GetDashboardData returns data for the workspace dashboard.
 func (cs *CloudService) GetDashboardData(workspaceID string) (map[string]any, error) {
 	cs.mu.RLock()
