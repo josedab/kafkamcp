@@ -88,6 +88,24 @@ kafkamcp init --output kafkamcp.yaml
 | `--bootstrap-servers` | — | `localhost:9092` | Kafka bootstrap servers. |
 | `--schema-registry` | — | — | Schema Registry URL (optional). |
 
+## Exit codes
+
+KafkaMCP uses standard exit codes for scripting and CI/CD integration.
+
+| Code | Meaning | Example cause |
+|------|---------|---------------|
+| `0` | Success | Server shut down cleanly, config validated, version printed. |
+| `1` | General error | Invalid flags, unsupported transport, server startup failure. |
+| `2` | Configuration error | Config file not found, YAML parse error, validation failure (`kafkamcp validate`). |
+
+In CI/CD pipelines you can rely on the exit code to gate deployments:
+
+```bash
+kafkamcp validate --config kafkamcp.yaml || exit 1
+```
+
+Error details are printed to stderr as structured JSON when `--log-level` is set, or as plain text otherwise.
+
 ## Examples
 
 **Start with stdio transport (Claude Desktop):**
