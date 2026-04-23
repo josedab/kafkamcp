@@ -14,264 +14,239 @@ import (
 
 // handleCreateConnector creates a new Kafka Connect connector.
 func (s *Server) handleCreateConnector(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	start := time.Now()
-	agentID := extractAgentID(request)
-	name := request.GetString("name", "")
-	cluster := request.GetString("cluster", "")
-	args := request.GetArguments()
+	return s.withToolAuth(toolAuthConfig{
+		tool: "kafka_create_connector", resourceType: auth.ResourceCluster, action: auth.ActionAdmin,
+	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+		name := request.GetString("name", "")
+		cluster := request.GetString("cluster", "")
 
-	if name == "" {
-		return mcp.NewToolResultError("name is required"), nil
-	}
-	if deny := validateStringLength("name", name); deny != nil {
-		return deny, nil
-	}
-	if deny := validateStringLength("cluster", cluster); deny != nil {
-		return deny, nil
-	}
-	if deny := s.checkRateLimit(agentID, "kafka_create_connector"); deny != nil {
-		return deny, nil
-	}
-	if deny := s.checkAuth(agentID, "kafka_create_connector", auth.ResourceCluster, "", auth.ActionAdmin); deny != nil {
-		return deny, nil
-	}
-
-	clCfg, err := s.kafkaManager.GetClusterConfig(cluster)
-	if err != nil {
-		return s.toolError("Cluster error", err), nil
-	}
-
-	client, err := s.getConnectClient(clCfg)
-	if err != nil || client == nil {
-		errMsg := "Kafka Connect URL not configured"
-		if err != nil {
-			errMsg = err.Error()
+		if name == "" {
+			return mcp.NewToolResultError("name is required"), nil
 		}
-		return mcp.NewToolResultError(errMsg), nil
-	}
+		if deny := validateStringLength("name", name); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("cluster", cluster); deny != nil {
+			return deny, nil
+		}
 
-	config := extractStringMapArg(request, "config")
-	if len(config) == 0 {
-		return mcp.NewToolResultError("config is required"), nil
-	}
-	if deny, _ := validateConnectorConfig(config); deny != nil {
-		return deny, nil
-	}
+		clCfg, err := s.kafkaManager.GetClusterConfig(cluster)
+		if err != nil {
+			return s.toolError("Cluster error", err), nil
+		}
 
-	result, err := client.CreateConnector(ctx, name, config)
-	if err != nil {
-		s.logAudit(agentID, "kafka_create_connector", args, cluster, "error", 0, err, start)
-		return s.toolError("Failed to create connector", err), nil
-	}
+		client, err := s.getConnectClient(clCfg)
+		if err != nil || client == nil {
+			errMsg := "Kafka Connect URL not configured"
+			if err != nil {
+				errMsg = err.Error()
+			}
+			return mcp.NewToolResultError(errMsg), nil
+		}
 
-	_, redactedConfig := validateConnectorConfig(config)
-	s.logger.Info("connector created", "name", name, "config", redactedConfig)
-	s.logAudit(agentID, "kafka_create_connector", args, cluster, "success", 0, nil, start)
-	return marshalResult(result)
+		config := extractStringMapArg(request, "config")
+		if len(config) == 0 {
+			return mcp.NewToolResultError("config is required"), nil
+		}
+		if deny, _ := validateConnectorConfig(config); deny != nil {
+			return deny, nil
+		}
+
+		result, err := client.CreateConnector(ctx, name, config)
+		if err != nil {
+			s.logAudit(agentID, "kafka_create_connector", args, cluster, "error", 0, err, start)
+			return s.toolError("Failed to create connector", err), nil
+		}
+
+		_, redactedConfig := validateConnectorConfig(config)
+		s.logger.Info("connector created", "name", name, "config", redactedConfig)
+		s.logAudit(agentID, "kafka_create_connector", args, cluster, "success", 0, nil, start)
+		return marshalResult(result)
+	})(ctx, request)
 }
 
 // handleUpdateConnector updates a connector's configuration.
 func (s *Server) handleUpdateConnector(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	start := time.Now()
-	agentID := extractAgentID(request)
-	name := request.GetString("name", "")
-	cluster := request.GetString("cluster", "")
-	args := request.GetArguments()
+	return s.withToolAuth(toolAuthConfig{
+		tool: "kafka_update_connector", resourceType: auth.ResourceCluster, action: auth.ActionAdmin,
+	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+		name := request.GetString("name", "")
+		cluster := request.GetString("cluster", "")
 
-	if name == "" {
-		return mcp.NewToolResultError("name is required"), nil
-	}
-	if deny := validateStringLength("name", name); deny != nil {
-		return deny, nil
-	}
-	if deny := validateStringLength("cluster", cluster); deny != nil {
-		return deny, nil
-	}
-	if deny := s.checkRateLimit(agentID, "kafka_update_connector"); deny != nil {
-		return deny, nil
-	}
-	if deny := s.checkAuth(agentID, "kafka_update_connector", auth.ResourceCluster, "", auth.ActionAdmin); deny != nil {
-		return deny, nil
-	}
-
-	clCfg, err := s.kafkaManager.GetClusterConfig(cluster)
-	if err != nil {
-		return s.toolError("Cluster error", err), nil
-	}
-
-	client, err := s.getConnectClient(clCfg)
-	if err != nil || client == nil {
-		errMsg := "Kafka Connect URL not configured"
-		if err != nil {
-			errMsg = err.Error()
+		if name == "" {
+			return mcp.NewToolResultError("name is required"), nil
 		}
-		return mcp.NewToolResultError(errMsg), nil
-	}
+		if deny := validateStringLength("name", name); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("cluster", cluster); deny != nil {
+			return deny, nil
+		}
 
-	config := extractStringMapArg(request, "config")
-	if len(config) == 0 {
-		return mcp.NewToolResultError("config is required"), nil
-	}
-	if deny, _ := validateConnectorConfig(config); deny != nil {
-		return deny, nil
-	}
+		clCfg, err := s.kafkaManager.GetClusterConfig(cluster)
+		if err != nil {
+			return s.toolError("Cluster error", err), nil
+		}
 
-	result, err := client.UpdateConnector(ctx, name, config)
-	if err != nil {
-		s.logAudit(agentID, "kafka_update_connector", args, cluster, "error", 0, err, start)
-		return s.toolError("Failed to update connector", err), nil
-	}
+		client, err := s.getConnectClient(clCfg)
+		if err != nil || client == nil {
+			errMsg := "Kafka Connect URL not configured"
+			if err != nil {
+				errMsg = err.Error()
+			}
+			return mcp.NewToolResultError(errMsg), nil
+		}
 
-	_, redactedConfig := validateConnectorConfig(config)
-	s.logger.Info("connector updated", "name", name, "config", redactedConfig)
-	s.logAudit(agentID, "kafka_update_connector", args, cluster, "success", 0, nil, start)
-	return marshalResult(result)
+		config := extractStringMapArg(request, "config")
+		if len(config) == 0 {
+			return mcp.NewToolResultError("config is required"), nil
+		}
+		if deny, _ := validateConnectorConfig(config); deny != nil {
+			return deny, nil
+		}
+
+		result, err := client.UpdateConnector(ctx, name, config)
+		if err != nil {
+			s.logAudit(agentID, "kafka_update_connector", args, cluster, "error", 0, err, start)
+			return s.toolError("Failed to update connector", err), nil
+		}
+
+		_, redactedConfig := validateConnectorConfig(config)
+		s.logger.Info("connector updated", "name", name, "config", redactedConfig)
+		s.logAudit(agentID, "kafka_update_connector", args, cluster, "success", 0, nil, start)
+		return marshalResult(result)
+	})(ctx, request)
 }
 
 // handleDeleteConnector deletes a Kafka Connect connector.
 func (s *Server) handleDeleteConnector(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	start := time.Now()
-	agentID := extractAgentID(request)
-	name := request.GetString("name", "")
-	cluster := request.GetString("cluster", "")
-	args := request.GetArguments()
+	return s.withToolAuth(toolAuthConfig{
+		tool: "kafka_delete_connector", resourceType: auth.ResourceCluster, action: auth.ActionAdmin,
+	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+		name := request.GetString("name", "")
+		cluster := request.GetString("cluster", "")
 
-	if name == "" {
-		return mcp.NewToolResultError("name is required"), nil
-	}
-	if deny := validateStringLength("name", name); deny != nil {
-		return deny, nil
-	}
-	if deny := validateStringLength("cluster", cluster); deny != nil {
-		return deny, nil
-	}
-	if deny := s.checkRateLimit(agentID, "kafka_delete_connector"); deny != nil {
-		return deny, nil
-	}
-	if deny := s.checkAuth(agentID, "kafka_delete_connector", auth.ResourceCluster, "", auth.ActionAdmin); deny != nil {
-		return deny, nil
-	}
-
-	clCfg, err := s.kafkaManager.GetClusterConfig(cluster)
-	if err != nil {
-		return s.toolError("Cluster error", err), nil
-	}
-
-	client, err := s.getConnectClient(clCfg)
-	if err != nil || client == nil {
-		errMsg := "Kafka Connect URL not configured"
-		if err != nil {
-			errMsg = err.Error()
+		if name == "" {
+			return mcp.NewToolResultError("name is required"), nil
 		}
-		return mcp.NewToolResultError(errMsg), nil
-	}
+		if deny := validateStringLength("name", name); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("cluster", cluster); deny != nil {
+			return deny, nil
+		}
 
-	if err := client.DeleteConnector(ctx, name); err != nil {
-		s.logAudit(agentID, "kafka_delete_connector", args, cluster, "error", 0, err, start)
-		return s.toolError("Failed to delete connector", err), nil
-	}
+		clCfg, err := s.kafkaManager.GetClusterConfig(cluster)
+		if err != nil {
+			return s.toolError("Cluster error", err), nil
+		}
 
-	s.logAudit(agentID, "kafka_delete_connector", args, cluster, "success", 0, nil, start)
-	return marshalResult(map[string]any{"status": "deleted", "name": name})
+		client, err := s.getConnectClient(clCfg)
+		if err != nil || client == nil {
+			errMsg := "Kafka Connect URL not configured"
+			if err != nil {
+				errMsg = err.Error()
+			}
+			return mcp.NewToolResultError(errMsg), nil
+		}
+
+		if err := client.DeleteConnector(ctx, name); err != nil {
+			s.logAudit(agentID, "kafka_delete_connector", args, cluster, "error", 0, err, start)
+			return s.toolError("Failed to delete connector", err), nil
+		}
+
+		s.logAudit(agentID, "kafka_delete_connector", args, cluster, "success", 0, nil, start)
+		return marshalResult(map[string]any{"status": "deleted", "name": name})
+	})(ctx, request)
 }
 
 // handleRestartConnector restarts a connector or specific tasks.
 func (s *Server) handleRestartConnector(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	start := time.Now()
-	agentID := extractAgentID(request)
-	name := request.GetString("name", "")
-	cluster := request.GetString("cluster", "")
-	args := request.GetArguments()
+	return s.withToolAuth(toolAuthConfig{
+		tool: "kafka_restart_connector", resourceType: auth.ResourceCluster, action: auth.ActionAdmin,
+	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+		name := request.GetString("name", "")
+		cluster := request.GetString("cluster", "")
 
-	if name == "" {
-		return mcp.NewToolResultError("name is required"), nil
-	}
-	if deny := validateStringLength("name", name); deny != nil {
-		return deny, nil
-	}
-	if deny := validateStringLength("cluster", cluster); deny != nil {
-		return deny, nil
-	}
-	if deny := s.checkRateLimit(agentID, "kafka_restart_connector"); deny != nil {
-		return deny, nil
-	}
-	if deny := s.checkAuth(agentID, "kafka_restart_connector", auth.ResourceCluster, "", auth.ActionAdmin); deny != nil {
-		return deny, nil
-	}
-
-	clCfg, err := s.kafkaManager.GetClusterConfig(cluster)
-	if err != nil {
-		return s.toolError("Cluster error", err), nil
-	}
-
-	client, err := s.getConnectClient(clCfg)
-	if err != nil || client == nil {
-		errMsg := "Kafka Connect URL not configured"
-		if err != nil {
-			errMsg = err.Error()
+		if name == "" {
+			return mcp.NewToolResultError("name is required"), nil
 		}
-		return mcp.NewToolResultError(errMsg), nil
-	}
+		if deny := validateStringLength("name", name); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("cluster", cluster); deny != nil {
+			return deny, nil
+		}
 
-	taskID := request.GetInt("task_id", -1)
-	failedOnly := request.GetBool("failed_only", false)
+		clCfg, err := s.kafkaManager.GetClusterConfig(cluster)
+		if err != nil {
+			return s.toolError("Cluster error", err), nil
+		}
 
-	result, err := client.RestartConnector(ctx, name, taskID, failedOnly)
-	if err != nil {
-		s.logAudit(agentID, "kafka_restart_connector", args, cluster, "error", 0, err, start)
-		return s.toolError("Failed to restart", err), nil
-	}
+		client, err := s.getConnectClient(clCfg)
+		if err != nil || client == nil {
+			errMsg := "Kafka Connect URL not configured"
+			if err != nil {
+				errMsg = err.Error()
+			}
+			return mcp.NewToolResultError(errMsg), nil
+		}
 
-	s.logAudit(agentID, "kafka_restart_connector", args, cluster, "success", 0, nil, start)
-	return marshalResult(result)
+		taskID := request.GetInt("task_id", -1)
+		failedOnly := request.GetBool("failed_only", false)
+
+		result, err := client.RestartConnector(ctx, name, taskID, failedOnly)
+		if err != nil {
+			s.logAudit(agentID, "kafka_restart_connector", args, cluster, "error", 0, err, start)
+			return s.toolError("Failed to restart", err), nil
+		}
+
+		s.logAudit(agentID, "kafka_restart_connector", args, cluster, "success", 0, nil, start)
+		return marshalResult(result)
+	})(ctx, request)
 }
 
 // handleConnectorHealth computes health score for a connector.
 func (s *Server) handleConnectorHealth(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	start := time.Now()
-	agentID := extractAgentID(request)
-	name := request.GetString("name", "")
-	cluster := request.GetString("cluster", "")
-	args := request.GetArguments()
+	return s.withToolAuth(toolAuthConfig{
+		tool: "kafka_connector_health", resourceType: auth.ResourceCluster, action: auth.ActionRead,
+	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+		name := request.GetString("name", "")
+		cluster := request.GetString("cluster", "")
 
-	if name == "" {
-		return mcp.NewToolResultError("name is required"), nil
-	}
-	if deny := validateStringLength("name", name); deny != nil {
-		return deny, nil
-	}
-	if deny := validateStringLength("cluster", cluster); deny != nil {
-		return deny, nil
-	}
-	if deny := s.checkRateLimit(agentID, "kafka_connector_health"); deny != nil {
-		return deny, nil
-	}
-	if deny := s.checkAuth(agentID, "kafka_connector_health", auth.ResourceCluster, "", auth.ActionRead); deny != nil {
-		return deny, nil
-	}
-
-	clCfg, err := s.kafkaManager.GetClusterConfig(cluster)
-	if err != nil {
-		return s.toolError("Cluster error", err), nil
-	}
-
-	client, err := s.getConnectClient(clCfg)
-	if err != nil || client == nil {
-		errMsg := "Kafka Connect URL not configured"
-		if err != nil {
-			errMsg = err.Error()
+		if name == "" {
+			return mcp.NewToolResultError("name is required"), nil
 		}
-		return mcp.NewToolResultError(errMsg), nil
-	}
+		if deny := validateStringLength("name", name); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("cluster", cluster); deny != nil {
+			return deny, nil
+		}
 
-	health, err := client.ConnectorHealth(ctx, name)
-	if err != nil {
-		s.logAudit(agentID, "kafka_connector_health", args, cluster, "error", 0, err, start)
-		return s.toolError("Failed to get health", err), nil
-	}
+		clCfg, err := s.kafkaManager.GetClusterConfig(cluster)
+		if err != nil {
+			return s.toolError("Cluster error", err), nil
+		}
 
-	s.logAudit(agentID, "kafka_connector_health", args, cluster, "success", 0, nil, start)
-	return marshalResult(health)
+		client, err := s.getConnectClient(clCfg)
+		if err != nil || client == nil {
+			errMsg := "Kafka Connect URL not configured"
+			if err != nil {
+				errMsg = err.Error()
+			}
+			return mcp.NewToolResultError(errMsg), nil
+		}
+
+		health, err := client.ConnectorHealth(ctx, name)
+		if err != nil {
+			s.logAudit(agentID, "kafka_connector_health", args, cluster, "error", 0, err, start)
+			return s.toolError("Failed to get health", err), nil
+		}
+
+		s.logAudit(agentID, "kafka_connector_health", args, cluster, "success", 0, nil, start)
+		return marshalResult(health)
+	})(ctx, request)
 }
 
 // extractStringMapArg extracts a map[string]string argument from a request.
