@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -193,6 +194,99 @@ func TestDeleteTopic_ErrorPropagation(t *testing.T) {
 	err := mock.DeleteTopic(context.Background(), "default", "t")
 	if err != context.DeadlineExceeded {
 		t.Errorf("expected DeadlineExceeded, got: %v", err)
+	}
+}
+
+func TestDeleteTopic_EmptyTopicName(t *testing.T) {
+	var capturedName string
+	mock := &MockKafkaManager{
+		DeleteTopicFn: func(ctx context.Context, cluster, topicName string) error {
+			capturedName = topicName
+			return nil
+		},
+	}
+	err := mock.DeleteTopic(context.Background(), "default", "")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if capturedName != "" {
+		t.Errorf("expected empty topic name, got %q", capturedName)
+	}
+}
+
+func TestDeleteTopic_DefaultCluster(t *testing.T) {
+	var capturedCluster string
+	mock := &MockKafkaManager{
+		DeleteTopicFn: func(ctx context.Context, cluster, topicName string) error {
+			capturedCluster = cluster
+			return nil
+		},
+	}
+	err := mock.DeleteTopic(context.Background(), "", "my-topic")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if capturedCluster != "" {
+		t.Errorf("expected empty cluster (default), got %q", capturedCluster)
+	}
+}
+
+func TestDeleteTopic_ContextCancelled(t *testing.T) {
+	mock := &MockKafkaManager{
+		DeleteTopicFn: func(ctx context.Context, cluster, topicName string) error {
+			return ctx.Err()
+		},
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	err := mock.DeleteTopic(ctx, "default", "topic")
+	if err != context.Canceled {
+		t.Errorf("expected Canceled error, got: %v", err)
+	}
+}
+
+func TestDeleteTopic_NotFoundError(t *testing.T) {
+	mock := &MockKafkaManager{
+		DeleteTopicFn: func(ctx context.Context, cluster, topicName string) error {
+			return fmt.Errorf("topic %q not found", topicName)
+		},
+	}
+	err := mock.DeleteTopic(context.Background(), "prod", "nonexistent-topic")
+	if err == nil {
+		t.Fatal("expected error for nonexistent topic")
+	}
+	if !strings.Contains(err.Error(), "not found") {
+		t.Errorf("expected 'not found' in error, got: %v", err)
+	}
+}
+
+func TestDeleteTopic_NilFnReturnsNil(t *testing.T) {
+	mock := &MockKafkaManager{}
+	err := mock.DeleteTopic(context.Background(), "default", "topic")
+	if err != nil {
+		t.Fatalf("expected nil error when DeleteTopicFn is nil, got: %v", err)
+	}
+}
+
+func TestDeleteTopic_MultipleCalls(t *testing.T) {
+	callCount := 0
+	mock := &MockKafkaManager{
+		DeleteTopicFn: func(ctx context.Context, cluster, topicName string) error {
+			callCount++
+			return nil
+		},
+	}
+	topics := []string{"topic-a", "topic-b", "topic-c"}
+	for _, topic := range topics {
+		if err := mock.DeleteTopic(context.Background(), "prod", topic); err != nil {
+			t.Fatalf("unexpected error deleting %s: %v", topic, err)
+		}
+	}
+	if callCount != 3 {
+		t.Errorf("expected 3 calls, got %d", callCount)
+	}
+	if mock.CallCount("DeleteTopic") != 3 {
+		t.Errorf("expected 3 recorded calls, got %d", mock.CallCount("DeleteTopic"))
 	}
 }
 
