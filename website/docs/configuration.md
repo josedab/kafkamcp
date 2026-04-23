@@ -252,6 +252,33 @@ Behavior:
 If you use `${VAR}` and the environment variable is missing, KafkaMCP refuses to start.
 :::
 
+### Runtime transport override
+
+The `KAFKAMCP_TRANSPORT` environment variable overrides `server.transport` from the config file at runtime. This is the only hardcoded env var (not part of `${VAR}` expansion).
+
+Valid values: `stdio`, `sse`, `streamable-http`.
+
+```bash
+KAFKAMCP_TRANSPORT=sse ./bin/kafkamcp --config kafkamcp.yaml
+```
+
+## Config validation
+
+KafkaMCP validates the configuration at startup and refuses to start if any rule fails. This helps catch misconfigurations early before connecting to Kafka.
+
+| Rule | Error Message |
+|------|---------------|
+| At least one cluster required | `at least one cluster must be configured` |
+| Cluster name required | `cluster[N]: name is required` |
+| Cluster names must be unique | `cluster[N]: duplicate cluster name "X"` |
+| Bootstrap servers required per cluster | `cluster[N] (name): bootstrap_servers is required` |
+| SASL credentials required when mechanism set | `cluster[N] (name): sasl_username and sasl_password are required when sasl_mechanism is set` |
+| Transport must be valid | `invalid transport "X"; must be one of: stdio, sse, streamable-http` |
+
+:::tip
+Run `./bin/kafkamcp validate --config kafkamcp.yaml` to check your config without starting the server.
+:::
+
 ## Complete annotated example
 
 ```yaml
