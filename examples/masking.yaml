@@ -1,0 +1,72 @@
+# KafkaMCP — Data Masking & PII Redaction Example
+#
+# This configuration demonstrates field-level data masking for sensitive data.
+# Masking rules apply before message content is returned to AI agents,
+# ensuring PII and secrets never leave the Kafka boundary.
+
+server:
+  transport: stdio
+  log_level: info
+
+clusters:
+  - name: default
+    bootstrap_servers: "localhost:9092"
+
+masking:
+  enabled: true
+  rules:
+    # Mask email addresses in any JSON field matching the path pattern
+    - name: mask-emails
+      type: email
+      field_path: "$.user.email"
+      replace: "***EMAIL_REDACTED***"
+
+    # Mask Social Security Numbers
+    - name: mask-ssn
+      type: ssn
+      field_path: "$.user.ssn"
+      replace: "***SSN_REDACTED***"
+
+    # Mask credit card numbers
+    - name: mask-credit-card
+      type: credit_card
+      field_path: "$.payment.card_number"
+      replace: "***CC_REDACTED***"
+
+    # Mask phone numbers
+    - name: mask-phone
+      type: phone
+      field_path: "$.user.phone"
+      replace: "***PHONE_REDACTED***"
+
+    # Custom regex pattern for API keys
+    - name: mask-api-keys
+      type: regex
+      field_path: "$.config.api_key"
+      pattern: "sk-[a-zA-Z0-9]{32,}"
+      replace: "***API_KEY_REDACTED***"
+
+    # Wildcard field path — mask emails anywhere in the payload
+    - name: mask-all-emails
+      type: email
+      field_path: "**email**"
+
+    # Agent-scoped rule — only apply to specific agents
+    - name: mask-ssn-for-analytics
+      type: ssn
+      field_path: "$.patient.ssn"
+      replace: "***REDACTED***"
+      agents:
+        - analytics-agent
+        - reporting-agent
+
+auth:
+  enabled: true
+  default_policy: deny
+  agents:
+    - id: analytics-agent
+      allow_topics: ["events.*"]
+      allow_tools: ["list_topics", "consume_messages"]
+    - id: reporting-agent
+      allow_topics: ["reports.*"]
+      allow_tools: ["list_topics", "consume_messages"]
