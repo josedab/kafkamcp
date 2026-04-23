@@ -5,11 +5,15 @@ title: "API Reference: Tools"
 
 # API Reference: Tools
 
-KafkaMCP exposes 22 MCP tools grouped into three tiers:
+KafkaMCP exposes 59 MCP tools grouped into six tiers:
 
 - **Core (P0)** — discovery, read, write, schemas, consumer groups
 - **Advanced (P1)** — subscriptions, admin operations, search, offset resets, DLQ analysis
 - **Intelligence (P2)** — aggregation, joins, schema advice, connectors, natural-language queries
+- **Event-Driven (P3)** — watch subscriptions, DLQ remediation, schema diffs
+- **Connector & Operations (Advanced)** — connector lifecycle, time travel, recommendations, tracing, ACLs, drift, playground
+- **AI & Analytics (Feature)** — anomaly detection, NL queries, cost analysis, workflows, GitOps, knowledge graph, contracts, lag diagnosis, migration, lineage, personas, forecasting
+- **Streaming** — real-time streaming sessions, multi-agent collaboration
 
 :::info
 The request snippets below show the **tool name and arguments payload**. In a real MCP session, the server wraps the JSON result inside the standard tool response envelope.
@@ -57,6 +61,59 @@ The request snippets below show the **tool name and arguments payload**. In a re
 | `kafka_describe_connector` | Inspect a Kafka Connect connector |
 | `kafka_join` | Perform a time-windowed join across two topics |
 | `kafka_query` | Translate a natural-language query into Kafka reads |
+
+### Event-Driven (P3)
+
+| Tool | Purpose |
+|---|---|
+| `kafka_watch` | Register event-driven watch subscriptions on topic patterns |
+| `kafka_remediate_dlq` | Auto-remediate DLQ messages: retry, route, or suggest fixes |
+| `kafka_schema_diff` | Field-by-field diff between two schema versions |
+
+### Connector & Operations (Advanced)
+
+| Tool | Purpose |
+|---|---|
+| `kafka_create_connector` | Create a new Kafka Connect connector |
+| `kafka_update_connector` | Update an existing connector configuration |
+| `kafka_delete_connector` | Delete a Kafka Connect connector |
+| `kafka_restart_connector` | Restart a connector or specific failed tasks |
+| `kafka_connector_health` | Health score and diagnostics for a connector |
+| `kafka_time_travel` | Point-in-time topic queries: snapshot or diff state |
+| `kafka_recommend` | Intelligent topic optimization recommendations |
+| `kafka_trace_message` | End-to-end message tracing via correlation IDs |
+| `kafka_list_acls` | List Kafka ACLs with security analysis |
+| `kafka_config_drift` | Detect configuration drift across clusters |
+| `kafka_playground` | Sandboxed environment for safe Kafka experimentation |
+
+### AI & Analytics (Feature)
+
+| Tool | Purpose |
+|---|---|
+| `kafka_anomalies` | AI-detected anomalies in lag, throughput, and error rates |
+| `kafka_anomaly_ingest` | Manually ingest data points for anomaly detection |
+| `kafka_nl_query` | Query Kafka with plain English (NL → pipeline) |
+| `kafka_cost_analyze` | Analyze storage and compute costs for a topic |
+| `kafka_cost_waste` | Detect cost waste: idle topics, over-replication, etc. |
+| `kafka_cost_whatif` | Simulate config changes and see cost impact |
+| `kafka_workflows` | Pre-built workflow templates for common operations |
+| `kafka_gitops_diff` | Compare declarative YAML config against live cluster state |
+| `kafka_knowledge_graph` | Query topic relationships and schema dependencies |
+| `kafka_platform_info` | Get info about configured Kafka-compatible platforms |
+| `kafka_validate_contract` | Validate messages against data contracts |
+| `kafka_diagnose_lag` | Deep diagnostic analysis of consumer group lag |
+| `kafka_migration_plan` | Plan and validate Kafka migrations between clusters |
+| `kafka_trace_lineage` | Track data lineage and PII/compliance annotations |
+| `kafka_group_health` | Consumer group health scoring with auto-remediation hints |
+| `kafka_persona` | Declarative agent personas (SRE, data-engineer, etc.) |
+| `kafka_forecast` | ML-based capacity forecasting (throughput, storage, lag) |
+
+### Streaming
+
+| Tool | Purpose |
+|---|---|
+| `kafka_stream` | Manage streaming consumer sessions for real-time delivery |
+| `kafka_agent_registry` | Multi-agent collaboration: register, claim partitions, handoff |
 
 ## Core (P0)
 
@@ -1065,6 +1122,814 @@ Interpret a natural-language request, choose a likely topic, and return matching
     }
   ],
   "count": 1
+}
+```
+
+## Event-Driven (P3)
+
+### `kafka_watch`
+
+Register or manage event-driven watch subscriptions on topic patterns. When matching messages arrive, notifications are pushed via webhooks or MCP sampling.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `action` | string | No | `subscribe` | Action: `subscribe`, `unsubscribe`, `list`. |
+| `topic_pattern` | string | Conditionally | — | Glob pattern to match topics (e.g., `orders.*`, `*-dlq`). Required for `subscribe`. |
+| `key_filter` | string | No | — | Filter messages where key contains this string. |
+| `value_filter` | string | No | — | Filter messages where value contains this string. |
+| `webhook_url` | string | No | — | URL to POST notifications to. |
+| `subscription_id` | string | Conditionally | — | Subscription ID. Required for `unsubscribe`. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_watch",
+  "arguments": {
+    "action": "subscribe",
+    "topic_pattern": "orders.*",
+    "value_filter": "failed",
+    "webhook_url": "https://hooks.example.com/alerts"
+  }
+}
+```
+
+### `kafka_remediate_dlq`
+
+Auto-remediate DLQ messages: retry with backoff, route to correction topic, or generate fix suggestions using schema context.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `topic` | string | Yes | — | DLQ topic name. |
+| `action` | string | No | `analyze` | Remediation action: `analyze`, `retry`, `route`, `suggest`. |
+| `target_topic` | string | No | — | Target topic for routing remediation. |
+| `limit` | number | No | `100` | Max messages to process. |
+| `cluster` | string | No | default cluster | Named cluster to query. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_remediate_dlq",
+  "arguments": {
+    "topic": "payments.failed.dlq",
+    "action": "suggest",
+    "limit": 50,
+    "cluster": "production"
+  }
+}
+```
+
+### `kafka_schema_diff`
+
+Compute a field-by-field diff between two schema versions showing additions, removals, and changes.
+
+:::tip
+This tool requires `schema_registry.url` on the selected cluster configuration.
+:::
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `subject` | string | Yes | — | Schema subject name. |
+| `version_from` | string | Yes | — | Source version number. |
+| `version_to` | string | No | `latest` | Target version number. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_schema_diff",
+  "arguments": {
+    "subject": "orders.created-value",
+    "version_from": "1",
+    "version_to": "3"
+  }
+}
+```
+
+## Connector & Operations (Advanced)
+
+### `kafka_create_connector`
+
+Create a new Kafka Connect connector with the specified configuration.
+
+:::tip
+This tool requires `connect_url` on the selected cluster configuration.
+:::
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `name` | string | Yes | — | Connector name. |
+| `config` | object | Yes | — | Connector configuration map. |
+| `cluster` | string | No | default cluster | Named cluster to target. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_create_connector",
+  "arguments": {
+    "name": "jdbc-orders-sink",
+    "config": {
+      "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+      "topics": "orders.created",
+      "connection.url": "jdbc:postgresql://db:5432/orders"
+    },
+    "cluster": "production"
+  }
+}
+```
+
+### `kafka_update_connector`
+
+Update an existing Kafka Connect connector configuration.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `name` | string | Yes | — | Connector name. |
+| `config` | object | Yes | — | New connector configuration map. |
+| `cluster` | string | No | default cluster | Named cluster to target. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_update_connector",
+  "arguments": {
+    "name": "jdbc-orders-sink",
+    "config": {
+      "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+      "topics": "orders.created,orders.updated"
+    },
+    "cluster": "production"
+  }
+}
+```
+
+### `kafka_delete_connector`
+
+Delete a Kafka Connect connector.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `name` | string | Yes | — | Connector name. |
+| `cluster` | string | No | default cluster | Named cluster to target. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_delete_connector",
+  "arguments": {
+    "name": "jdbc-orders-sink",
+    "cluster": "production"
+  }
+}
+```
+
+### `kafka_restart_connector`
+
+Restart a Kafka Connect connector or specific tasks. Supports bulk restart of failed tasks.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `name` | string | Yes | — | Connector name. |
+| `task_id` | number | No | `-1` | Specific task ID to restart (`-1` for all). |
+| `failed_only` | boolean | No | `false` | Only restart failed tasks. |
+| `cluster` | string | No | default cluster | Named cluster to target. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_restart_connector",
+  "arguments": {
+    "name": "jdbc-orders-sink",
+    "failed_only": true,
+    "cluster": "production"
+  }
+}
+```
+
+### `kafka_connector_health`
+
+Get health score and diagnostics for a Kafka Connect connector including task states, error rates, and recommendations.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `name` | string | Yes | — | Connector name. |
+| `cluster` | string | No | default cluster | Named cluster to query. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_connector_health",
+  "arguments": {
+    "name": "jdbc-orders-sink",
+    "cluster": "production"
+  }
+}
+```
+
+### `kafka_time_travel`
+
+Point-in-time topic queries: snapshot state at a timestamp, reconstruct compacted topic state, or diff state between two timestamps.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `action` | string | Yes | — | Action: `snapshot`, `diff`. |
+| `topic` | string | Yes | — | Topic name. |
+| `timestamp` | string | Conditionally | — | Point-in-time timestamp (ISO 8601). Required for `snapshot`. |
+| `timestamp_from` | string | No | — | Start timestamp for `diff` (ISO 8601). |
+| `timestamp_to` | string | No | — | End timestamp for `diff` (ISO 8601). |
+| `max_keys` | number | No | `10000` | Max unique keys to track. |
+| `cluster` | string | No | default cluster | Named cluster to query. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_time_travel",
+  "arguments": {
+    "action": "snapshot",
+    "topic": "orders.created",
+    "timestamp": "2025-01-01T00:00:00Z",
+    "cluster": "production"
+  }
+}
+```
+
+### `kafka_recommend`
+
+Get intelligent recommendations for topic optimization: detect under-replicated partitions, idle topics, consumer lag trends, partition hotspots, retention tuning, and compression analysis.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `topic` | string | No | — | Specific topic to analyze. Analyzes all topics if empty. |
+| `cluster` | string | No | default cluster | Named cluster to query. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_recommend",
+  "arguments": {
+    "topic": "orders.created",
+    "cluster": "production"
+  }
+}
+```
+
+### `kafka_trace_message`
+
+Trace a message across topics using correlation IDs. Auto-detects `correlation-id`, `trace-id`, `x-request-id` headers and builds a message flow graph.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `correlation_id` | string | Yes | — | Correlation ID to trace. |
+| `header_name` | string | No | auto-detect | Header name containing correlation ID. |
+| `topics` | object | No | all topics | List of topic names to search. |
+| `max_scan` | number | No | `10000` | Max messages to scan per topic. |
+| `cluster` | string | No | default cluster | Named cluster to query. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_trace_message",
+  "arguments": {
+    "correlation_id": "req-abc-123",
+    "cluster": "production"
+  }
+}
+```
+
+### `kafka_list_acls`
+
+List all Kafka ACLs with principal, resource, and operation breakdown. Includes security analysis for over-permissioned principals and wildcard exposure.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `principal` | string | No | — | Filter by principal (e.g., `User:alice`). |
+| `resource_type` | string | No | — | Filter by resource type: `topic`, `group`, `cluster`, `transactional_id`. |
+| `include_analysis` | boolean | No | `true` | Include security analysis. |
+| `cluster` | string | No | default cluster | Named cluster to query. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_list_acls",
+  "arguments": {
+    "principal": "User:alice",
+    "include_analysis": true,
+    "cluster": "production"
+  }
+}
+```
+
+### `kafka_config_drift`
+
+Detect configuration drift across clusters. Compare topic configs between clusters, check against golden templates, and generate remediation commands.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `action` | string | No | `compare` | Action: `compare`, `audit`, `template`. |
+| `topic` | string | No | — | Specific topic to compare. |
+| `source_cluster` | string | No | — | Source cluster for comparison. |
+| `target_cluster` | string | No | — | Target cluster for comparison. |
+| `template` | object | No | — | Golden template configs for audit. |
+| `cluster` | string | No | default cluster | Named cluster to query. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_config_drift",
+  "arguments": {
+    "action": "compare",
+    "topic": "orders.created",
+    "source_cluster": "production",
+    "target_cluster": "staging"
+  }
+}
+```
+
+### `kafka_playground`
+
+Sandboxed Kafka environment for safe experimentation. Create temporary topics, generate sample data, and auto-cleanup.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `action` | string | Yes | — | Action: `create`, `produce_sample`, `list`, `cleanup`. |
+| `name` | string | No | — | Playground topic name suffix (auto-prefixed with `_playground_`). |
+| `partitions` | number | No | `3` | Partitions for playground topic. |
+| `data_pattern` | string | No | `ecommerce` | Sample data pattern: `ecommerce`, `iot`, `user_activity`, `logs`. |
+| `count` | number | No | `10` | Number of sample messages to produce. |
+| `cluster` | string | No | default cluster | Named cluster to target. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_playground",
+  "arguments": {
+    "action": "create",
+    "name": "test-orders",
+    "data_pattern": "ecommerce",
+    "cluster": "staging"
+  }
+}
+```
+
+## AI & Analytics (Feature)
+
+### `kafka_anomalies`
+
+Get AI-detected anomalies in consumer lag, throughput, and error rates. Uses z-score and IQR statistical models with configurable sensitivity.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `severity` | string | No | — | Filter by severity: `warning`, `critical`. |
+| `metric` | string | No | — | Filter by metric type: `consumer_lag`, `throughput`, `error_rate`. |
+| `limit` | number | No | `50` | Max alerts to return. |
+| `since_hours` | number | No | `24` | Look back period in hours. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_anomalies",
+  "arguments": {
+    "severity": "critical",
+    "metric": "consumer_lag",
+    "limit": 10
+  }
+}
+```
+
+### `kafka_anomaly_ingest`
+
+Manually ingest a data point for anomaly detection analysis.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `metric` | string | Yes | — | Metric type: `consumer_lag`, `throughput`, `error_rate`. |
+| `source` | string | Yes | — | Source name (topic or consumer group). |
+| `value` | number | Yes | — | Metric value. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_anomaly_ingest",
+  "arguments": {
+    "metric": "consumer_lag",
+    "source": "orders-processor",
+    "value": 15000
+  }
+}
+```
+
+### `kafka_nl_query`
+
+Query Kafka with plain English. Parses natural language into consume + filter + aggregate pipelines.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `query` | string | Yes | — | Natural language query. |
+| `cluster` | string | No | default cluster | Named cluster to query. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_nl_query",
+  "arguments": {
+    "query": "show me all failed orders in the last hour",
+    "cluster": "production"
+  }
+}
+```
+
+### `kafka_cost_analyze`
+
+Analyze storage and compute costs for a Kafka topic. Estimates monthly cost based on retention, partitions, throughput, and replication.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `topic` | string | Yes | — | Topic name. |
+| `provider` | string | No | `aws-msk` | Cost model: `aws-msk`, `confluent-cloud`, `self-hosted`. |
+| `cluster` | string | No | default cluster | Named cluster to query. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_cost_analyze",
+  "arguments": {
+    "topic": "orders.created",
+    "provider": "aws-msk",
+    "cluster": "production"
+  }
+}
+```
+
+### `kafka_cost_waste`
+
+Detect cost waste across all topics: idle topics, over-replication, compression opportunities, excessive retention.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `provider` | string | No | `aws-msk` | Cost model: `aws-msk`, `confluent-cloud`, `self-hosted`. |
+| `cluster` | string | No | default cluster | Named cluster to query. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_cost_waste",
+  "arguments": {
+    "provider": "confluent-cloud",
+    "cluster": "production"
+  }
+}
+```
+
+### `kafka_cost_whatif`
+
+Simulate configuration changes and see cost impact. What-if analysis for retention, compression, partitions, and replication changes.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `topic` | string | Yes | — | Topic name. |
+| `new_retention_ms` | number | No | — | New retention period in ms. |
+| `new_compression` | string | No | — | New compression type: `gzip`, `snappy`, `lz4`, `zstd`, `none`. |
+| `new_partitions` | number | No | — | New partition count. |
+| `new_replication_factor` | number | No | — | New replication factor. |
+| `provider` | string | No | `aws-msk` | Cost model. |
+| `cluster` | string | No | default cluster | Named cluster to query. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_cost_whatif",
+  "arguments": {
+    "topic": "orders.created",
+    "new_retention_ms": 86400000,
+    "new_compression": "zstd",
+    "cluster": "production"
+  }
+}
+```
+
+### `kafka_workflows`
+
+Manage pre-built workflow templates for common Kafka operations.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `action` | string | Yes | — | Action: `list`, `describe`, `execute`. |
+| `template` | string | Conditionally | — | Template name. Required for `describe`/`execute`. |
+| `category` | string | No | — | Filter by category: `operations`, `planning`, `development`, `monitoring`, `discovery`, `quality`, `debugging`. |
+| `params` | object | No | — | Parameters for template execution. |
+| `topic` | string | No | — | Topic parameter for workflow. |
+| `group_id` | string | No | — | Consumer group parameter for workflow. |
+| `subject` | string | No | — | Schema subject parameter for workflow. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_workflows",
+  "arguments": {
+    "action": "list",
+    "category": "operations"
+  }
+}
+```
+
+### `kafka_gitops_diff`
+
+Compare desired Kafka configuration (declarative YAML) against live cluster state. Generates a diff and migration plan with dry-run support.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `topics` | object | No | — | Array of desired topic specs: `[{name, partitions, replication_factor, configs}]`. |
+| `cluster` | string | No | default cluster | Named cluster to query. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_gitops_diff",
+  "arguments": {
+    "topics": [
+      {"name": "orders.created", "partitions": 12, "replication_factor": 3}
+    ],
+    "cluster": "production"
+  }
+}
+```
+
+### `kafka_knowledge_graph`
+
+Query the embedded knowledge graph of topic relationships, consumer group topologies, and schema dependencies.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `query` | string | Yes | — | Graph query (e.g., `depends_on orders`, `impacts user-events`, `type consumer_group`). |
+| `cluster` | string | No | default cluster | Named cluster to query. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_knowledge_graph",
+  "arguments": {
+    "query": "depends_on orders.created",
+    "cluster": "production"
+  }
+}
+```
+
+### `kafka_platform_info`
+
+Get information about configured Kafka-compatible platforms (Apache Kafka, Redpanda, Confluent Cloud, MSK Serverless) and their capabilities.
+
+*No parameters.*
+
+**Example request**
+
+```json
+{
+  "name": "kafka_platform_info",
+  "arguments": {}
+}
+```
+
+### `kafka_validate_contract`
+
+Validate messages against data contracts, register contracts, or get compliance reports.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `action` | string | Yes | — | Action: `validate`, `register`, `get`, `list`, `compliance`. |
+| `topic` | string | No | — | Topic name. |
+| `contract` | object | No | — | Contract definition for `register` action. |
+| `message` | object | No | — | Message value to validate. |
+| `cluster` | string | No | default cluster | Named cluster to query. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_validate_contract",
+  "arguments": {
+    "action": "list",
+    "topic": "orders.created"
+  }
+}
+```
+
+### `kafka_diagnose_lag`
+
+Deep diagnostic analysis of consumer group lag. Traces root cause: slow consumers, producer spikes, partition imbalance, or GC pressure.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `group_id` | string | Yes | — | Consumer group ID. |
+| `cluster` | string | No | default cluster | Named cluster to query. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_diagnose_lag",
+  "arguments": {
+    "group_id": "orders-processor",
+    "cluster": "production"
+  }
+}
+```
+
+### `kafka_migration_plan`
+
+Plan and validate Kafka migrations between clusters.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `action` | string | Yes | — | Action: `plan`, `validate`, `list`. |
+| `source_cluster` | string | No | — | Source cluster name. |
+| `target_cluster` | string | No | — | Target cluster name. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_migration_plan",
+  "arguments": {
+    "action": "plan",
+    "source_cluster": "production",
+    "target_cluster": "production-v2"
+  }
+}
+```
+
+### `kafka_trace_lineage`
+
+Track data lineage through Kafka topics. Shows producer→topic→consumer relationships, PII annotations, and GDPR/CCPA compliance reports.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `action` | string | Yes | — | Action: `trace`, `annotate_pii`, `compliance_report`, `detect_pii`. |
+| `topic` | string | No | — | Topic name. |
+| `framework` | string | No | — | Compliance framework: `GDPR`, `CCPA`. |
+| `cluster` | string | No | default cluster | Named cluster to query. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_trace_lineage",
+  "arguments": {
+    "action": "compliance_report",
+    "framework": "GDPR",
+    "cluster": "production"
+  }
+}
+```
+
+### `kafka_group_health`
+
+Evaluate consumer group health with scoring (0–100), detect zombies, rebalance storms, stuck partitions, and suggest auto-remediation.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `group_id` | string | Yes | — | Consumer group ID. |
+| `cluster` | string | No | default cluster | Named cluster to query. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_group_health",
+  "arguments": {
+    "group_id": "orders-processor",
+    "cluster": "production"
+  }
+}
+```
+
+### `kafka_persona`
+
+Manage declarative agent personas.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `action` | string | Yes | — | Action: `list`, `get`, `activate`. |
+| `persona` | string | No | — | Persona name: `sre`, `data-engineer`, `compliance`, `developer`, `admin`. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_persona",
+  "arguments": {
+    "action": "activate",
+    "persona": "sre"
+  }
+}
+```
+
+### `kafka_forecast`
+
+ML-based capacity forecasting using linear regression and seasonal decomposition. Predicts throughput growth and storage needs.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `topic` | string | Yes | — | Topic name. |
+| `metric` | string | No | `throughput` | Metric to forecast: `throughput`, `storage`, `lag`. |
+| `horizon_days` | number | No | `7` | Forecast horizon in days. |
+| `cluster` | string | No | default cluster | Named cluster to query. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_forecast",
+  "arguments": {
+    "topic": "orders.created",
+    "metric": "storage",
+    "horizon_days": 30,
+    "cluster": "production"
+  }
+}
+```
+
+## Streaming
+
+### `kafka_stream`
+
+Manage streaming consumer sessions for real-time message delivery.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `action` | string | No | `start` | Action: `start`, `poll`, `pause`, `resume`, `stop`, `list`. |
+| `topic` | string | Conditionally | — | Topic name. Required for `start`. |
+| `group_id` | string | No | auto-generated | Consumer group ID. |
+| `session_id` | string | Conditionally | — | Session ID. Required for `poll`/`pause`/`resume`/`stop`. |
+| `batch_size` | number | No | `10` | Messages per batch (`1`–`100`). |
+| `max_msg_per_sec` | number | No | `1000` | Throttle: max messages/sec. |
+| `max_messages` | number | No | `1000` | Max total messages before auto-stop. |
+| `timeout_ms` | number | No | `30000` | Session timeout in ms (max `60000`). |
+| `poll_timeout_ms` | number | No | `5000` | Poll wait time in ms. |
+| `deserializer` | string | No | `auto` | Deserialization: `auto`, `json`, `string`, `bytes`. |
+| `auto_commit` | boolean | No | `true` | Auto-commit offsets. |
+| `cluster` | string | No | default cluster | Named cluster to query. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_stream",
+  "arguments": {
+    "action": "start",
+    "topic": "orders.created",
+    "batch_size": 25,
+    "max_messages": 500,
+    "cluster": "production"
+  }
+}
+```
+
+### `kafka_agent_registry`
+
+Multi-agent collaboration: register agents, claim partitions, share cursors, and handoff messages.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `action` | string | Yes | — | Action: `register`, `heartbeat`, `claim`, `release`, `share_cursor`, `handoff`, `list_agents`. |
+| `agent_name` | string | No | — | Agent name for registration. |
+| `topic` | string | No | — | Topic for partition operations. |
+| `partition` | number | No | — | Partition number to claim/release. |
+| `offset` | number | No | — | Offset for cursor sharing. |
+| `target_agent` | string | No | — | Target agent for handoff. |
+| `message_data` | string | No | — | Message data for handoff (JSON string). |
+| `cluster` | string | No | default cluster | Named cluster to query. |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_agent_registry",
+  "arguments": {
+    "action": "register",
+    "agent_name": "order-processor-agent",
+    "cluster": "production"
+  }
 }
 ```
 
