@@ -15,6 +15,8 @@ clusters:
 policies:
 schema_cache:
 audit:
+masking:
+telemetry:
 ```
 
 KafkaMCP validates the file at startup and applies defaults for omitted values where appropriate.
@@ -149,6 +151,78 @@ Controls the audit trail.
 | `max_entries` | integer | No | `10000` | Size of the in-memory ring buffer. |
 | `log_file` | string | No | empty | Optional JSONL file path for durable audit logs. |
 
+## `masking`
+
+Controls data masking and PII redaction for consumed messages.
+
+| Field | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `enabled` | boolean | No | `false` | Enable data masking / PII redaction. |
+| `rules` | array | No | empty | List of masking rule definitions. |
+
+### `masking.rules[]`
+
+| Field | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `name` | string | Yes | — | Rule identifier. |
+| `type` | string | Yes | — | Rule type: `email`, `ssn`, `credit_card`, `phone`, `regex`, `ner`. |
+| `field_path` | string | Yes | — | JSON path pattern (e.g., `$.user.email`, `**email**`). |
+| `pattern` | string | Conditionally | — | Custom regex pattern. Required when `type` is `regex`. |
+| `replace` | string | No | `***REDACTED***` | Replacement string for masked values. |
+| `agents` | array of strings | No | empty (all agents) | Apply only to these agent IDs. Empty means all agents. |
+
+### Example
+
+```yaml
+masking:
+  enabled: true
+  rules:
+    - name: redact-emails
+      type: email
+      field_path: "**email**"
+      replace: "***EMAIL***"
+    - name: redact-ssn
+      type: ssn
+      field_path: "$.user.ssn"
+    - name: custom-api-key
+      type: regex
+      field_path: "$.headers.authorization"
+      pattern: "Bearer [A-Za-z0-9._~+/-]+"
+      replace: "Bearer ***REDACTED***"
+      agents: ["incident-agent"]
+```
+
+:::tip
+Masking rules are evaluated in order. The first matching rule wins for each field path.
+:::
+
+## `telemetry`
+
+Controls OpenTelemetry distributed tracing.
+
+| Field | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `enabled` | boolean | No | `false` | Enable OpenTelemetry tracing. |
+| `endpoint` | string | Conditionally | — | OTLP collector endpoint (e.g., `localhost:4317`). Required when `enabled` is `true`. |
+| `insecure` | boolean | No | `false` | Use insecure (non-TLS) connection to collector. |
+| `service_name` | string | No | `kafkamcp` | Service name reported in traces. |
+| `sample_rate` | float | No | `1.0` | Trace sampling rate (`0.0`–`1.0`). |
+
+### Example
+
+```yaml
+telemetry:
+  enabled: true
+  endpoint: "localhost:4317"
+  insecure: true
+  service_name: kafkamcp-production
+  sample_rate: 0.5
+```
+
+:::info
+KafkaMCP uses the OTLP exporter. Point `endpoint` at any OpenTelemetry Collector, Jaeger, or compatible backend.
+:::
+
 ## Environment variable expansion
 
 KafkaMCP expands environment variables before parsing the YAML file.
@@ -249,6 +323,23 @@ audit:
   enabled: true
   max_entries: 10000
   log_file: /var/log/kafkamcp/audit.jsonl
+
+masking:
+  enabled: true
+  rules:
+    - name: redact-emails
+      type: email
+      field_path: "**email**"
+    - name: redact-ssn
+      type: ssn
+      field_path: "$.user.ssn"
+
+telemetry:
+  enabled: true
+  endpoint: "${OTEL_ENDPOINT:-localhost:4317}"
+  insecure: true
+  service_name: kafkamcp
+  sample_rate: 1.0
 ```
 
 ## Validate before startup
