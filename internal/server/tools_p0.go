@@ -217,76 +217,66 @@ func (s *Server) handleProduce(ctx context.Context, request mcp.CallToolRequest)
 
 // handleListSchemas returns all Schema Registry subjects, optionally filtered by name pattern.
 func (s *Server) handleListSchemas(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	start := time.Now()
-	agentID := extractAgentID(request)
-	filter := request.GetString("filter", "")
-	args := request.GetArguments()
+	return s.withToolAuth(toolAuthConfig{
+		tool: "kafka_list_schemas", resourceType: auth.ResourceSchema, action: auth.ActionRead,
+	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+		filter := request.GetString("filter", "")
 
-	if deny := s.checkRateLimit(agentID, "kafka_list_schemas"); deny != nil {
-		return deny, nil
-	}
-	if deny := s.checkAuth(agentID, "kafka_list_schemas", auth.ResourceSchema, "", auth.ActionRead); deny != nil {
-		return deny, nil
-	}
-	if deny := validateStringLength("filter", filter); deny != nil {
-		return deny, nil
-	}
-
-	sc := s.getSchemaClient("")
-	if sc == nil {
-		s.logAudit(agentID, "kafka_list_schemas", args, "", "error", 0, fmt.Errorf("no schema registry configured"), start)
-		return mcp.NewToolResultError("No schema registry configured for this cluster"), nil
-	}
-
-	subjects, err := sc.ListSubjectsDetailed(ctx)
-	if err != nil {
-		s.logAudit(agentID, "kafka_list_schemas", args, "", "error", 0, err, start)
-		return s.toolError("Failed to list schemas", err), nil
-	}
-
-	if filter != "" {
-		var filtered []schema.Subject
-		for _, subj := range subjects {
-			if matchTopicFilter(filter, subj.SubjectName) {
-				filtered = append(filtered, subj)
-			}
+		if deny := validateStringLength("filter", filter); deny != nil {
+			return deny, nil
 		}
-		subjects = filtered
-	}
 
-	s.logAudit(agentID, "kafka_list_schemas", args, "", "success", len(subjects), nil, start)
-	return marshalResult(map[string]any{"subjects": subjects, "total_count": len(subjects)})
+		sc := s.getSchemaClient("")
+		if sc == nil {
+			s.logAudit(agentID, "kafka_list_schemas", args, "", "error", 0, fmt.Errorf("no schema registry configured"), start)
+			return mcp.NewToolResultError("No schema registry configured for this cluster"), nil
+		}
+
+		subjects, err := sc.ListSubjectsDetailed(ctx)
+		if err != nil {
+			s.logAudit(agentID, "kafka_list_schemas", args, "", "error", 0, err, start)
+			return s.toolError("Failed to list schemas", err), nil
+		}
+
+		if filter != "" {
+			var filtered []schema.Subject
+			for _, subj := range subjects {
+				if matchTopicFilter(filter, subj.SubjectName) {
+					filtered = append(filtered, subj)
+				}
+			}
+			subjects = filtered
+		}
+
+		s.logAudit(agentID, "kafka_list_schemas", args, "", "success", len(subjects), nil, start)
+		return marshalResult(map[string]any{"subjects": subjects, "total_count": len(subjects)})
+	})(ctx, request)
 }
 
 // handleGetSchema retrieves a schema by subject and version from the Schema Registry.
 func (s *Server) handleGetSchema(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	start := time.Now()
-	agentID := extractAgentID(request)
-	subject := request.GetString("subject", "")
-	version := request.GetString("version", "latest")
-	args := request.GetArguments()
+	return s.withToolAuth(toolAuthConfig{
+		tool: "kafka_get_schema", resourceType: auth.ResourceSchema, action: auth.ActionRead,
+	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+		subject := request.GetString("subject", "")
+		version := request.GetString("version", "latest")
 
-	if subject == "" {
-		return mcp.NewToolResultError("subject is required"), nil
-	}
-	if deny := validateStringLength("subject", subject); deny != nil {
-		return deny, nil
-	}
-	if deny := s.checkRateLimit(agentID, "kafka_get_schema"); deny != nil {
-		return deny, nil
-	}
-	if deny := s.checkAuth(agentID, "kafka_get_schema", auth.ResourceSchema, "", auth.ActionRead); deny != nil {
-		return deny, nil
-	}
+		if subject == "" {
+			return mcp.NewToolResultError("subject is required"), nil
+		}
+		if deny := validateStringLength("subject", subject); deny != nil {
+			return deny, nil
+		}
 
-	info, err := s.getSchemaClient("").GetSchema(ctx, subject, version)
-	if err != nil {
-		s.logAudit(agentID, "kafka_get_schema", args, "", "error", 0, err, start)
-		return s.toolError("Failed to get schema", err), nil
-	}
+		info, err := s.getSchemaClient("").GetSchema(ctx, subject, version)
+		if err != nil {
+			s.logAudit(agentID, "kafka_get_schema", args, "", "error", 0, err, start)
+			return s.toolError("Failed to get schema", err), nil
+		}
 
-	s.logAudit(agentID, "kafka_get_schema", args, "", "success", 0, nil, start)
-	return marshalResult(info)
+		s.logAudit(agentID, "kafka_get_schema", args, "", "success", 0, nil, start)
+		return marshalResult(info)
+	})(ctx, request)
 }
 
 // handleDescribeConsumerGroup returns detailed state and member assignments for a consumer group.
@@ -317,38 +307,33 @@ func (s *Server) handleDescribeConsumerGroup(ctx context.Context, request mcp.Ca
 
 // handleListConsumerGroups returns all consumer groups, optionally filtered by state.
 func (s *Server) handleListConsumerGroups(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	start := time.Now()
-	agentID := extractAgentID(request)
-	stateFilter := request.GetString("state_filter", "")
-	cluster := request.GetString("cluster", "")
-	args := request.GetArguments()
+	return s.withToolAuth(toolAuthConfig{
+		tool: "kafka_list_consumer_groups", resourceType: auth.ResourceConsumerGroup, action: auth.ActionDescribe,
+	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+		stateFilter := request.GetString("state_filter", "")
+		cluster := request.GetString("cluster", "")
 
-	if deny := s.checkRateLimit(agentID, "kafka_list_consumer_groups"); deny != nil {
-		return deny, nil
-	}
-	if deny := s.checkAuth(agentID, "kafka_list_consumer_groups", auth.ResourceConsumerGroup, "", auth.ActionDescribe); deny != nil {
-		return deny, nil
-	}
-	if deny := validateStringLength("state_filter", stateFilter); deny != nil {
-		return deny, nil
-	}
-
-	groups, err := s.kafkaManager.ListConsumerGroups(ctx, cluster)
-	if err != nil {
-		s.logAudit(agentID, "kafka_list_consumer_groups", args, cluster, "error", 0, err, start)
-		return s.toolError("Failed to list groups", err), nil
-	}
-
-	if stateFilter != "" {
-		var filtered []kafka.ConsumerGroupSummary
-		for _, g := range groups {
-			if strings.EqualFold(g.State, stateFilter) {
-				filtered = append(filtered, g)
-			}
+		if deny := validateStringLength("state_filter", stateFilter); deny != nil {
+			return deny, nil
 		}
-		groups = filtered
-	}
 
-	s.logAudit(agentID, "kafka_list_consumer_groups", args, cluster, "success", len(groups), nil, start)
-	return marshalResult(map[string]any{"groups": groups, "total_count": len(groups), "cluster": s.resolveClusterName(cluster)})
+		groups, err := s.kafkaManager.ListConsumerGroups(ctx, cluster)
+		if err != nil {
+			s.logAudit(agentID, "kafka_list_consumer_groups", args, cluster, "error", 0, err, start)
+			return s.toolError("Failed to list groups", err), nil
+		}
+
+		if stateFilter != "" {
+			var filtered []kafka.ConsumerGroupSummary
+			for _, g := range groups {
+				if strings.EqualFold(g.State, stateFilter) {
+					filtered = append(filtered, g)
+				}
+			}
+			groups = filtered
+		}
+
+		s.logAudit(agentID, "kafka_list_consumer_groups", args, cluster, "success", len(groups), nil, start)
+		return marshalResult(map[string]any{"groups": groups, "total_count": len(groups), "cluster": s.resolveClusterName(cluster)})
+	})(ctx, request)
 }
