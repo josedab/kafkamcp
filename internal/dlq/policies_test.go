@@ -2,10 +2,12 @@ package dlq
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -293,5 +295,219 @@ func TestEscalationEvent_Fields(t *testing.T) {
 	}
 	if e.Topic != "dlq.orders" || e.FailureCount != 50 {
 		t.Errorf("unexpected event: %+v", e)
+	}
+}
+
+// --- SuggestSchemaFixes tests ---
+
+func TestSuggestSchemaFixes_EmptyMessages(t *testing.T) {
+	r := NewRemediator(testDLQLogger())
+	mock := &kafka.MockKafkaManager{
+		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
+			return []kafka.Message{}, nil
+		},
+	}
+
+	suggestions, err := r.SuggestSchemaFixes(context.Background(), mock, "prod", "dlq.orders", 20)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(suggestions) != 0 {
+		t.Errorf("expected 0 suggestions for empty messages, got %d", len(suggestions))
+	}
+}
+
+func TestSuggestSchemaFixes_ConsumeError(t *testing.T) {
+	r := NewRemediator(testDLQLogger())
+	mock := &kafka.MockKafkaManager{
+		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
+			return nil, fmt.Errorf("broker unavailable")
+		},
+	}
+
+	_, err := r.SuggestSchemaFixes(context.Background(), mock, "prod", "dlq.orders", 20)
+	if err == nil {
+		t.Fatal("expected error from consume failure")
+	}
+	if !strings.Contains(err.Error(), "consuming DLQ messages") {
+		t.Errorf("expected wrapped error, got: %v", err)
+	}
+}
+
+func TestSuggestSchemaFixes_DefaultLimit(t *testing.T) {
+	var capturedLimit int
+	r := NewRemediator(testDLQLogger())
+	mock := &kafka.MockKafkaManager{
+		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
+			capturedLimit = limit
+			return []kafka.Message{}, nil
+		},
+	}
+
+	r.SuggestSchemaFixes(context.Background(), mock, "", "dlq.topic", 0)
+	if capturedLimit != 20 {
+		t.Errorf("expected default limit 20, got %d", capturedLimit)
+	}
+}
+
+func TestSuggestSchemaFixes_NullFields(t *testing.T) {
+	r := NewRemediator(testDLQLogger())
+	mock := &kafka.MockKafkaManager{
+		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
+			return []kafka.Message{
+				{Value: map[string]any{"user_id": nil, "name": "test"}},
+				{Value: map[string]any{"user_id": nil, "email": nil}},
+			}, nil
+		},
+	}
+
+	suggestions, err := r.SuggestSchemaFixes(context.Background(), mock, "", "dlq.users", 10)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Should find null field suggestions for user_id (2 occurrences) and email (1 occurrence)
+	nullFieldFound := false
+	for _, s := range suggestions {
+		if s.Field == "user_id" && strings.Contains(s.Issue, "null") {
+			nullFieldFound = true
+			if !s.AutoFixable {
+				t.Error("expected null field suggestion to be auto-fixable")
+			}
+			if s.FixAction != "add_default" {
+				t.Errorf("expected fix action 'add_default', got %q", s.FixAction)
+			}
+		}
+	}
+	if !nullFieldFound {
+		t.Error("expected suggestion for null field 'user_id'")
+	}
+}
+
+func TestSuggestSchemaFixes_EmptyStringFields(t *testing.T) {
+	r := NewRemediator(testDLQLogger())
+	mock := &kafka.MockKafkaManager{
+		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
+			return []kafka.Message{
+				{Value: map[string]any{"status": "", "name": "test"}},
+				{Value: map[string]any{"status": ""}},
+			}, nil
+		},
+	}
+
+	suggestions, err := r.SuggestSchemaFixes(context.Background(), mock, "", "dlq.orders", 10)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	emptyFieldFound := false
+	for _, s := range suggestions {
+		if s.Field == "status" && strings.Contains(s.Issue, "empty string") {
+			emptyFieldFound = true
+			if s.AutoFixable {
+				t.Error("expected empty string suggestion to not be auto-fixable")
+			}
+		}
+	}
+	if !emptyFieldFound {
+		t.Error("expected suggestion for empty string field 'status'")
+	}
+}
+
+func TestSuggestSchemaFixes_NonJSONValue(t *testing.T) {
+	r := NewRemediator(testDLQLogger())
+	mock := &kafka.MockKafkaManager{
+		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
+			return []kafka.Message{
+				{Value: "this is not JSON"},
+			}, nil
+		},
+	}
+
+	suggestions, err := r.SuggestSchemaFixes(context.Background(), mock, "", "dlq.raw", 10)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	foundValueIssue := false
+	for _, s := range suggestions {
+		if s.Field == "_value" && strings.Contains(s.Issue, "not valid JSON") {
+			foundValueIssue = true
+		}
+	}
+	if !foundValueIssue {
+		t.Error("expected suggestion for non-JSON value")
+	}
+}
+
+func TestSuggestSchemaFixes_SchemaErrorHeader(t *testing.T) {
+	r := NewRemediator(testDLQLogger())
+	mock := &kafka.MockKafkaManager{
+		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
+			return []kafka.Message{
+				{
+					Value:   map[string]any{"field": "value"},
+					Headers: map[string]string{"x-error-type": "schema_mismatch"},
+				},
+			}, nil
+		},
+	}
+
+	suggestions, err := r.SuggestSchemaFixes(context.Background(), mock, "", "dlq.schema", 10)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	schemaIssueFound := false
+	for _, s := range suggestions {
+		if s.Field == "_schema" && strings.Contains(s.Issue, "Schema error") {
+			schemaIssueFound = true
+			if s.AutoFixable {
+				t.Error("expected schema issue to not be auto-fixable")
+			}
+		}
+	}
+	if !schemaIssueFound {
+		t.Error("expected schema error suggestion from header")
+	}
+}
+
+func TestSuggestSchemaFixes_MixedIssues(t *testing.T) {
+	r := NewRemediator(testDLQLogger())
+	mock := &kafka.MockKafkaManager{
+		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
+			return []kafka.Message{
+				{Value: map[string]any{"id": nil, "status": ""}},
+				{Value: "invalid-json"},
+				{
+					Value:   map[string]any{"id": nil},
+					Headers: map[string]string{"x-error-type": "schema_validation_error"},
+				},
+			}, nil
+		},
+	}
+
+	suggestions, err := r.SuggestSchemaFixes(context.Background(), mock, "prod", "dlq.mixed", 10)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(suggestions) == 0 {
+		t.Error("expected multiple suggestions for mixed issues")
+	}
+}
+
+func TestSuggestSchemaFixes_CustomLimit(t *testing.T) {
+	var capturedLimit int
+	r := NewRemediator(testDLQLogger())
+	mock := &kafka.MockKafkaManager{
+		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
+			capturedLimit = limit
+			return []kafka.Message{}, nil
+		},
+	}
+
+	r.SuggestSchemaFixes(context.Background(), mock, "", "dlq.topic", 50)
+	if capturedLimit != 50 {
+		t.Errorf("expected custom limit 50, got %d", capturedLimit)
 	}
 }
