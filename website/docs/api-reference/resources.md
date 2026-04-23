@@ -5,7 +5,7 @@ title: "API Reference: Resources"
 
 # API Reference: Resources
 
-KafkaMCP exposes 10 read-only MCP resources. They return JSON documents that agents can browse and reason over.
+KafkaMCP exposes 18 read-only MCP resources. They return JSON documents that agents can browse and reason over.
 
 :::info
 Resource reads are served from the default cluster where cluster-specific data is involved. Use `kafka://clusters` to discover configured cluster names and use tool calls with the `cluster` parameter when you need explicit routing.
@@ -25,6 +25,14 @@ Resource reads are served from the default cluster where cluster-specific data i
 | `kafka://groups/{id}` | Detailed consumer group state and lag |
 | `kafka://audit/log` | Recent audit log entries |
 | `kafka://topic_graph` | Topic and consumer-group topology graph |
+| `kafka://replication/status` | Cross-cluster replication status with lag |
+| `kafka://plugins` | Registered plugins and extensions |
+| `kafka://watch/subscriptions` | Active watch subscriptions |
+| `kafka://anomalies` | AI-detected anomaly alerts |
+| `kafka://workflows` | Pre-built workflow templates |
+| `kafka://knowledge_graph` | Topic relationships and schema dependencies |
+| `kafka://flow_graph` | Real-time message flow visualization |
+| `kafka://platforms` | Configured Kafka-compatible platforms |
 
 ## `kafka://cluster/metadata`
 
@@ -324,6 +332,193 @@ kafka://groups/orders-processor
       "type": "consumes"
     }
   ]
+}
+```
+
+## `kafka://replication/status`
+
+**Description:** Returns cross-cluster replication status with lag per topic-partition.
+
+**Example response shape:**
+
+```json
+{
+  "total_links": 2,
+  "links": [
+    {
+      "source_cluster": "production",
+      "target_cluster": "dr-region",
+      "topic": "orders.created",
+      "partition": 0,
+      "source_offset": 182034,
+      "target_offset": 182000,
+      "lag": 34
+    }
+  ]
+}
+```
+
+## `kafka://plugins`
+
+**Description:** Returns registered plugins and extensions.
+
+**Example response shape:**
+
+```json
+{
+  "plugins": [
+    {
+      "name": "custom-masking",
+      "type": "masking",
+      "version": "1.0.0",
+      "enabled": true
+    }
+  ],
+  "total_count": 1
+}
+```
+
+## `kafka://watch/subscriptions`
+
+**Description:** Returns active watch subscriptions for event-driven workflows.
+
+**Example response shape:**
+
+```json
+{
+  "subscriptions": [
+    {
+      "id": "sub_abc123",
+      "topic_pattern": "orders.*",
+      "key_filter": "",
+      "value_filter": "failed",
+      "webhook_url": "https://hooks.example.com/alerts",
+      "created_at": "2025-01-01T12:00:00Z"
+    }
+  ],
+  "total_count": 1
+}
+```
+
+## `kafka://anomalies`
+
+**Description:** Returns AI-detected anomalies in consumer lag, throughput, and error rates (last 24h).
+
+**Example response shape:**
+
+```json
+{
+  "alerts": [
+    {
+      "id": "alert_001",
+      "severity": "critical",
+      "metric": "consumer_lag",
+      "source": "orders-processor",
+      "value": 15000,
+      "threshold": 5000,
+      "detected_at": "2025-01-01T12:00:00Z",
+      "message": "Consumer lag spike detected for orders-processor"
+    }
+  ],
+  "total_count": 1
+}
+```
+
+## `kafka://workflows`
+
+**Description:** Returns pre-built workflow templates for common Kafka operations.
+
+**Example response shape:**
+
+```json
+{
+  "workflows": [
+    {
+      "name": "topic-health-check",
+      "category": "monitoring",
+      "description": "Comprehensive topic health check including lag, throughput, and partition balance"
+    }
+  ],
+  "total_count": 1
+}
+```
+
+## `kafka://knowledge_graph`
+
+**Description:** Returns topic relationships, schema dependencies, and consumer group topology graph.
+
+**Example response shape:**
+
+```json
+{
+  "nodes": [
+    {
+      "id": "topic:orders.created",
+      "type": "topic",
+      "name": "orders.created"
+    },
+    {
+      "id": "schema:orders.created-value",
+      "type": "schema",
+      "name": "orders.created-value"
+    }
+  ],
+  "edges": [
+    {
+      "source": "topic:orders.created",
+      "target": "schema:orders.created-value",
+      "type": "has_schema"
+    }
+  ],
+  "total_nodes": 2,
+  "total_edges": 1
+}
+```
+
+## `kafka://flow_graph`
+
+**Description:** Returns real-time message flow visualization with throughput and latency data.
+
+**Example response shape:**
+
+```json
+{
+  "nodes": [
+    {
+      "id": "topic:orders.created",
+      "type": "topic",
+      "name": "orders.created",
+      "throughput_msg_sec": 150.5
+    }
+  ],
+  "edges": [
+    {
+      "source": "producer:order-service",
+      "target": "topic:orders.created",
+      "type": "produces",
+      "msg_per_sec": 150.5
+    }
+  ]
+}
+```
+
+## `kafka://platforms`
+
+**Description:** Returns configured Kafka-compatible platforms and their capabilities.
+
+**Example response shape:**
+
+```json
+{
+  "platforms": [
+    {
+      "name": "production",
+      "type": "apache-kafka",
+      "version": "3.6.0",
+      "capabilities": ["transactions", "exactly_once", "tiered_storage"]
+    }
+  ],
+  "total_count": 1
 }
 ```
 
