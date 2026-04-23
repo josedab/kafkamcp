@@ -14,30 +14,24 @@ import (
 
 // handleStream manages streaming consumer sessions: start, poll, control, list.
 func (s *Server) handleStream(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	start := time.Now()
-	agentID := extractAgentID(request)
-	args := request.GetArguments()
-	action := request.GetString("action", "start")
+	return s.withToolAuth(toolAuthConfig{
+		tool: "kafka_stream", resourceType: auth.ResourceTopic, action: auth.ActionRead,
+	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+		action := request.GetString("action", "start")
 
-	if deny := s.checkRateLimit(agentID, "kafka_stream"); deny != nil {
-		return deny, nil
-	}
-	if deny := s.validateAgentID(agentID); deny != nil {
-		return deny, nil
-	}
-
-	switch action {
-	case "start":
-		return s.handleStreamStart(ctx, request, agentID, args, start)
-	case "poll":
-		return s.handleStreamPoll(ctx, request, agentID, args, start)
-	case "pause", "resume", "stop":
-		return s.handleStreamControl(ctx, request, agentID, args, start, action)
-	case "list":
-		return s.handleStreamList(agentID, args, start)
-	default:
-		return mcp.NewToolResultError(fmt.Sprintf("unknown action %q; must be: start, poll, pause, resume, stop, list", action)), nil
-	}
+		switch action {
+		case "start":
+			return s.handleStreamStart(ctx, request, agentID, args, start)
+		case "poll":
+			return s.handleStreamPoll(ctx, request, agentID, args, start)
+		case "pause", "resume", "stop":
+			return s.handleStreamControl(ctx, request, agentID, args, start, action)
+		case "list":
+			return s.handleStreamList(agentID, args, start)
+		default:
+			return mcp.NewToolResultError(fmt.Sprintf("unknown action %q; must be: start, poll, pause, resume, stop, list", action)), nil
+		}
+	})(ctx, request)
 }
 
 func (s *Server) handleStreamStart(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
