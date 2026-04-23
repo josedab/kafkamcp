@@ -121,6 +121,86 @@ policies:
 
 Also check whether the agent is stuck in a loop or repeatedly polling large topics.
 
+## Agent authentication required
+
+### Symptom
+
+KafkaMCP returns:
+
+```text
+Authentication required: valid X-Agent-ID header must be provided
+```
+
+### Cause
+
+`policies.default_deny` is `true` and the request is missing a valid `X-Agent-ID` header, or the agent ID is not listed in `policies.agents`.
+
+### Fix
+
+For **SSE / streamable-http** transports, set the `X-Agent-ID` header on every HTTP request. For example:
+
+```bash
+curl -H "X-Agent-ID: my-agent" http://localhost:3100/...
+```
+
+Make sure the agent ID matches an entry in your `policies.agents` configuration. If you are testing locally and don't need auth, set `policies.default_deny: false`.
+
+## Capacity / concurrency limit
+
+### Symptom
+
+KafkaMCP returns:
+
+```text
+timed out waiting for available capacity; too many concurrent expensive operations
+```
+
+### Cause
+
+Too many expensive operations (consume, produce, describe) are running at the same time. The server limits concurrent expensive operations to protect the Kafka cluster.
+
+### Fix
+
+1. Reduce the number of parallel requests from your agents.
+2. Increase the request context timeout so operations have more time to acquire a slot.
+3. If the problem persists, check whether agents are stuck in retry loops that saturate concurrency.
+
+## Schema Registry not configured
+
+### Symptom
+
+Schema tools return:
+
+```text
+Schema Registry not configured
+```
+
+### Cause
+
+The cluster configuration does not include a `schema_registry` section. Schema Registry is optional — if you don't need schemas, this message is expected.
+
+### Fix
+
+Add the schema registry URL to the cluster config:
+
+```yaml
+clusters:
+  - name: default
+    bootstrap_servers: "localhost:9092"
+    schema_registry:
+      url: "http://localhost:8081"
+```
+
+If your registry requires authentication, add credentials:
+
+```yaml
+schema_registry:
+  url: "https://registry.example.com"
+  auth:
+    username: "${SR_USERNAME}"
+    password: "${SR_PASSWORD}"
+```
+
 ## `unauthorized` errors
 
 ### Symptom
