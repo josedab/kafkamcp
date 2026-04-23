@@ -30,9 +30,12 @@ Browse topics, consume/produce messages, view schemas, run workflows, and query 
 ## Commands
 
 - `KafkaMCP: Connect to Server` - Configure server connection
+- `KafkaMCP: Refresh Topics` - Reload the topic list from the server
 - `KafkaMCP: Consume Messages` - Read messages from a topic
 - `KafkaMCP: Produce Message` - Publish a message
+- `KafkaMCP: Describe Topic` - Show partition, replica, and configuration details for a topic
 - `KafkaMCP: Search Messages` - Search messages by content
+- `KafkaMCP: View Schema` - Display the schema for a Schema Registry subject
 - `KafkaMCP: Natural Language Query` - Query Kafka in plain English
 - `KafkaMCP: Run Workflow` - Execute a workflow template
 - `KafkaMCP: Analyze Cost` - Get cost analysis for a topic
