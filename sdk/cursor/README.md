@@ -6,6 +6,8 @@ Cursor has built-in MCP support, so KafkaMCP works with minimal configuration.
 
 Add KafkaMCP to your Cursor MCP configuration (`.cursor/mcp.json`):
 
+### Option 1: stdio transport (recommended)
+
 ```json
 {
   "mcpServers": {
@@ -20,13 +22,25 @@ Add KafkaMCP to your Cursor MCP configuration (`.cursor/mcp.json`):
 }
 ```
 
-Or connect to a running server:
+### Option 2: Connect to a running SSE server
 
 ```json
 {
   "mcpServers": {
     "kafkamcp": {
       "url": "http://localhost:8080/sse"
+    }
+  }
+}
+```
+
+### Option 3: Connect to a running streamable-http server
+
+```json
+{
+  "mcpServers": {
+    "kafkamcp": {
+      "url": "http://localhost:8080/mcp"
     }
   }
 }
