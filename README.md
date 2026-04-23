@@ -21,6 +21,7 @@ KafkaMCP is an MCP (Model Context Protocol) server that transforms Apache Kafka 
 - **📝 Audit Logging** — Structured JSON audit trail of all agent interactions
 - **🔌 Dual Transport** — stdio (local/Claude Desktop) and SSE/HTTP (remote/multi-agent)
 - **🏢 Multi-Cluster** — Connect to multiple Kafka clusters with per-cluster configuration
+- **🩺 Self-Healing** — Consumer group health monitoring with automated remediation recommendations
 
 ## Quick Start
 
@@ -32,7 +33,7 @@ go install github.com/kafkamcp/kafkamcp/cmd/kafkamcp@latest
 kafkamcp version
 ```
 
-**From binary:**
+**From binary** ([all platforms](https://github.com/kafkamcp/kafkamcp/releases)):
 ```bash
 # Download from GitHub Releases
 curl -sSL https://github.com/kafkamcp/kafkamcp/releases/latest/download/kafkamcp_$(uname -s)_$(uname -m).tar.gz | tar xz
@@ -240,6 +241,8 @@ Once connected, your AI agent can:
 | `kafka://groups/{id}` | Individual consumer group detail |
 | `kafka://audit/log` | Agent audit trail (recent 1000 entries) |
 | `kafka://topic_graph` | Producer → topic → consumer group topology graph |
+| `kafka://flow_graph` | Real-time message flow visualization with throughput and latency data |
+| `kafka://platforms` | Configured Kafka-compatible platforms and their capabilities |
 
 ## Security & Access Control
 
@@ -527,7 +530,7 @@ kafkamcp/
 │   ├── python/            # Python SDKs (LangChain, CrewAI)
 │   ├── vscode/            # VS Code extension
 │   ├── cursor/            # Cursor editor integration
-│   └── intellij/          # IntelliJ plugin
+│   └── intellij/          # IntelliJ plugin (placeholder — VS Code and Cursor are prioritized)
 ├── deploy/
 │   └── helm/              # Helm chart for Kubernetes
 ├── examples/              # Example configurations
@@ -606,7 +609,8 @@ To report a vulnerability, please see [SECURITY.md](SECURITY.md).
 - [x] **v0.2**: Auth enforcement, rate limiting, Prometheus metrics
 - [x] **v0.3**: P1 tools (subscribe, topic CRUD, search, offset reset, DLQ analysis, schema compat)
 - [x] **v0.4**: P2 tools (aggregate, join, NL query, schema evolution, Kafka Connect, topic graph)
-- [x] **v0.4**: All MCP resources (10 static + 3 templates)
-- [ ] **v1.0**: Cloud managed service, enterprise features (SSO, data masking)
+- [x] **v0.4**: All MCP resources (15 static + 3 templates)
+- [x] **v0.5**: Data masking and PII redaction
+- [ ] **v1.0**: Cloud managed service, enterprise features (SSO)
 
 See the [PRD](docs/internal/PRD.md) for the complete roadmap.
