@@ -77,6 +77,14 @@ and compose — with zero custom integration code.`,
 	initCmd.Flags().String("schema-registry", "", "Schema Registry URL (optional)")
 	rootCmd.AddCommand(initCmd)
 
+	serveCmd := &cobra.Command{
+		Use:   "serve",
+		Short: "Start the MCP server (alias for root command)",
+		Long:  `Start the KafkaMCP server. This is equivalent to running kafkamcp without a subcommand.`,
+		RunE:  runServer,
+	}
+	rootCmd.AddCommand(serveCmd)
+
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
