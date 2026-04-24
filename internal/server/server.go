@@ -10,14 +10,19 @@ import (
 "time"
 
 "github.com/kafkamcp/kafkamcp/internal/anomaly"
+"github.com/kafkamcp/kafkamcp/internal/advisor"
 "github.com/kafkamcp/kafkamcp/internal/audit"
 "github.com/kafkamcp/kafkamcp/internal/auth"
+"github.com/kafkamcp/kafkamcp/internal/chaos"
 "github.com/kafkamcp/kafkamcp/internal/collaboration"
+"github.com/kafkamcp/kafkamcp/internal/compliance"
 "github.com/kafkamcp/kafkamcp/internal/config"
 "github.com/kafkamcp/kafkamcp/internal/contracts"
 "github.com/kafkamcp/kafkamcp/internal/cost"
 "github.com/kafkamcp/kafkamcp/internal/dlq"
 "github.com/kafkamcp/kafkamcp/internal/evolution"
+"github.com/kafkamcp/kafkamcp/internal/federation"
+"github.com/kafkamcp/kafkamcp/internal/flowdebug"
 "github.com/kafkamcp/kafkamcp/internal/forecast"
 "github.com/kafkamcp/kafkamcp/internal/gateway"
 "github.com/kafkamcp/kafkamcp/internal/gitops"
@@ -37,7 +42,9 @@ import (
 "github.com/kafkamcp/kafkamcp/internal/pipeline"
 "github.com/kafkamcp/kafkamcp/internal/platform"
 "github.com/kafkamcp/kafkamcp/internal/plugin"
+"github.com/kafkamcp/kafkamcp/internal/profiler"
 "github.com/kafkamcp/kafkamcp/internal/ratelimit"
+"github.com/kafkamcp/kafkamcp/internal/replay"
 "github.com/kafkamcp/kafkamcp/internal/replication"
 "github.com/kafkamcp/kafkamcp/internal/schema"
 "github.com/kafkamcp/kafkamcp/internal/selfheal"
@@ -62,18 +69,20 @@ type Analytics struct {
 	lagAnalyzer     *lagdiag.Analyzer    // consumer lag root cause analysis
 	schemaWorkflow      *evolution.WorkflowEngine   // schema evolution workflow engine
 	timeseriesAnalyzer  *anomaly.TimeSeriesAnalyzer // time-series analytics
+	advisorEngine   *advisor.Engine      // intelligent topic advisor
 }
 
 // Governance groups policy, audit, security, and compliance subsystems.
 type Governance struct {
-	policyEngine   *auth.PolicyEngine
-	auditLogger    *audit.Logger
-	rateLimiter    *ratelimit.Limiter
-	maskingEngine  *masking.Engine    // PII redaction engine
-	contractEngine *contracts.Engine  // schema-aware data contracts
-	personaEngine  *persona.Engine    // declarative agent personas
-	tenantManager  *tenant.Manager    // multi-tenant management
-	usageTracker   *tenant.UsageTracker // usage analytics tracking
+	policyEngine     *auth.PolicyEngine
+	auditLogger      *audit.Logger
+	rateLimiter      *ratelimit.Limiter
+	maskingEngine    *masking.Engine    // PII redaction engine
+	contractEngine   *contracts.Engine  // schema-aware data contracts
+	personaEngine    *persona.Engine    // declarative agent personas
+	tenantManager    *tenant.Manager    // multi-tenant management
+	usageTracker     *tenant.UsageTracker // usage analytics tracking
+	complianceEngine *compliance.Engine // compliance & regulatory reporting
 }
 
 // Streaming groups event-driven and stream-processing subsystems.
@@ -84,6 +93,7 @@ type Streaming struct {
 	selfHealMon    *selfheal.Monitor   // self-healing consumer groups
 	lineageTracker *lineage.Tracker        // topic data lineage
 	messageTracer  *lineage.MessageTracer  // distributed message tracing
+	flowDebugger   *flowdebug.Debugger     // live message flow debugger
 }
 
 // Platform groups infrastructure, orchestration, and extensibility subsystems.
@@ -104,6 +114,10 @@ type Platform struct {
 	pipelineEngine     *pipeline.Engine           // streaming function pipelines
 	marketplace        *plugin.Marketplace        // plugin marketplace
 	observabilityMgr   *observability.Manager     // observability dashboards & alerts
+	chaosEngine        *chaos.Engine              // chaos engineering toolkit
+	replayEngine       *replay.Engine             // interactive replay & time-travel
+	federationCoord    *federation.Coordinator    // federated multi-instance coordination
+	agentProfiler      *profiler.Profiler         // agent performance profiler
 }
 
 // Server is the KafkaMCP MCP server.
@@ -178,6 +192,7 @@ Analytics: Analytics{
 	lagAnalyzer:     lagdiag.NewAnalyzer(),
 	schemaWorkflow:     evolution.NewWorkflowEngine(),
 	timeseriesAnalyzer: anomaly.NewTimeSeriesAnalyzer(),
+	advisorEngine:      advisor.NewEngine(logger),
 },
 Governance: Governance{
 	policyEngine:   policyEngine,
@@ -187,7 +202,8 @@ Governance: Governance{
 	contractEngine: contracts.NewEngine(),
 	personaEngine:  persona.NewEngine(),
 	tenantManager:  tenant.NewManager(),
-	usageTracker:   tenant.NewUsageTracker(),
+	usageTracker:     tenant.NewUsageTracker(),
+	complianceEngine: compliance.NewEngine(logger),
 },
 Streaming: Streaming{
 	watchManager:   watch.NewManager(logger),
@@ -196,6 +212,7 @@ Streaming: Streaming{
 	selfHealMon:    selfheal.NewMonitor(),
 	lineageTracker: lineage.NewTracker(),
 	messageTracer:  lineage.NewMessageTracer(),
+	flowDebugger:   flowdebug.NewDebugger(logger),
 },
 Platform: Platform{
 	pluginRegistry:   plugin.NewRegistry(logger),
@@ -213,6 +230,10 @@ Platform: Platform{
 	operatorController: operator.NewController(logger),
 	pipelineEngine:     pipeline.NewEngine(logger),
 	observabilityMgr:   observability.NewManager(),
+	chaosEngine:        chaos.NewEngine(logger),
+	replayEngine:       replay.NewEngine(logger),
+	federationCoord:    federation.NewCoordinator("local", logger),
+	agentProfiler:      profiler.NewProfiler(),
 },
 }
 
@@ -503,6 +524,11 @@ s.auditLogger.Log(entry)
 safeAgent := metrics.SanitizeAgentLabel(agentID)
 s.metrics.ToolCallsTotal.WithLabelValues(tool, safeAgent, entry.Cluster, status).Inc()
 s.metrics.ToolLatencySeconds.WithLabelValues(tool, safeAgent, entry.Cluster).Observe(latency.Seconds())
+
+// Record for agent profiling
+if s.agentProfiler != nil {
+	s.agentProfiler.RecordCall(tool, agentID, nil, latency.Milliseconds(), status)
+}
 }
 
 // categorizeError maps raw errors to safe category strings to prevent
