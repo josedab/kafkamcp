@@ -84,24 +84,64 @@ type WebSocketMessage struct {
 	Payload any    `json:"payload"`
 }
 
+// BottleneckConfig defines configurable thresholds for bottleneck detection.
+type BottleneckConfig struct {
+	LagWarning       int64   `json:"lag_warning"`
+	LagCritical      int64   `json:"lag_critical"`
+	ErrorRateWarning  float64 `json:"error_rate_warning"`
+	ErrorRateCritical float64 `json:"error_rate_critical"`
+	LatencyWarningMs  float64 `json:"latency_warning_ms"`
+	LatencyCriticalMs float64 `json:"latency_critical_ms"`
+	ThroughputMinMsg  float64 `json:"throughput_min_msg_sec"`
+}
+
+// DefaultBottleneckConfig returns reasonable default thresholds.
+func DefaultBottleneckConfig() BottleneckConfig {
+	return BottleneckConfig{
+		LagWarning:        10000,
+		LagCritical:       100000,
+		ErrorRateWarning:  0.01,
+		ErrorRateCritical: 0.05,
+		LatencyWarningMs:  1000,
+		LatencyCriticalMs: 5000,
+		ThroughputMinMsg:  1.0,
+	}
+}
+
 // Debugger manages the visual message flow debugging.
 type Debugger struct {
-	currentGraph *FlowGraph
-	snapshots    []FlowSnapshot
-	subscribers  map[string]chan WebSocketMessage
-	mu           sync.RWMutex
-	logger       *slog.Logger
-	maxSnapshots int
+	currentGraph    *FlowGraph
+	snapshots       []FlowSnapshot
+	subscribers     map[string]chan WebSocketMessage
+	mu              sync.RWMutex
+	logger          *slog.Logger
+	maxSnapshots    int
+	bottleneckCfg   BottleneckConfig
 }
 
 // NewDebugger creates a new flow debugger.
 func NewDebugger(logger *slog.Logger) *Debugger {
 	return &Debugger{
-		currentGraph: &FlowGraph{},
-		subscribers:  make(map[string]chan WebSocketMessage),
-		logger:       logger,
-		maxSnapshots: 360, // 1 hour of 10s snapshots
+		currentGraph:  &FlowGraph{},
+		subscribers:   make(map[string]chan WebSocketMessage),
+		logger:        logger,
+		maxSnapshots:  360,
+		bottleneckCfg: DefaultBottleneckConfig(),
 	}
+}
+
+// SetBottleneckConfig updates the bottleneck detection thresholds.
+func (d *Debugger) SetBottleneckConfig(cfg BottleneckConfig) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	d.bottleneckCfg = cfg
+}
+
+// GetBottleneckConfig returns the current bottleneck thresholds.
+func (d *Debugger) GetBottleneckConfig() BottleneckConfig {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+	return d.bottleneckCfg
 }
 
 // UpdateGraph updates the current flow graph and detects bottlenecks.
@@ -193,12 +233,13 @@ func (d *Debugger) Unsubscribe(clientID string) {
 
 func (d *Debugger) detectBottlenecks(graph *FlowGraph) []Bottleneck {
 	var bottlenecks []Bottleneck
+	cfg := d.bottleneckCfg
 
 	for _, node := range graph.Nodes {
 		// High consumer lag
-		if node.ConsumerLag > 10000 {
+		if node.ConsumerLag > cfg.LagWarning {
 			severity := "warning"
-			if node.ConsumerLag > 100000 {
+			if node.ConsumerLag > cfg.LagCritical {
 				severity = "critical"
 			}
 			bottlenecks = append(bottlenecks, Bottleneck{
@@ -208,14 +249,14 @@ func (d *Debugger) detectBottlenecks(graph *FlowGraph) []Bottleneck {
 				Severity:    severity,
 				Description: fmt.Sprintf("Consumer lag of %d messages on %s", node.ConsumerLag, node.Name),
 				Value:       float64(node.ConsumerLag),
-				Threshold:   10000,
+				Threshold:   float64(cfg.LagWarning),
 			})
 		}
 
 		// High error rate
-		if node.ErrorRate > 0.01 {
+		if node.ErrorRate > cfg.ErrorRateWarning {
 			severity := "warning"
-			if node.ErrorRate > 0.05 {
+			if node.ErrorRate > cfg.ErrorRateCritical {
 				severity = "critical"
 			}
 			bottlenecks = append(bottlenecks, Bottleneck{
@@ -225,16 +266,29 @@ func (d *Debugger) detectBottlenecks(graph *FlowGraph) []Bottleneck {
 				Severity:    severity,
 				Description: fmt.Sprintf("Error rate %.1f%% on %s", node.ErrorRate*100, node.Name),
 				Value:       node.ErrorRate,
-				Threshold:   0.01,
+				Threshold:   cfg.ErrorRateWarning,
+			})
+		}
+
+		// Low throughput
+		if node.Throughput > 0 && node.Throughput < cfg.ThroughputMinMsg {
+			bottlenecks = append(bottlenecks, Bottleneck{
+				NodeID:      node.ID,
+				NodeName:    node.Name,
+				Type:        "low_throughput",
+				Severity:    "warning",
+				Description: fmt.Sprintf("Low throughput %.1f msg/s on %s", node.Throughput, node.Name),
+				Value:       node.Throughput,
+				Threshold:   cfg.ThroughputMinMsg,
 			})
 		}
 	}
 
 	for _, edge := range graph.Edges {
 		// High latency
-		if edge.AvgLatencyMs > 1000 {
+		if edge.AvgLatencyMs > cfg.LatencyWarningMs {
 			severity := "warning"
-			if edge.AvgLatencyMs > 5000 {
+			if edge.AvgLatencyMs > cfg.LatencyCriticalMs {
 				severity = "critical"
 			}
 			bottlenecks = append(bottlenecks, Bottleneck{
@@ -244,7 +298,7 @@ func (d *Debugger) detectBottlenecks(graph *FlowGraph) []Bottleneck {
 				Severity:    severity,
 				Description: fmt.Sprintf("Avg latency %.0fms between %s and %s", edge.AvgLatencyMs, edge.Source, edge.Target),
 				Value:       edge.AvgLatencyMs,
-				Threshold:   1000,
+				Threshold:   cfg.LatencyWarningMs,
 			})
 		}
 	}
