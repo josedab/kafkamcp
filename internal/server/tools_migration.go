@@ -79,3 +79,97 @@ func (s *Server) handleMigrationPlan(ctx context.Context, request mcp.CallToolRe
 		}
 	})(ctx, request)
 }
+
+func (s *Server) handleMigrationExecute(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return s.withToolAuth(toolAuthConfig{
+		tool: "kafka_migrate_execute", resourceType: auth.ResourceCluster, action: auth.ActionAdmin,
+	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+		planID := request.GetString("plan_id", "")
+		if planID == "" {
+			return mcp.NewToolResultError("plan_id is required"), nil
+		}
+		if deny := validateStringLength("plan_id", planID); deny != nil {
+			return deny, nil
+		}
+
+		dryRun := false
+		if d, ok := args["dry_run"].(bool); ok {
+			dryRun = d
+		}
+
+		result, err := s.migrationPlanner.ExecutePlan(planID, dryRun)
+		if err != nil {
+			s.logAudit(agentID, "kafka_migrate_execute", args, "", "error", 0, err, start)
+			return mcp.NewToolResultError(fmt.Sprintf("migration execution failed: %s", err)), nil
+		}
+
+		s.logAudit(agentID, "kafka_migrate_execute", args, "", "success", result.Executed, nil, start)
+		return marshalResult(result)
+	})(ctx, request)
+}
+
+func (s *Server) handleMigrationStatus(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return s.withToolAuth(toolAuthConfig{
+		tool: "kafka_migrate_status", resourceType: auth.ResourceCluster, action: auth.ActionRead,
+	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+		planID := request.GetString("plan_id", "")
+		if planID == "" {
+			return mcp.NewToolResultError("plan_id is required"), nil
+		}
+		if deny := validateStringLength("plan_id", planID); deny != nil {
+			return deny, nil
+		}
+
+		view := request.GetString("view", "progress")
+
+		switch view {
+		case "progress":
+			progress, err := s.migrationPlanner.GetProgress(planID)
+			if err != nil {
+				return mcp.NewToolResultError(fmt.Sprintf("progress not found: %s", err)), nil
+			}
+			s.logAudit(agentID, "kafka_migrate_status", args, "", "success", 1, nil, start)
+			return marshalResult(progress)
+
+		case "report":
+			report, err := s.migrationPlanner.GetReport(planID)
+			if err != nil {
+				return mcp.NewToolResultError(fmt.Sprintf("report not found: %s", err)), nil
+			}
+			s.logAudit(agentID, "kafka_migrate_status", args, "", "success", 1, nil, start)
+			return marshalResult(report)
+
+		default:
+			return mcp.NewToolResultError("view must be: progress, report"), nil
+		}
+	})(ctx, request)
+}
+
+func (s *Server) handleMigrationRollback(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return s.withToolAuth(toolAuthConfig{
+		tool: "kafka_migrate_rollback", resourceType: auth.ResourceCluster, action: auth.ActionAdmin,
+	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+		planID := request.GetString("plan_id", "")
+		if planID == "" {
+			return mcp.NewToolResultError("plan_id is required"), nil
+		}
+		if deny := validateStringLength("plan_id", planID); deny != nil {
+			return deny, nil
+		}
+
+		record, err := s.migrationPlanner.Rollback(planID)
+		if err != nil {
+			s.logAudit(agentID, "kafka_migrate_rollback", args, "", "error", 0, err, start)
+			return mcp.NewToolResultError(fmt.Sprintf("rollback failed: %s", err)), nil
+		}
+
+		s.logAudit(agentID, "kafka_migrate_rollback", args, "", "success", 1, nil, start)
+		return marshalResult(map[string]any{
+			"status":           "rolled_back",
+			"topics_created":   record.TopicsCreated,
+			"topics_modified":  len(record.TopicsModified),
+			"groups_recreated": record.GroupsRecreated,
+			"schemas_migrated": record.SchemasMigrated,
+		})
+	})(ctx, request)
+}

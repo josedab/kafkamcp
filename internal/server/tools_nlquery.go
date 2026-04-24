@@ -21,12 +21,39 @@ func (s *Server) handleNLQuery(ctx context.Context, request mcp.CallToolRequest)
 	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 		query := request.GetString("query", "")
 		cluster := request.GetString("cluster", "")
+		action := request.GetString("action", "execute")
+
+		if action == "history" {
+			limit := 20
+			if l, ok := args["limit"].(float64); ok && l > 0 {
+				limit = int(l)
+			}
+			history := s.nlQueryEngine.GetHistory(limit)
+			s.logAudit(agentID, "kafka_nl_query", args, cluster, "success", len(history), nil, start)
+			return marshalResult(map[string]any{"history": history, "total": len(history)})
+		}
+
+		if action == "suggest" {
+			topics, _ := s.kafkaManager.ListTopics(ctx, cluster, false)
+			topicNames := make([]string, len(topics))
+			for i, t := range topics {
+				topicNames[i] = t.Name
+			}
+			suggestions := s.nlQueryEngine.Suggest(query, topicNames)
+			return marshalResult(map[string]any{"suggestions": suggestions})
+		}
 
 		if query == "" {
 			return mcp.NewToolResultError("query is required"), nil
 		}
 		if deny := validateStringLength("query", query); deny != nil {
 			return deny, nil
+		}
+
+		// Check cache first
+		if cached, ok := s.nlQueryEngine.GetCached(query); ok {
+			s.logAudit(agentID, "kafka_nl_query", args, cluster, "success", cached.TotalCount, nil, start)
+			return marshalResult(cached)
 		}
 
 		// Get available topics for context
@@ -41,7 +68,8 @@ func (s *Server) handleNLQuery(ctx context.Context, request mcp.CallToolRequest)
 			topicNames[i] = t.Name
 		}
 
-		plan, err := s.nlQueryEngine.Parse(query, topicNames)
+		// Use semantic parser for richer intent extraction
+		plan, err := s.nlQueryEngine.SemanticParse(query, topicNames)
 		if err != nil {
 			s.logAudit(agentID, "kafka_nl_query", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to parse query", err), nil
@@ -73,11 +101,16 @@ func (s *Server) handleNLQuery(ctx context.Context, request mcp.CallToolRequest)
 			}
 		}
 
+		// Apply aggregation if specified
+		if plan.Aggregation != nil {
+			results = applyAggregation(results, plan.Aggregation)
+		}
+
 		if plan.Limit > 0 && len(results) > plan.Limit {
 			results = results[:plan.Limit]
 		}
 
-		queryResult := nlquery.QueryResult{
+		queryResult := nlquery.ExecutionResult{
 			Plan:       *plan,
 			Data:       results,
 			TotalCount: len(results),
@@ -90,9 +123,129 @@ func (s *Server) handleNLQuery(ctx context.Context, request mcp.CallToolRequest)
 			Duration: time.Since(start).String(),
 		}
 
+		// Cache and record history
+		durationMs := time.Since(start).Milliseconds()
+		s.nlQueryEngine.CacheResult(query, queryResult)
+		s.nlQueryEngine.RecordHistory(query, *plan, len(results), durationMs)
+
 		s.logAudit(agentID, "kafka_nl_query", args, cluster, "success", len(results), nil, start)
 		return marshalResult(queryResult)
 	})(ctx, request)
+}
+
+// applyAggregation performs in-memory aggregation on results.
+func applyAggregation(data []map[string]any, agg *nlquery.AggregationStep) []map[string]any {
+	if agg == nil || len(data) == 0 {
+		return data
+	}
+
+	switch agg.Function {
+	case "count":
+		if agg.GroupBy != "" {
+			groups := make(map[string]int)
+			for _, row := range data {
+				key := fmt.Sprintf("%v", extractNestedField(row, agg.GroupBy))
+				groups[key]++
+			}
+			var result []map[string]any
+			for k, v := range groups {
+				result = append(result, map[string]any{agg.GroupBy: k, "count": v})
+			}
+			return result
+		}
+		return []map[string]any{{"count": len(data)}}
+
+	case "avg", "sum", "min", "max":
+		if agg.Field == "" {
+			return data
+		}
+		var values []float64
+		for _, row := range data {
+			if v := extractNestedField(row, agg.Field); v != nil {
+				if f, ok := toFloat64(v); ok {
+					values = append(values, f)
+				}
+			}
+		}
+		if len(values) == 0 {
+			return []map[string]any{{agg.Function: nil, "field": agg.Field}}
+		}
+		var aggVal float64
+		switch agg.Function {
+		case "avg":
+			sum := 0.0
+			for _, v := range values {
+				sum += v
+			}
+			aggVal = sum / float64(len(values))
+		case "sum":
+			for _, v := range values {
+				aggVal += v
+			}
+		case "min":
+			aggVal = values[0]
+			for _, v := range values[1:] {
+				if v < aggVal {
+					aggVal = v
+				}
+			}
+		case "max":
+			aggVal = values[0]
+			for _, v := range values[1:] {
+				if v > aggVal {
+					aggVal = v
+				}
+			}
+		}
+		return []map[string]any{{agg.Function: aggVal, "field": agg.Field, "sample_count": len(values)}}
+
+	case "group_by":
+		if agg.GroupBy == "" {
+			return data
+		}
+		groups := make(map[string]int)
+		for _, row := range data {
+			key := fmt.Sprintf("%v", extractNestedField(row, agg.GroupBy))
+			groups[key]++
+		}
+		var result []map[string]any
+		for k, v := range groups {
+			result = append(result, map[string]any{agg.GroupBy: k, "count": v})
+		}
+		return result
+	}
+	return data
+}
+
+func extractNestedField(row map[string]any, field string) any {
+	// Check top-level first
+	if v, ok := row[field]; ok {
+		return v
+	}
+	// Check inside "value" (common for Kafka messages)
+	if val, ok := row["value"].(map[string]any); ok {
+		if v, ok := val[field]; ok {
+			return v
+		}
+	}
+	return nil
+}
+
+func toFloat64(v any) (float64, bool) {
+	switch n := v.(type) {
+	case float64:
+		return n, true
+	case float32:
+		return float64(n), true
+	case int:
+		return float64(n), true
+	case int64:
+		return float64(n), true
+	case int32:
+		return float64(n), true
+	default:
+		return 0, false
+	}
 }
 
 // matchesFilters checks if a message matches all filters.
