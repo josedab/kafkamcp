@@ -241,3 +241,160 @@ func (m *Monitor) SetThresholds(warning, critical int64) {
 	m.config.WarningLagThreshold = warning
 	m.config.CriticalLagThreshold = critical
 }
+
+// FailoverReadiness evaluates how ready a target cluster is to take over from a source.
+type FailoverReadiness struct {
+	Source          string   `json:"source_cluster"`
+	Target          string   `json:"target_cluster"`
+	ReadinessScore  int      `json:"readiness_score"`
+	Status          string   `json:"status"`
+	MaxLag          int64    `json:"max_lag"`
+	AvgLag          float64  `json:"avg_lag"`
+	TopicsInSync    int      `json:"topics_in_sync"`
+	TopicsOutOfSync int      `json:"topics_out_of_sync"`
+	EstimatedRPO    string   `json:"estimated_rpo"`
+	EstimatedRTO    string   `json:"estimated_rto"`
+	Recommendations []string `json:"recommendations"`
+}
+
+// GetLagDetails returns per-topic lag details for a replication link.
+func (m *Monitor) GetLagDetails(source, target string) ([]TopicReplication, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	key := fmt.Sprintf("%s->%s", source, target)
+	link, ok := m.links[key]
+	if !ok {
+		return nil, fmt.Errorf("replication link %s not found", key)
+	}
+
+	result := make([]TopicReplication, len(link.Topics))
+	copy(result, link.Topics)
+	return result, nil
+}
+
+// EvaluateFailoverReadiness computes a failover readiness score for a replication link.
+func (m *Monitor) EvaluateFailoverReadiness(source, target string) (*FailoverReadiness, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	key := fmt.Sprintf("%s->%s", source, target)
+	link, ok := m.links[key]
+	if !ok {
+		return nil, fmt.Errorf("replication link %s not found", key)
+	}
+
+	fr := &FailoverReadiness{
+		Source: source,
+		Target: target,
+	}
+
+	if len(link.Topics) == 0 {
+		fr.ReadinessScore = 0
+		fr.Status = "not_ready"
+		fr.Recommendations = []string{"No topics are being replicated"}
+		fr.EstimatedRPO = "unknown"
+		fr.EstimatedRTO = "unknown"
+		return fr, nil
+	}
+
+	var totalLag int64
+	var maxLag int64
+	var partitionCount int64
+	for _, t := range link.Topics {
+		if t.TotalLag == 0 {
+			fr.TopicsInSync++
+		} else {
+			fr.TopicsOutOfSync++
+		}
+		totalLag += t.TotalLag
+		for _, p := range t.Partitions {
+			partitionCount++
+			if p.Lag > maxLag {
+				maxLag = p.Lag
+			}
+		}
+	}
+
+	fr.MaxLag = maxLag
+	if partitionCount > 0 {
+		fr.AvgLag = float64(totalLag) / float64(partitionCount)
+	}
+
+	// Score calculation
+	score := 100
+	if maxLag > m.config.CriticalLagThreshold {
+		score -= 50
+	} else if maxLag > m.config.WarningLagThreshold {
+		score -= 25
+	}
+	if fr.TopicsOutOfSync > 0 {
+		outOfSyncPct := float64(fr.TopicsOutOfSync) / float64(len(link.Topics)) * 100
+		if outOfSyncPct > 50 {
+			score -= 30
+		} else if outOfSyncPct > 20 {
+			score -= 15
+		} else {
+			score -= 5
+		}
+	}
+	if score < 0 {
+		score = 0
+	}
+	fr.ReadinessScore = score
+
+	switch {
+	case score >= 80:
+		fr.Status = "ready"
+	case score >= 50:
+		fr.Status = "at_risk"
+	default:
+		fr.Status = "not_ready"
+	}
+
+	// Estimate RPO based on lag
+	if maxLag == 0 {
+		fr.EstimatedRPO = "0s (fully synced)"
+	} else if maxLag < 100 {
+		fr.EstimatedRPO = "<1s"
+	} else if maxLag < 10000 {
+		fr.EstimatedRPO = "<10s"
+	} else {
+		fr.EstimatedRPO = fmt.Sprintf("~%ds (estimated)", maxLag/1000)
+	}
+	fr.EstimatedRTO = "30-60s (manual failover)"
+
+	// Recommendations
+	if fr.TopicsOutOfSync > 0 {
+		fr.Recommendations = append(fr.Recommendations,
+			fmt.Sprintf("%d topics are out of sync — investigate replication lag", fr.TopicsOutOfSync))
+	}
+	if maxLag > m.config.CriticalLagThreshold {
+		fr.Recommendations = append(fr.Recommendations,
+			"Critical lag detected — check network bandwidth and replicator health")
+	}
+	if score >= 80 && fr.TopicsOutOfSync == 0 {
+		fr.Recommendations = append(fr.Recommendations, "Cluster is ready for failover")
+	}
+
+	return fr, nil
+}
+
+// GetRecentAlerts returns alerts for a specific replication link.
+func (m *Monitor) GetRecentAlerts(source, target string, limit int) []Alert {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	if limit <= 0 {
+		limit = 50
+	}
+
+	var filtered []Alert
+	for i := len(m.alerts) - 1; i >= 0 && len(filtered) < limit; i-- {
+		a := m.alerts[i]
+		if (source == "" || a.Source == source) && (target == "" || a.Target == target) {
+			filtered = append(filtered, a)
+		}
+	}
+	return filtered
+}
