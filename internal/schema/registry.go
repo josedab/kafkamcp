@@ -451,6 +451,54 @@ func (c *Client) CheckCompatibility(ctx context.Context, subject, version, schem
 	}, nil
 }
 
+// RegisterSchema registers a new schema version under the given subject.
+// It returns the newly assigned schema ID.
+func (c *Client) RegisterSchema(ctx context.Context, subject, schemaStr, schemaType string) (int, error) {
+	if schemaType == "" {
+		schemaType = "AVRO"
+	}
+
+	reqBody := fmt.Sprintf(`{"schema": %s, "schemaType": %q}`,
+		jsonEscapeString(schemaStr), schemaType)
+
+	path := fmt.Sprintf("/subjects/%s/versions", url.PathEscape(subject))
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+path,
+		strings.NewReader(reqBody))
+	if err != nil {
+		return 0, fmt.Errorf("creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/vnd.schemaregistry.v1+json")
+	req.Header.Set("Accept", "application/vnd.schemaregistry.v1+json")
+	if c.username != "" {
+		req.SetBasicAuth(c.username, c.password)
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return 0, fmt.Errorf("registering schema: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(io.LimitReader(resp.Body, 10<<20))
+	if err != nil {
+		return 0, fmt.Errorf("reading response: %w", err)
+	}
+
+	if resp.StatusCode >= 400 {
+		return 0, fmt.Errorf("schema registration failed (HTTP %d)", resp.StatusCode)
+	}
+
+	var result struct {
+		ID int `json:"id"`
+	}
+	if err := json.Unmarshal(body, &result); err != nil {
+		return 0, fmt.Errorf("parsing registration result: %w", err)
+	}
+
+	return result.ID, nil
+}
+
 func jsonEscapeString(s string) string {
 	b, err := json.Marshal(s)
 	if err != nil {
