@@ -21,9 +21,11 @@ func (s *Server) registerFeatureTools() {
 
 	// Natural Language Query
 	s.mcpServer.AddTool(mcp.NewTool("kafka_nl_query",
-		mcp.WithDescription("Query Kafka with plain English. Parses natural language into consume + filter + aggregate pipelines. Examples: 'show me all failed orders in the last hour', 'count errors in logs', 'average latency for payments'."),
-		mcp.WithString("query", mcp.Required(), mcp.Description("Natural language query")),
+		mcp.WithDescription("Query Kafka with plain English. Semantic parser handles complex boolean filters, aggregations, time ranges, multi-topic joins. Actions: execute (default), history, suggest. Examples: 'show me all failed orders in the last hour', 'count errors in logs group by service', 'average latency for payments'."),
+		mcp.WithString("query", mcp.Description("Natural language query (required for execute/suggest)")),
+		mcp.WithString("action", mcp.Description("Action: execute, history, suggest. Default: execute")),
 		mcp.WithString("cluster", mcp.Description("Cluster name.")),
+		mcp.WithNumber("limit", mcp.Description("Max results. Default: 100")),
 	), s.handleNLQuery)
 
 	// Cost Analysis
@@ -106,6 +108,23 @@ func (s *Server) registerFeatureTools() {
 		mcp.WithString("source_cluster", mcp.Description("Source cluster name")),
 		mcp.WithString("target_cluster", mcp.Description("Target cluster name")),
 	), s.handleMigrationPlan)
+
+	s.mcpServer.AddTool(mcp.NewTool("kafka_migrate_execute",
+		mcp.WithDescription("Execute a migration plan. Supports dry-run mode, parallel execution, and progress tracking."),
+		mcp.WithString("plan_id", mcp.Required(), mcp.Description("Migration plan ID to execute")),
+		mcp.WithBoolean("dry_run", mcp.Description("If true, validate without making changes. Default: false")),
+	), s.handleMigrationExecute)
+
+	s.mcpServer.AddTool(mcp.NewTool("kafka_migrate_status",
+		mcp.WithDescription("Get the status and progress of a migration execution."),
+		mcp.WithString("plan_id", mcp.Required(), mcp.Description("Migration plan ID")),
+		mcp.WithString("view", mcp.Description("View type: progress, report. Default: progress")),
+	), s.handleMigrationStatus)
+
+	s.mcpServer.AddTool(mcp.NewTool("kafka_migrate_rollback",
+		mcp.WithDescription("Rollback a completed or failed migration."),
+		mcp.WithString("plan_id", mcp.Required(), mcp.Description("Migration plan ID to rollback")),
+	), s.handleMigrationRollback)
 
 	// Data Lineage
 	s.mcpServer.AddTool(mcp.NewTool("kafka_trace_lineage",

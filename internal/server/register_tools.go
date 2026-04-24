@@ -25,4 +25,12 @@ func (s *Server) registerTools() {
 	s.registerUsageTools()
 	s.registerContractTools()
 	s.registerTracingFlowTools()
+	s.registerChaosTools()
+	s.registerFlowDebugTools()
+	s.registerAdvisorTools()
+	s.registerOpenAPITools()
+	s.registerReplayTools()
+	s.registerFederationTools()
+	s.registerComplianceTools()
+	s.registerProfilerTools()
 }
