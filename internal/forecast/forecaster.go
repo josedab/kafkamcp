@@ -305,3 +305,213 @@ func (f *Forecaster) GetMetricHistory(topic, metricName string) []Metric {
 	copy(out, src)
 	return out
 }
+
+// CapacityPlan represents a comprehensive capacity plan with actionable recommendations.
+type CapacityPlan struct {
+	Cluster         string          `json:"cluster"`
+	Topics          []TopicCapacity `json:"topics"`
+	ClusterCapacity ClusterCapacity `json:"cluster_capacity"`
+	Recommendations []Recommendation `json:"recommendations"`
+	CostEstimate    *CostEstimate   `json:"cost_estimate,omitempty"`
+	Timestamp       string          `json:"timestamp"`
+}
+
+// ClusterCapacity describes aggregate cluster-level capacity metrics.
+type ClusterCapacity struct {
+	TotalPartitions     int     `json:"total_partitions"`
+	TotalThroughputMBps float64 `json:"total_throughput_mbps"`
+	TotalStorageGB      float64 `json:"total_storage_gb"`
+	PredictedStorageGB  float64 `json:"predicted_storage_gb"`
+	UtilizationPct      float64 `json:"utilization_pct"`
+	DaysUntilCapacity   int     `json:"days_until_capacity"`
+}
+
+// Recommendation is an actionable capacity recommendation.
+type Recommendation struct {
+	Priority    string `json:"priority"`
+	Category    string `json:"category"`
+	Topic       string `json:"topic,omitempty"`
+	Description string `json:"description"`
+	Impact      string `json:"impact"`
+}
+
+// ExponentialSmoothing applies simple exponential smoothing and returns the forecast.
+func ExponentialSmoothing(values []float64, alpha float64, horizonDays int) []float64 {
+	if len(values) == 0 {
+		return nil
+	}
+	if alpha <= 0 || alpha > 1 {
+		alpha = 0.3
+	}
+
+	smoothed := values[0]
+	for i := 1; i < len(values); i++ {
+		smoothed = alpha*values[i] + (1-alpha)*smoothed
+	}
+
+	trend := 0.0
+	if len(values) >= 3 {
+		recent := values[len(values)-3:]
+		trend = (recent[2] - recent[0]) / 2.0
+	}
+
+	predictions := make([]float64, horizonDays)
+	for i := range predictions {
+		predictions[i] = smoothed + trend*float64(i+1)
+	}
+	return predictions
+}
+
+// GenerateCapacityPlan creates a capacity plan for all tracked topics.
+func (f *Forecaster) GenerateCapacityPlan(cluster string, horizonDays int, maxStorageGB float64) *CapacityPlan {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
+
+	if horizonDays <= 0 {
+		horizonDays = 30
+	}
+	if maxStorageGB <= 0 {
+		maxStorageGB = 1000
+	}
+
+	plan := &CapacityPlan{
+		Cluster:   cluster,
+		Timestamp: time.Now().UTC().Format(time.RFC3339),
+	}
+
+	topicSet := make(map[string]bool)
+	for key := range f.metrics {
+		parts := splitMetricKey(key)
+		if parts[0] != "" {
+			topicSet[parts[0]] = true
+		}
+	}
+
+	var totalCurrentThroughput, totalPredictedThroughput float64
+	var totalCurrentStorage, totalPredictedStorage float64
+	var totalPartitions int
+
+	for topic := range topicSet {
+		tc := TopicCapacity{Topic: topic}
+
+		throughputKey := metricKey(topic, "throughput")
+		if points, ok := f.metrics[throughputKey]; ok && len(points) > 0 {
+			tc.CurrentThroughput = points[len(points)-1].Value
+			values := extractValues(points)
+			predicted := ExponentialSmoothing(values, 0.3, horizonDays)
+			if len(predicted) > 0 {
+				tc.PredictedThroughput = predicted[len(predicted)-1]
+			}
+		}
+
+		storageKey := metricKey(topic, "storage")
+		if points, ok := f.metrics[storageKey]; ok && len(points) > 0 {
+			tc.CurrentStorage = points[len(points)-1].Value
+			values := extractValues(points)
+			predicted := ExponentialSmoothing(values, 0.3, horizonDays)
+			if len(predicted) > 0 {
+				tc.PredictedStorage = predicted[len(predicted)-1]
+			}
+			if tc.PredictedStorage > tc.CurrentStorage && tc.CurrentStorage > 0 {
+				dailyGrowth := (tc.PredictedStorage - tc.CurrentStorage) / float64(horizonDays)
+				if dailyGrowth > 0 {
+					remaining := maxStorageGB - tc.CurrentStorage
+					tc.DaysUntilLimit = int(remaining / dailyGrowth)
+				}
+			}
+		}
+
+		tc.NeedsScaling = tc.DaysUntilLimit > 0 && tc.DaysUntilLimit < 30
+
+		plan.Topics = append(plan.Topics, tc)
+		totalCurrentThroughput += tc.CurrentThroughput
+		totalPredictedThroughput += tc.PredictedThroughput
+		totalCurrentStorage += tc.CurrentStorage
+		totalPredictedStorage += tc.PredictedStorage
+		totalPartitions++
+	}
+
+	plan.ClusterCapacity = ClusterCapacity{
+		TotalPartitions:     totalPartitions,
+		TotalThroughputMBps: totalCurrentThroughput / 1024 / 1024,
+		TotalStorageGB:      totalCurrentStorage / 1024 / 1024 / 1024,
+		PredictedStorageGB:  totalPredictedStorage / 1024 / 1024 / 1024,
+	}
+
+	if maxStorageGB > 0 {
+		plan.ClusterCapacity.UtilizationPct = (plan.ClusterCapacity.TotalStorageGB / maxStorageGB) * 100
+	}
+
+	plan.Recommendations = f.generateCapacityRecommendations(plan)
+
+	return plan
+}
+
+func (f *Forecaster) generateCapacityRecommendations(plan *CapacityPlan) []Recommendation {
+	var recs []Recommendation
+
+	for _, tc := range plan.Topics {
+		if tc.NeedsScaling {
+			recs = append(recs, Recommendation{
+				Priority:    "high",
+				Category:    "scaling",
+				Topic:       tc.Topic,
+				Description: fmt.Sprintf("Topic %q will exceed capacity in %d days", tc.Topic, tc.DaysUntilLimit),
+				Impact:      "Add partitions or increase broker count to accommodate growth",
+			})
+		}
+		if tc.PredictedThroughput > tc.CurrentThroughput*2 {
+			recs = append(recs, Recommendation{
+				Priority:    "medium",
+				Category:    "partitions",
+				Topic:       tc.Topic,
+				Description: fmt.Sprintf("Topic %q throughput predicted to double", tc.Topic),
+				Impact:      "Consider adding partitions for better parallelism",
+			})
+		}
+	}
+
+	if plan.ClusterCapacity.UtilizationPct > 80 {
+		recs = append(recs, Recommendation{
+			Priority:    "critical",
+			Category:    "scaling",
+			Description: "Cluster storage utilization above 80%",
+			Impact:      "Add brokers or increase disk capacity immediately",
+		})
+	} else if plan.ClusterCapacity.UtilizationPct > 60 {
+		recs = append(recs, Recommendation{
+			Priority:    "medium",
+			Category:    "retention",
+			Description: "Cluster storage utilization above 60%",
+			Impact:      "Review topic retention policies and enable compression",
+		})
+	}
+
+	if len(recs) == 0 {
+		recs = append(recs, Recommendation{
+			Priority:    "low",
+			Category:    "scaling",
+			Description: "Cluster capacity is healthy",
+			Impact:      "No immediate action required",
+		})
+	}
+
+	return recs
+}
+
+func splitMetricKey(key string) [2]string {
+	for i := len(key) - 1; i >= 0; i-- {
+		if key[i] == ':' {
+			return [2]string{key[:i], key[i+1:]}
+		}
+	}
+	return [2]string{key, ""}
+}
+
+func extractValues(points []Metric) []float64 {
+	vals := make([]float64, len(points))
+	for i, p := range points {
+		vals[i] = p.Value
+	}
+	return vals
+}
