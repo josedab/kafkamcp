@@ -74,16 +74,80 @@ type MigrationResult struct {
 	Details   []MigrationStepResult
 }
 
+// MigrationProgress tracks ongoing migration execution.
+type MigrationProgress struct {
+	PlanID         string                `json:"plan_id"`
+	Status         string                `json:"status"`
+	TotalSteps     int                   `json:"total_steps"`
+	CompletedSteps int                   `json:"completed_steps"`
+	FailedSteps    int                   `json:"failed_steps"`
+	CurrentStep    string                `json:"current_step"`
+	StartedAt      string                `json:"started_at"`
+	UpdatedAt      string                `json:"updated_at"`
+	DryRun         bool                  `json:"dry_run"`
+	Resumable      bool                  `json:"resumable"`
+	Details        []MigrationStepResult `json:"details"`
+	Errors         []string              `json:"errors,omitempty"`
+}
+
+// OffsetMapping maps source offsets to target offsets for consumer group migration.
+type OffsetMapping struct {
+	Topic          string            `json:"topic"`
+	PartitionMap   map[int32]int64   `json:"partition_map"`
+	Strategy       string            `json:"strategy"`
+	MappedAt       string            `json:"mapped_at"`
+}
+
+// RollbackRecord stores information needed to rollback a migration.
+type RollbackRecord struct {
+	PlanID          string              `json:"plan_id"`
+	TopicsCreated   []string            `json:"topics_created"`
+	TopicsModified  []TopicMigration    `json:"topics_modified"`
+	GroupsRecreated []string            `json:"groups_recreated"`
+	SchemasMigrated []string            `json:"schemas_migrated"`
+	CreatedAt       string              `json:"created_at"`
+}
+
+// MigrationReport summarizes a completed migration.
+type MigrationReport struct {
+	PlanID          string                `json:"plan_id"`
+	SourceCluster   string                `json:"source_cluster"`
+	TargetCluster   string                `json:"target_cluster"`
+	Status          string                `json:"status"`
+	TopicsMigrated  int                   `json:"topics_migrated"`
+	GroupsMigrated  int                   `json:"groups_migrated"`
+	SchemasMigrated int                   `json:"schemas_migrated"`
+	DurationMs      int64                 `json:"duration_ms"`
+	Warnings        []string              `json:"warnings"`
+	ValidationResult *ValidationResult    `json:"validation_result,omitempty"`
+	GeneratedAt     string                `json:"generated_at"`
+}
+
+// ValidationResult captures pre/post migration validation.
+type ValidationResult struct {
+	TopicsValid     bool     `json:"topics_valid"`
+	SchemasValid    bool     `json:"schemas_valid"`
+	GroupsValid     bool     `json:"groups_valid"`
+	Errors          []string `json:"errors,omitempty"`
+	Warnings        []string `json:"warnings,omitempty"`
+}
+
 // Planner creates and manages migration plans.
 type Planner struct {
-	mu    sync.RWMutex
-	plans map[string]*MigrationPlan
+	mu        sync.RWMutex
+	plans     map[string]*MigrationPlan
+	progress  map[string]*MigrationProgress
+	rollbacks map[string]*RollbackRecord
+	reports   map[string]*MigrationReport
 }
 
 // NewPlanner returns a new Planner.
 func NewPlanner() *Planner {
 	return &Planner{
-		plans: make(map[string]*MigrationPlan),
+		plans:     make(map[string]*MigrationPlan),
+		progress:  make(map[string]*MigrationProgress),
+		rollbacks: make(map[string]*RollbackRecord),
+		reports:   make(map[string]*MigrationReport),
 	}
 }
 
@@ -209,4 +273,295 @@ func mapsEqual(a, b map[string]string) bool {
 		}
 	}
 	return true
+}
+
+// ExecutePlan simulates executing a migration plan.
+// In dry-run mode, it validates what would happen without making changes.
+func (p *Planner) ExecutePlan(planID string, dryRun bool) (*MigrationResult, error) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	plan, ok := p.plans[planID]
+	if !ok {
+		return nil, fmt.Errorf("plan %q not found", planID)
+	}
+	if plan.Status != "pending" && plan.Status != "failed" {
+		return nil, fmt.Errorf("plan %q is in status %q (must be pending or failed)", planID, plan.Status)
+	}
+
+	progress := &MigrationProgress{
+		PlanID:     planID,
+		Status:     "running",
+		TotalSteps: len(plan.Topics) + len(plan.ConsumerGroups) + len(plan.SchemaSubjects),
+		StartedAt:  time.Now().UTC().Format(time.RFC3339),
+		DryRun:     dryRun,
+		Resumable:  true,
+	}
+	p.progress[planID] = progress
+
+	rollback := &RollbackRecord{
+		PlanID:    planID,
+		CreatedAt: time.Now().UTC().Format(time.RFC3339),
+	}
+
+	result := &MigrationResult{
+		PlanID: planID,
+		DryRun: dryRun,
+	}
+
+	// Execute topic migrations
+	for _, t := range plan.Topics {
+		progress.CurrentStep = fmt.Sprintf("topic:%s:%s", t.Action, t.Name)
+		progress.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
+
+		step := MigrationStepResult{
+			Step:     "topic_" + t.Action,
+			Resource: t.Name,
+		}
+
+		if t.Action == "skip" {
+			step.Status = "skipped"
+			result.Details = append(result.Details, step)
+			progress.CompletedSteps++
+			continue
+		}
+
+		if dryRun {
+			step.Status = "dry_run"
+			result.Details = append(result.Details, step)
+			result.Executed++
+			result.Succeeded++
+			progress.CompletedSteps++
+			continue
+		}
+
+		// Simulate execution success
+		step.Status = "success"
+		result.Details = append(result.Details, step)
+		result.Executed++
+		result.Succeeded++
+		progress.CompletedSteps++
+
+		if t.Action == "create" {
+			rollback.TopicsCreated = append(rollback.TopicsCreated, t.Name)
+		} else if t.Action == "update" {
+			rollback.TopicsModified = append(rollback.TopicsModified, t)
+		}
+	}
+
+	// Execute consumer group migrations
+	for _, g := range plan.ConsumerGroups {
+		progress.CurrentStep = fmt.Sprintf("group:%s:%s", g.Action, g.GroupID)
+		progress.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
+
+		step := MigrationStepResult{
+			Step:     "group_" + g.Action,
+			Resource: g.GroupID,
+		}
+
+		if g.Action == "skip" {
+			step.Status = "skipped"
+			result.Details = append(result.Details, step)
+			progress.CompletedSteps++
+			continue
+		}
+
+		if dryRun {
+			step.Status = "dry_run"
+		} else {
+			step.Status = "success"
+			rollback.GroupsRecreated = append(rollback.GroupsRecreated, g.GroupID)
+		}
+
+		result.Details = append(result.Details, step)
+		result.Executed++
+		result.Succeeded++
+		progress.CompletedSteps++
+	}
+
+	// Execute schema migrations
+	for _, sc := range plan.SchemaSubjects {
+		progress.CurrentStep = fmt.Sprintf("schema:%s:%s", sc.Action, sc.Subject)
+		progress.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
+
+		step := MigrationStepResult{
+			Step:     "schema_" + sc.Action,
+			Resource: sc.Subject,
+		}
+
+		if sc.Action == "skip" {
+			step.Status = "skipped"
+			result.Details = append(result.Details, step)
+			progress.CompletedSteps++
+			continue
+		}
+
+		if dryRun {
+			step.Status = "dry_run"
+		} else {
+			step.Status = "success"
+			rollback.SchemasMigrated = append(rollback.SchemasMigrated, sc.Subject)
+		}
+
+		result.Details = append(result.Details, step)
+		result.Executed++
+		result.Succeeded++
+		progress.CompletedSteps++
+	}
+
+	// Update plan status
+	if dryRun {
+		plan.Status = "pending"
+		progress.Status = "dry_run_complete"
+	} else if result.Failed > 0 {
+		plan.Status = "failed"
+		progress.Status = "failed"
+	} else {
+		plan.Status = "completed"
+		progress.Status = "completed"
+	}
+
+	progress.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
+	p.rollbacks[planID] = rollback
+
+	// Generate report
+	report := &MigrationReport{
+		PlanID:          planID,
+		SourceCluster:   plan.SourceCluster,
+		TargetCluster:   plan.TargetCluster,
+		Status:          string(plan.Status),
+		TopicsMigrated:  countNonSkipped(plan.Topics),
+		GroupsMigrated:  countNonSkippedGroups(plan.ConsumerGroups),
+		SchemasMigrated: countNonSkippedSchemas(plan.SchemaSubjects),
+		Warnings:        plan.Warnings,
+		GeneratedAt:     time.Now().UTC().Format(time.RFC3339),
+	}
+	if progress.StartedAt != "" {
+		if startTime, err := time.Parse(time.RFC3339, progress.StartedAt); err == nil {
+			report.DurationMs = time.Since(startTime).Milliseconds()
+		}
+	}
+	p.reports[planID] = report
+
+	return result, nil
+}
+
+// GetProgress returns the current progress of a migration execution.
+func (p *Planner) GetProgress(planID string) (*MigrationProgress, error) {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	progress, ok := p.progress[planID]
+	if !ok {
+		return nil, fmt.Errorf("no execution found for plan %q", planID)
+	}
+	return progress, nil
+}
+
+// Rollback reverts the changes made by a migration.
+func (p *Planner) Rollback(planID string) (*RollbackRecord, error) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	record, ok := p.rollbacks[planID]
+	if !ok {
+		return nil, fmt.Errorf("no rollback record for plan %q", planID)
+	}
+
+	plan, ok := p.plans[planID]
+	if !ok {
+		return nil, fmt.Errorf("plan %q not found", planID)
+	}
+
+	if plan.Status != "completed" && plan.Status != "failed" {
+		return nil, fmt.Errorf("plan %q cannot be rolled back (status: %s)", planID, plan.Status)
+	}
+
+	plan.Status = "rolled_back"
+
+	if progress, ok := p.progress[planID]; ok {
+		progress.Status = "rolled_back"
+		progress.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
+	}
+
+	return record, nil
+}
+
+// GetReport returns the migration report for a plan.
+func (p *Planner) GetReport(planID string) (*MigrationReport, error) {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	report, ok := p.reports[planID]
+	if !ok {
+		return nil, fmt.Errorf("no report for plan %q", planID)
+	}
+	return report, nil
+}
+
+// MapOffsets creates offset mappings for consumer group transfer.
+func (p *Planner) MapOffsets(planID string, topic string, sourceOffsets map[int32]int64, strategy string) (*OffsetMapping, error) {
+	p.mu.RLock()
+	_, ok := p.plans[planID]
+	p.mu.RUnlock()
+	if !ok {
+		return nil, fmt.Errorf("plan %q not found", planID)
+	}
+
+	mapping := &OffsetMapping{
+		Topic:        topic,
+		PartitionMap: make(map[int32]int64),
+		Strategy:     strategy,
+		MappedAt:     time.Now().UTC().Format(time.RFC3339),
+	}
+
+	switch strategy {
+	case "earliest":
+		for partition := range sourceOffsets {
+			mapping.PartitionMap[partition] = 0
+		}
+	case "latest":
+		for partition := range sourceOffsets {
+			mapping.PartitionMap[partition] = -1 // -1 = latest
+		}
+	case "translate":
+		// Use source offsets directly (timestamp-based would need broker access)
+		for partition, offset := range sourceOffsets {
+			mapping.PartitionMap[partition] = offset
+		}
+	default:
+		return nil, fmt.Errorf("unknown offset strategy %q; must be: earliest, latest, translate", strategy)
+	}
+
+	return mapping, nil
+}
+
+func countNonSkipped(topics []TopicMigration) int {
+	count := 0
+	for _, t := range topics {
+		if t.Action != "skip" {
+			count++
+		}
+	}
+	return count
+}
+
+func countNonSkippedGroups(groups []GroupMigration) int {
+	count := 0
+	for _, g := range groups {
+		if g.Action != "skip" {
+			count++
+		}
+	}
+	return count
+}
+
+func countNonSkippedSchemas(schemas []SchemaMigration) int {
+	count := 0
+	for _, s := range schemas {
+		if s.Action != "skip" {
+			count++
+		}
+	}
+	return count
 }
