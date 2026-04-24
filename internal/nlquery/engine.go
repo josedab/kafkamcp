@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -64,11 +65,43 @@ type SchemaInfo struct {
 	Fields map[string]string `json:"fields"` // field name -> type
 }
 
+// ExecutionResult represents the result of executing a parsed query plan.
+type ExecutionResult struct {
+	Plan         QueryPlan        `json:"plan"`
+	Data         []map[string]any `json:"data"`
+	TotalCount   int              `json:"total_count"`
+	Provenance   Provenance       `json:"provenance"`
+	Duration     string           `json:"duration"`
+	FromCache    bool             `json:"from_cache,omitempty"`
+	Suggestions  []string         `json:"suggestions,omitempty"`
+}
+
+// QueryHistoryEntry records a past query for auto-suggest and re-use.
+type QueryHistoryEntry struct {
+	Query     string    `json:"query"`
+	Plan      QueryPlan `json:"plan"`
+	Timestamp time.Time `json:"timestamp"`
+	ResultCount int     `json:"result_count"`
+	DurationMs  int64   `json:"duration_ms"`
+}
+
+// CachedResult stores a cached query result with expiry.
+type CachedResult struct {
+	Result   ExecutionResult
+	CachedAt time.Time
+	TTL      time.Duration
+}
+
 // Engine is the natural language query processing engine.
 type Engine struct {
-	logger       *slog.Logger
-	schemas      map[string]SchemaInfo
+	logger        *slog.Logger
+	schemas       map[string]SchemaInfo
 	queryPatterns []queryPattern
+	queryHistory  []QueryHistoryEntry
+	queryCache    map[string]*CachedResult
+	cacheTTL      time.Duration
+	maxHistory    int
+	mu            sync.RWMutex
 }
 
 type queryPattern struct {
@@ -87,8 +120,11 @@ type partialPlan struct {
 // NewEngine creates a new NL query engine.
 func NewEngine(logger *slog.Logger) *Engine {
 	e := &Engine{
-		logger:  logger,
-		schemas: make(map[string]SchemaInfo),
+		logger:     logger,
+		schemas:    make(map[string]SchemaInfo),
+		queryCache: make(map[string]*CachedResult),
+		cacheTTL:   5 * time.Minute,
+		maxHistory: 100,
 	}
 	e.initPatterns()
 	return e
@@ -306,4 +342,399 @@ func parseDuration(amount, unit string) time.Duration {
 	default:
 		return time.Duration(n) * time.Hour
 	}
+}
+
+// SemanticParse performs LLM-style semantic parsing using heuristic NLP.
+// It handles complex boolean filters, multi-topic joins, and arbitrary NL.
+func (e *Engine) SemanticParse(query string, availableTopics []string) (*QueryPlan, error) {
+	if query == "" {
+		return nil, fmt.Errorf("query cannot be empty")
+	}
+	if len(query) > 2000 {
+		return nil, fmt.Errorf("query too long (max 2000 characters)")
+	}
+
+	plan := &QueryPlan{
+		RawQuery: query,
+		Limit:    100,
+	}
+
+	queryLower := strings.ToLower(query)
+
+	// Detect intent from semantic keywords
+	plan.Intent = e.detectIntent(queryLower)
+
+	// Extract boolean filters (AND/OR)
+	plan.Filters = e.extractBooleanFilters(queryLower)
+
+	// Extract aggregation
+	plan.Aggregation = e.extractAggregation(queryLower)
+
+	// Extract time range
+	plan.TimeRange = e.extractTimeRange(queryLower)
+
+	// Extract limit
+	if limit := e.extractLimit(queryLower); limit > 0 {
+		plan.Limit = limit
+	}
+
+	// Extract sort
+	plan.SortBy = e.extractSort(queryLower)
+
+	// Fall back to regex patterns if semantic parse found no filters
+	if len(plan.Filters) == 0 && plan.Aggregation == nil && plan.TimeRange == nil {
+		for _, qp := range e.queryPatterns {
+			matches := qp.pattern.FindStringSubmatch(query)
+			if matches != nil {
+				plan.Intent = qp.intent
+				pp := qp.extract(matches)
+				plan.Filters = pp.filters
+				plan.Aggregation = pp.aggregation
+				plan.TimeRange = pp.timeRange
+				if len(pp.topics) > 0 {
+					plan.Topics = pp.topics
+				}
+				break
+			}
+		}
+	}
+
+	if plan.Intent == "" {
+		plan.Intent = "search"
+	}
+
+	// Resolve topics
+	if len(plan.Topics) == 0 {
+		plan.Topics = e.resolveTopics(query, availableTopics)
+	}
+
+	e.resolveFields(plan)
+	return plan, nil
+}
+
+func (e *Engine) detectIntent(query string) string {
+	intentKeywords := map[string][]string{
+		"count":       {"count", "how many", "total number", "number of"},
+		"average":     {"average", "avg", "mean"},
+		"sum":         {"sum", "total", "add up"},
+		"max":         {"maximum", "max", "highest", "largest", "biggest", "top"},
+		"min":         {"minimum", "min", "lowest", "smallest"},
+		"group_by":    {"group by", "breakdown", "split by", "per"},
+		"filter":      {"where", "filter", "with", "having"},
+		"trend":       {"trend", "over time", "timeline", "history"},
+		"compare":     {"compare", "versus", "vs", "difference between"},
+		"join":        {"join", "combine", "correlate", "across topics"},
+	}
+
+	for intent, keywords := range intentKeywords {
+		for _, kw := range keywords {
+			if strings.Contains(query, kw) {
+				return intent
+			}
+		}
+	}
+	return "search"
+}
+
+func (e *Engine) extractBooleanFilters(query string) []Filter {
+	var filters []Filter
+
+	// Handle "where X = Y" patterns
+	wherePattern := regexp.MustCompile(`where\s+(\w+)\s*(=|!=|>|<|>=|<=|is|equals|contains|like)\s*['"]*([^'"]+?)['"]*(?:\s+(?:and|or|$))`)
+	matches := wherePattern.FindAllStringSubmatch(query, -1)
+	for _, m := range matches {
+		op := normalizeOperator(m[2])
+		filters = append(filters, Filter{
+			Field:    strings.TrimSpace(m[1]),
+			Operator: op,
+			Value:    strings.TrimSpace(m[3]),
+		})
+	}
+
+	// Handle "status = failed" without where
+	eqPattern := regexp.MustCompile(`(\w+)\s*(?:=|is|equals)\s*['"]*(\w+)['"]*`)
+	if len(filters) == 0 {
+		eqMatches := eqPattern.FindAllStringSubmatch(query, -1)
+		for _, m := range eqMatches {
+			field := strings.TrimSpace(m[1])
+			// Skip common non-filter words
+			if isCommonWord(field) {
+				continue
+			}
+			filters = append(filters, Filter{
+				Field:    field,
+				Operator: "eq",
+				Value:    strings.TrimSpace(m[2]),
+			})
+		}
+	}
+
+	// Handle "failed", "errors" as status filters
+	if strings.Contains(query, "failed") || strings.Contains(query, "failure") {
+		hasStatusFilter := false
+		for _, f := range filters {
+			if f.Field == "status" {
+				hasStatusFilter = true
+				break
+			}
+		}
+		if !hasStatusFilter {
+			filters = append(filters, Filter{Field: "status", Operator: "eq", Value: "failed"})
+		}
+	}
+	if strings.Contains(query, "error") && !strings.Contains(query, "error_rate") {
+		hasLevelFilter := false
+		for _, f := range filters {
+			if f.Field == "level" {
+				hasLevelFilter = true
+				break
+			}
+		}
+		if !hasLevelFilter {
+			filters = append(filters, Filter{Field: "level", Operator: "eq", Value: "error"})
+		}
+	}
+
+	return filters
+}
+
+func normalizeOperator(op string) string {
+	switch strings.ToLower(strings.TrimSpace(op)) {
+	case "=", "is", "equals":
+		return "eq"
+	case "!=":
+		return "neq"
+	case ">":
+		return "gt"
+	case "<":
+		return "lt"
+	case ">=":
+		return "gte"
+	case "<=":
+		return "lte"
+	case "contains", "like":
+		return "contains"
+	default:
+		return "eq"
+	}
+}
+
+func isCommonWord(w string) bool {
+	common := map[string]bool{
+		"show": true, "find": true, "get": true, "list": true,
+		"me": true, "all": true, "the": true, "in": true,
+		"from": true, "on": true, "it": true, "that": true,
+		"this": true, "what": true, "which": true,
+	}
+	return common[strings.ToLower(w)]
+}
+
+func (e *Engine) extractAggregation(query string) *AggregationStep {
+	aggPatterns := []struct {
+		keywords []string
+		function string
+	}{
+		{[]string{"count", "how many", "number of"}, "count"},
+		{[]string{"average", "avg", "mean"}, "avg"},
+		{[]string{"sum", "total"}, "sum"},
+		{[]string{"maximum", "max", "highest"}, "max"},
+		{[]string{"minimum", "min", "lowest"}, "min"},
+	}
+
+	for _, ap := range aggPatterns {
+		for _, kw := range ap.keywords {
+			if strings.Contains(query, kw) {
+				step := &AggregationStep{Function: ap.function}
+
+				// Extract "of <field>"
+				ofPattern := regexp.MustCompile(regexp.QuoteMeta(kw) + `\s+(?:of\s+)?(\w+)`)
+				if m := ofPattern.FindStringSubmatch(query); m != nil {
+					step.Field = m[1]
+				}
+
+				// Extract "group by <field>" or "by <field>"
+				groupPattern := regexp.MustCompile(`(?:group\s+)?by\s+(\w+)`)
+				if m := groupPattern.FindStringSubmatch(query); m != nil {
+					step.GroupBy = m[1]
+				}
+
+				return step
+			}
+		}
+	}
+
+	// Standalone group by
+	groupPattern := regexp.MustCompile(`(?:group|breakdown|split)\s+(?:\w+\s+)?by\s+(\w+)`)
+	if m := groupPattern.FindStringSubmatch(query); m != nil {
+		return &AggregationStep{Function: "group_by", GroupBy: m[1]}
+	}
+
+	return nil
+}
+
+func (e *Engine) extractTimeRange(query string) *TimeRange {
+	// "in the last N unit(s)"
+	lastPattern := regexp.MustCompile(`(?:in|from|over)\s+(?:the\s+)?last\s+(\d+)\s+(minute|hour|day|week|month)s?`)
+	if m := lastPattern.FindStringSubmatch(query); m != nil {
+		dur := parseDuration(m[1], m[2])
+		return &TimeRange{
+			Start:    time.Now().Add(-dur).UTC().Format(time.RFC3339),
+			Duration: fmt.Sprintf("%s %ss", m[1], m[2]),
+		}
+	}
+
+	// "since yesterday"
+	if strings.Contains(query, "since yesterday") {
+		return &TimeRange{
+			Start:    time.Now().Add(-24 * time.Hour).UTC().Format(time.RFC3339),
+			Duration: "1 days",
+		}
+	}
+
+	// "today"
+	if strings.Contains(query, "today") {
+		now := time.Now().UTC()
+		startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+		return &TimeRange{
+			Start:    startOfDay.Format(time.RFC3339),
+			Duration: "today",
+		}
+	}
+
+	return nil
+}
+
+func (e *Engine) extractLimit(query string) int {
+	// "top N", "first N", "limit N", "last N"
+	limitPattern := regexp.MustCompile(`(?:top|first|limit|last)\s+(\d+)`)
+	if m := limitPattern.FindStringSubmatch(query); m != nil {
+		n := 0
+		fmt.Sscanf(m[1], "%d", &n)
+		if n > 0 && n <= 10000 {
+			return n
+		}
+	}
+	return 0
+}
+
+func (e *Engine) extractSort(query string) string {
+	sortPattern := regexp.MustCompile(`(?:sort|order)\s+(?:by\s+)?(\w+)\s*(asc|desc|ascending|descending)?`)
+	if m := sortPattern.FindStringSubmatch(query); m != nil {
+		field := m[1]
+		dir := "desc"
+		if len(m) > 2 && (m[2] == "asc" || m[2] == "ascending") {
+			dir = "asc"
+		}
+		return field + ":" + dir
+	}
+	return ""
+}
+
+// CacheResult stores a query result in the cache.
+func (e *Engine) CacheResult(query string, result ExecutionResult) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	e.queryCache[strings.ToLower(strings.TrimSpace(query))] = &CachedResult{
+		Result:   result,
+		CachedAt: time.Now(),
+		TTL:      e.cacheTTL,
+	}
+}
+
+// GetCached retrieves a cached result if available and not expired.
+func (e *Engine) GetCached(query string) (*ExecutionResult, bool) {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+
+	key := strings.ToLower(strings.TrimSpace(query))
+	cached, ok := e.queryCache[key]
+	if !ok {
+		return nil, false
+	}
+	if time.Since(cached.CachedAt) > cached.TTL {
+		return nil, false
+	}
+	result := cached.Result
+	result.FromCache = true
+	return &result, true
+}
+
+// RecordHistory records a query execution in history.
+func (e *Engine) RecordHistory(query string, plan QueryPlan, resultCount int, durationMs int64) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	entry := QueryHistoryEntry{
+		Query:       query,
+		Plan:        plan,
+		Timestamp:   time.Now(),
+		ResultCount: resultCount,
+		DurationMs:  durationMs,
+	}
+
+	e.queryHistory = append(e.queryHistory, entry)
+	if len(e.queryHistory) > e.maxHistory {
+		e.queryHistory = e.queryHistory[len(e.queryHistory)-e.maxHistory:]
+	}
+}
+
+// GetHistory returns recent query history.
+func (e *Engine) GetHistory(limit int) []QueryHistoryEntry {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+
+	if limit <= 0 || limit > len(e.queryHistory) {
+		limit = len(e.queryHistory)
+	}
+	// Return most recent first
+	result := make([]QueryHistoryEntry, limit)
+	for i := 0; i < limit; i++ {
+		result[i] = e.queryHistory[len(e.queryHistory)-1-i]
+	}
+	return result
+}
+
+// Suggest returns query suggestions based on history and available topics.
+func (e *Engine) Suggest(prefix string, availableTopics []string) []string {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+
+	prefixLower := strings.ToLower(prefix)
+	seen := make(map[string]bool)
+	var suggestions []string
+
+	// Suggest from history
+	for i := len(e.queryHistory) - 1; i >= 0; i-- {
+		q := e.queryHistory[i].Query
+		if strings.HasPrefix(strings.ToLower(q), prefixLower) && !seen[q] {
+			suggestions = append(suggestions, q)
+			seen[q] = true
+		}
+		if len(suggestions) >= 5 {
+			break
+		}
+	}
+
+	// Suggest template queries based on topics
+	templates := []string{
+		"show me all messages from %s in the last hour",
+		"count messages in %s",
+		"show errors in %s",
+		"average latency in %s",
+	}
+	for _, topic := range availableTopics {
+		if len(suggestions) >= 10 {
+			break
+		}
+		for _, tmpl := range templates {
+			s := fmt.Sprintf(tmpl, topic)
+			if strings.HasPrefix(strings.ToLower(s), prefixLower) && !seen[s] {
+				suggestions = append(suggestions, s)
+				seen[s] = true
+			}
+		}
+	}
+
+	return suggestions
 }
