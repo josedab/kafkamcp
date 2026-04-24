@@ -8,4 +8,11 @@ func (s *Server) registerTools() {
 	s.registerStreamingTools()
 	s.registerAdvancedTools()
 	s.registerFeatureTools()
+	s.registerGatewayTools()
+	s.registerCollaborationTools()
+	s.registerSemanticTools()
+	s.registerOnboardingTools()
+	s.registerOPATools()
+	s.registerOperatorTools()
+	s.registerPipelineTools()
 }

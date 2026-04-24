@@ -12,11 +12,13 @@ import (
 "github.com/kafkamcp/kafkamcp/internal/anomaly"
 "github.com/kafkamcp/kafkamcp/internal/audit"
 "github.com/kafkamcp/kafkamcp/internal/auth"
+"github.com/kafkamcp/kafkamcp/internal/collaboration"
 "github.com/kafkamcp/kafkamcp/internal/config"
 "github.com/kafkamcp/kafkamcp/internal/contracts"
 "github.com/kafkamcp/kafkamcp/internal/cost"
 "github.com/kafkamcp/kafkamcp/internal/dlq"
 "github.com/kafkamcp/kafkamcp/internal/forecast"
+"github.com/kafkamcp/kafkamcp/internal/gateway"
 "github.com/kafkamcp/kafkamcp/internal/gitops"
 "github.com/kafkamcp/kafkamcp/internal/graph"
 "github.com/kafkamcp/kafkamcp/internal/kafka"
@@ -27,12 +29,17 @@ import (
 "github.com/kafkamcp/kafkamcp/internal/metrics"
 "github.com/kafkamcp/kafkamcp/internal/migration"
 "github.com/kafkamcp/kafkamcp/internal/nlquery"
+"github.com/kafkamcp/kafkamcp/internal/onboarding"
+"github.com/kafkamcp/kafkamcp/internal/opa"
+"github.com/kafkamcp/kafkamcp/internal/operator"
+"github.com/kafkamcp/kafkamcp/internal/pipeline"
 "github.com/kafkamcp/kafkamcp/internal/platform"
 "github.com/kafkamcp/kafkamcp/internal/plugin"
 "github.com/kafkamcp/kafkamcp/internal/ratelimit"
 "github.com/kafkamcp/kafkamcp/internal/replication"
 "github.com/kafkamcp/kafkamcp/internal/schema"
 "github.com/kafkamcp/kafkamcp/internal/selfheal"
+"github.com/kafkamcp/kafkamcp/internal/semantic"
 "github.com/kafkamcp/kafkamcp/internal/telemetry"
 "github.com/kafkamcp/kafkamcp/internal/watch"
 "github.com/kafkamcp/kafkamcp/internal/workflow"
@@ -80,6 +87,13 @@ type Platform struct {
 	gitopsManager    *gitops.Manager     // GitOps configuration management
 	migrationPlanner *migration.Planner  // kafka migration assistant
 	workflowEngine   *workflow.Engine    // agent workflow templates
+	gatewayManager   *gateway.Manager    // multi-protocol streaming gateway
+	collaborationCoord *collaboration.Coordinator // agent collaboration
+	semanticEngine     *semantic.Engine           // semantic search & RAG
+	onboardingEngine   *onboarding.Engine         // zero-config onboarding
+	opaPolicyEngine    *opa.PolicyEngine          // OPA policy-as-code engine
+	operatorController *operator.Controller       // Kubernetes operator
+	pipelineEngine     *pipeline.Engine           // streaming function pipelines
 }
 
 // Server is the KafkaMCP MCP server.
@@ -176,6 +190,13 @@ Platform: Platform{
 	gitopsManager:    gitops.NewManager(logger),
 	migrationPlanner: migration.NewPlanner(),
 	workflowEngine:   workflow.NewEngine(logger),
+	gatewayManager:   gateway.NewManager(logger),
+	collaborationCoord: collaboration.NewCoordinator(logger),
+	semanticEngine:     semantic.NewEngine(logger),
+	onboardingEngine:   onboarding.NewEngine(logger),
+	opaPolicyEngine:    opa.NewPolicyEngine(logger),
+	operatorController: operator.NewController(logger),
+	pipelineEngine:     pipeline.NewEngine(logger),
 },
 }
 

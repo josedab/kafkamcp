@@ -3,10 +3,12 @@ package server
 import (
 	"github.com/kafkamcp/kafkamcp/internal/anomaly"
 	"github.com/kafkamcp/kafkamcp/internal/audit"
+	"github.com/kafkamcp/kafkamcp/internal/collaboration"
 	"github.com/kafkamcp/kafkamcp/internal/contracts"
 	"github.com/kafkamcp/kafkamcp/internal/cost"
 	"github.com/kafkamcp/kafkamcp/internal/dlq"
 	"github.com/kafkamcp/kafkamcp/internal/forecast"
+	"github.com/kafkamcp/kafkamcp/internal/gateway"
 	"github.com/kafkamcp/kafkamcp/internal/gitops"
 	"github.com/kafkamcp/kafkamcp/internal/graph"
 	"github.com/kafkamcp/kafkamcp/internal/lagdiag"
@@ -15,12 +17,17 @@ import (
 	"github.com/kafkamcp/kafkamcp/internal/metrics"
 	"github.com/kafkamcp/kafkamcp/internal/migration"
 	"github.com/kafkamcp/kafkamcp/internal/nlquery"
+	"github.com/kafkamcp/kafkamcp/internal/onboarding"
+	"github.com/kafkamcp/kafkamcp/internal/opa"
+	"github.com/kafkamcp/kafkamcp/internal/operator"
 	"github.com/kafkamcp/kafkamcp/internal/persona"
+	"github.com/kafkamcp/kafkamcp/internal/pipeline"
 	"github.com/kafkamcp/kafkamcp/internal/platform"
 	"github.com/kafkamcp/kafkamcp/internal/plugin"
 	"github.com/kafkamcp/kafkamcp/internal/ratelimit"
 	"github.com/kafkamcp/kafkamcp/internal/replication"
 	"github.com/kafkamcp/kafkamcp/internal/selfheal"
+	"github.com/kafkamcp/kafkamcp/internal/semantic"
 	"github.com/kafkamcp/kafkamcp/internal/watch"
 	"github.com/kafkamcp/kafkamcp/internal/workflow"
 )
@@ -136,4 +143,39 @@ func WithPersonaEngine(p *persona.Engine) Option {
 // WithForecaster sets a custom forecaster.
 func WithForecaster(f *forecast.Forecaster) Option {
 	return func(s *Server) { s.forecaster = f }
+}
+
+// WithGatewayManager sets a custom gateway manager.
+func WithGatewayManager(g *gateway.Manager) Option {
+	return func(s *Server) { s.gatewayManager = g }
+}
+
+// WithCollaborationCoordinator sets a custom collaboration coordinator.
+func WithCollaborationCoordinator(c *collaboration.Coordinator) Option {
+	return func(s *Server) { s.collaborationCoord = c }
+}
+
+// WithSemanticEngine sets a custom semantic search engine.
+func WithSemanticEngine(se *semantic.Engine) Option {
+	return func(s *Server) { s.semanticEngine = se }
+}
+
+// WithOnboardingEngine sets a custom onboarding engine.
+func WithOnboardingEngine(o *onboarding.Engine) Option {
+	return func(s *Server) { s.onboardingEngine = o }
+}
+
+// WithOPAPolicyEngine sets a custom OPA policy engine.
+func WithOPAPolicyEngine(o *opa.PolicyEngine) Option {
+	return func(s *Server) { s.opaPolicyEngine = o }
+}
+
+// WithOperatorController sets a custom K8s operator controller.
+func WithOperatorController(o *operator.Controller) Option {
+	return func(s *Server) { s.operatorController = o }
+}
+
+// WithPipelineEngine sets a custom pipeline engine.
+func WithPipelineEngine(p *pipeline.Engine) Option {
+	return func(s *Server) { s.pipelineEngine = p }
 }
