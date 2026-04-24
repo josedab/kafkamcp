@@ -1,0 +1,19 @@
+{
+  "name": "@kafkamcp/sdk",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for KafkaMCP - Kafka Model Context Protocol server",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "lint": "eslint src/",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": ["kafka", "mcp", "ai", "agent", "sdk"],
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": ["dist/", "README.md", "LICENSE"]
+}
