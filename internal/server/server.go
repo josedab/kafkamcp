@@ -17,6 +17,7 @@ import (
 "github.com/kafkamcp/kafkamcp/internal/contracts"
 "github.com/kafkamcp/kafkamcp/internal/cost"
 "github.com/kafkamcp/kafkamcp/internal/dlq"
+"github.com/kafkamcp/kafkamcp/internal/evolution"
 "github.com/kafkamcp/kafkamcp/internal/forecast"
 "github.com/kafkamcp/kafkamcp/internal/gateway"
 "github.com/kafkamcp/kafkamcp/internal/gitops"
@@ -29,6 +30,7 @@ import (
 "github.com/kafkamcp/kafkamcp/internal/metrics"
 "github.com/kafkamcp/kafkamcp/internal/migration"
 "github.com/kafkamcp/kafkamcp/internal/nlquery"
+"github.com/kafkamcp/kafkamcp/internal/observability"
 "github.com/kafkamcp/kafkamcp/internal/onboarding"
 "github.com/kafkamcp/kafkamcp/internal/opa"
 "github.com/kafkamcp/kafkamcp/internal/operator"
@@ -44,6 +46,7 @@ import (
 "github.com/kafkamcp/kafkamcp/internal/watch"
 "github.com/kafkamcp/kafkamcp/internal/workflow"
 "github.com/kafkamcp/kafkamcp/internal/persona"
+	"github.com/kafkamcp/kafkamcp/internal/tenant"
 "github.com/mark3labs/mcp-go/mcp"
 "github.com/mark3labs/mcp-go/server"
 otelTrace "go.opentelemetry.io/otel/trace"
@@ -57,6 +60,8 @@ type Analytics struct {
 	forecaster      *forecast.Forecaster // intelligent capacity forecasting
 	knowledgeGraph  *graph.KnowledgeGraph // embedded knowledge graph
 	lagAnalyzer     *lagdiag.Analyzer    // consumer lag root cause analysis
+	schemaWorkflow      *evolution.WorkflowEngine   // schema evolution workflow engine
+	timeseriesAnalyzer  *anomaly.TimeSeriesAnalyzer // time-series analytics
 }
 
 // Governance groups policy, audit, security, and compliance subsystems.
@@ -67,6 +72,8 @@ type Governance struct {
 	maskingEngine  *masking.Engine    // PII redaction engine
 	contractEngine *contracts.Engine  // schema-aware data contracts
 	personaEngine  *persona.Engine    // declarative agent personas
+	tenantManager  *tenant.Manager    // multi-tenant management
+	usageTracker   *tenant.UsageTracker // usage analytics tracking
 }
 
 // Streaming groups event-driven and stream-processing subsystems.
@@ -75,7 +82,8 @@ type Streaming struct {
 	dlqRemediator  *dlq.Remediator     // DLQ auto-remediation
 	replicationMon *replication.Monitor // cross-cluster replication monitoring
 	selfHealMon    *selfheal.Monitor   // self-healing consumer groups
-	lineageTracker *lineage.Tracker    // topic data lineage
+	lineageTracker *lineage.Tracker        // topic data lineage
+	messageTracer  *lineage.MessageTracer  // distributed message tracing
 }
 
 // Platform groups infrastructure, orchestration, and extensibility subsystems.
@@ -94,6 +102,8 @@ type Platform struct {
 	opaPolicyEngine    *opa.PolicyEngine          // OPA policy-as-code engine
 	operatorController *operator.Controller       // Kubernetes operator
 	pipelineEngine     *pipeline.Engine           // streaming function pipelines
+	marketplace        *plugin.Marketplace        // plugin marketplace
+	observabilityMgr   *observability.Manager     // observability dashboards & alerts
 }
 
 // Server is the KafkaMCP MCP server.
@@ -166,6 +176,8 @@ Analytics: Analytics{
 	forecaster:      forecast.NewForecaster(30),
 	knowledgeGraph:  graph.NewKnowledgeGraph(logger),
 	lagAnalyzer:     lagdiag.NewAnalyzer(),
+	schemaWorkflow:     evolution.NewWorkflowEngine(),
+	timeseriesAnalyzer: anomaly.NewTimeSeriesAnalyzer(),
 },
 Governance: Governance{
 	policyEngine:   policyEngine,
@@ -174,6 +186,8 @@ Governance: Governance{
 	maskingEngine:  masking.NewEngine(cfg.Masking, logger),
 	contractEngine: contracts.NewEngine(),
 	personaEngine:  persona.NewEngine(),
+	tenantManager:  tenant.NewManager(),
+	usageTracker:   tenant.NewUsageTracker(),
 },
 Streaming: Streaming{
 	watchManager:   watch.NewManager(logger),
@@ -181,6 +195,7 @@ Streaming: Streaming{
 	replicationMon: replication.NewMonitor(logger),
 	selfHealMon:    selfheal.NewMonitor(),
 	lineageTracker: lineage.NewTracker(),
+	messageTracer:  lineage.NewMessageTracer(),
 },
 Platform: Platform{
 	pluginRegistry:   plugin.NewRegistry(logger),
@@ -197,8 +212,11 @@ Platform: Platform{
 	opaPolicyEngine:    opa.NewPolicyEngine(logger),
 	operatorController: operator.NewController(logger),
 	pipelineEngine:     pipeline.NewEngine(logger),
+	observabilityMgr:   observability.NewManager(),
 },
 }
+
+s.marketplace = plugin.NewMarketplace(s.pluginRegistry)
 
 // Apply functional options, overriding defaults
 for _, opt := range opts {
