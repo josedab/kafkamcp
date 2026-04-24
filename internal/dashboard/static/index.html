@@ -83,6 +83,47 @@
         </div>
       </div>
     </div>
+
+    <!-- V2: Agent Heatmap -->
+    <div class="card" style="margin-bottom: 16px;">
+      <h2>🔥 Agent Heatmap</h2>
+      <div id="heatmap-container" style="overflow-x:auto;">
+        <div id="heatmap-content" class="topology-placeholder">Loading heatmap data...</div>
+      </div>
+    </div>
+
+    <!-- V2: Message Tailing -->
+    <div class="card" style="margin-bottom: 16px;">
+      <h2>📨 Message Tail</h2>
+      <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;">
+        <input id="tail-topic" type="text" placeholder="Topic name" style="background:#0d1117;border:1px solid #30363d;color:#c9d1d9;padding:6px 12px;border-radius:6px;flex:1;">
+        <button class="refresh-btn" onclick="tailMessages()">Tail</button>
+        <button class="refresh-btn" onclick="startLiveTail()">▶ Live</button>
+        <button class="refresh-btn" onclick="stopLiveTail()">■ Stop</button>
+      </div>
+      <div class="activity-feed" id="tail-feed" style="max-height:300px;">
+        <table>
+          <thead><tr><th>Partition</th><th>Offset</th><th>Key</th><th>Value</th><th>Time</th></tr></thead>
+          <tbody id="tail-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- V2: Cluster Overview -->
+    <div class="card" style="margin-bottom: 16px;">
+      <h2>🏗️ Cluster Overview</h2>
+      <div id="cluster-overview" class="topology-placeholder">Click Refresh to load cluster info</div>
+    </div>
+
+    <!-- V2: Partition Health -->
+    <div class="card" style="margin-bottom: 16px;">
+      <h2>📊 Partition Health</h2>
+      <div style="margin-bottom:8px;">
+        <input id="partition-topic" type="text" placeholder="Topic name" style="background:#0d1117;border:1px solid #30363d;color:#c9d1d9;padding:6px 12px;border-radius:6px;">
+        <button class="refresh-btn" onclick="loadPartitions()">View Partitions</button>
+      </div>
+      <div id="partition-view" class="topology-placeholder">Enter a topic name to view partition health</div>
+    </div>
   </div>
 
   <script>
@@ -181,6 +222,100 @@
     refreshAll();
     setInterval(refreshAll, 30000);
     connectSSE();
+
+    // V2: Heatmap
+    async function loadHeatmap() {
+      const data = await fetchJSON('/api/v2/heatmap?hours=24');
+      const el = document.getElementById('heatmap-content');
+      if (!data || !data.agents || data.agents.length === 0) { el.textContent = 'No agent activity'; return; }
+      let html = '<table><thead><tr><th>Agent</th><th>Calls</th><th>Err%</th><th>Top Tool</th><th>Activity</th></tr></thead><tbody>';
+      data.agents.forEach(a => {
+        const errPct = (a.error_rate * 100).toFixed(1);
+        const topTool = a.top_tools && a.top_tools.length > 0 ? a.top_tools[0].tool : '-';
+        const maxCount = Math.max(...a.buckets.map(b => b.count), 1);
+        const bars = a.buckets.slice(-12).map(b => {
+          const h = Math.max(4, (b.count / maxCount) * 24);
+          const color = b.errors > 0 ? '#f85149' : '#3fb950';
+          return `<span style="display:inline-block;width:6px;height:${h}px;background:${color};margin:0 1px;vertical-align:bottom;" title="${b.time}: ${b.count} calls"></span>`;
+        }).join('');
+        html += `<tr><td>${esc(a.agent_id)}</td><td>${a.total_calls}</td><td>${errPct}%</td><td>${esc(topTool)}</td><td>${bars}</td></tr>`;
+      });
+      html += '</tbody></table>';
+      el.innerHTML = html;
+    }
+
+    // V2: Message Tailing
+    let tailEventSource = null;
+    async function tailMessages() {
+      const topic = document.getElementById('tail-topic').value;
+      if (!topic) return;
+      const data = await fetchJSON('/api/v2/messages/tail?topic=' + encodeURIComponent(topic) + '&limit=50');
+      if (!data) return;
+      const tbody = document.getElementById('tail-body');
+      tbody.innerHTML = '';
+      (data.messages || []).forEach(m => {
+        const tr = document.createElement('tr');
+        const val = (m.value || '').substring(0, 120);
+        tr.innerHTML = `<td>${m.partition}</td><td>${m.offset}</td><td>${esc(m.key || '')}</td><td style="font-family:monospace;font-size:11px">${esc(val)}</td><td>${formatTime(m.timestamp)}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function startLiveTail() {
+      stopLiveTail();
+      const topic = document.getElementById('tail-topic').value;
+      if (!topic) return;
+      tailEventSource = new EventSource('/api/v2/messages/tail-stream?topic=' + encodeURIComponent(topic));
+      tailEventSource.addEventListener('message', (e) => {
+        try {
+          const m = JSON.parse(e.data);
+          const tbody = document.getElementById('tail-body');
+          const tr = document.createElement('tr');
+          const val = (m.value || '').substring(0, 120);
+          tr.innerHTML = `<td>${m.partition}</td><td>${m.offset}</td><td>${esc(m.key || '')}</td><td style="font-family:monospace;font-size:11px">${esc(val)}</td><td>${formatTime(m.timestamp)}</td>`;
+          tbody.insertBefore(tr, tbody.firstChild);
+          if (tbody.children.length > 100) tbody.removeChild(tbody.lastChild);
+        } catch {}
+      });
+    }
+
+    function stopLiveTail() { if (tailEventSource) { tailEventSource.close(); tailEventSource = null; } }
+
+    // V2: Cluster Overview
+    async function loadClusterOverview() {
+      const data = await fetchJSON('/api/v2/cluster/overview');
+      const el = document.getElementById('cluster-overview');
+      if (!data) { el.textContent = 'Failed to load'; return; }
+      el.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;">
+        <div><div style="color:#8b949e;font-size:11px;">Status</div><div style="font-size:18px;color:${data.status==='healthy'?'#3fb950':'#f85149'}">${data.status}</div></div>
+        <div><div style="color:#8b949e;font-size:11px;">Brokers</div><div style="font-size:18px;color:#58a6ff;">${data.broker_count || '-'}</div></div>
+        <div><div style="color:#8b949e;font-size:11px;">Topics</div><div style="font-size:18px;color:#58a6ff;">${data.topic_count || '-'}</div></div>
+        <div><div style="color:#8b949e;font-size:11px;">Consumer Groups</div><div style="font-size:18px;color:#58a6ff;">${data.consumer_group_count || '-'}</div></div>
+        <div><div style="color:#8b949e;font-size:11px;">Total Partitions</div><div style="font-size:18px;color:#58a6ff;">${data.total_partitions || '-'}</div></div>
+        <div><div style="color:#8b949e;font-size:11px;">Total Lag</div><div style="font-size:18px;color:#e3b341;">${data.total_consumer_lag || '0'}</div></div>
+      </div>`;
+    }
+
+    // V2: Partition Health
+    async function loadPartitions() {
+      const topic = document.getElementById('partition-topic').value;
+      if (!topic) return;
+      const data = await fetchJSON('/api/v2/partitions?topic=' + encodeURIComponent(topic));
+      const el = document.getElementById('partition-view');
+      if (!data || !data.partitions) { el.textContent = 'Topic not found'; return; }
+      let html = '<table><thead><tr><th>ID</th><th>Leader</th><th>Replicas</th><th>ISR</th><th>Messages</th><th>In Sync</th></tr></thead><tbody>';
+      data.partitions.forEach(p => {
+        const syncClass = p.in_sync ? 'status-success' : 'status-error';
+        html += `<tr><td>${p.id}</td><td>${p.leader}</td><td>${(p.replicas||[]).join(',')}</td><td>${(p.isr||[]).join(',')}</td><td>${p.messages}</td><td class="${syncClass}">${p.in_sync ? '✓' : '✗'}</td></tr>`;
+      });
+      html += '</tbody></table>';
+      el.innerHTML = html;
+    }
+
+    // Enhanced refresh
+    const origRefresh = refreshAll;
+    function refreshAll() { origRefresh(); loadHeatmap(); loadClusterOverview(); }
+    refreshAll();
   </script>
 </body>
 </html>

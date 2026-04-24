@@ -93,6 +93,11 @@ func (d *Dashboard) Handler() http.Handler {
 	// SSE endpoint for live updates (protected by auth middleware)
 	mux.HandleFunc("/api/v1/events", d.requireAuth(d.handleSSE))
 
+	// V2 enhanced dashboard APIs
+	v2 := NewDashboardV2(d.kafkaManager, d.auditLogger, d.logger)
+	v2.RegisterRoutes(mux, d.requireAuth)
+	mux.HandleFunc("/api/v2/messages/tail-stream", d.requireAuth(v2.HandleSSETail))
+
 	// Embedded SPA
 	staticContent, err := fs.Sub(staticFS, "static")
 	if err != nil {
