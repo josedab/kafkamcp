@@ -302,6 +302,515 @@ func TestCloseError(t *testing.T) {
 	}
 }
 
+// --- Consumer Group Tests ---
+
+func TestListConsumerGroups(t *testing.T) {
+	tr := &mockTransport{
+		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
+			if name != "kafka_list_consumer_groups" {
+				t.Errorf("expected tool kafka_list_consumer_groups, got %q", name)
+			}
+			return json.Marshal(map[string]any{
+				"groups": []ConsumerGroupSummary{
+					{GroupID: "group-1", State: "Stable", MemberCount: 3, TotalLag: 100},
+				},
+			})
+		},
+	}
+	c := New(tr)
+	groups, err := c.ListConsumerGroups(context.Background(), "")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(groups) != 1 {
+		t.Errorf("expected 1 group, got %d", len(groups))
+	}
+	if groups[0].GroupID != "group-1" {
+		t.Errorf("expected group-1, got %s", groups[0].GroupID)
+	}
+}
+
+func TestListConsumerGroupsWithCluster(t *testing.T) {
+	tr := &mockTransport{
+		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
+			if args["cluster"] != "prod" {
+				t.Errorf("expected cluster prod, got %v", args["cluster"])
+			}
+			return json.Marshal(map[string]any{"groups": []ConsumerGroupSummary{}})
+		},
+	}
+	c := New(tr)
+	c.ListConsumerGroups(context.Background(), "prod")
+}
+
+func TestListConsumerGroupsError(t *testing.T) {
+	tr := &mockTransport{
+		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
+			return nil, errors.New("timeout")
+		},
+	}
+	c := New(tr)
+	_, err := c.ListConsumerGroups(context.Background(), "")
+	if err == nil {
+		t.Error("expected error")
+	}
+}
+
+func TestListConsumerGroupsInvalidJSON(t *testing.T) {
+	tr := &mockTransport{
+		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
+			return json.RawMessage(`{invalid`), nil
+		},
+	}
+	c := New(tr)
+	_, err := c.ListConsumerGroups(context.Background(), "")
+	if err == nil {
+		t.Error("expected error for malformed JSON")
+	}
+}
+
+func TestDescribeConsumerGroup(t *testing.T) {
+	tr := &mockTransport{
+		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
+			if name != "kafka_describe_consumer_group" {
+				t.Errorf("expected kafka_describe_consumer_group, got %q", name)
+			}
+			if args["group_id"] != "my-group" {
+				t.Errorf("expected group_id my-group, got %v", args["group_id"])
+			}
+			return json.Marshal(map[string]any{"group_id": "my-group", "state": "Stable"})
+		},
+	}
+	c := New(tr)
+	result, err := c.DescribeConsumerGroup(context.Background(), "my-group")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected non-nil result")
+	}
+}
+
+func TestDescribeConsumerGroupError(t *testing.T) {
+	tr := &mockTransport{
+		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
+			return nil, errors.New("not found")
+		},
+	}
+	c := New(tr)
+	_, err := c.DescribeConsumerGroup(context.Background(), "missing")
+	if err == nil {
+		t.Error("expected error")
+	}
+}
+
+// --- Topic Management Tests ---
+
+func TestDescribeTopic(t *testing.T) {
+	tr := &mockTransport{
+		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
+			if name != "kafka_describe_topic" {
+				t.Errorf("expected kafka_describe_topic, got %q", name)
+			}
+			return json.Marshal(map[string]any{"name": "orders", "partitions": 3})
+		},
+	}
+	c := New(tr)
+	result, err := c.DescribeTopic(context.Background(), "orders")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected non-nil result")
+	}
+}
+
+func TestDescribeTopicError(t *testing.T) {
+	tr := &mockTransport{
+		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
+			return nil, errors.New("failed")
+		},
+	}
+	c := New(tr)
+	_, err := c.DescribeTopic(context.Background(), "orders")
+	if err == nil {
+		t.Error("expected error")
+	}
+}
+
+func TestCreateTopic(t *testing.T) {
+	tr := &mockTransport{
+		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
+			if name != "kafka_create_topic" {
+				t.Errorf("expected kafka_create_topic, got %q", name)
+			}
+			if args["topic"] != "new-topic" {
+				t.Errorf("expected topic new-topic, got %v", args["topic"])
+			}
+			if args["partitions"].(float64) != 3 {
+				t.Errorf("expected 3 partitions, got %v", args["partitions"])
+			}
+			return json.Marshal(map[string]any{"status": "created"})
+		},
+	}
+	c := New(tr)
+	err := c.CreateTopic(context.Background(), "new-topic", 3, 2, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCreateTopicWithConfigs(t *testing.T) {
+	tr := &mockTransport{
+		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
+			if args["configs"] == nil {
+				t.Error("expected configs to be present")
+			}
+			return json.Marshal(map[string]any{})
+		},
+	}
+	c := New(tr)
+	err := c.CreateTopic(context.Background(), "t", 1, 1, map[string]string{"retention.ms": "86400000"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCreateTopicError(t *testing.T) {
+	tr := &mockTransport{
+		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
+			return nil, errors.New("failed")
+		},
+	}
+	c := New(tr)
+	err := c.CreateTopic(context.Background(), "t", 1, 1, nil)
+	if err == nil {
+		t.Error("expected error")
+	}
+}
+
+func TestDeleteTopic(t *testing.T) {
+	tr := &mockTransport{
+		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
+			if name != "kafka_delete_topic" {
+				t.Errorf("expected kafka_delete_topic, got %q", name)
+			}
+			return json.Marshal(map[string]any{})
+		},
+	}
+	c := New(tr)
+	err := c.DeleteTopic(context.Background(), "old-topic")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestDeleteTopicError(t *testing.T) {
+	tr := &mockTransport{
+		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
+			return nil, errors.New("permission denied")
+		},
+	}
+	c := New(tr)
+	err := c.DeleteTopic(context.Background(), "protected")
+	if err == nil {
+		t.Error("expected error")
+	}
+}
+
+// --- Schema Registry Tests ---
+
+func TestListSchemas(t *testing.T) {
+	tr := &mockTransport{
+		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
+			if name != "kafka_list_schemas" {
+				t.Errorf("expected kafka_list_schemas, got %q", name)
+			}
+			return json.Marshal(map[string]any{
+				"subjects": []string{"orders-value", "payments-value"},
+			})
+		},
+	}
+	c := New(tr)
+	subjects, err := c.ListSchemas(context.Background())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(subjects) != 2 {
+		t.Errorf("expected 2 subjects, got %d", len(subjects))
+	}
+}
+
+func TestListSchemasError(t *testing.T) {
+	tr := &mockTransport{
+		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
+			return nil, errors.New("registry unavailable")
+		},
+	}
+	c := New(tr)
+	_, err := c.ListSchemas(context.Background())
+	if err == nil {
+		t.Error("expected error")
+	}
+}
+
+func TestListSchemasInvalidJSON(t *testing.T) {
+	tr := &mockTransport{
+		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
+			return json.RawMessage(`not json`), nil
+		},
+	}
+	c := New(tr)
+	_, err := c.ListSchemas(context.Background())
+	if err == nil {
+		t.Error("expected error for malformed JSON")
+	}
+}
+
+func TestGetSchema(t *testing.T) {
+	tr := &mockTransport{
+		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
+			if name != "kafka_describe_schema" {
+				t.Errorf("expected kafka_describe_schema, got %q", name)
+			}
+			return json.Marshal(SchemaInfo{
+				Subject:    "orders-value",
+				Version:    1,
+				SchemaType: "AVRO",
+				Schema:     `{"type":"record"}`,
+			})
+		},
+	}
+	c := New(tr)
+	info, err := c.GetSchema(context.Background(), "orders-value")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if info.Subject != "orders-value" {
+		t.Errorf("expected orders-value, got %s", info.Subject)
+	}
+}
+
+func TestGetSchemaError(t *testing.T) {
+	tr := &mockTransport{
+		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
+			return nil, errors.New("not found")
+		},
+	}
+	c := New(tr)
+	_, err := c.GetSchema(context.Background(), "missing")
+	if err == nil {
+		t.Error("expected error")
+	}
+}
+
+func TestGetSchemaInvalidJSON(t *testing.T) {
+	tr := &mockTransport{
+		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
+			return json.RawMessage(`bad`), nil
+		},
+	}
+	c := New(tr)
+	_, err := c.GetSchema(context.Background(), "test")
+	if err == nil {
+		t.Error("expected error for malformed JSON")
+	}
+}
+
+// --- Admin Operations Tests ---
+
+func TestResetOffsets(t *testing.T) {
+	tr := &mockTransport{
+		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
+			if name != "kafka_reset_offsets" {
+				t.Errorf("expected kafka_reset_offsets, got %q", name)
+			}
+			if args["group_id"] != "my-group" {
+				t.Errorf("expected group_id my-group, got %v", args["group_id"])
+			}
+			return json.Marshal(map[string]any{})
+		},
+	}
+	c := New(tr)
+	err := c.ResetOffsets(context.Background(), "my-group", "orders", "earliest")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestResetOffsetsError(t *testing.T) {
+	tr := &mockTransport{
+		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
+			return nil, errors.New("failed")
+		},
+	}
+	c := New(tr)
+	err := c.ResetOffsets(context.Background(), "g", "t", "earliest")
+	if err == nil {
+		t.Error("expected error")
+	}
+}
+
+func TestNaturalLanguageQuery(t *testing.T) {
+	tr := &mockTransport{
+		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
+			if name != "kafka_nl_query" {
+				t.Errorf("expected kafka_nl_query, got %q", name)
+			}
+			return json.Marshal(map[string]any{"answer": "There are 3 topics"})
+		},
+	}
+	c := New(tr)
+	result, err := c.NaturalLanguageQuery(context.Background(), "how many topics?")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected non-nil result")
+	}
+}
+
+func TestNaturalLanguageQueryError(t *testing.T) {
+	tr := &mockTransport{
+		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
+			return nil, errors.New("failed")
+		},
+	}
+	c := New(tr)
+	_, err := c.NaturalLanguageQuery(context.Background(), "query")
+	if err == nil {
+		t.Error("expected error")
+	}
+}
+
+func TestDiagnoseLag(t *testing.T) {
+	tr := &mockTransport{
+		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
+			if name != "kafka_diagnose_lag" {
+				t.Errorf("expected kafka_diagnose_lag, got %q", name)
+			}
+			return json.Marshal(map[string]any{"diagnosis": "healthy"})
+		},
+	}
+	c := New(tr)
+	result, err := c.DiagnoseLag(context.Background(), "my-group")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected non-nil result")
+	}
+}
+
+func TestDiagnoseLagError(t *testing.T) {
+	tr := &mockTransport{
+		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
+			return nil, errors.New("failed")
+		},
+	}
+	c := New(tr)
+	_, err := c.DiagnoseLag(context.Background(), "g")
+	if err == nil {
+		t.Error("expected error")
+	}
+}
+
+func TestGetAnomalies(t *testing.T) {
+	tr := &mockTransport{
+		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
+			if name != "kafka_anomalies" {
+				t.Errorf("expected kafka_anomalies, got %q", name)
+			}
+			if args["severity"] != "critical" {
+				t.Errorf("expected severity critical, got %v", args["severity"])
+			}
+			return json.Marshal(map[string]any{"anomalies": []any{}})
+		},
+	}
+	c := New(tr)
+	result, err := c.GetAnomalies(context.Background(), "critical", 10)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected non-nil result")
+	}
+}
+
+func TestGetAnomaliesNoFilters(t *testing.T) {
+	tr := &mockTransport{
+		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
+			if _, ok := args["severity"]; ok {
+				t.Error("severity should not be set when empty")
+			}
+			if _, ok := args["limit"]; ok {
+				t.Error("limit should not be set when 0")
+			}
+			return json.Marshal(map[string]any{})
+		},
+	}
+	c := New(tr)
+	c.GetAnomalies(context.Background(), "", 0)
+}
+
+func TestGetAnomaliesError(t *testing.T) {
+	tr := &mockTransport{
+		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
+			return nil, errors.New("failed")
+		},
+	}
+	c := New(tr)
+	_, err := c.GetAnomalies(context.Background(), "", 0)
+	if err == nil {
+		t.Error("expected error")
+	}
+}
+
+func TestAdvisorScan(t *testing.T) {
+	tr := &mockTransport{
+		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
+			if name != "kafka_advisor_scan" {
+				t.Errorf("expected kafka_advisor_scan, got %q", name)
+			}
+			return json.Marshal(map[string]any{"recommendations": []any{}})
+		},
+	}
+	c := New(tr)
+	result, err := c.AdvisorScan(context.Background(), "prod")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected non-nil result")
+	}
+}
+
+func TestAdvisorScanNoCluster(t *testing.T) {
+	tr := &mockTransport{
+		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
+			if _, ok := args["cluster"]; ok {
+				t.Error("cluster should not be set when empty")
+			}
+			return json.Marshal(map[string]any{})
+		},
+	}
+	c := New(tr)
+	c.AdvisorScan(context.Background(), "")
+}
+
+func TestAdvisorScanError(t *testing.T) {
+	tr := &mockTransport{
+		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
+			return nil, errors.New("failed")
+		},
+	}
+	c := New(tr)
+	_, err := c.AdvisorScan(context.Background(), "")
+	if err == nil {
+		t.Error("expected error")
+	}
+}
+
 func TestTopicSummaryJSON(t *testing.T) {
 	ts := TopicSummary{Name: "test", Partitions: 3, ReplicationFactor: 2, MessageCount: 100}
 	data, err := json.Marshal(ts)
