@@ -1,13 +1,14 @@
 # Binaries
 bin/
 dist/
-kafkamcp
+/kafkamcp
 
 # IDE
 .idea/
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json.example
+!.vscode/launch.json.example
 *.swp
 *.swo
 *~
