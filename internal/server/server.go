@@ -9,16 +9,22 @@ import (
 "sync"
 "time"
 
+"github.com/kafkamcp/kafkamcp/internal/adaptiverate"
+"github.com/kafkamcp/kafkamcp/internal/agentmemory"
 "github.com/kafkamcp/kafkamcp/internal/anomaly"
 "github.com/kafkamcp/kafkamcp/internal/advisor"
 "github.com/kafkamcp/kafkamcp/internal/audit"
 "github.com/kafkamcp/kafkamcp/internal/auth"
+"github.com/kafkamcp/kafkamcp/internal/catalog"
 "github.com/kafkamcp/kafkamcp/internal/chaos"
 "github.com/kafkamcp/kafkamcp/internal/collaboration"
 "github.com/kafkamcp/kafkamcp/internal/compliance"
 "github.com/kafkamcp/kafkamcp/internal/config"
+"github.com/kafkamcp/kafkamcp/internal/configvcs"
 "github.com/kafkamcp/kafkamcp/internal/contracts"
 "github.com/kafkamcp/kafkamcp/internal/cost"
+"github.com/kafkamcp/kafkamcp/internal/costattribution"
+"github.com/kafkamcp/kafkamcp/internal/dagworkflow"
 "github.com/kafkamcp/kafkamcp/internal/dlq"
 "github.com/kafkamcp/kafkamcp/internal/evolution"
 "github.com/kafkamcp/kafkamcp/internal/federation"
@@ -46,10 +52,14 @@ import (
 "github.com/kafkamcp/kafkamcp/internal/ratelimit"
 "github.com/kafkamcp/kafkamcp/internal/replay"
 "github.com/kafkamcp/kafkamcp/internal/replication"
+"github.com/kafkamcp/kafkamcp/internal/sandbox"
 "github.com/kafkamcp/kafkamcp/internal/schema"
 "github.com/kafkamcp/kafkamcp/internal/selfheal"
 "github.com/kafkamcp/kafkamcp/internal/semantic"
+"github.com/kafkamcp/kafkamcp/internal/streamsql"
+"github.com/kafkamcp/kafkamcp/internal/taskqueue"
 "github.com/kafkamcp/kafkamcp/internal/telemetry"
+"github.com/kafkamcp/kafkamcp/internal/viewstore"
 "github.com/kafkamcp/kafkamcp/internal/watch"
 "github.com/kafkamcp/kafkamcp/internal/workflow"
 "github.com/kafkamcp/kafkamcp/internal/persona"
@@ -118,6 +128,16 @@ type Platform struct {
 	replayEngine       *replay.Engine             // interactive replay & time-travel
 	federationCoord    *federation.Coordinator    // federated multi-instance coordination
 	agentProfiler      *profiler.Profiler         // agent performance profiler
+	dagWorkflowEngine  *dagworkflow.Engine        // DAG-based workflow orchestrator
+	viewStoreEngine    *viewstore.Engine          // materialized view store
+	agentMemoryEngine  *agentmemory.Engine        // per-agent persistent memory
+	taskQueueEngine    *taskqueue.Engine          // multi-agent task queue
+	streamSQLEngine    *streamsql.Engine          // streaming SQL engine
+	catalogEngine      *catalog.Engine            // data catalog & discovery
+	adaptiveRateEngine *adaptiverate.Engine       // ML-driven rate limiting
+	configVCSEngine    *configvcs.Engine          // config version control
+	costAttrEngine     *costattribution.Engine    // real-time cost attribution
+	sandboxEngine      *sandbox.Engine            // agent sandbox environments
 }
 
 // Server is the KafkaMCP MCP server.
@@ -234,6 +254,16 @@ Platform: Platform{
 	replayEngine:       replay.NewEngine(logger),
 	federationCoord:    federation.NewCoordinator("local", logger),
 	agentProfiler:      profiler.NewProfiler(),
+	dagWorkflowEngine:  dagworkflow.NewEngine(logger),
+	viewStoreEngine:    viewstore.NewEngine(logger),
+	agentMemoryEngine:  agentmemory.NewEngine(logger),
+	taskQueueEngine:    taskqueue.NewEngine(logger),
+	streamSQLEngine:    streamsql.NewEngine(logger),
+	catalogEngine:      catalog.NewEngine(logger),
+	adaptiveRateEngine: adaptiverate.NewEngine(logger),
+	configVCSEngine:    configvcs.NewEngine(logger),
+	costAttrEngine:     costattribution.NewEngine(logger),
+	sandboxEngine:      sandbox.NewEngine(logger),
 },
 }
 
