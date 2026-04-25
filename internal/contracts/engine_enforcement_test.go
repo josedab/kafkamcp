@@ -1,6 +1,8 @@
 package contracts
 
 import (
+	"strings"
+	"sync"
 	"testing"
 )
 
@@ -294,4 +296,189 @@ func TestInferContract(t *testing.T) {
 			t.Errorf("expected confidence 0.9 for 100 samples, got %f", r.Confidence)
 		}
 	})
+
+	t.Run("malformed samples with non-string values", func(t *testing.T) {
+		e := NewEngine()
+		samples := []map[string]any{
+			{"count": 42, "flag": true},
+			{"count": 99, "flag": false},
+			{"count": 7, "flag": true},
+		}
+		result := e.InferContract("numeric.topic", samples)
+		if result == nil {
+			t.Fatal("expected non-nil result")
+		}
+		if result.SampleSize != 3 {
+			t.Errorf("expected sample size 3, got %d", result.SampleSize)
+		}
+		// Non-string fields should still generate not_null rules
+		hasNotNull := false
+		for _, rule := range result.Quality {
+			if rule.Rule == "not_null" {
+				hasNotNull = true
+			}
+		}
+		if !hasNotNull {
+			t.Error("expected not_null rules for fields present in all samples")
+		}
+	})
+
+	t.Run("mixed types - some fields missing", func(t *testing.T) {
+		e := NewEngine()
+		samples := []map[string]any{
+			{"id": "1", "name": "alice"},
+			{"id": "2"},
+			{"id": "3", "name": "charlie"},
+		}
+		result := e.InferContract("mixed.topic", samples)
+		if result == nil {
+			t.Fatal("expected non-nil result")
+		}
+		// "id" present in all 3, "name" only in 2 → only "id" gets not_null
+		for _, rule := range result.Quality {
+			if rule.Rule == "not_null" && rule.Field == "name" {
+				t.Error("field 'name' is not in all samples, should not get not_null")
+			}
+		}
+	})
+}
+
+func TestSetEnforcementMode_AllModes(t *testing.T) {
+	modes := []EnforcementMode{ModeWarn, ModeReject, ModeQuarantine}
+	for _, mode := range modes {
+		t.Run(string(mode), func(t *testing.T) {
+			e := setupEnforcementEngine(t)
+			err := e.SetEnforcementMode("test.topic", mode)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			got := e.getEnforcementMode("test.topic")
+			if got != mode {
+				t.Errorf("expected %q, got %q", mode, got)
+			}
+		})
+	}
+}
+
+func TestGetEnforcementMode_DefaultIsWarn(t *testing.T) {
+	e := setupEnforcementEngine(t)
+	mode := e.getEnforcementMode("test.topic")
+	if mode != ModeWarn {
+		t.Errorf("expected default mode warn, got %q", mode)
+	}
+}
+
+func TestEnforceContract_NilPayload(t *testing.T) {
+	e := setupEnforcementEngine(t)
+	_ = e.SetEnforcementMode("test.topic", ModeReject)
+
+	r := e.EnforceContract("test.topic", nil)
+	if r == nil {
+		t.Fatal("expected non-nil result even for nil value")
+	}
+	if r.Allowed {
+		t.Error("nil payload should violate not_null rule")
+	}
+}
+
+func TestEnforceContract_NonExistentContract(t *testing.T) {
+	e := NewEngine()
+	r := e.EnforceContract("no.such.topic", map[string]any{"key": "val"})
+	if r != nil {
+		t.Error("expected nil result for topic without contract")
+	}
+}
+
+func TestRecordViolation_DuplicateDetection(t *testing.T) {
+	e := setupEnforcementEngine(t)
+	// Validate same bad message twice
+	msg := map[string]any{"status": "unknown"}
+	e.ValidateMessage("test.topic", msg)
+	e.ValidateMessage("test.topic", msg)
+
+	report, err := e.GetComplianceReport("test.topic")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if report.FailedCount != 2 {
+		t.Errorf("expected 2 failed checks, got %d", report.FailedCount)
+	}
+	// Both violations should be counted
+	if report.ViolationsByRule["not_null"] != 2 {
+		t.Errorf("expected 2 not_null violations, got %d", report.ViolationsByRule["not_null"])
+	}
+}
+
+func TestGetViolationSummary_AcrossTopics(t *testing.T) {
+	e := NewEngine()
+	_ = e.RegisterContract(Contract{
+		Name: "c1", Version: "1.0", Topic: "topic.a", Owner: "team",
+		Quality: []QualityRule{{Field: "id", Rule: "not_null", Severity: "error"}},
+	})
+	_ = e.RegisterContract(Contract{
+		Name: "c2", Version: "1.0", Topic: "topic.b", Owner: "team",
+		Quality: []QualityRule{{Field: "name", Rule: "not_null", Severity: "error"}},
+	})
+
+	e.ValidateMessage("topic.a", map[string]any{})
+	e.ValidateMessage("topic.b", map[string]any{})
+
+	sumA, err := e.GetViolationSummary("topic.a")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if sumA.TotalViolations != 1 {
+		t.Errorf("topic.a: expected 1 violation, got %d", sumA.TotalViolations)
+	}
+
+	sumB, err := e.GetViolationSummary("topic.b")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if sumB.TotalViolations != 1 {
+		t.Errorf("topic.b: expected 1 violation, got %d", sumB.TotalViolations)
+	}
+}
+
+func TestEnforceContract_ConcurrentAccess(t *testing.T) {
+	e := setupEnforcementEngine(t)
+	_ = e.SetEnforcementMode("test.topic", ModeWarn)
+
+	var wg sync.WaitGroup
+	for i := 0; i < 50; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			r := e.EnforceContract("test.topic", map[string]any{"id": "1", "status": "active"})
+			if r == nil {
+				t.Error("expected non-nil result")
+			}
+		}()
+	}
+	wg.Wait()
+
+	report, err := e.GetComplianceReport("test.topic")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if report.TotalChecked != 50 {
+		t.Errorf("expected 50 total checks, got %d", report.TotalChecked)
+	}
+}
+
+func TestRecordViolation_NoStats(t *testing.T) {
+	e := setupEnforcementEngine(t)
+	// Call recordViolation when no stats exist (before any validation)
+	result := &ValidationResult{
+		Violations: []Violation{{Rule: "not_null", Field: "id", Severity: "error"}},
+	}
+	e.recordViolation("test.topic", result)
+	// Should not panic; stats don't exist so it's a no-op
+	_, err := e.GetComplianceReport("test.topic")
+	if err == nil {
+		t.Error("expected error since no validation has run")
+	}
+	if !strings.Contains(err.Error(), "no compliance report") {
+		t.Errorf("unexpected error: %v", err)
+	}
 }
