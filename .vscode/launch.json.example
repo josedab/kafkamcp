@@ -1,0 +1,33 @@
+{
+  // Copy this file to launch.json to use these debug configurations.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Server",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/kafkamcp",
+      "args": ["--config", "${workspaceFolder}/kafkamcp.yaml"],
+      "env": {},
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Debug Current Test File",
+      "type": "go",
+      "request": "launch",
+      "mode": "test",
+      "program": "${fileDirname}",
+      "args": ["-test.v"],
+      "env": {},
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Attach to Running Process",
+      "type": "go",
+      "request": "attach",
+      "mode": "local",
+      "processId": 0
+    }
+  ]
+}
