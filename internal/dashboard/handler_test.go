@@ -162,3 +162,155 @@ func TestBroadcastEventFullChannel(t *testing.T) {
 	// Should not block or panic
 	d.BroadcastEvent("test", map[string]any{"data": "dropped"})
 }
+
+// --- SetAPIKey and requireAuth tests ---
+
+func TestSetAPIKeyAndRequireAuth(t *testing.T) {
+	rl := ratelimit.New(0)
+	d := New(nil, nil, rl, slog.Default())
+	d.SetAPIKey("my-secret-key")
+
+	handler := d.requireAuth(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("ok"))
+	})
+
+	t.Run("valid_bearer_token", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/test", nil)
+		req.Header.Set("Authorization", "Bearer my-secret-key")
+		w := httptest.NewRecorder()
+		handler(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("expected 200 with valid bearer, got %d", w.Code)
+		}
+	})
+
+	t.Run("valid_api_key_header", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/test", nil)
+		req.Header.Set("X-API-Key", "my-secret-key")
+		w := httptest.NewRecorder()
+		handler(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("expected 200 with valid X-API-Key, got %d", w.Code)
+		}
+	})
+
+	t.Run("missing_token", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/test", nil)
+		w := httptest.NewRecorder()
+		handler(w, req)
+
+		if w.Code != http.StatusUnauthorized {
+			t.Errorf("expected 401 for missing token, got %d", w.Code)
+		}
+	})
+
+	t.Run("invalid_token", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/test", nil)
+		req.Header.Set("Authorization", "Bearer wrong-key")
+		w := httptest.NewRecorder()
+		handler(w, req)
+
+		if w.Code != http.StatusUnauthorized {
+			t.Errorf("expected 401 for invalid token, got %d", w.Code)
+		}
+	})
+
+	t.Run("invalid_api_key", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/test", nil)
+		req.Header.Set("X-API-Key", "wrong-key")
+		w := httptest.NewRecorder()
+		handler(w, req)
+
+		if w.Code != http.StatusUnauthorized {
+			t.Errorf("expected 401 for invalid X-API-Key, got %d", w.Code)
+		}
+	})
+}
+
+func TestRequireAuthNoKey(t *testing.T) {
+	rl := ratelimit.New(0)
+	d := New(nil, nil, rl, slog.Default())
+	// No API key set — auth should pass through
+
+	handler := d.requireAuth(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200 when no API key set, got %d", w.Code)
+	}
+}
+
+func TestSetAPIKeyEmpty(t *testing.T) {
+	rl := ratelimit.New(0)
+	d := New(nil, nil, rl, slog.Default())
+	d.SetAPIKey("")
+
+	handler := d.requireAuth(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200 when API key is empty string, got %d", w.Code)
+	}
+}
+
+func TestRequireAuthPartialBearerPrefix(t *testing.T) {
+	rl := ratelimit.New(0)
+	d := New(nil, nil, rl, slog.Default())
+	d.SetAPIKey("test-key")
+
+	handler := d.requireAuth(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req.Header.Set("Authorization", "Basic dXNlcjpwYXNz")
+	w := httptest.NewRecorder()
+	handler(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401 for non-Bearer auth, got %d", w.Code)
+	}
+}
+
+func TestAuthProtectsEndpoints(t *testing.T) {
+	rl := ratelimit.New(0)
+	d := New(nil, nil, rl, slog.Default())
+	d.SetAPIKey("secret")
+	handler := d.Handler()
+
+	endpoints := []string{"/api/v1/schemas", "/api/v1/ratelimits"}
+	for _, ep := range endpoints {
+		req := httptest.NewRequest(http.MethodGet, ep, nil)
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, req)
+
+		if w.Code != http.StatusUnauthorized {
+			t.Errorf("%s: expected 401 without auth, got %d", ep, w.Code)
+		}
+	}
+
+	// With auth
+	for _, ep := range endpoints {
+		req := httptest.NewRequest(http.MethodGet, ep, nil)
+		req.Header.Set("Authorization", "Bearer secret")
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("%s: expected 200 with auth, got %d", ep, w.Code)
+		}
+	}
+}
