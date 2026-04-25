@@ -2,6 +2,7 @@ package dlq
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/kafkamcp/kafkamcp/internal/kafka"
@@ -147,5 +148,149 @@ func TestSuggestSchemaFixes_BothNullAndEmptyInSameField(t *testing.T) {
 	}
 	if !hasEmpty {
 		t.Error("expected empty string suggestion for 'status'")
+	}
+}
+
+func TestSuggestSchemaFixes_InvalidJSONMessage(t *testing.T) {
+	mock := &kafka.MockKafkaManager{
+		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
+			return []kafka.Message{
+				{Value: "not a map value"},
+			}, nil
+		},
+	}
+
+	r := NewRemediator(discardLogger())
+	suggestions, err := r.SuggestSchemaFixes(context.Background(), mock, "cluster", "orders-dlq", 10)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	found := false
+	for _, s := range suggestions {
+		if s.Field == "_value" {
+			found = true
+		}
+	}
+	if !found {
+		t.Error("expected _value suggestion for non-JSON message")
+	}
+}
+
+func TestSuggestSchemaFixes_SchemaMismatchHeader(t *testing.T) {
+	mock := &kafka.MockKafkaManager{
+		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
+			return []kafka.Message{
+				{
+					Value:   map[string]any{"id": "1"},
+					Headers: map[string]string{"x-error-type": "schema_mismatch"},
+				},
+			}, nil
+		},
+	}
+
+	r := NewRemediator(discardLogger())
+	suggestions, err := r.SuggestSchemaFixes(context.Background(), mock, "cluster", "orders-dlq", 10)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	found := false
+	for _, s := range suggestions {
+		if s.Field == "_schema" {
+			found = true
+		}
+	}
+	if !found {
+		t.Error("expected _schema suggestion for schema_mismatch header")
+	}
+}
+
+func TestSuggestSchemaFixes_LimitDefault(t *testing.T) {
+	var capturedLimit int
+	mock := &kafka.MockKafkaManager{
+		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
+			capturedLimit = limit
+			return nil, nil
+		},
+	}
+
+	r := NewRemediator(discardLogger())
+	_, err := r.SuggestSchemaFixes(context.Background(), mock, "cluster", "topic", 0)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if capturedLimit != 20 {
+		t.Errorf("expected default limit 20, got %d", capturedLimit)
+	}
+}
+
+func TestSuggestSchemaFixes_NegativeLimit(t *testing.T) {
+	var capturedLimit int
+	mock := &kafka.MockKafkaManager{
+		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
+			capturedLimit = limit
+			return nil, nil
+		},
+	}
+
+	r := NewRemediator(discardLogger())
+	_, err := r.SuggestSchemaFixes(context.Background(), mock, "cluster", "topic", -5)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if capturedLimit != 20 {
+		t.Errorf("expected default limit 20 for negative input, got %d", capturedLimit)
+	}
+}
+
+func TestSuggestSchemaFixes_ConsumeErrorExt(t *testing.T) {
+	mock := &kafka.MockKafkaManager{
+		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
+			return nil, errors.New("consume failed")
+		},
+	}
+
+	r := NewRemediator(discardLogger())
+	_, err := r.SuggestSchemaFixes(context.Background(), mock, "cluster", "topic", 10)
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+func TestSuggestSchemaFixes_EmptyConsumeResult(t *testing.T) {
+	mock := &kafka.MockKafkaManager{
+		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
+			return nil, nil
+		},
+	}
+
+	r := NewRemediator(discardLogger())
+	suggestions, err := r.SuggestSchemaFixes(context.Background(), mock, "cluster", "topic", 10)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(suggestions) != 0 {
+		t.Errorf("expected 0 suggestions for empty result, got %d", len(suggestions))
+	}
+}
+
+func TestSuggestSchemaFixes_MixOfValidInvalidNull(t *testing.T) {
+	mock := &kafka.MockKafkaManager{
+		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
+			return []kafka.Message{
+				{Value: map[string]any{"id": "1", "name": "alice"}},
+				{Value: "raw string not a map"},
+				{Value: map[string]any{"id": nil, "name": ""}},
+			}, nil
+		},
+	}
+
+	r := NewRemediator(discardLogger())
+	suggestions, err := r.SuggestSchemaFixes(context.Background(), mock, "cluster", "topic", 10)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	// Should have: _value (invalid JSON), id:null, name:empty
+	if len(suggestions) < 2 {
+		t.Errorf("expected at least 2 suggestions, got %d: %+v", len(suggestions), suggestions)
 	}
 }
