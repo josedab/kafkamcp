@@ -3,6 +3,7 @@ package streamsql
 import (
 	"log/slog"
 	"os"
+	"sync"
 	"testing"
 )
 
@@ -104,4 +105,278 @@ func TestExplain(t *testing.T) {
 	if len(plan.Steps) == 0 {
 		t.Error("expected non-empty execution plan")
 	}
+}
+
+// --- GetQuery tests ---
+
+func TestGetQueryFound(t *testing.T) {
+	e := NewEngine(testLogger())
+	q, _ := e.Parse("SELECT * FROM test_topic", "agent-1")
+
+	got, err := e.GetQuery(q.ID)
+	if err != nil {
+		t.Fatalf("GetQuery failed: %v", err)
+	}
+	if got.SQL != q.SQL {
+		t.Errorf("expected SQL %q, got %q", q.SQL, got.SQL)
+	}
+}
+
+func TestGetQueryNotFound(t *testing.T) {
+	e := NewEngine(testLogger())
+	_, err := e.GetQuery("nonexistent")
+	if err == nil {
+		t.Fatal("expected error for nonexistent query")
+	}
+}
+
+// --- ListQueries tests ---
+
+func TestListQueriesEmpty(t *testing.T) {
+	e := NewEngine(testLogger())
+	result := e.ListQueries(10)
+	if len(result) != 0 {
+		t.Errorf("expected 0 queries, got %d", len(result))
+	}
+}
+
+func TestListQueries(t *testing.T) {
+	e := NewEngine(testLogger())
+	e.Parse("SELECT * FROM t1", "a1")
+	e.Parse("SELECT * FROM t2", "a2")
+	e.Parse("SELECT * FROM t3", "a3")
+
+	result := e.ListQueries(10)
+	if len(result) != 3 {
+		t.Errorf("expected 3 queries, got %d", len(result))
+	}
+}
+
+func TestListQueriesWithLimit(t *testing.T) {
+	e := NewEngine(testLogger())
+	e.Parse("SELECT * FROM t1", "a1")
+	e.Parse("SELECT * FROM t2", "a2")
+	e.Parse("SELECT * FROM t3", "a3")
+
+	result := e.ListQueries(2)
+	if len(result) != 2 {
+		t.Errorf("expected 2 queries with limit, got %d", len(result))
+	}
+}
+
+func TestListQueriesDefaultLimit(t *testing.T) {
+	e := NewEngine(testLogger())
+	e.Parse("SELECT * FROM t1", "a1")
+
+	result := e.ListQueries(0)
+	if len(result) != 1 {
+		t.Errorf("expected 1 query with default limit, got %d", len(result))
+	}
+}
+
+// --- DeleteQuery tests ---
+
+func TestDeleteQuery(t *testing.T) {
+	e := NewEngine(testLogger())
+	q, _ := e.Parse("SELECT * FROM test_topic", "agent-1")
+
+	err := e.DeleteQuery(q.ID)
+	if err != nil {
+		t.Fatalf("DeleteQuery failed: %v", err)
+	}
+
+	_, err = e.GetQuery(q.ID)
+	if err == nil {
+		t.Error("expected error after delete")
+	}
+}
+
+func TestDeleteQueryNotFound(t *testing.T) {
+	e := NewEngine(testLogger())
+	err := e.DeleteQuery("nonexistent")
+	if err == nil {
+		t.Fatal("expected error for nonexistent query")
+	}
+}
+
+func TestDeleteThenList(t *testing.T) {
+	e := NewEngine(testLogger())
+	q1, _ := e.Parse("SELECT * FROM t1", "a1")
+	e.Parse("SELECT * FROM t2", "a2")
+
+	e.DeleteQuery(q1.ID)
+	result := e.ListQueries(10)
+	if len(result) != 1 {
+		t.Errorf("expected 1 query after delete, got %d", len(result))
+	}
+}
+
+// --- matchWhere tests for all operators ---
+
+func TestMatchWhereEquals(t *testing.T) {
+	msg := map[string]any{"status": "active"}
+	w := &WhereClause{Field: "status", Operator: "=", Value: "active"}
+	if !matchWhere(msg, w) {
+		t.Error("expected match for =")
+	}
+	w.Value = "inactive"
+	if matchWhere(msg, w) {
+		t.Error("expected no match for = with different value")
+	}
+}
+
+func TestMatchWhereNotEquals(t *testing.T) {
+	msg := map[string]any{"status": "active"}
+	w := &WhereClause{Field: "status", Operator: "!=", Value: "inactive"}
+	if !matchWhere(msg, w) {
+		t.Error("expected match for !=")
+	}
+	w.Value = "active"
+	if matchWhere(msg, w) {
+		t.Error("expected no match for != with same value")
+	}
+}
+
+func TestMatchWhereGreaterThan(t *testing.T) {
+	msg := map[string]any{"age": 30.0}
+	w := &WhereClause{Field: "age", Operator: ">", Value: "25"}
+	if !matchWhere(msg, w) {
+		t.Error("expected match for > 25")
+	}
+	w.Value = "30"
+	if matchWhere(msg, w) {
+		t.Error("expected no match for > 30 when value is 30")
+	}
+}
+
+func TestMatchWhereLessThan(t *testing.T) {
+	msg := map[string]any{"age": 20.0}
+	w := &WhereClause{Field: "age", Operator: "<", Value: "25"}
+	if !matchWhere(msg, w) {
+		t.Error("expected match for < 25")
+	}
+}
+
+func TestMatchWhereGreaterOrEqual(t *testing.T) {
+	msg := map[string]any{"age": 30.0}
+	w := &WhereClause{Field: "age", Operator: ">=", Value: "30"}
+	if !matchWhere(msg, w) {
+		t.Error("expected match for >= 30")
+	}
+}
+
+func TestMatchWhereLessOrEqual(t *testing.T) {
+	msg := map[string]any{"age": 25.0}
+	w := &WhereClause{Field: "age", Operator: "<=", Value: "25"}
+	if !matchWhere(msg, w) {
+		t.Error("expected match for <= 25")
+	}
+}
+
+func TestMatchWhereLike(t *testing.T) {
+	msg := map[string]any{"name": "hello-world"}
+	w := &WhereClause{Field: "name", Operator: "LIKE", Value: "hello%"}
+	if !matchWhere(msg, w) {
+		t.Error("expected match for LIKE hello%")
+	}
+	w.Value = "%world"
+	if !matchWhere(msg, w) {
+		t.Error("expected match for LIKE %world")
+	}
+	w.Value = "nomatch%"
+	if matchWhere(msg, w) {
+		t.Error("expected no match for LIKE nomatch%")
+	}
+}
+
+func TestMatchWhereLikeRegexSpecialChars(t *testing.T) {
+	msg := map[string]any{"name": "test.value"}
+	w := &WhereClause{Field: "name", Operator: "LIKE", Value: "test%"}
+	if !matchWhere(msg, w) {
+		t.Error("expected match for LIKE with dots in value")
+	}
+}
+
+func TestMatchWhereFieldMissing(t *testing.T) {
+	msg := map[string]any{"name": "test"}
+	w := &WhereClause{Field: "missing", Operator: "=", Value: "test"}
+	if matchWhere(msg, w) {
+		t.Error("expected no match for missing field")
+	}
+}
+
+func TestMatchWhereDefaultOperator(t *testing.T) {
+	msg := map[string]any{"status": "active"}
+	w := &WhereClause{Field: "status", Operator: "UNKNOWN", Value: "active"}
+	if !matchWhere(msg, w) {
+		t.Error("expected default operator to behave like =")
+	}
+}
+
+func TestMatchWhereWithBoolValue(t *testing.T) {
+	msg := map[string]any{"active": true}
+	w := &WhereClause{Field: "active", Operator: "=", Value: "true"}
+	if !matchWhere(msg, w) {
+		t.Error("expected match for bool true")
+	}
+}
+
+func TestMatchWhereWithStringNumeric(t *testing.T) {
+	msg := map[string]any{"count": "42"}
+	w := &WhereClause{Field: "count", Operator: ">", Value: "10"}
+	if !matchWhere(msg, w) {
+		t.Error("expected match for string numeric comparison")
+	}
+}
+
+// --- toFloat64 tests ---
+
+func TestToFloat64(t *testing.T) {
+	tests := []struct {
+		input    any
+		expected float64
+	}{
+		{float64(3.14), 3.14},
+		{float32(2.5), 2.5},
+		{int(42), 42},
+		{int64(100), 100},
+		{"3.14", 3.14},
+		{"-5.5", -5.5},
+		{"1e3", 1000},
+		{"notanumber", 0},
+		{nil, 0},
+		{true, 0},
+		{[]int{1, 2}, 0},
+	}
+
+	for _, tt := range tests {
+		result := toFloat64(tt.input)
+		diff := result - tt.expected
+		if diff > 0.01 || diff < -0.01 {
+			t.Errorf("toFloat64(%v) = %f, expected %f", tt.input, result, tt.expected)
+		}
+	}
+}
+
+// --- Concurrent GetQuery ---
+
+func TestConcurrentGetQuery(t *testing.T) {
+	e := NewEngine(testLogger())
+	q, _ := e.Parse("SELECT * FROM orders", "agent-1")
+
+	var wg sync.WaitGroup
+	for i := 0; i < 20; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			got, err := e.GetQuery(q.ID)
+			if err != nil {
+				t.Errorf("concurrent GetQuery failed: %v", err)
+			}
+			if got.SQL != q.SQL {
+				t.Errorf("unexpected SQL in concurrent read")
+			}
+		}()
+	}
+	wg.Wait()
 }
