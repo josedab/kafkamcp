@@ -240,3 +240,134 @@ func TestExtractValuesEmpty(t *testing.T) {
 		t.Fatalf("expected 0 values for nil input, got %d", len(vals))
 	}
 }
+
+func TestExponentialSmoothing_Alpha0(t *testing.T) {
+	values := []float64{10, 20, 30, 40, 50}
+	// alpha=0 should default to 0.3
+	result := ExponentialSmoothing(values, 0, 3)
+	if len(result) != 3 {
+		t.Fatalf("expected 3 predictions, got %d", len(result))
+	}
+	// Should use alpha=0.3 fallback, results should be reasonable
+	for _, v := range result {
+		if v <= 0 {
+			t.Errorf("expected positive prediction, got %f", v)
+		}
+	}
+}
+
+func TestExponentialSmoothing_Alpha1(t *testing.T) {
+	values := []float64{10, 20, 30, 40, 50}
+	result := ExponentialSmoothing(values, 1.0, 3)
+	if len(result) != 3 {
+		t.Fatalf("expected 3 predictions, got %d", len(result))
+	}
+	// alpha=1 means smoothed = last value (50), trend=(50-30)/2=10
+	// prediction[0] = 50 + 10*1 = 60
+	if math.Abs(result[0]-60) > 1e-9 {
+		t.Errorf("expected first prediction ~60 with alpha=1, got %f", result[0])
+	}
+}
+
+func TestExponentialSmoothing_TypicalAlpha(t *testing.T) {
+	values := []float64{100, 100, 100, 100, 100}
+	result := ExponentialSmoothing(values, 0.3, 5)
+	if len(result) != 5 {
+		t.Fatalf("expected 5 predictions, got %d", len(result))
+	}
+	// Flat data: trend=0, all predictions should equal smoothed value (~100)
+	for i, v := range result {
+		if math.Abs(v-100) > 1e-6 {
+			t.Errorf("prediction[%d] = %f, expected ~100 for flat data", i, v)
+		}
+	}
+}
+
+func TestExponentialSmoothing_AllZeroValues(t *testing.T) {
+	values := []float64{0, 0, 0, 0, 0}
+	result := ExponentialSmoothing(values, 0.3, 3)
+	if len(result) != 3 {
+		t.Fatalf("expected 3 predictions, got %d", len(result))
+	}
+	for i, v := range result {
+		if v != 0 {
+			t.Errorf("prediction[%d] = %f, expected 0 for all-zero values", i, v)
+		}
+	}
+}
+
+func TestExponentialSmoothing_NegativeMetrics(t *testing.T) {
+	values := []float64{-10, -20, -30}
+	result := ExponentialSmoothing(values, 0.3, 2)
+	if len(result) != 2 {
+		t.Fatalf("expected 2 predictions, got %d", len(result))
+	}
+	// Trend should be negative; predictions should decrease
+	if result[1] >= result[0] {
+		t.Errorf("expected decreasing predictions for negative trend, got %v", result)
+	}
+}
+
+func TestGenerateCapacityPlan_InsufficientData(t *testing.T) {
+	f := NewForecaster(30)
+	base := time.Now()
+	// Only 2 data points (< 3 for trend)
+	f.RecordMetric(Metric{Topic: "sparse", MetricName: "throughput", Value: 100, Timestamp: base})
+	f.RecordMetric(Metric{Topic: "sparse", MetricName: "throughput", Value: 200, Timestamp: base.AddDate(0, 0, 1)})
+
+	plan := f.GenerateCapacityPlan("test", 30, 1000)
+	if len(plan.Topics) != 1 {
+		t.Fatalf("expected 1 topic, got %d", len(plan.Topics))
+	}
+	// Should still produce a plan, just with less trend accuracy
+	if plan.Topics[0].CurrentThroughput != 200 {
+		t.Errorf("expected current throughput 200, got %f", plan.Topics[0].CurrentThroughput)
+	}
+}
+
+func TestGenerateCapacityRecommendations_HighUtilization(t *testing.T) {
+	f := NewForecaster(30)
+	base := time.Now()
+
+	// Record enough storage data to create high utilization
+	for d := 0; d < 5; d++ {
+		f.RecordMetric(Metric{
+			Topic: "big", MetricName: "storage",
+			Value:     float64(d+1) * 1024 * 1024 * 1024 * 200, // 200GB increments
+			Timestamp: base.AddDate(0, 0, d),
+		})
+	}
+
+	plan := f.GenerateCapacityPlan("test", 30, 1) // maxStorageGB=1 (very small)
+	hasCritical := false
+	for _, rec := range plan.Recommendations {
+		if rec.Priority == "critical" {
+			hasCritical = true
+		}
+	}
+	if !hasCritical {
+		t.Error("expected critical recommendation when utilization exceeds 80%")
+	}
+}
+
+func TestSplitMetricKey_Malformed(t *testing.T) {
+	// Colons in topic name
+	got := splitMetricKey("my:fancy:topic:throughput")
+	if got[0] != "my:fancy:topic" || got[1] != "throughput" {
+		t.Errorf("expected split on last colon, got %v", got)
+	}
+
+	// Just a colon
+	got = splitMetricKey(":")
+	if got[0] != "" || got[1] != "" {
+		t.Errorf("expected empty parts for single colon, got %v", got)
+	}
+}
+
+func TestExtractValues_SinglePoint(t *testing.T) {
+	points := []Metric{{Value: 42.5}}
+	vals := extractValues(points)
+	if len(vals) != 1 || vals[0] != 42.5 {
+		t.Errorf("expected [42.5], got %v", vals)
+	}
+}
