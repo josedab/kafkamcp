@@ -328,3 +328,139 @@ func TestHandleConsumerLag_EmbedMode(t *testing.T) {
 		t.Error("expected X-Frame-Options DENY (embed override removed for security)")
 	}
 }
+
+func TestWebSocketHub_Stop_NoClients(t *testing.T) {
+	hub := NewWebSocketHub()
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	go func() {
+		hub.Run(ctx)
+		close(done)
+	}()
+	cancel()
+	<-done
+
+	// Stop should not panic when no clients are connected
+	hub.Stop()
+}
+
+func TestWebSocketHub_Stop_WithActiveClients(t *testing.T) {
+	hub := NewWebSocketHub()
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	go func() {
+		hub.Run(ctx)
+		close(done)
+	}()
+
+	// Register clients
+	for i := 0; i < 5; i++ {
+		hub.register <- &WSClient{
+			ID: "client-" + string(rune('a'+i)),
+			Ch: make(chan []byte, 10),
+		}
+	}
+	time.Sleep(50 * time.Millisecond)
+
+	if hub.ClientCount() != 5 {
+		t.Fatalf("expected 5 clients, got %d", hub.ClientCount())
+	}
+
+	cancel()
+	<-done
+
+	// Stop closes channels after Run exits
+	hub.Stop()
+}
+
+func TestHandleAgentActivity_MethodNotAllowed(t *testing.T) {
+	d := setupDashboard(t)
+	mux := http.NewServeMux()
+	d.RegisterDashboardRoutes(mux)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/agent-activity", nil)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusMethodNotAllowed {
+		t.Errorf("expected 405, got %d", w.Code)
+	}
+}
+
+func TestHandleAgentActivity_NoRecordedCalls(t *testing.T) {
+	d := setupDashboard(t)
+	mux := http.NewServeMux()
+	d.RegisterDashboardRoutes(mux)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/agent-activity", nil)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d", w.Code)
+	}
+	// Response should contain empty agents list
+	body := w.Body.String()
+	if body == "" {
+		t.Error("expected non-empty response body")
+	}
+}
+
+func TestHandleFlowRates_MethodNotAllowed(t *testing.T) {
+	d := setupDashboard(t)
+	mux := http.NewServeMux()
+	d.RegisterDashboardRoutes(mux)
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/flow-rates", nil)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusMethodNotAllowed {
+		t.Errorf("expected 405, got %d", w.Code)
+	}
+}
+
+func TestWebSocketHub_BroadcastDropsSlow(t *testing.T) {
+	hub := NewWebSocketHub()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go hub.Run(ctx)
+
+	// Register a client with channel size 1
+	client := &WSClient{ID: "slow", Ch: make(chan []byte, 1), JoinedAt: time.Now()}
+	hub.register <- client
+	time.Sleep(50 * time.Millisecond)
+
+	// Broadcast multiple times - slow client should not block
+	for i := 0; i < 10; i++ {
+		hub.Broadcast("test", map[string]int{"n": i})
+	}
+	time.Sleep(50 * time.Millisecond)
+
+	// Should not hang or panic
+	if hub.ClientCount() != 1 {
+		t.Errorf("expected 1 client, got %d", hub.ClientCount())
+	}
+}
+
+func TestWebSocketHub_LargeClientCount(t *testing.T) {
+	hub := NewWebSocketHub()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go hub.Run(ctx)
+
+	for i := 0; i < 50; i++ {
+		hub.register <- &WSClient{
+			ID: "client-" + string(rune(i)),
+			Ch: make(chan []byte, 10),
+		}
+	}
+	time.Sleep(100 * time.Millisecond)
+
+	if hub.ClientCount() != 50 {
+		t.Errorf("expected 50 clients, got %d", hub.ClientCount())
+	}
+
+	hub.Broadcast("ping", nil)
+	time.Sleep(50 * time.Millisecond)
+}
