@@ -143,6 +143,9 @@ func (d *DashboardV2) handleTopologyV2(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	cluster := r.URL.Query().Get("cluster")
+	if validateQueryParam(w, "cluster", cluster) {
+		return
+	}
 
 	resp := TopologyResponse{
 		UpdatedAt: time.Now().UTC().Format(time.RFC3339),
@@ -337,8 +340,14 @@ func (d *DashboardV2) handleMessageTail(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "topic parameter required", http.StatusBadRequest)
 		return
 	}
+	if validateQueryParam(w, "topic", topic) {
+		return
+	}
 
 	cluster := r.URL.Query().Get("cluster")
+	if validateQueryParam(w, "cluster", cluster) {
+		return
+	}
 	limitStr := r.URL.Query().Get("limit")
 	limit := 50
 	if limitStr != "" {
@@ -420,6 +429,9 @@ func (d *DashboardV2) handleClusterOverview(w http.ResponseWriter, r *http.Reque
 	defer cancel()
 
 	cluster := r.URL.Query().Get("cluster")
+	if validateQueryParam(w, "cluster", cluster) {
+		return
+	}
 
 	overview := map[string]any{
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
@@ -480,6 +492,12 @@ func (d *DashboardV2) handleConsumerGroupsDetail(w http.ResponseWriter, r *http.
 
 	cluster := r.URL.Query().Get("cluster")
 	groupID := r.URL.Query().Get("group_id")
+	if validateQueryParam(w, "cluster", cluster) {
+		return
+	}
+	if validateQueryParam(w, "group_id", groupID) {
+		return
+	}
 
 	if groupID != "" {
 		detail, err := d.kafkaManager.DescribeConsumerGroup(ctx, groupID, cluster)
@@ -516,11 +534,17 @@ func (d *DashboardV2) handlePartitionView(w http.ResponseWriter, r *http.Request
 		http.Error(w, "topic parameter required", http.StatusBadRequest)
 		return
 	}
+	if validateQueryParam(w, "topic", topic) {
+		return
+	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
 	cluster := r.URL.Query().Get("cluster")
+	if validateQueryParam(w, "cluster", cluster) {
+		return
+	}
 	detail, err := d.kafkaManager.DescribeTopic(ctx, topic, cluster)
 	if err != nil {
 		d.logger.Error("failed to describe topic", "error", err)
@@ -660,3 +684,15 @@ func (d *DashboardV2) HandleSSETail(w http.ResponseWriter, r *http.Request) {
 // The actual SPA is embedded via //go:embed and served by the base dashboard.
 // V2 endpoints are registered separately on the same mux.
 var _ = strings.TrimSpace // ensure import used
+
+const maxQueryParamLength = 1024
+
+// validateQueryParam checks that a query parameter doesn't exceed the maximum length.
+// Returns true if the value is too long (and writes an error response).
+func validateQueryParam(w http.ResponseWriter, name, value string) bool {
+	if len(value) > maxQueryParamLength {
+		http.Error(w, fmt.Sprintf("%s exceeds maximum length", name), http.StatusBadRequest)
+		return true
+	}
+	return false
+}
