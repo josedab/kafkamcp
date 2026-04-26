@@ -339,7 +339,13 @@ func computeDiff(before, after map[string]any) []DiffEntry {
 }
 
 func jsonEqual(a, b any) bool {
-	aj, _ := json.Marshal(a)
-	bj, _ := json.Marshal(b)
+	aj, err := json.Marshal(a)
+	if err != nil {
+		return false
+	}
+	bj, err := json.Marshal(b)
+	if err != nil {
+		return false
+	}
 	return string(aj) == string(bj)
 }
