@@ -77,12 +77,11 @@ func (m *Manager) CreateTopic(ctx context.Context, cluster string, req CreateTop
 	if len(configs) > 0 {
 		resps, err := admin.AlterTopicConfigs(ctx, configs, req.Name)
 		if err != nil {
-			m.logger.Warn("failed to set topic configs", "topic", req.Name, "error", err)
-		} else {
-			for _, r := range resps {
-				if r.Err != nil {
-					m.logger.Warn("failed to set topic config", "topic", req.Name, "error", r.Err)
-				}
+			return fmt.Errorf("setting topic configs for %q: %w", req.Name, err)
+		}
+		for _, r := range resps {
+			if r.Err != nil {
+				return fmt.Errorf("setting topic config for %q: %w", req.Name, r.Err)
 			}
 		}
 	}
