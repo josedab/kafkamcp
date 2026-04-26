@@ -9,6 +9,26 @@
 
 KafkaMCP is an MCP (Model Context Protocol) server that transforms Apache Kafka into a first-class, agent-accessible data layer. It exposes Kafka topics, consumer groups, schemas, and cluster metadata as MCP tools and resources — enabling any MCP-compatible AI agent to discover, read from, write to, and reason about Kafka data with zero custom integration code.
 
+## Table of Contents
+
+- [Features](#features)
+- [Quick Start](#quick-start)
+- [MCP Tools](#mcp-tools)
+- [MCP Resources](#mcp-resources)
+- [Security & Access Control](#security--access-control)
+- [Observability](#observability)
+- [SDKs & Editor Integrations](#sdks--editor-integrations)
+- [Architecture](#architecture)
+- [Configuration Reference](#configuration-reference)
+- [Development](#development)
+- [Project Structure](#project-structure)
+- [License](#license)
+- [Troubleshooting](#troubleshooting)
+- [Documentation & Community](#documentation--community)
+- [Contributing](#contributing)
+- [Security](#security)
+- [Roadmap](#roadmap)
+
 ## Features
 
 - **🔍 Topic Discovery** — List and describe topics, partitions, offsets, and configurations
