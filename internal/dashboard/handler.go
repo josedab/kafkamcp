@@ -80,30 +80,15 @@ func (d *Dashboard) requireAuth(next http.HandlerFunc) http.HandlerFunc {
 
 // requireAuthHandler is like requireAuth but wraps an http.Handler instead of http.HandlerFunc.
 func (d *Dashboard) requireAuthHandler(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if d.apiKey == "" {
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		token := ""
-		if auth := r.Header.Get("Authorization"); strings.HasPrefix(auth, "Bearer ") {
-			token = strings.TrimPrefix(auth, "Bearer ")
-		} else {
-			token = r.Header.Get("X-API-Key")
-		}
-
-		if subtle.ConstantTimeCompare([]byte(token), []byte(d.apiKey)) != 1 {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
+	return d.requireAuth(next.ServeHTTP)
 }
 
 // Handler returns the HTTP handler for the dashboard.
 func (d *Dashboard) Handler() http.Handler {
+	if d.apiKey == "" {
+		d.logger.Warn("dashboard API key is not set — all endpoints are unauthenticated")
+	}
+
 	mux := http.NewServeMux()
 
 	// REST API endpoints (protected by auth middleware)

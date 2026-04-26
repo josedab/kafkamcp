@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -681,7 +680,6 @@ func (d *DashboardV2) HandleSSETail(w http.ResponseWriter, r *http.Request) {
 // This replaces the contents that would go in static/index.html
 // The actual SPA is embedded via //go:embed and served by the base dashboard.
 // V2 endpoints are registered separately on the same mux.
-var _ = strings.TrimSpace // ensure import used
 
 const maxQueryParamLength = 1024
 
