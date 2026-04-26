@@ -2,7 +2,7 @@ package cloud
 
 import (
 	"encoding/json"
-	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
@@ -332,12 +332,11 @@ func extractAPIKey(r *http.Request) string {
 func writeCloudJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(v)
+	if err := json.NewEncoder(w).Encode(v); err != nil {
+		slog.Error("failed to encode cloud JSON response", "error", err)
+	}
 }
 
 func writeCloudError(w http.ResponseWriter, status int, msg string) {
 	writeCloudJSON(w, status, map[string]string{"error": msg})
 }
-
-// ensure fmt is used
-var _ = fmt.Sprintf

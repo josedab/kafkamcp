@@ -480,7 +480,9 @@ func (s *Server) writeIDEJSON(w http.ResponseWriter, r *http.Request, status int
 	}
 	w.Header().Set("Access-Control-Allow-Credentials", "false")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(v)
+	if err := json.NewEncoder(w).Encode(v); err != nil {
+		slog.Error("failed to encode JSON response", "error", err)
+	}
 }
 
 func (s *Server) isAllowedOrigin(origin string) bool {

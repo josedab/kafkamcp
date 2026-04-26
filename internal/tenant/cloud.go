@@ -239,7 +239,9 @@ func (api *ControlPlaneAPI) handleQuotas(w http.ResponseWriter, r *http.Request)
 
 func (api *ControlPlaneAPI) writeJSON(w http.ResponseWriter, v any) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(v)
+	if err := json.NewEncoder(w).Encode(v); err != nil {
+		http.Error(w, "failed to encode response", http.StatusInternalServerError)
+	}
 }
 
 // GenerateAdminAPIKey generates a new admin API key.
