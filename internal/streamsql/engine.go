@@ -519,7 +519,8 @@ func matchWhere(msg map[string]any, where *WhereClause) bool {
 		}
 		return lhs <= rhs
 	case "LIKE":
-		pattern := strings.ReplaceAll(where.Value, "%", ".*")
+		pattern := regexp.QuoteMeta(where.Value)
+		pattern = strings.ReplaceAll(pattern, "%", ".*")
 		matched, _ := regexp.MatchString("(?i)^"+pattern+"$", strVal)
 		return matched
 	default:
