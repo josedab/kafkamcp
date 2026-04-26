@@ -1,0 +1,12 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="KafkaMCP (stdio)" type="GoApplicationRunConfiguration" factoryName="Go Application">
+    <module name="kafkamcp" />
+    <working_directory value="$PROJECT_DIR$" />
+    <parameters value="--config kafkamcp.yaml" />
+    <kind value="PACKAGE" />
+    <package value="github.com/kafkamcp/kafkamcp/cmd/kafkamcp" />
+    <directory value="$PROJECT_DIR$" />
+    <filePath value="$PROJECT_DIR$/cmd/kafkamcp/main.go" />
+    <method v="2" />
+  </configuration>
+</component>
