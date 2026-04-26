@@ -1,0 +1,161 @@
+# Default values for KafkaMCP Helm chart
+
+# Number of KafkaMCP pod replicas. Increase for high-availability in production.
+replicaCount: 1
+
+image:
+  # Container image registry and repository
+  repository: ghcr.io/kafkamcp/kafkamcp
+  # Image pull policy: IfNotPresent avoids re-pulling on every restart
+  pullPolicy: IfNotPresent
+  # Image tag override; defaults to the chart's appVersion when empty
+  tag: ""  # Defaults to appVersion
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# KafkaMCP configuration
+config:
+  server:
+    transport: "streamable-http"
+    host: "0.0.0.0"
+    port: 3100
+    log_level: "info"
+  clusters:
+    - name: default
+      bootstrap_servers: "kafka:9092"
+      security_protocol: "PLAINTEXT"
+  schema_cache:
+    max_entries: 10000
+    ttl_seconds: 300
+  audit:
+    enabled: true
+    max_entries: 10000
+  masking:
+    enabled: false
+    rules: []
+  telemetry:
+    enabled: false
+    endpoint: ""           # OTLP collector endpoint (e.g., "otel-collector:4317")
+    insecure: false
+    service_name: "kafkamcp"
+    sample_rate: 1.0
+  policies:
+    default_deny: false
+    agents: []
+
+# Existing secret for Kafka credentials (optional).
+# When set, the chart mounts this Secret instead of creating one.
+# Must contain keys: KAFKA_SASL_USERNAME, KAFKA_SASL_PASSWORD
+existingSecret: ""
+
+# Create a chart-managed Secret with the values below.
+# Ignored if existingSecret is set — existingSecret always takes precedence.
+secrets:
+  create: false
+  kafkaSaslUsername: ""
+  kafkaSaslPassword: ""
+  schemaRegistryUsername: ""
+  schemaRegistryPassword: ""
+  extra: {}  # Additional key-value pairs injected into the Secret
+
+service:
+  type: ClusterIP
+  port: 3100
+  metricsPort: 3101
+  annotations: {}
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: kafkamcp.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+# Pod resource requests and limits.
+# Requests are used by the scheduler; limits cap actual usage.
+# Tune based on cluster size and expected concurrent agent connections.
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+podAnnotations: {}
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65534
+  fsGroup: 65534
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+# Prometheus ServiceMonitor
+serviceMonitor:
+  enabled: false
+  interval: 30s
+  scrapeTimeout: 10s
+  labels: {}
+  namespace: ""
+
+# NetworkPolicy
+networkPolicy:
+  enabled: false
+  ingressFrom: []    # Additional ingress sources (e.g., [{namespaceSelector: {matchLabels: {name: monitoring}}}])
+  kafkaCIDR: ""      # CIDR for Kafka broker egress (e.g., "10.0.0.0/8")
+  additionalEgress: []
+
+# Rolling update strategy
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 0
+    maxSurge: 1
+
+# Liveness and readiness probes
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: metrics
+  initialDelaySeconds: 10
+  periodSeconds: 30
+  timeoutSeconds: 5
+
+readinessProbe:
+  httpGet:
+    path: /healthz
+    port: metrics
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 3

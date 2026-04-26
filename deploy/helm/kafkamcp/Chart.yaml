@@ -1,0 +1,22 @@
+apiVersion: v2
+name: kafkamcp
+description: KafkaMCP — MCP server for Apache Kafka. Makes Kafka topics fully readable, writable, and discoverable by AI agents.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+home: https://github.com/kafkamcp/kafkamcp
+sources:
+  - https://github.com/kafkamcp/kafkamcp
+maintainers:
+  - name: KafkaMCP Team
+    url: https://github.com/kafkamcp
+keywords:
+  - kafka
+  - mcp
+  - ai-agents
+  - model-context-protocol
+  - streaming
+icon: https://raw.githubusercontent.com/kafkamcp/kafkamcp/main/website/static/img/logo.svg
+annotations:
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/category: integration-delivery
