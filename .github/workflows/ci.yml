@@ -27,23 +27,16 @@ jobs:
           git diff --exit-code go.mod go.sum
 
       - name: Check formatting
-        run: |
-          unformatted=$(gofmt -s -l .)
-          if [ -n "$unformatted" ]; then
-            echo "ERROR: The following files are not formatted:"
-            echo "$unformatted"
-            echo "Run 'make fmt' to fix."
-            exit 1
-          fi
+        run: make fmt-check
 
       - name: Vet
-        run: go vet ./...
+        run: make vet
 
       - name: Build
-        run: go build ./...
+        run: make build
 
       - name: Test
-        run: go test -race -coverprofile=coverage.out ./...
+        run: make test
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -69,10 +62,8 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: latest
+      - name: Lint
+        run: make lint
 
   vulncheck:
     name: Vulnerability Check
@@ -130,6 +121,42 @@ jobs:
         with:
           name: kafkamcp-${{ matrix.goos }}-${{ matrix.goarch }}
           path: bin/kafkamcp-*
+
+  integration-test:
+    name: Integration Test
+    runs-on: ubuntu-latest
+    services:
+      kafka:
+        image: confluentinc/cp-kafka:7.6.0
+        ports:
+          - 9092:9092
+        env:
+          KAFKA_NODE_ID: 1
+          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+          KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+          KAFKA_PROCESS_ROLES: broker,controller
+          KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+          KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+          CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+        options: >-
+          --health-cmd "kafka-topics --bootstrap-server localhost:9092 --list"
+          --health-interval 10s
+          --health-timeout 10s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Run integration tests
+        run: make integration-test
+        env:
+          KAFKA_BROKERS: localhost:9092
 
   benchmark:
     name: Benchmark
