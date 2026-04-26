@@ -22,6 +22,18 @@ and inline message inspection directly in IntelliJ IDEA.
 2. Configure the KafkaMCP server URL in Settings → Tools → KafkaMCP
 3. The plugin will auto-connect on startup
 
+## Run Configurations
+
+Pre-configured GoLand/IntelliJ run configurations are available in `.run/`:
+
+| Configuration | Description |
+|---------------|-------------|
+| **Run Server** | Build and run KafkaMCP with `kafkamcp.yaml` |
+| **Run Tests** | Run all Go tests (`./...`) |
+| **Run Validate** | Run `make validate` (fmt → vet → lint → test → build) |
+
+To use them, copy the `.run/` directory to your project root or open this directory as a GoLand project.
+
 ## Building from Source
 
 ```bash
