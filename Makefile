@@ -1,4 +1,4 @@
-.PHONY: build test lint lint-fix fmt docker clean validate help run dev dev-sse dev-http coverage setup-hooks docker-dev docker-dev-down setup test-one setup-vscode integration-test check doctor sdk-test quickstart benchmark docker-compose-full vet sdk-setup deps changelog test-coverage-check test-short
+.PHONY: build test lint lint-fix fmt docker clean validate help run run-local dev dev-sse dev-http coverage setup-hooks docker-dev docker-dev-down setup test-one setup-vscode integration-test check doctor sdk-test quickstart benchmark docker-compose-full vet sdk-setup deps changelog test-coverage-check test-short
 
 # Build variables
 BINARY    := kafkamcp
@@ -22,6 +22,11 @@ build: ## Build the binary
 
 run: build ## Build and run with default config
 	$(BUILD_DIR)/$(BINARY) --config kafkamcp.yaml
+
+run-local: build ## Build and run without Docker (for remote Kafka clusters)
+@echo "Starting KafkaMCP (no Docker required)..."
+@echo "Configure your Kafka connection in kafkamcp.yaml"
+$(BUILD_DIR)/$(BINARY) --config kafkamcp.yaml
 
 dev: ## Run with auto-reload (requires air: go install github.com/air-verse/air@latest)
 	@command -v air >/dev/null 2>&1 || { echo "Installing air..."; go install github.com/air-verse/air@latest; }
