@@ -194,6 +194,17 @@ func runServer(cmd *cobra.Command, args []string) error {
 
 	if !cfg.Policies.DefaultDeny {
 		logger.Warn("running with default_deny=false — all agents have unrestricted access; enable policies.default_deny for production use")
+
+		hasRateLimits := false
+		for _, agent := range cfg.Policies.Agents {
+			if agent.RateLimit.RequestsPerMinute > 0 {
+				hasRateLimits = true
+				break
+			}
+		}
+		if !hasRateLimits {
+			logger.Warn("INSECURE DEFAULTS: default_deny is false and no rate limits are configured — this installation has zero access control; configure policies for production use")
+		}
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
