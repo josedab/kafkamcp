@@ -628,7 +628,7 @@ return sanitized
 }
 
 // sensitiveKeyPatterns contains substrings that indicate a parameter key holds sensitive data.
-var sensitiveKeyPatterns = []string{"password", "secret", "token", "key", "credential", "api_key", "apikey", "webhook_url"}
+var sensitiveKeyPatterns = []string{"password", "secret", "token", "key", "credential", "api_key", "apikey", "webhook_url", "sasl", "bearer", "jwt", "auth", "connection_string"}
 
 // deepRedactSensitiveKeys recursively inspects map values and redacts any key
 // matching sensitive patterns.
