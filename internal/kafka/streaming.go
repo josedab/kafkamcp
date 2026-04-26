@@ -201,6 +201,14 @@ func (m *Manager) StartStream(ctx context.Context, cluster string, cfg StreamCon
 		ticker := time.NewTicker(time.Second / time.Duration(cfg.MaxMsgPerSec/cfg.BatchSize+1))
 		defer ticker.Stop()
 
+		pauseTimer := time.NewTimer(100 * time.Millisecond)
+		pauseTimer.Stop()
+		defer pauseTimer.Stop()
+
+		backoffTimer := time.NewTimer(100 * time.Millisecond)
+		backoffTimer.Stop()
+		defer backoffTimer.Stop()
+
 		for {
 			select {
 			case <-streamCtx.Done():
@@ -212,10 +220,11 @@ func (m *Manager) StartStream(ctx context.Context, cluster string, cfg StreamCon
 				return
 			}
 			if session.paused.Load() {
+				pauseTimer.Reset(100 * time.Millisecond)
 				select {
 				case <-streamCtx.Done():
 					return
-				case <-time.After(100 * time.Millisecond):
+				case <-pauseTimer.C:
 					continue
 				}
 			}
@@ -286,10 +295,11 @@ func (m *Manager) StartStream(ctx context.Context, cluster string, cfg StreamCon
 			}
 
 			if fetches.NumRecords() == 0 {
+				backoffTimer.Reset(100 * time.Millisecond)
 				select {
 				case <-streamCtx.Done():
 					return
-				case <-time.After(100 * time.Millisecond):
+				case <-backoffTimer.C:
 				}
 			}
 		}
