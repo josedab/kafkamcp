@@ -2,10 +2,8 @@ package server
 
 import (
 "context"
-"encoding/json"
 "fmt"
 "log/slog"
-"strings"
 "sync"
 "time"
 
@@ -64,9 +62,7 @@ import (
 "github.com/kafkamcp/kafkamcp/internal/workflow"
 "github.com/kafkamcp/kafkamcp/internal/persona"
 	"github.com/kafkamcp/kafkamcp/internal/tenant"
-"github.com/mark3labs/mcp-go/mcp"
 "github.com/mark3labs/mcp-go/server"
-otelTrace "go.opentelemetry.io/otel/trace"
 )
 
 // Analytics groups AI-powered analysis and intelligence subsystems.
@@ -378,355 +374,38 @@ func (s *Server) getConnectClient(clCfg *config.ClusterConfig) (*kafka.ConnectCl
 	return c, nil
 }
 
-// extractAgentID gets the agent ID from the MCP request headers or defaults.
-func extractAgentID(request mcp.CallToolRequest) string {
-if request.Header != nil {
-if id := request.Header.Get("X-Agent-ID"); id != "" {
-return sanitizeAgentID(id)
-}
-if id := request.Header.Get("X-Client-ID"); id != "" {
-return sanitizeAgentID(id)
-}
-}
-return "anonymous"
-}
-
-// extractAgentIDFromResource gets the agent ID from a resource request.
-func extractAgentIDFromResource(request mcp.ReadResourceRequest) string {
-if request.Header != nil {
-if id := request.Header.Get("X-Agent-ID"); id != "" {
-return sanitizeAgentID(id)
-}
-if id := request.Header.Get("X-Client-ID"); id != "" {
-return sanitizeAgentID(id)
-}
-}
-return "anonymous"
-}
-
-// sanitizeAgentID validates and sanitizes an agent ID to contain only
-// alphanumeric characters, hyphens, and underscores.
-func sanitizeAgentID(id string) string {
-	if len(id) > 128 {
-		id = id[:128]
-	}
-	for _, c := range id {
-		if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' || c == '_' || c == '.') {
-			return "anonymous"
-		}
-	}
-	return id
-}
-
-// validateAgentID checks that the claimed agent ID exists in policy config when default_deny is true.
-func (s *Server) validateAgentID(agentID string) *mcp.CallToolResult {
-if !s.policyEngine.DefaultDeny() {
-	return nil
-}
-if agentID == "anonymous" || !s.policyEngine.AgentExists(agentID) {
-	return mcp.NewToolResultError("Authentication required: valid X-Agent-ID header must be provided")
-}
-return nil
-}
-
-
-
-// --- Auth & Rate Limit helpers ---
-
-// toolAuthConfig defines the authorization requirements for a tool handler,
-// specifying which resource type and action to check against the policy engine.
-type toolAuthConfig struct {
-	tool         string
-	resourceType auth.ResourceType
-	action       auth.Action
-	// resourceName extracts the resource name from the request.
-	// If nil, defaults to "*".
-	resourceName func(mcp.CallToolRequest) string
-}
-
-// toolHandler is a handler function that processes an MCP tool call after
-// agent identity, rate limiting, and authorization have been validated.
-type toolHandler func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error)
-
-// withToolAuth wraps a tool handler with cross-cutting concerns: agent ID
-// extraction, OpenTelemetry span creation, rate limiting, authorization
-// checks, and audit logging. It eliminates repeated boilerplate across handlers.
-func (s *Server) withToolAuth(cfg toolAuthConfig, handler toolHandler) func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		start := time.Now()
-		agentID := extractAgentID(request)
-		args := request.GetArguments()
-
-		// Start OTel span if provider is configured
-		if s.otelProvider != nil {
-			cluster := ""
-			if args != nil {
-				if c, ok := args["cluster"].(string); ok {
-					cluster = c
-				}
-			}
-			var otelSpan otelTrace.Span
-			ctx, otelSpan = s.otelProvider.StartToolSpan(ctx, cfg.tool, agentID, cluster)
-			defer otelSpan.End()
-		}
-
-		if deny := s.checkRateLimit(agentID, cfg.tool); deny != nil {
-			return deny, nil
-		}
-
-		resourceName := "*"
-		if cfg.resourceName != nil {
-			resourceName = cfg.resourceName(request)
-		}
-		if deny := s.checkAuth(agentID, cfg.tool, cfg.resourceType, resourceName, cfg.action); deny != nil {
-			return deny, nil
-		}
-
-		result, err := handler(ctx, request, agentID, args, start)
-		return result, err
-	}
-}
-
-// checkAuth verifies that the given agent is authorized to perform the specified
-// action on the resource. Returns a denial result if unauthorized, nil if allowed.
-func (s *Server) checkAuth(agentID, tool string, resource auth.ResourceType, resourceName string, action auth.Action) *mcp.CallToolResult {
-if deny := s.validateAgentID(agentID); deny != nil {
-	return deny
-}
-if !s.policyEngine.Authorize(agentID, resource, resourceName, action) {
-s.metrics.AuthzDenials.WithLabelValues(metrics.SanitizeAgentLabel(agentID), tool, string(action)).Inc()
-s.logger.Warn("authorization denied", "agent", agentID, "tool", tool, "resource", resourceName, "action", action)
-return mcp.NewToolResultError("Unauthorized: insufficient permission for this operation")
-}
-return nil
-}
-
-// checkRateLimit checks whether the agent has exceeded its rate limit.
-// Returns a denial result if rate-limited, nil if the request is allowed.
-func (s *Server) checkRateLimit(agentID, tool string) *mcp.CallToolResult {
-if !s.rateLimiter.Allow(agentID) {
-s.metrics.RateLimitDenials.WithLabelValues(metrics.SanitizeAgentLabel(agentID), tool).Inc()
-return mcp.NewToolResultError("Rate limit exceeded. Please retry later.")
-}
-return nil
-}
-
-// checkResourceRateLimit checks rate limits for resource handlers.
-func (s *Server) checkResourceRateLimit(agentID, resource string) error {
-if !s.rateLimiter.Allow(agentID) {
-s.metrics.RateLimitDenials.WithLabelValues(metrics.SanitizeAgentLabel(agentID), resource).Inc()
-return fmt.Errorf("rate limit exceeded")
-}
-return nil
+// matchTopicFilter checks whether a topic name matches a glob pattern.
+func matchTopicFilter(pattern, name string) bool {
+	return match.Glob(pattern, name)
 }
 
 // acquireExpensiveOp blocks until a slot is available for an expensive operation,
 // or returns an error if the context is cancelled while waiting.
 func (s *Server) acquireExpensiveOp(ctx context.Context) error {
-select {
-case s.expensiveOps <- struct{}{}:
-	return nil
-case <-ctx.Done():
-	return fmt.Errorf("timed out waiting for available capacity; too many concurrent expensive operations")
-}
+	select {
+	case s.expensiveOps <- struct{}{}:
+		return nil
+	case <-ctx.Done():
+		return fmt.Errorf("timed out waiting for available capacity; too many concurrent expensive operations")
+	}
 }
 
 // releaseExpensiveOp releases a slot from the expensive operation semaphore.
 func (s *Server) releaseExpensiveOp() {
-<-s.expensiveOps
+	<-s.expensiveOps
 }
 
 // resolveClusterName returns the given cluster name if it maps to a valid
 // configured cluster, otherwise falls back to the default cluster.
 func (s *Server) resolveClusterName(cluster string) string {
-if cluster != "" {
-	// Only return the cluster name if it's a valid configured cluster
-	if _, err := s.kafkaManager.GetClusterConfig(cluster); err == nil {
-		return cluster
+	if cluster != "" {
+		if _, err := s.kafkaManager.GetClusterConfig(cluster); err == nil {
+			return cluster
+		}
+		s.logger.Warn("invalid cluster name, falling back to default", "requested", cluster, "default", s.kafkaManager.DefaultClusterName())
+		return s.kafkaManager.DefaultClusterName()
 	}
-	s.logger.Warn("invalid cluster name, falling back to default", "requested", cluster, "default", s.kafkaManager.DefaultClusterName())
 	return s.kafkaManager.DefaultClusterName()
-}
-return s.kafkaManager.DefaultClusterName()
-}
-
-// logAudit records a tool call in the audit log and increments Prometheus metrics.
-func (s *Server) logAudit(agentID, tool string, params map[string]any, cluster, status string, count int, err error, start time.Time) {
-latency := time.Since(start)
-entry := audit.Entry{
-AgentID:    agentID,
-Tool:       tool,
-Parameters: sanitizeAuditParams(tool, params),
-Cluster:    s.resolveClusterName(cluster),
-Result:     audit.Result{Status: status, MessageCount: count},
-LatencyMs:  latency.Milliseconds(),
-}
-if err != nil {
-entry.Result.Error = categorizeError(err)
-}
-s.auditLogger.Log(entry)
-safeAgent := metrics.SanitizeAgentLabel(agentID)
-s.metrics.ToolCallsTotal.WithLabelValues(tool, safeAgent, entry.Cluster, status).Inc()
-s.metrics.ToolLatencySeconds.WithLabelValues(tool, safeAgent, entry.Cluster).Observe(latency.Seconds())
-
-// Record for agent profiling
-if s.agentProfiler != nil {
-	s.agentProfiler.RecordCall(tool, agentID, nil, latency.Milliseconds(), status)
-}
-}
-
-// categorizeError maps raw errors to safe category strings to prevent
-// leaking internal details (broker IPs, TLS info, connection strings)
-// in audit logs and dashboard responses.
-func categorizeError(err error) string {
-msg := err.Error()
-lower := strings.ToLower(msg)
-
-switch {
-case strings.Contains(lower, "context deadline exceeded") || strings.Contains(lower, "timeout") || strings.Contains(lower, "timed out"):
-	return "timeout"
-case strings.Contains(lower, "connection refused") || strings.Contains(lower, "connection reset") || strings.Contains(lower, "broken pipe") || strings.Contains(lower, "no such host") || strings.Contains(lower, "dial tcp"):
-	return "connection_error"
-case strings.Contains(lower, "sasl") || strings.Contains(lower, "authentication") || strings.Contains(lower, "unauthorized") || strings.Contains(lower, "credential"):
-	return "auth_error"
-case strings.Contains(lower, "tls") || strings.Contains(lower, "certificate") || strings.Contains(lower, "x509"):
-	return "tls_error"
-case strings.Contains(lower, "permission") || strings.Contains(lower, "forbidden") || strings.Contains(lower, "not authorized") || strings.Contains(lower, "acl"):
-	return "permission_denied"
-case strings.Contains(lower, "not found") || strings.Contains(lower, "unknown topic") || strings.Contains(lower, "does not exist"):
-	return "not_found"
-case strings.Contains(lower, "already exists") || strings.Contains(lower, "duplicate"):
-	return "already_exists"
-case strings.Contains(lower, "invalid") || strings.Contains(lower, "malformed"):
-	return "invalid_request"
-default:
-	return "internal_error"
-}
-}
-
-// sanitizeAuditParams redacts sensitive data from audit log parameters.
-// It applies tool-specific redactions and deep-inspects all parameters for
-// sensitive key patterns (password, secret, token, key, credential).
-func sanitizeAuditParams(tool string, params map[string]any) map[string]any {
-if params == nil {
-	return nil
-}
-
-sensitiveTools := map[string][]string{
-	"kafka_produce":                  {"messages"},
-	"kafka_consume":                  {"messages"},
-	"kafka_alter_topic":              {"configs"},
-	"kafka_create_topic":             {"configs"},
-	"kafka_check_schema_compatibility": {"schema"},
-	"kafka_describe_connector":       {"name"},
-}
-
-sanitized := make(map[string]any, len(params))
-for k, v := range params {
-	sanitized[k] = v
-}
-
-// Tool-specific redactions
-if keys, ok := sensitiveTools[tool]; ok {
-	for _, key := range keys {
-		if _, exists := sanitized[key]; exists {
-			sanitized[key] = "**REDACTED**"
-		}
-	}
-}
-
-// Deep-redact any parameter whose key matches sensitive patterns
-deepRedactSensitiveKeys(sanitized)
-
-return sanitized
-}
-
-// sensitiveKeyPatterns contains substrings that indicate a parameter key holds sensitive data.
-var sensitiveKeyPatterns = []string{"password", "secret", "token", "key", "credential", "api_key", "apikey", "webhook_url", "sasl", "bearer", "jwt", "auth", "connection_string"}
-
-// deepRedactSensitiveKeys recursively inspects map values and redacts any key
-// matching sensitive patterns.
-func deepRedactSensitiveKeys(m map[string]any) {
-for k, v := range m {
-	lower := strings.ToLower(k)
-	isSensitive := false
-	for _, pat := range sensitiveKeyPatterns {
-		if strings.Contains(lower, pat) {
-			isSensitive = true
-			break
-		}
-	}
-	if isSensitive {
-		m[k] = "**REDACTED**"
-		continue
-	}
-	// Recurse into nested maps
-	if nested, ok := v.(map[string]any); ok {
-		deepRedactSensitiveKeys(nested)
-	}
-}
-}
-
-// toolError logs the raw error server-side and returns a generic error message
-// to the client, preventing leakage of internal details like broker IPs,
-// TLS certificate info, connection strings, and file system paths.
-func (s *Server) toolError(msg string, err error) *mcp.CallToolResult {
-	s.logger.Error(msg, "error", err)
-	return mcp.NewToolResultError(msg)
-}
-
-// redactURL masks a URL for safe inclusion in responses and audit logs,
-// preserving only the scheme and host.
-func redactURL(rawURL string) string {
-	if rawURL == "" {
-		return ""
-	}
-	// Show scheme + host, redact path/query
-	if idx := strings.Index(rawURL, "://"); idx >= 0 {
-		rest := rawURL[idx+3:]
-		if slashIdx := strings.Index(rest, "/"); slashIdx >= 0 {
-			return rawURL[:idx+3+slashIdx] + "/***"
-		}
-		return rawURL + "/***"
-	}
-	return "***"
-}
-
-// marshalResult serializes a value as indented JSON and wraps it in an MCP tool result.
-func marshalResult(v any) (*mcp.CallToolResult, error) {
-data, err := json.MarshalIndent(v, "", "  ")
-if err != nil {
-slog.Error("failed to marshal tool result", "error", err)
-return mcp.NewToolResultError("internal error: failed to format response"), nil
-}
-return mcp.NewToolResultText(string(data)), nil
-}
-
-// marshalResourceJSON serializes a value as JSON resource contents for MCP resource responses.
-func marshalResourceJSON(uri string, v any) ([]mcp.ResourceContents, error) {
-data, err := json.MarshalIndent(v, "", "  ")
-if err != nil {
-return nil, fmt.Errorf("marshaling resource: %w", err)
-}
-return []mcp.ResourceContents{
-mcp.TextResourceContents{URI: uri, MIMEType: "application/json", Text: string(data)},
-}, nil
-}
-
-// validateResourceAgentID validates agent identity for resource handlers.
-func (s *Server) validateResourceAgentID(agentID string) error {
-	if !s.policyEngine.DefaultDeny() {
-		return nil
-	}
-	if agentID == "anonymous" || !s.policyEngine.AgentExists(agentID) {
-		return fmt.Errorf("authentication required: valid X-Agent-ID header must be provided")
-	}
-	return nil
-}
-
-// matchTopicFilter checks whether a topic name matches a glob pattern.
-func matchTopicFilter(pattern, name string) bool {
-	return match.Glob(pattern, name)
 }
 
 // clampInt64 constrains a value to [min, max].
@@ -738,14 +417,6 @@ func clampInt64(v, min, max int64) int64 {
 		return max
 	}
 	return v
-}
-
-// validateStringLength checks that a string parameter doesn't exceed the maximum length.
-func validateStringLength(name, value string) *mcp.CallToolResult {
-	if len(value) > maxInputLength {
-		return mcp.NewToolResultError(fmt.Sprintf("%s exceeds maximum length of %d characters", name, maxInputLength))
-	}
-	return nil
 }
 
 // Tool and resource handler implementations are in:
