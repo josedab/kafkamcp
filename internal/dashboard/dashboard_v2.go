@@ -428,7 +428,6 @@ func (d *DashboardV2) handleClusterOverview(w http.ResponseWriter, r *http.Reque
 	if meta, err := d.kafkaManager.GetClusterMetadata(ctx, cluster); err == nil {
 		overview["cluster_id"] = meta.ClusterID
 		overview["controller"] = meta.Controller
-		overview["brokers"] = meta.Brokers
 		overview["broker_count"] = len(meta.Brokers)
 	}
 
