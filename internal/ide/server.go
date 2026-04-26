@@ -172,7 +172,11 @@ func (s *Server) cleanupExpiredSessions() {
 func (s *Server) RegisterRoutes(mux *http.ServeMux, authMiddleware func(http.HandlerFunc) http.HandlerFunc) {
 	wrap := authMiddleware
 	if wrap == nil {
-		wrap = func(h http.HandlerFunc) http.HandlerFunc { return h }
+		wrap = func(h http.HandlerFunc) http.HandlerFunc {
+			return func(w http.ResponseWriter, r *http.Request) {
+				http.Error(w, "Forbidden: no auth middleware configured", http.StatusForbidden)
+			}
+		}
 	}
 
 	mux.HandleFunc("/api/ide/v1/connect", wrap(s.handleConnect))
