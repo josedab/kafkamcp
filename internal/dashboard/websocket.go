@@ -248,10 +248,10 @@ func (dm *DashboardMetrics) GetAgentActivity() []AgentActivityEntry {
 
 // RegisterDashboardRoutes adds the enhanced API routes to the dashboard handler.
 func (d *Dashboard) RegisterDashboardRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("/api/v1/consumer-lag", d.handleConsumerLag)
-	mux.HandleFunc("/api/v1/agent-activity", d.handleAgentActivity)
-	mux.HandleFunc("/api/v1/flow-rates", d.handleFlowRates)
-	mux.HandleFunc("/api/v1/dashboard-summary", d.handleDashboardSummary)
+	mux.HandleFunc("/api/v1/consumer-lag", d.requireAuth(d.handleConsumerLag))
+	mux.HandleFunc("/api/v1/agent-activity", d.requireAuth(d.handleAgentActivity))
+	mux.HandleFunc("/api/v1/flow-rates", d.requireAuth(d.handleFlowRates))
+	mux.HandleFunc("/api/v1/dashboard-summary", d.requireAuth(d.handleDashboardSummary))
 }
 
 func (d *Dashboard) handleConsumerLag(w http.ResponseWriter, r *http.Request) {
