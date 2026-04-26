@@ -442,7 +442,7 @@ func TestHandlePlans(t *testing.T) {
 func TestRegisterRoutes(t *testing.T) {
 	h, _ := setupAPI()
 	mux := http.NewServeMux()
-	h.RegisterRoutes(mux)
+	h.RegisterRoutes(mux, nil)
 
 	// Verify routes are registered by making a request
 	req := httptest.NewRequest(http.MethodGet, "/api/cloud/v1/plans", nil)

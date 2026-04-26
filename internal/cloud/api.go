@@ -13,20 +13,27 @@ type APIHandler struct {
 	service *CloudService
 }
 
+const maxCloudRequestSize = 1 << 20 // 1 MB
+
 // NewAPIHandler creates a new cloud service API handler.
 func NewAPIHandler(service *CloudService) *APIHandler {
 	return &APIHandler{service: service}
 }
 
 // RegisterRoutes adds cloud service API routes to the given mux.
-func (h *APIHandler) RegisterRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("/api/cloud/v1/workspaces", h.handleWorkspaces)
-	mux.HandleFunc("/api/cloud/v1/workspaces/", h.handleWorkspaceByID)
-	mux.HandleFunc("/api/cloud/v1/auth", h.handleAuth)
-	mux.HandleFunc("/api/cloud/v1/billing", h.handleBilling)
-	mux.HandleFunc("/api/cloud/v1/usage", h.handleUsage)
-	mux.HandleFunc("/api/cloud/v1/plans", h.handlePlans)
-	mux.HandleFunc("/api/cloud/v1/provision", h.handleProvision)
+func (h *APIHandler) RegisterRoutes(mux *http.ServeMux, authMiddleware func(http.HandlerFunc) http.HandlerFunc) {
+	wrap := authMiddleware
+	if wrap == nil {
+		wrap = func(h http.HandlerFunc) http.HandlerFunc { return h }
+	}
+
+	mux.HandleFunc("/api/cloud/v1/workspaces", wrap(h.handleWorkspaces))
+	mux.HandleFunc("/api/cloud/v1/workspaces/", wrap(h.handleWorkspaceByID))
+	mux.HandleFunc("/api/cloud/v1/auth", wrap(h.handleAuth))
+	mux.HandleFunc("/api/cloud/v1/billing", wrap(h.handleBilling))
+	mux.HandleFunc("/api/cloud/v1/usage", wrap(h.handleUsage))
+	mux.HandleFunc("/api/cloud/v1/plans", wrap(h.handlePlans))
+	mux.HandleFunc("/api/cloud/v1/provision", wrap(h.handleProvision))
 }
 
 func (h *APIHandler) handleWorkspaces(w http.ResponseWriter, r *http.Request) {
@@ -43,13 +50,13 @@ func (h *APIHandler) handleWorkspaces(w http.ResponseWriter, r *http.Request) {
 			OwnerEmail string `json:"owner_email"`
 			Plan       string `json:"plan"`
 		}
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxCloudRequestSize)).Decode(&req); err != nil {
 			writeCloudError(w, http.StatusBadRequest, "invalid request body")
 			return
 		}
 		ws, apiKey, err := h.service.CreateWorkspace(req.Name, req.OwnerEmail, req.Plan)
 		if err != nil {
-			writeCloudError(w, http.StatusBadRequest, err.Error())
+			writeCloudError(w, http.StatusBadRequest, "failed to create workspace")
 			return
 		}
 		writeCloudJSON(w, http.StatusCreated, map[string]any{
@@ -85,7 +92,7 @@ func (h *APIHandler) handleWorkspaceByID(w http.ResponseWriter, r *http.Request)
 			SecurityProtocol string `json:"security_protocol"`
 			Region           string `json:"region"`
 		}
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxCloudRequestSize)).Decode(&req); err != nil {
 			writeCloudError(w, http.StatusBadRequest, "invalid request body")
 			return
 		}
@@ -96,7 +103,7 @@ func (h *APIHandler) handleWorkspaceByID(w http.ResponseWriter, r *http.Request)
 			Region:           req.Region,
 		})
 		if err != nil {
-			writeCloudError(w, http.StatusBadRequest, err.Error())
+			writeCloudError(w, http.StatusBadRequest, "failed to add cluster")
 			return
 		}
 		writeCloudJSON(w, http.StatusCreated, map[string]string{"status": "cluster added"})
@@ -106,13 +113,13 @@ func (h *APIHandler) handleWorkspaceByID(w http.ResponseWriter, r *http.Request)
 			Email string `json:"email"`
 			Role  string `json:"role"`
 		}
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxCloudRequestSize)).Decode(&req); err != nil {
 			writeCloudError(w, http.StatusBadRequest, "invalid request body")
 			return
 		}
 		err := h.service.AddMember(wsID, req.Email, req.Role)
 		if err != nil {
-			writeCloudError(w, http.StatusBadRequest, err.Error())
+			writeCloudError(w, http.StatusBadRequest, "failed to add member")
 			return
 		}
 		writeCloudJSON(w, http.StatusCreated, map[string]string{"status": "member added"})
@@ -120,7 +127,7 @@ func (h *APIHandler) handleWorkspaceByID(w http.ResponseWriter, r *http.Request)
 	case subPath == "dashboard" && r.Method == http.MethodGet:
 		data, err := h.service.GetDashboardData(wsID)
 		if err != nil {
-			writeCloudError(w, http.StatusNotFound, err.Error())
+			writeCloudError(w, http.StatusNotFound, "workspace not found")
 			return
 		}
 		writeCloudJSON(w, http.StatusOK, data)
@@ -128,7 +135,7 @@ func (h *APIHandler) handleWorkspaceByID(w http.ResponseWriter, r *http.Request)
 	case subPath == "" && r.Method == http.MethodGet:
 		ws, err := h.service.GetWorkspace(wsID)
 		if err != nil {
-			writeCloudError(w, http.StatusNotFound, err.Error())
+			writeCloudError(w, http.StatusNotFound, "workspace not found")
 			return
 		}
 		writeCloudJSON(w, http.StatusOK, ws)
@@ -136,7 +143,7 @@ func (h *APIHandler) handleWorkspaceByID(w http.ResponseWriter, r *http.Request)
 	case subPath == "" && r.Method == http.MethodDelete:
 		err := h.service.DeleteWorkspace(wsID)
 		if err != nil {
-			writeCloudError(w, http.StatusNotFound, err.Error())
+			writeCloudError(w, http.StatusNotFound, "workspace not found")
 			return
 		}
 		writeCloudJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
@@ -192,7 +199,7 @@ func (h *APIHandler) handleBilling(w http.ResponseWriter, r *http.Request) {
 
 	ws, err := h.service.GetWorkspace(wsID)
 	if err != nil {
-		writeCloudError(w, http.StatusNotFound, err.Error())
+		writeCloudError(w, http.StatusNotFound, "workspace not found")
 		return
 	}
 
@@ -231,7 +238,7 @@ func (h *APIHandler) handleUsage(w http.ResponseWriter, r *http.Request) {
 
 	data, err := h.service.GetDashboardData(wsID)
 	if err != nil {
-		writeCloudError(w, http.StatusNotFound, err.Error())
+		writeCloudError(w, http.StatusNotFound, "workspace not found")
 		return
 	}
 	writeCloudJSON(w, http.StatusOK, data)
@@ -279,14 +286,14 @@ func (h *APIHandler) handleProvision(w http.ResponseWriter, r *http.Request) {
 		Region      string `json:"region"`
 		Size        string `json:"size"` // small, medium, large
 	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxCloudRequestSize)).Decode(&req); err != nil {
 		writeCloudError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
 	ws, err := h.service.GetWorkspace(req.WorkspaceID)
 	if err != nil {
-		writeCloudError(w, http.StatusNotFound, err.Error())
+		writeCloudError(w, http.StatusNotFound, "workspace not found")
 		return
 	}
 
