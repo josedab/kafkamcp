@@ -26,6 +26,16 @@ jobs:
           go mod tidy
           git diff --exit-code go.mod go.sum
 
+      - name: Check formatting
+        run: |
+          unformatted=$(gofmt -s -l .)
+          if [ -n "$unformatted" ]; then
+            echo "ERROR: The following files are not formatted:"
+            echo "$unformatted"
+            echo "Run 'make fmt' to fix."
+            exit 1
+          fi
+
       - name: Vet
         run: go vet ./...
 
