@@ -1,4 +1,4 @@
-.PHONY: build test lint lint-fix fmt fmt-check docker clean clean-all validate help run run-local dev dev-sse dev-http coverage test-coverage-report setup-hooks docker-dev docker-dev-down setup test-one setup-vscode integration-test check doctor sdk-test quickstart benchmark docker-compose-full vet sdk-setup deps changelog test-coverage-check test-short
+.PHONY: build test lint lint-fix fmt fmt-check docker clean clean-all validate help run run-local dev dev-sse dev-http coverage test-coverage-report setup-hooks docker-dev docker-dev-down setup test-one setup-vscode integration-test check doctor sdk-test quickstart benchmark docker-compose-full vet sdk-setup deps changelog test-coverage-check test-short new-tool
 
 # Build variables
 BINARY    := kafkamcp
@@ -24,9 +24,9 @@ run: build ## Build and run with default config
 	$(BUILD_DIR)/$(BINARY) --config kafkamcp.yaml
 
 run-local: build ## Build and run without Docker (for remote Kafka clusters)
-@echo "Starting KafkaMCP (no Docker required)..."
-@echo "Configure your Kafka connection in kafkamcp.yaml"
-$(BUILD_DIR)/$(BINARY) --config kafkamcp.yaml
+	@echo "Starting KafkaMCP (no Docker required)..."
+	@echo "Configure your Kafka connection in kafkamcp.yaml"
+	$(BUILD_DIR)/$(BINARY) --config kafkamcp.yaml
 
 dev: ## Run with auto-reload (requires air: go install github.com/air-verse/air@latest)
 	@command -v air >/dev/null 2>&1 || { echo "Installing air..."; go install github.com/air-verse/air@latest; }
@@ -63,14 +63,14 @@ test-coverage-check: test ## Fail if total test coverage is below MIN_COVERAGE (
 	echo "OK: coverage $${total}% meets minimum $(MIN_COVERAGE)%"
 
 test-coverage-report: test ## Print per-package coverage breakdown to stdout
-@echo "=== Per-Package Coverage ==="
-@go tool cover -func=coverage.out | \
-grep -E '^[a-z]' | \
-awk '{pkg=$$1; cov=$$NF} pkg!=prev {if(prev) printf "  %-60s %s\n", prev, last; prev=pkg} {last=cov} END {if(prev) printf "  %-60s %s\n", prev, last}' | \
-sort
-@echo ""
-@echo "=== Total ==="
-@go tool cover -func=coverage.out | tail -1 | awk '{printf "  %-60s %s\n", $$1, $$NF}'
+	@echo "=== Per-Package Coverage ==="
+	@go tool cover -func=coverage.out | \
+		grep -E '^[a-z]' | \
+		awk '{pkg=$$1; cov=$$NF} pkg!=prev {if(prev) printf "  %-60s %s\n", prev, last; prev=pkg} {last=cov} END {if(prev) printf "  %-60s %s\n", prev, last}' | \
+		sort
+	@echo ""
+	@echo "=== Total ==="
+	@go tool cover -func=coverage.out | tail -1 | awk '{printf "  %-60s %s\n", $$1, $$NF}'
 
 test-short: ## Run tests without -race for fast iteration (respects testing.Short)
 	go test -short ./...
@@ -86,6 +86,16 @@ lint-fix: ## Run golangci-lint with auto-fix
 fmt: ## Format code
 	gofmt -s -w .
 	goimports -w . 2>/dev/null || true
+
+fmt-check: ## Check code formatting (fails if unformatted, does not modify files)
+	@unformatted=$$(gofmt -s -l .); \
+	if [ -n "$$unformatted" ]; then \
+		echo "ERROR: The following files are not formatted:"; \
+		echo "$$unformatted"; \
+		echo "Run 'make fmt' to fix."; \
+		exit 1; \
+	fi; \
+	echo "All files formatted correctly."
 
 docker: ## Build Docker image
 	docker build -t $(DOCKER_IMAGE):$(DOCKER_TAG) .
@@ -171,6 +181,59 @@ changelog: ## Generate CHANGELOG.md from Conventional Commits
 	@command -v git-chglog >/dev/null 2>&1 || { echo "Installing git-chglog..."; go install github.com/git-chglog/git-chglog/cmd/git-chglog@latest; }
 	git-chglog -o CHANGELOG.md
 	@echo "CHANGELOG.md updated."
+
+new-tool: ## Scaffold a new tool: make new-tool NAME=xyz
+	@if [ -z "$(NAME)" ]; then echo "Usage: make new-tool NAME=<tool_name>"; exit 1; fi
+	@if [ -d "internal/$(NAME)" ]; then echo "ERROR: internal/$(NAME) already exists"; exit 1; fi
+	@if [ -f "internal/server/tools_$(NAME).go" ]; then echo "ERROR: internal/server/tools_$(NAME).go already exists"; exit 1; fi
+	@echo "Scaffolding tool: $(NAME)"
+	@mkdir -p internal/$(NAME)
+	@CAMEL=$$(echo "$(NAME)" | sed -r 's/(^|_)([a-z])/\U\2/g' 2>/dev/null || echo "$(NAME)" | sed -E 's/(^|_)([a-z])/\U\2/g' 2>/dev/null || echo "$(NAME)"); \
+	echo "package $(NAME)" > internal/$(NAME)/engine.go; \
+	echo "" >> internal/$(NAME)/engine.go; \
+	echo "import \"log/slog\"" >> internal/$(NAME)/engine.go; \
+	echo "" >> internal/$(NAME)/engine.go; \
+	echo "// Engine implements $(NAME) functionality." >> internal/$(NAME)/engine.go; \
+	echo "type Engine struct {" >> internal/$(NAME)/engine.go; \
+	echo "	logger *slog.Logger" >> internal/$(NAME)/engine.go; \
+	echo "}" >> internal/$(NAME)/engine.go; \
+	echo "" >> internal/$(NAME)/engine.go; \
+	echo "// NewEngine creates a new $(NAME) engine." >> internal/$(NAME)/engine.go; \
+	echo "func NewEngine(logger *slog.Logger) *Engine {" >> internal/$(NAME)/engine.go; \
+	echo "	return &Engine{logger: logger}" >> internal/$(NAME)/engine.go; \
+	echo "}" >> internal/$(NAME)/engine.go; \
+	echo "package server" > internal/server/tools_$(NAME).go; \
+	echo "" >> internal/server/tools_$(NAME).go; \
+	echo "import (" >> internal/server/tools_$(NAME).go; \
+	echo "	\"context\"" >> internal/server/tools_$(NAME).go; \
+	echo "	\"time\"" >> internal/server/tools_$(NAME).go; \
+	echo "" >> internal/server/tools_$(NAME).go; \
+	echo "	\"github.com/mark3labs/mcp-go/mcp\"" >> internal/server/tools_$(NAME).go; \
+	echo ")" >> internal/server/tools_$(NAME).go; \
+	echo "" >> internal/server/tools_$(NAME).go; \
+	echo "func (s *Server) handle$${CAMEL}Example(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {" >> internal/server/tools_$(NAME).go; \
+	echo "	// TODO: implement handler" >> internal/server/tools_$(NAME).go; \
+	echo "	return mcp.NewToolResultText(\"not implemented\"), nil" >> internal/server/tools_$(NAME).go; \
+	echo "}" >> internal/server/tools_$(NAME).go; \
+	echo "package server" > internal/server/register_$(NAME).go; \
+	echo "" >> internal/server/register_$(NAME).go; \
+	echo "import \"github.com/mark3labs/mcp-go/mcp\"" >> internal/server/register_$(NAME).go; \
+	echo "" >> internal/server/register_$(NAME).go; \
+	echo "func (s *Server) register$${CAMEL}Tools() {" >> internal/server/register_$(NAME).go; \
+	echo "	s.mcpServer.AddTool(mcp.NewTool(\"kafka_$(NAME)_example\"," >> internal/server/register_$(NAME).go; \
+	echo "		mcp.WithDescription(\"TODO: describe this tool\")," >> internal/server/register_$(NAME).go; \
+	echo "	), s.handle$${CAMEL}Example)" >> internal/server/register_$(NAME).go; \
+	echo "}" >> internal/server/register_$(NAME).go
+	@echo ""
+	@echo "Created:"
+	@echo "  internal/$(NAME)/engine.go"
+	@echo "  internal/server/tools_$(NAME).go"
+	@echo "  internal/server/register_$(NAME).go"
+	@echo ""
+	@echo "Next steps:"
+	@echo "  1. Add the engine field to the appropriate group struct in internal/server/server.go"
+	@echo "  2. Initialise it in New() in internal/server/server.go"
+	@echo "  3. Add s.register<Name>Tools() to registerTools() in internal/server/register_tools.go"
 
 sdk-setup: ## Install SDK test dependencies (Python, Node.js)
 	@echo "=== SDK Dependency Setup ==="
