@@ -382,10 +382,10 @@ func (s *Server) getConnectClient(clCfg *config.ClusterConfig) (*kafka.ConnectCl
 func extractAgentID(request mcp.CallToolRequest) string {
 if request.Header != nil {
 if id := request.Header.Get("X-Agent-ID"); id != "" {
-return id
+return sanitizeAgentID(id)
 }
 if id := request.Header.Get("X-Client-ID"); id != "" {
-return id
+return sanitizeAgentID(id)
 }
 }
 return "anonymous"
@@ -395,13 +395,27 @@ return "anonymous"
 func extractAgentIDFromResource(request mcp.ReadResourceRequest) string {
 if request.Header != nil {
 if id := request.Header.Get("X-Agent-ID"); id != "" {
-return id
+return sanitizeAgentID(id)
 }
 if id := request.Header.Get("X-Client-ID"); id != "" {
-return id
+return sanitizeAgentID(id)
 }
 }
 return "anonymous"
+}
+
+// sanitizeAgentID validates and sanitizes an agent ID to contain only
+// alphanumeric characters, hyphens, and underscores.
+func sanitizeAgentID(id string) string {
+	if len(id) > 128 {
+		id = id[:128]
+	}
+	for _, c := range id {
+		if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' || c == '_' || c == '.') {
+			return "anonymous"
+		}
+	}
+	return id
 }
 
 // validateAgentID checks that the claimed agent ID exists in policy config when default_deny is true.
