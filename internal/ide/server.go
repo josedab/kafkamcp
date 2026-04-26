@@ -5,6 +5,8 @@ package ide
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -25,6 +27,8 @@ type Server struct {
 	mu            sync.RWMutex
 	sessions      map[string]*IDESession
 }
+
+const maxIDERequestSize = 1 << 20 // 1 MB
 
 // IDESession tracks a connected IDE instance.
 type IDESession struct {
@@ -111,15 +115,20 @@ func NewServer(km kafka.KafkaManager, schemaClients map[string]*schema.Client, l
 }
 
 // RegisterRoutes adds IDE API routes to the given mux.
-func (s *Server) RegisterRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("/api/ide/v1/connect", s.handleConnect)
-	mux.HandleFunc("/api/ide/v1/topics", s.handleTopicBrowse)
-	mux.HandleFunc("/api/ide/v1/topics/", s.handleTopicDetail)
-	mux.HandleFunc("/api/ide/v1/schemas", s.handleSchemas)
-	mux.HandleFunc("/api/ide/v1/schemas/", s.handleSchemaDetail)
-	mux.HandleFunc("/api/ide/v1/messages", s.handleMessagePreview)
-	mux.HandleFunc("/api/ide/v1/completions", s.handleCompletions)
-	mux.HandleFunc("/api/ide/v1/health", s.handleHealth)
+func (s *Server) RegisterRoutes(mux *http.ServeMux, authMiddleware func(http.HandlerFunc) http.HandlerFunc) {
+	wrap := authMiddleware
+	if wrap == nil {
+		wrap = func(h http.HandlerFunc) http.HandlerFunc { return h }
+	}
+
+	mux.HandleFunc("/api/ide/v1/connect", wrap(s.handleConnect))
+	mux.HandleFunc("/api/ide/v1/topics", wrap(s.handleTopicBrowse))
+	mux.HandleFunc("/api/ide/v1/topics/", wrap(s.handleTopicDetail))
+	mux.HandleFunc("/api/ide/v1/schemas", wrap(s.handleSchemas))
+	mux.HandleFunc("/api/ide/v1/schemas/", wrap(s.handleSchemaDetail))
+	mux.HandleFunc("/api/ide/v1/messages", wrap(s.handleMessagePreview))
+	mux.HandleFunc("/api/ide/v1/completions", wrap(s.handleCompletions))
+	mux.HandleFunc("/api/ide/v1/health", wrap(s.handleHealth))
 }
 
 func (s *Server) handleConnect(w http.ResponseWriter, r *http.Request) {
@@ -132,13 +141,13 @@ func (s *Server) handleConnect(w http.ResponseWriter, r *http.Request) {
 		IDE     string `json:"ide"`
 		Version string `json:"version"`
 	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxIDERequestSize)).Decode(&req); err != nil {
 		http.Error(w, "invalid request", http.StatusBadRequest)
 		return
 	}
 
 	s.mu.Lock()
-	sessionID := fmt.Sprintf("ide_%d", time.Now().UnixNano())
+	sessionID := generateIDESessionID()
 	s.sessions[sessionID] = &IDESession{
 		ID:        sessionID,
 		IDE:       req.IDE,
@@ -369,6 +378,14 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 		"sessions":     sessionCount,
 		"capabilities": []string{"topics", "schemas", "messages", "completions"},
 	})
+}
+
+func generateIDESessionID() string {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return fmt.Sprintf("ide_%d", time.Now().UnixNano())
+	}
+	return "ide_" + hex.EncodeToString(b)
 }
 
 func writeIDEJSON(w http.ResponseWriter, status int, v any) {

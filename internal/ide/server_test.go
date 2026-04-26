@@ -38,7 +38,7 @@ func TestNewServer(t *testing.T) {
 func TestRegisterRoutes(t *testing.T) {
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	mux := http.NewServeMux()
-	s.RegisterRoutes(mux)
+	s.RegisterRoutes(mux, nil)
 
 	// Verify health endpoint registered
 	req := httptest.NewRequest(http.MethodGet, "/api/ide/v1/health", nil)
@@ -52,7 +52,7 @@ func TestRegisterRoutes(t *testing.T) {
 func TestHandleConnect(t *testing.T) {
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	mux := http.NewServeMux()
-	s.RegisterRoutes(mux)
+	s.RegisterRoutes(mux, nil)
 
 	body := strings.NewReader(`{"ide":"vscode","version":"1.90.0"}`)
 	req := httptest.NewRequest(http.MethodPost, "/api/ide/v1/connect", body)
@@ -77,7 +77,7 @@ func TestHandleConnect(t *testing.T) {
 func TestHandleConnectMethodNotAllowed(t *testing.T) {
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	mux := http.NewServeMux()
-	s.RegisterRoutes(mux)
+	s.RegisterRoutes(mux, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/ide/v1/connect", nil)
 	w := httptest.NewRecorder()
@@ -91,7 +91,7 @@ func TestHandleConnectMethodNotAllowed(t *testing.T) {
 func TestHandleConnectInvalidBody(t *testing.T) {
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	mux := http.NewServeMux()
-	s.RegisterRoutes(mux)
+	s.RegisterRoutes(mux, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/ide/v1/connect", strings.NewReader("invalid"))
 	w := httptest.NewRecorder()
@@ -113,7 +113,7 @@ func TestHandleTopicBrowse(t *testing.T) {
 	}
 	s := newTestServer(mock, nil)
 	mux := http.NewServeMux()
-	s.RegisterRoutes(mux)
+	s.RegisterRoutes(mux, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/ide/v1/topics?cluster=default", nil)
 	w := httptest.NewRecorder()
@@ -141,7 +141,7 @@ func TestHandleTopicBrowseInternalFilter(t *testing.T) {
 	}
 	s := newTestServer(mock, nil)
 	mux := http.NewServeMux()
-	s.RegisterRoutes(mux)
+	s.RegisterRoutes(mux, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/ide/v1/topics?internal=true", nil)
 	w := httptest.NewRecorder()
@@ -160,7 +160,7 @@ func TestHandleTopicBrowseError(t *testing.T) {
 	}
 	s := newTestServer(mock, nil)
 	mux := http.NewServeMux()
-	s.RegisterRoutes(mux)
+	s.RegisterRoutes(mux, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/ide/v1/topics", nil)
 	w := httptest.NewRecorder()
@@ -174,7 +174,7 @@ func TestHandleTopicBrowseError(t *testing.T) {
 func TestHandleTopicBrowseMethodNotAllowed(t *testing.T) {
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	mux := http.NewServeMux()
-	s.RegisterRoutes(mux)
+	s.RegisterRoutes(mux, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/ide/v1/topics", nil)
 	w := httptest.NewRecorder()
@@ -203,7 +203,7 @@ func TestHandleTopicDetail(t *testing.T) {
 	}
 	s := newTestServer(mock, nil)
 	mux := http.NewServeMux()
-	s.RegisterRoutes(mux)
+	s.RegisterRoutes(mux, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/ide/v1/topics/orders", nil)
 	w := httptest.NewRecorder()
@@ -234,7 +234,7 @@ func TestHandleTopicDetailNotFound(t *testing.T) {
 	}
 	s := newTestServer(mock, nil)
 	mux := http.NewServeMux()
-	s.RegisterRoutes(mux)
+	s.RegisterRoutes(mux, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/ide/v1/topics/nonexistent", nil)
 	w := httptest.NewRecorder()
@@ -248,7 +248,7 @@ func TestHandleTopicDetailNotFound(t *testing.T) {
 func TestHandleTopicDetailEmptyName(t *testing.T) {
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	mux := http.NewServeMux()
-	s.RegisterRoutes(mux)
+	s.RegisterRoutes(mux, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/ide/v1/topics/", nil)
 	w := httptest.NewRecorder()
@@ -267,7 +267,7 @@ func TestHandleTopicDetailUnicodeName(t *testing.T) {
 	}
 	s := newTestServer(mock, nil)
 	mux := http.NewServeMux()
-	s.RegisterRoutes(mux)
+	s.RegisterRoutes(mux, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/ide/v1/topics/日本語トピック", nil)
 	w := httptest.NewRecorder()
@@ -281,7 +281,7 @@ func TestHandleTopicDetailUnicodeName(t *testing.T) {
 func TestHandleSchemas(t *testing.T) {
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	mux := http.NewServeMux()
-	s.RegisterRoutes(mux)
+	s.RegisterRoutes(mux, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/ide/v1/schemas", nil)
 	w := httptest.NewRecorder()
@@ -302,7 +302,7 @@ func TestHandleSchemasWithClients(t *testing.T) {
 	clients := map[string]*schema.Client{"default": {}}
 	s := newTestServer(&kafka.MockKafkaManager{}, clients)
 	mux := http.NewServeMux()
-	s.RegisterRoutes(mux)
+	s.RegisterRoutes(mux, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/ide/v1/schemas", nil)
 	w := httptest.NewRecorder()
@@ -318,7 +318,7 @@ func TestHandleSchemasWithClients(t *testing.T) {
 func TestHandleSchemasMethodNotAllowed(t *testing.T) {
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	mux := http.NewServeMux()
-	s.RegisterRoutes(mux)
+	s.RegisterRoutes(mux, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/ide/v1/schemas", nil)
 	w := httptest.NewRecorder()
@@ -332,7 +332,7 @@ func TestHandleSchemasMethodNotAllowed(t *testing.T) {
 func TestHandleSchemaDetail(t *testing.T) {
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	mux := http.NewServeMux()
-	s.RegisterRoutes(mux)
+	s.RegisterRoutes(mux, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/ide/v1/schemas/orders-value", nil)
 	w := httptest.NewRecorder()
@@ -355,7 +355,7 @@ func TestHandleSchemaDetail(t *testing.T) {
 func TestHandleSchemaDetailEmpty(t *testing.T) {
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	mux := http.NewServeMux()
-	s.RegisterRoutes(mux)
+	s.RegisterRoutes(mux, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/ide/v1/schemas/", nil)
 	w := httptest.NewRecorder()
@@ -376,7 +376,7 @@ func TestHandleMessagePreview(t *testing.T) {
 	}
 	s := newTestServer(mock, nil)
 	mux := http.NewServeMux()
-	s.RegisterRoutes(mux)
+	s.RegisterRoutes(mux, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/ide/v1/messages?topic=orders", nil)
 	w := httptest.NewRecorder()
@@ -396,7 +396,7 @@ func TestHandleMessagePreview(t *testing.T) {
 func TestHandleMessagePreviewNoTopic(t *testing.T) {
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	mux := http.NewServeMux()
-	s.RegisterRoutes(mux)
+	s.RegisterRoutes(mux, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/ide/v1/messages", nil)
 	w := httptest.NewRecorder()
@@ -415,7 +415,7 @@ func TestHandleMessagePreviewError(t *testing.T) {
 	}
 	s := newTestServer(mock, nil)
 	mux := http.NewServeMux()
-	s.RegisterRoutes(mux)
+	s.RegisterRoutes(mux, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/ide/v1/messages?topic=orders", nil)
 	w := httptest.NewRecorder()
@@ -429,7 +429,7 @@ func TestHandleMessagePreviewError(t *testing.T) {
 func TestHandleMessagePreviewMethodNotAllowed(t *testing.T) {
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	mux := http.NewServeMux()
-	s.RegisterRoutes(mux)
+	s.RegisterRoutes(mux, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/ide/v1/messages?topic=orders", nil)
 	w := httptest.NewRecorder()
@@ -451,7 +451,7 @@ func TestHandleMessagePreviewLargeMessage(t *testing.T) {
 	}
 	s := newTestServer(mock, nil)
 	mux := http.NewServeMux()
-	s.RegisterRoutes(mux)
+	s.RegisterRoutes(mux, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/ide/v1/messages?topic=orders", nil)
 	w := httptest.NewRecorder()
@@ -478,7 +478,7 @@ func TestHandleCompletions(t *testing.T) {
 	}
 	s := newTestServer(mock, nil)
 	mux := http.NewServeMux()
-	s.RegisterRoutes(mux)
+	s.RegisterRoutes(mux, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/ide/v1/completions", nil)
 	w := httptest.NewRecorder()
@@ -510,7 +510,7 @@ func TestHandleCompletionsWithPrefix(t *testing.T) {
 	}
 	s := newTestServer(mock, nil)
 	mux := http.NewServeMux()
-	s.RegisterRoutes(mux)
+	s.RegisterRoutes(mux, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/ide/v1/completions?prefix=ord&kind=topic", nil)
 	w := httptest.NewRecorder()
@@ -526,7 +526,7 @@ func TestHandleCompletionsWithPrefix(t *testing.T) {
 func TestHandleCompletionsMethodNotAllowed(t *testing.T) {
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	mux := http.NewServeMux()
-	s.RegisterRoutes(mux)
+	s.RegisterRoutes(mux, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/ide/v1/completions", nil)
 	w := httptest.NewRecorder()
@@ -540,7 +540,7 @@ func TestHandleCompletionsMethodNotAllowed(t *testing.T) {
 func TestHandleHealth(t *testing.T) {
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	mux := http.NewServeMux()
-	s.RegisterRoutes(mux)
+	s.RegisterRoutes(mux, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/ide/v1/health", nil)
 	w := httptest.NewRecorder()
@@ -565,7 +565,7 @@ func TestHandleHealthWithSessions(t *testing.T) {
 	s.sessions["s1"] = &IDESession{ID: "s1", IDE: "vscode"}
 
 	mux := http.NewServeMux()
-	s.RegisterRoutes(mux)
+	s.RegisterRoutes(mux, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/ide/v1/health", nil)
 	w := httptest.NewRecorder()
@@ -596,7 +596,7 @@ func TestWriteIDEJSON(t *testing.T) {
 func TestConcurrentConnect(t *testing.T) {
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	mux := http.NewServeMux()
-	s.RegisterRoutes(mux)
+	s.RegisterRoutes(mux, nil)
 
 	var wg sync.WaitGroup
 	for i := 0; i < 20; i++ {
