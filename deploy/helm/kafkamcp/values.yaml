@@ -131,7 +131,7 @@ serviceMonitor:
 
 # NetworkPolicy
 networkPolicy:
-  enabled: false
+  enabled: true
   ingressFrom: []    # Additional ingress sources (e.g., [{namespaceSelector: {matchLabels: {name: monitoring}}}])
   kafkaCIDR: ""      # CIDR for Kafka broker egress (e.g., "10.0.0.0/8")
   additionalEgress: []
