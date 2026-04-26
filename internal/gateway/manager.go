@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"strings"
 	"sync"
 )
 
@@ -94,13 +95,13 @@ func (m *Manager) ListBackends() []BackendStatus {
 			Status:   "unknown",
 		}
 		if cfg, ok := m.configs[name]; ok {
-			status.Endpoints = cfg.Endpoints
+			status.EndpointCount = len(cfg.Endpoints)
 		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), healthCheckTimeout)
 		if err := backend.Healthy(ctx); err != nil {
 			status.Status = "unhealthy"
-			status.Error = err.Error()
+			status.Error = categorizeBackendError(err)
 		} else {
 			status.Status = "healthy"
 		}
@@ -165,11 +166,28 @@ func (m *Manager) Close() error {
 
 // BackendStatus describes the health of a backend.
 type BackendStatus struct {
-	Name      string   `json:"name"`
-	Protocol  Protocol `json:"protocol"`
-	Endpoints []string `json:"endpoints"`
-	Status    string   `json:"status"`
-	Error     string   `json:"error,omitempty"`
+	Name          string   `json:"name"`
+	Protocol      Protocol `json:"protocol"`
+	EndpointCount int      `json:"endpoint_count"`
+	Status        string   `json:"status"`
+	Error         string   `json:"error,omitempty"`
 }
 
 const healthCheckTimeout = 5e9 // 5 seconds
+
+func categorizeBackendError(err error) string {
+	msg := err.Error()
+	lower := strings.ToLower(msg)
+	switch {
+	case strings.Contains(lower, "timeout") || strings.Contains(lower, "deadline"):
+		return "health_check_timeout"
+	case strings.Contains(lower, "connection refused") || strings.Contains(lower, "connect"):
+		return "connection_failed"
+	case strings.Contains(lower, "auth") || strings.Contains(lower, "permission"):
+		return "authentication_failed"
+	case strings.Contains(lower, "tls") || strings.Contains(lower, "certificate"):
+		return "tls_error"
+	default:
+		return "health_check_failed"
+	}
+}
