@@ -5,9 +5,15 @@
 /internal/auth/ @kafkamcp/security
 /internal/masking/ @kafkamcp/security
 /internal/audit/ @kafkamcp/security
+/internal/compliance/ @kafkamcp/security
+/internal/opa/ @kafkamcp/security
 
 # Kafka client code
 /internal/kafka/ @kafkamcp/kafka
+/internal/streamsql/ @kafkamcp/kafka
+/internal/dlq/ @kafkamcp/kafka
+/internal/replication/ @kafkamcp/kafka
+/internal/replay/ @kafkamcp/kafka
 
 # Core server and configuration
 /internal/config/ @kafkamcp/maintainers
@@ -16,11 +22,23 @@
 # Schema Registry integration
 /internal/schema/ @kafkamcp/kafka
 
+# Observability and monitoring
+/internal/metrics/ @kafkamcp/infra
+/internal/telemetry/ @kafkamcp/infra
+/internal/observability/ @kafkamcp/infra
+/internal/lagdiag/ @kafkamcp/kafka
+/internal/anomaly/ @kafkamcp/kafka
+/internal/forecast/ @kafkamcp/kafka
+
 # Infrastructure and deployment
 /deploy/helm/ @kafkamcp/infra
+/internal/operator/ @kafkamcp/infra
+/internal/gateway/ @kafkamcp/infra
+/internal/tenant/ @kafkamcp/infra
 
 # SDKs
 /sdk/ @kafkamcp/sdk
+/internal/ide/ @kafkamcp/sdk
 
 # CI/CD workflows
 /.github/workflows/ @kafkamcp/maintainers
