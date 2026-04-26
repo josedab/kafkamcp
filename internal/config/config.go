@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"regexp"
 	"strings"
@@ -202,7 +203,7 @@ func Load(path string) (*Config, error) {
 	if info, err := os.Stat(path); err == nil {
 		mode := info.Mode().Perm()
 		if mode&0044 != 0 {
-			fmt.Fprintf(os.Stderr, "SECURITY WARNING: config file %q has permissive permissions (%04o); run 'chmod 600 %s' if it contains credentials\n", path, mode, path)
+			slog.Warn("config file has permissive permissions", "path", path, "mode", fmt.Sprintf("%04o", mode))
 		}
 	}
 
