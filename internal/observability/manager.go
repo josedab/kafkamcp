@@ -265,7 +265,7 @@ func (m *Manager) ListIncidents(status string) []Incident {
 func randomID() string {
 	b := make([]byte, 8)
 	if _, err := rand.Read(b); err != nil {
-		return fmt.Sprintf("%d", time.Now().UnixNano())
+		panic("crypto/rand failed: " + err.Error())
 	}
 	return hex.EncodeToString(b)
 }

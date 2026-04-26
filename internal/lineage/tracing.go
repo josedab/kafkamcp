@@ -112,7 +112,7 @@ func (tc *TraceContext) FormatTraceparent() string {
 func generateHexID(bytes int) string {
 	b := make([]byte, bytes)
 	if _, err := rand.Read(b); err != nil {
-		return fmt.Sprintf("%x", time.Now().UnixNano())
+		panic("crypto/rand failed: " + err.Error())
 	}
 	return hex.EncodeToString(b)
 }
