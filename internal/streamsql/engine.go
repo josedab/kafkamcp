@@ -167,7 +167,10 @@ func (e *Engine) Parse(sql, createdBy string) (*Query, error) {
 	// Extract WINDOW clause
 	windowRegex := regexp.MustCompile(`(?i)WINDOW\s+(TUMBLING|SLIDING|SESSION)\s+(\d+)(ms|s|m|h)`)
 	if matches := windowRegex.FindStringSubmatch(sql); len(matches) > 3 {
-		size, _ := strconv.ParseInt(matches[2], 10, 64)
+		size, err := strconv.ParseInt(matches[2], 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("invalid WINDOW size %q: %w", matches[2], err)
+		}
 		switch matches[3] {
 		case "s":
 			size *= 1000
@@ -185,7 +188,11 @@ func (e *Engine) Parse(sql, createdBy string) (*Query, error) {
 	// Extract LIMIT
 	limitRegex := regexp.MustCompile(`(?i)LIMIT\s+(\d+)`)
 	if matches := limitRegex.FindStringSubmatch(sql); len(matches) > 1 {
-		query.Limit, _ = strconv.Atoi(matches[1])
+		limit, err := strconv.Atoi(matches[1])
+		if err != nil {
+			return nil, fmt.Errorf("invalid LIMIT value %q: %w", matches[1], err)
+		}
+		query.Limit = limit
 	}
 
 	e.mu.Lock()
