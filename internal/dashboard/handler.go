@@ -78,6 +78,30 @@ func (d *Dashboard) requireAuth(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+// requireAuthHandler is like requireAuth but wraps an http.Handler instead of http.HandlerFunc.
+func (d *Dashboard) requireAuthHandler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if d.apiKey == "" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		token := ""
+		if auth := r.Header.Get("Authorization"); strings.HasPrefix(auth, "Bearer ") {
+			token = strings.TrimPrefix(auth, "Bearer ")
+		} else {
+			token = r.Header.Get("X-API-Key")
+		}
+
+		if subtle.ConstantTimeCompare([]byte(token), []byte(d.apiKey)) != 1 {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 // Handler returns the HTTP handler for the dashboard.
 func (d *Dashboard) Handler() http.Handler {
 	mux := http.NewServeMux()
@@ -104,7 +128,7 @@ func (d *Dashboard) Handler() http.Handler {
 	if err != nil {
 		d.logger.Error("failed to load static files", "error", err)
 	} else {
-		mux.Handle("/", http.FileServer(http.FS(staticContent)))
+		mux.Handle("/", d.requireAuthHandler(http.FileServer(http.FS(staticContent))))
 	}
 
 	return mux
