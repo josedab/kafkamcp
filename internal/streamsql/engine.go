@@ -306,30 +306,52 @@ func (e *Engine) executeAggregation(query *Query, messages []map[string]any) []m
 			case "SUM":
 				var sum float64
 				for _, m := range groupMsgs {
-					sum += toFloat64(m[agg.Field])
+					v, err := toFloat64(m[agg.Field])
+					if err != nil {
+						continue
+					}
+					sum += v
 				}
 				row[agg.Alias] = sum
 			case "AVG":
 				var sum float64
+				var count int
 				for _, m := range groupMsgs {
-					sum += toFloat64(m[agg.Field])
+					v, err := toFloat64(m[agg.Field])
+					if err != nil {
+						continue
+					}
+					sum += v
+					count++
 				}
-				if len(groupMsgs) > 0 {
-					row[agg.Alias] = sum / float64(len(groupMsgs))
+				if count > 0 {
+					row[agg.Alias] = sum / float64(count)
 				}
 			case "MIN":
-				min := toFloat64(groupMsgs[0][agg.Field])
+				min, err := toFloat64(groupMsgs[0][agg.Field])
+				if err != nil {
+					break
+				}
 				for _, m := range groupMsgs[1:] {
-					v := toFloat64(m[agg.Field])
+					v, err := toFloat64(m[agg.Field])
+					if err != nil {
+						continue
+					}
 					if v < min {
 						min = v
 					}
 				}
 				row[agg.Alias] = min
 			case "MAX":
-				max := toFloat64(groupMsgs[0][agg.Field])
+				max, err := toFloat64(groupMsgs[0][agg.Field])
+				if err != nil {
+					break
+				}
 				for _, m := range groupMsgs[1:] {
-					v := toFloat64(m[agg.Field])
+					v, err := toFloat64(m[agg.Field])
+					if err != nil {
+						continue
+					}
 					if v > max {
 						max = v
 					}
@@ -469,13 +491,33 @@ func matchWhere(msg map[string]any, where *WhereClause) bool {
 	case "!=":
 		return strVal != where.Value
 	case ">":
-		return toFloat64(val) > toFloat64(where.Value)
+		lhs, err1 := toFloat64(val)
+		rhs, err2 := toFloat64(where.Value)
+		if err1 != nil || err2 != nil {
+			return false
+		}
+		return lhs > rhs
 	case "<":
-		return toFloat64(val) < toFloat64(where.Value)
+		lhs, err1 := toFloat64(val)
+		rhs, err2 := toFloat64(where.Value)
+		if err1 != nil || err2 != nil {
+			return false
+		}
+		return lhs < rhs
 	case ">=":
-		return toFloat64(val) >= toFloat64(where.Value)
+		lhs, err1 := toFloat64(val)
+		rhs, err2 := toFloat64(where.Value)
+		if err1 != nil || err2 != nil {
+			return false
+		}
+		return lhs >= rhs
 	case "<=":
-		return toFloat64(val) <= toFloat64(where.Value)
+		lhs, err1 := toFloat64(val)
+		rhs, err2 := toFloat64(where.Value)
+		if err1 != nil || err2 != nil {
+			return false
+		}
+		return lhs <= rhs
 	case "LIKE":
 		pattern := strings.ReplaceAll(where.Value, "%", ".*")
 		matched, _ := regexp.MatchString("(?i)^"+pattern+"$", strVal)
@@ -485,20 +527,23 @@ func matchWhere(msg map[string]any, where *WhereClause) bool {
 	}
 }
 
-func toFloat64(v any) float64 {
+func toFloat64(v any) (float64, error) {
 	switch val := v.(type) {
 	case float64:
-		return val
+		return val, nil
 	case float32:
-		return float64(val)
+		return float64(val), nil
 	case int:
-		return float64(val)
+		return float64(val), nil
 	case int64:
-		return float64(val)
+		return float64(val), nil
 	case string:
-		f, _ := strconv.ParseFloat(val, 64)
-		return f
+		f, err := strconv.ParseFloat(val, 64)
+		if err != nil {
+			return 0, fmt.Errorf("cannot convert %q to float64: %w", val, err)
+		}
+		return f, nil
 	default:
-		return 0
+		return 0, fmt.Errorf("cannot convert %T to float64", v)
 	}
 }

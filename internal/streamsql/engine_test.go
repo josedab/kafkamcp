@@ -335,22 +335,33 @@ func TestToFloat64(t *testing.T) {
 	tests := []struct {
 		input    any
 		expected float64
+		wantErr  bool
 	}{
-		{float64(3.14), 3.14},
-		{float32(2.5), 2.5},
-		{int(42), 42},
-		{int64(100), 100},
-		{"3.14", 3.14},
-		{"-5.5", -5.5},
-		{"1e3", 1000},
-		{"notanumber", 0},
-		{nil, 0},
-		{true, 0},
-		{[]int{1, 2}, 0},
+		{float64(3.14), 3.14, false},
+		{float32(2.5), 2.5, false},
+		{int(42), 42, false},
+		{int64(100), 100, false},
+		{"3.14", 3.14, false},
+		{"-5.5", -5.5, false},
+		{"1e3", 1000, false},
+		{"notanumber", 0, true},
+		{nil, 0, true},
+		{true, 0, true},
+		{[]int{1, 2}, 0, true},
 	}
 
 	for _, tt := range tests {
-		result := toFloat64(tt.input)
+		result, err := toFloat64(tt.input)
+		if tt.wantErr {
+			if err == nil {
+				t.Errorf("toFloat64(%v) expected error, got nil", tt.input)
+			}
+			continue
+		}
+		if err != nil {
+			t.Errorf("toFloat64(%v) unexpected error: %v", tt.input, err)
+			continue
+		}
 		diff := result - tt.expected
 		if diff > 0.01 || diff < -0.01 {
 			t.Errorf("toFloat64(%v) = %f, expected %f", tt.input, result, tt.expected)
