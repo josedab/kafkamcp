@@ -157,6 +157,9 @@ func (s *Server) handleCostWhatIf(ctx context.Context, request mcp.CallToolReque
 			scenario.NewCompression = newComp
 		}
 		if newPart := request.GetInt("new_partitions", 0); newPart > 0 {
+			if newPart > MaxPartitions {
+				return mcp.NewToolResultError("new_partitions must be <= 10000"), nil
+			}
 			scenario.NewPartitions = &newPart
 		}
 		if newRF := request.GetInt("new_replication_factor", 0); newRF > 0 {

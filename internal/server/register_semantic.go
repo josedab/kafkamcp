@@ -114,6 +114,9 @@ func (s *Server) handleSemanticSearch(ctx context.Context, request mcp.CallToolR
 	if l, ok := args["limit"].(float64); ok && l > 0 {
 		limit = int(l)
 	}
+	if limit > 500 {
+		limit = 500
+	}
 
 	results := s.semanticEngine.Search(query, topicFilter, limit)
 	s.logAudit(agentID, "kafka_semantic_search", args, "", "success", len(results), nil, start)
@@ -135,6 +138,9 @@ func (s *Server) handleRAGContext(ctx context.Context, request mcp.CallToolReque
 	maxTokens := 4000
 	if t, ok := args["max_tokens"].(float64); ok && t > 0 {
 		maxTokens = int(t)
+	}
+	if maxTokens > 32000 {
+		maxTokens = 32000
 	}
 
 	ragCtx := s.semanticEngine.BuildRAGContext(query, topicFilter, maxTokens)

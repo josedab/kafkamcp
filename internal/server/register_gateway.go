@@ -176,6 +176,9 @@ func (s *Server) handleGatewayCreateTopic(ctx context.Context, request mcp.CallT
 	if p, ok := args["partitions"].(float64); ok && p > 0 {
 		partitions = int(p)
 	}
+	if partitions > MaxPartitions {
+		return mcp.NewToolResultError("partitions must be <= 10000"), nil
+	}
 
 	err := s.gatewayManager.CreateTopic(ctx, backendName, topic, partitions, nil)
 	if err != nil {

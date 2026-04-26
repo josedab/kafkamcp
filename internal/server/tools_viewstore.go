@@ -69,8 +69,17 @@ func (s *Server) handleViewQuery(ctx context.Context, request mcp.CallToolReques
 	if v, ok := args["limit"].(float64); ok {
 		opts.Limit = int(v)
 	}
+	if opts.Limit < 0 {
+		opts.Limit = 0
+	}
+	if opts.Limit > 10000 {
+		opts.Limit = 10000
+	}
 	if v, ok := args["offset"].(float64); ok {
 		opts.Offset = int(v)
+	}
+	if opts.Offset < 0 {
+		opts.Offset = 0
 	}
 	if v, ok := args["descending"].(bool); ok {
 		opts.Descending = v

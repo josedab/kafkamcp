@@ -157,6 +157,9 @@ func (s *Server) handlePolicyManage(ctx context.Context, request mcp.CallToolReq
 		if l, ok := args["limit"].(float64); ok && l > 0 {
 			limit = int(l)
 		}
+		if limit > 1000 {
+			limit = 1000
+		}
 		decisions := s.opaPolicyEngine.RecentDecisions(limit)
 		s.logAudit(agentID, "kafka_policy_manage", args, "", "success", len(decisions), nil, start)
 		return marshalResult(map[string]any{"decisions": decisions, "total": len(decisions)})

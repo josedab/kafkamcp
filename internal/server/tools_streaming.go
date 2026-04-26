@@ -96,6 +96,12 @@ func (s *Server) handleStreamPoll(_ context.Context, request mcp.CallToolRequest
 	}
 
 	timeoutMs := request.GetInt("poll_timeout_ms", 5000)
+	if timeoutMs < 100 {
+		timeoutMs = 100
+	}
+	if timeoutMs > 60000 {
+		timeoutMs = 60000
+	}
 	result, err := s.kafkaManager.PollStream(sessionID, timeoutMs)
 	if err != nil {
 		s.logAudit(agentID, "kafka_stream", args, "", "error", 0, err, start)
