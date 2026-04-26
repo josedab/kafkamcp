@@ -23,6 +23,12 @@ cd kafkamcp
 make setup
 ```
 
+This installs dev dependencies and a **git pre-commit hook** that runs `make validate` (fmt → vet → lint → test → build) before each commit. You can also install the hook separately:
+
+```bash
+make setup-hooks
+```
+
 ### 3. Build
 
 ```bash
