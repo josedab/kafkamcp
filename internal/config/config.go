@@ -246,6 +246,10 @@ func (c *Config) validate() error {
 		if cluster.SASLMechanism != "" && (cluster.SASLUsername == "" || cluster.SASLPassword == "") {
 			return fmt.Errorf("cluster[%d] (%s): sasl_username and sasl_password are required when sasl_mechanism is set", i, cluster.Name)
 		}
+		// InsecureSkipVerify requires explicit env gate
+		if cluster.ConnectTLS.InsecureSkipVerify && os.Getenv("KAFKAMCP_ALLOW_INSECURE") != "true" {
+			return fmt.Errorf("cluster[%d] (%s): insecure_skip_verify requires KAFKAMCP_ALLOW_INSECURE=true environment variable", i, cluster.Name)
+		}
 	}
 
 	transport := c.Server.Transport
