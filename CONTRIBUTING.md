@@ -23,7 +23,7 @@ cd kafkamcp
 make setup
 ```
 
-This installs dev dependencies and a **git pre-commit hook** that runs `make validate` (fmt → vet → lint → test → build) before each commit. You can also install the hook separately:
+This installs dev dependencies and a **git pre-commit hook** that runs `make validate` (fmt-check → vet → lint → test → build) before each commit. You can also install the hook separately:
 
 ```bash
 make setup-hooks
@@ -179,6 +179,31 @@ examples/           — Example configs (docker-compose, Confluent Cloud)
 deploy/             — Deployment (Helm chart)
 ```
 
+## Package Tiers
+
+Internal packages are grouped into three tiers. Higher tiers may depend on lower tiers but not the reverse.
+
+```
+┌─────────────────────────────────────────────────────┐
+│  Feature (optional modules — safe to disable)       │
+│  anomaly, chaos, cost, dlq, forecast, gitops,       │
+│  graph, lagdiag, lineage, migration, nlquery,       │
+│  persona, plugin, sandbox, selfheal, watch,         │
+│  workflow, profiler                                  │
+├─────────────────────────────────────────────────────┤
+│  Infrastructure (cross-cutting concerns)            │
+│  audit, auth, masking, match, metrics, ratelimit,   │
+│  telemetry, platform, urlutil                       │
+├─────────────────────────────────────────────────────┤
+│  Core (always needed)                               │
+│  kafka, server, config, schema                      │
+└─────────────────────────────────────────────────────┘
+```
+
+- **Core** packages provide the Kafka client, MCP server, configuration parsing, and schema registry integration. Every deployment uses them.
+- **Infrastructure** packages supply cross-cutting capabilities (auth, audit, metrics, masking) used by both Core and Feature packages.
+- **Feature** packages are self-contained modules that add optional functionality. They depend on Core and Infrastructure but never on each other.
+
 ## Questions?
 
 Open a [GitHub Discussion](https://github.com/kafkamcp/kafkamcp/discussions) or file an issue.
@@ -203,4 +228,4 @@ This checks your Go version, linting tools, Docker status, Kafka reachability, a
 | `make dev` fails with "air: command not found" | `air` hot-reload tool is not installed | Run `go install github.com/air-verse/air@latest` or `make setup` |
 | Tests fail with `-race` on macOS | The Go race detector requires CGO on macOS; `CGO_ENABLED=0` or missing Xcode CLI tools | Install Xcode CLI tools: `xcode-select --install` and ensure `CGO_ENABLED=1` (the default) |
 
-> **Note:** `make check` is an alias for `make validate` — both run the full fmt → lint → test → build pipeline.
+> **Note:** `make check` is an alias for `make validate` — both run the full fmt-check → lint → test → build pipeline. Use `make validate-ci` as a read-only pre-push check that never modifies your working tree. If formatting issues are reported, run `make fmt` first, then re-run validation.
