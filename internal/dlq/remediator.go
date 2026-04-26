@@ -2,6 +2,7 @@ package dlq
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -63,7 +64,12 @@ type RemediationStats struct {
 func NewRemediator(logger *slog.Logger) *Remediator {
 	return &Remediator{
 		logger: logger,
-		httpClient: &http.Client{Timeout: 10 * time.Second},
+		httpClient: &http.Client{
+			Timeout: 10 * time.Second,
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS13},
+			},
+		},
 		stats: RemediationStats{
 			ByTopic: make(map[string]int64),
 		},

@@ -2,6 +2,7 @@ package replication
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -218,7 +219,12 @@ func NewAlertManager(ctx context.Context, config NotificationConfig) (*AlertMana
 	return &AlertManager{
 		config:     config,
 		cooldowns:  make(map[string]time.Time),
-		httpClient: &http.Client{Timeout: 10 * time.Second},
+		httpClient: &http.Client{
+			Timeout: 10 * time.Second,
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS13},
+			},
+		},
 		webhookSem: make(chan struct{}, 10),
 		logger:     slog.Default(),
 		ctx:        ctx,

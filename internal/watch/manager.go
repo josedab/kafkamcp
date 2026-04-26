@@ -2,6 +2,7 @@ package watch
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -86,6 +87,9 @@ func NewManager(logger *slog.Logger) *Manager {
 		logger:        logger,
 		httpClient: &http.Client{
 			Timeout: 10 * time.Second,
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS13},
+			},
 		},
 		maxRetries: 5,
 		notifyCh:   make(chan Notification, 1000),
