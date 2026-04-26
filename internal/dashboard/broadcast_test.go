@@ -18,8 +18,7 @@ func TestBroadcastEvent_ConcurrentDisconnect(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		ch := make(chan []byte, 10)
 		d.mu.Lock()
-		d.clientID++
-		id := fmt.Sprintf("client-%d", d.clientID)
+		id := fmt.Sprintf("test-client-%d", i)
 		d.sseClients[id] = ch
 		d.mu.Unlock()
 	}

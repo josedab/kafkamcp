@@ -2,8 +2,10 @@ package dashboard
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/subtle"
 	"embed"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/fs"
@@ -31,7 +33,6 @@ type Dashboard struct {
 
 	mu         sync.RWMutex
 	sseClients map[string]chan []byte
-	clientID   int
 }
 
 // New creates a new dashboard server.
@@ -230,8 +231,13 @@ func (d *Dashboard) handleSSE(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("X-Accel-Buffering", "no")
 
 	d.mu.Lock()
-	d.clientID++
-	clientID := fmt.Sprintf("client-%d", d.clientID)
+	var idBytes [16]byte
+	if _, err := rand.Read(idBytes[:]); err != nil {
+		d.mu.Unlock()
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	clientID := "client-" + hex.EncodeToString(idBytes[:])
 	ch := make(chan []byte, 100)
 	d.sseClients[clientID] = ch
 	d.mu.Unlock()
