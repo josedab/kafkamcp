@@ -644,7 +644,11 @@ func (d *DashboardV2) HandleSSETail(w http.ResponseWriter, r *http.Request) {
 					payload["value"] = valStr
 				}
 
-				data, _ := json.Marshal(payload)
+				data, err := json.Marshal(payload)
+				if err != nil {
+					d.logger.Error("marshaling SSE payload", "error", err)
+					continue
+				}
 				fmt.Fprintf(w, "event: message\ndata: %s\n\n", data)
 				flusher.Flush()
 			}
