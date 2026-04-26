@@ -91,10 +91,22 @@ and compose — with zero custom integration code.`,
 }
 
 func runConfigInit(cmd *cobra.Command, args []string) error {
-	transport, _ := cmd.Flags().GetString("transport")
-	bootstrap, _ := cmd.Flags().GetString("bootstrap-servers")
-	schemaReg, _ := cmd.Flags().GetString("schema-registry")
-	output, _ := cmd.Flags().GetString("output")
+	transport, err := cmd.Flags().GetString("transport")
+	if err != nil {
+		return fmt.Errorf("reading flag: %w", err)
+	}
+	bootstrap, err := cmd.Flags().GetString("bootstrap-servers")
+	if err != nil {
+		return fmt.Errorf("reading flag: %w", err)
+	}
+	schemaReg, err := cmd.Flags().GetString("schema-registry")
+	if err != nil {
+		return fmt.Errorf("reading flag: %w", err)
+	}
+	output, err := cmd.Flags().GetString("output")
+	if err != nil {
+		return fmt.Errorf("reading flag: %w", err)
+	}
 
 	switch transport {
 	case "stdio", "sse", "streamable-http":
