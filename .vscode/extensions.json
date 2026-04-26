@@ -2,6 +2,7 @@
   "recommendations": [
     "golang.go",
     "redhat.vscode-yaml",
-    "editorconfig.editorconfig"
+    "editorconfig.editorconfig",
+    "streetsidesoftware.code-spell-checker"
   ]
 }
