@@ -409,6 +409,12 @@ func (e *Engine) AddRule(name, ruleType, fieldPath, pattern, replace string, age
 		if pattern == "" {
 			return fmt.Errorf("regex pattern is required for type 'regex'")
 		}
+		if len(pattern) > maxRegexPatternLength {
+			return fmt.Errorf("regex pattern exceeds maximum length of %d characters", maxRegexPatternLength)
+		}
+		if strings.Contains(pattern, "(?") && !strings.Contains(pattern, "(?i)") {
+			return fmt.Errorf("regex pattern contains potentially dangerous constructs")
+		}
 		p, err := regexp.Compile(pattern)
 		if err != nil {
 			return fmt.Errorf("invalid regex pattern: %w", err)

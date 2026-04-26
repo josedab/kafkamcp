@@ -87,6 +87,12 @@ func (pm *PolicyManager) Apply(policy *MaskingPolicy) error {
 			paths: r.FieldPaths,
 		}
 		if r.Pattern != "" {
+			if len(r.Pattern) > maxRegexPatternLength {
+				return fmt.Errorf("pattern in rule %q exceeds maximum length of %d characters", r.Name, maxRegexPatternLength)
+			}
+			if strings.Contains(r.Pattern, "(?") && !strings.Contains(r.Pattern, "(?i)") {
+				return fmt.Errorf("pattern in rule %q contains potentially dangerous constructs", r.Name)
+			}
 			p, err := regexp.Compile(r.Pattern)
 			if err != nil {
 				return fmt.Errorf("invalid pattern in rule %q: %w", r.Name, err)
