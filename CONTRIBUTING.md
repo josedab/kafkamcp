@@ -193,4 +193,14 @@ make doctor
 
 This checks your Go version, linting tools, Docker status, Kafka reachability, and pre-commit hook installation. It will tell you exactly what's missing or misconfigured.
 
+### Common Issues
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| `make doctor` reports missing tools | Dev dependencies not installed | Run `make setup` to install all required tools |
+| `golangci-lint` reports different findings locally vs CI | Version mismatch between local and CI `golangci-lint` | Install the pinned version: check `GOLANGCI_LINT_VERSION` in the Makefile and run `go install github.com/golangci/golangci-lint/cmd/golangci-lint@<version>` |
+| `make docker-dev` fails with "port 9092 already in use" | Another process (Kafka, Docker container) is bound to port 9092 | Stop the conflicting process: `lsof -i :9092` to identify it, then `kill <PID>` or `docker compose down` |
+| `make dev` fails with "air: command not found" | `air` hot-reload tool is not installed | Run `go install github.com/air-verse/air@latest` or `make setup` |
+| Tests fail with `-race` on macOS | The Go race detector requires CGO on macOS; `CGO_ENABLED=0` or missing Xcode CLI tools | Install Xcode CLI tools: `xcode-select --install` and ensure `CGO_ENABLED=1` (the default) |
+
 > **Note:** `make check` is an alias for `make validate` — both run the full fmt → lint → test → build pipeline.
