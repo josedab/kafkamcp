@@ -37,11 +37,10 @@ func (s *Server) handleCreateConnector(ctx context.Context, request mcp.CallTool
 
 		client, err := s.getConnectClient(clCfg)
 		if err != nil || client == nil {
-			errMsg := "Kafka Connect URL not configured"
 			if err != nil {
-				errMsg = err.Error()
+				s.logger.Warn("Kafka Connect client error", "error", err)
 			}
-			return mcp.NewToolResultError(errMsg), nil
+			return mcp.NewToolResultError("Kafka Connect is not available"), nil
 		}
 
 		config := extractStringMapArg(request, "config")
@@ -90,11 +89,10 @@ func (s *Server) handleUpdateConnector(ctx context.Context, request mcp.CallTool
 
 		client, err := s.getConnectClient(clCfg)
 		if err != nil || client == nil {
-			errMsg := "Kafka Connect URL not configured"
 			if err != nil {
-				errMsg = err.Error()
+				s.logger.Warn("Kafka Connect client error", "error", err)
 			}
-			return mcp.NewToolResultError(errMsg), nil
+			return mcp.NewToolResultError("Kafka Connect is not available"), nil
 		}
 
 		config := extractStringMapArg(request, "config")
@@ -143,11 +141,10 @@ func (s *Server) handleDeleteConnector(ctx context.Context, request mcp.CallTool
 
 		client, err := s.getConnectClient(clCfg)
 		if err != nil || client == nil {
-			errMsg := "Kafka Connect URL not configured"
 			if err != nil {
-				errMsg = err.Error()
+				s.logger.Warn("Kafka Connect client error", "error", err)
 			}
-			return mcp.NewToolResultError(errMsg), nil
+			return mcp.NewToolResultError("Kafka Connect is not available"), nil
 		}
 
 		if err := client.DeleteConnector(ctx, name); err != nil {
@@ -185,11 +182,10 @@ func (s *Server) handleRestartConnector(ctx context.Context, request mcp.CallToo
 
 		client, err := s.getConnectClient(clCfg)
 		if err != nil || client == nil {
-			errMsg := "Kafka Connect URL not configured"
 			if err != nil {
-				errMsg = err.Error()
+				s.logger.Warn("Kafka Connect client error", "error", err)
 			}
-			return mcp.NewToolResultError(errMsg), nil
+			return mcp.NewToolResultError("Kafka Connect is not available"), nil
 		}
 
 		taskID := request.GetInt("task_id", -1)
@@ -231,11 +227,10 @@ func (s *Server) handleConnectorHealth(ctx context.Context, request mcp.CallTool
 
 		client, err := s.getConnectClient(clCfg)
 		if err != nil || client == nil {
-			errMsg := "Kafka Connect URL not configured"
 			if err != nil {
-				errMsg = err.Error()
+				s.logger.Warn("Kafka Connect client error", "error", err)
 			}
-			return mcp.NewToolResultError(errMsg), nil
+			return mcp.NewToolResultError("Kafka Connect is not available"), nil
 		}
 
 		health, err := client.ConnectorHealth(ctx, name)
