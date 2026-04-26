@@ -412,8 +412,11 @@ func (e *Engine) AddRule(name, ruleType, fieldPath, pattern, replace string, age
 		if len(pattern) > maxRegexPatternLength {
 			return fmt.Errorf("regex pattern exceeds maximum length of %d characters", maxRegexPatternLength)
 		}
-		if strings.Contains(pattern, "(?") && !strings.Contains(pattern, "(?i)") {
-			return fmt.Errorf("regex pattern contains potentially dangerous constructs")
+		// Block all (? constructs except (?i) at position 0 only
+		if idx := strings.Index(pattern, "(?"); idx >= 0 {
+			if !(idx == 0 && strings.HasPrefix(pattern, "(?i)") && !strings.Contains(pattern[4:], "(?")) {
+				return fmt.Errorf("regex pattern contains potentially dangerous constructs")
+			}
 		}
 		p, err := regexp.Compile(pattern)
 		if err != nil {
