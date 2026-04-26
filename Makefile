@@ -1,4 +1,4 @@
-.PHONY: build test lint lint-fix fmt fmt-check docker clean validate help run run-local dev dev-sse dev-http coverage test-coverage-report setup-hooks docker-dev docker-dev-down setup test-one setup-vscode integration-test check doctor sdk-test quickstart benchmark docker-compose-full vet sdk-setup deps changelog test-coverage-check test-short
+.PHONY: build test lint lint-fix fmt fmt-check docker clean clean-all validate help run run-local dev dev-sse dev-http coverage test-coverage-report setup-hooks docker-dev docker-dev-down setup test-one setup-vscode integration-test check doctor sdk-test quickstart benchmark docker-compose-full vet sdk-setup deps changelog test-coverage-check test-short
 
 # Build variables
 BINARY    := kafkamcp
@@ -99,6 +99,10 @@ docker-dev-down: ## Stop local dev stack
 clean: ## Remove build artifacts
 	rm -rf $(BUILD_DIR) coverage.out coverage.html
 
+clean-all: clean ## Remove build artifacts and Docker dev volumes
+	docker compose -f $(COMPOSE_FILE) down -v 2>/dev/null || true
+	@echo "Cleaned build artifacts and Docker volumes."
+
 setup-hooks: ## Install git pre-commit hook running make validate
 	@mkdir -p .git/hooks
 	@echo '#!/bin/sh' > .git/hooks/pre-commit
@@ -141,7 +145,10 @@ doctor: ## Check development environment prerequisites
 	@echo ""
 	@echo "Run 'make setup' to install missing dev dependencies."
 
-quickstart: setup docker-dev build run ## One-command setup: install deps, start Kafka, build, and run
+quickstart: ## One-command setup: install deps, start Kafka, build, and run
+	@command -v docker >/dev/null 2>&1 || { echo "ERROR: Docker is not installed."; echo "Install Docker from https://docs.docker.com/get-docker/ and try again."; echo "Alternatively, use 'make run-local' if you have a remote Kafka cluster."; exit 1; }
+	@docker info >/dev/null 2>&1 || { echo "ERROR: Docker is not running."; echo "Start Docker Desktop (or the Docker daemon) and try again."; echo "Alternatively, use 'make run-local' if you have a remote Kafka cluster."; exit 1; }
+	@$(MAKE) setup docker-dev build run
 
 benchmark: ## Run Go benchmarks with memory stats
 	go test -bench=. -benchmem -run=^$$ ./...
