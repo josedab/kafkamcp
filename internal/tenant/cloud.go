@@ -8,9 +8,12 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"regexp"
 	"strings"
 	"sync"
 )
+
+var validTenantIDRegex = regexp.MustCompile(`^[a-zA-Z0-9_\-]{1,128}$`)
 
 // ControlPlane manages the multi-tenant SaaS control plane.
 type ControlPlane struct {
@@ -43,6 +46,9 @@ type ControlPlaneAPI struct {
 
 // NewControlPlaneAPI creates a new control plane API handler.
 func NewControlPlaneAPI(cp *ControlPlane, adminAPIKey string) *ControlPlaneAPI {
+	if adminAPIKey == "" {
+		slog.Warn("SECURITY WARNING: control plane API key is empty — all admin endpoints are unauthenticated")
+	}
 	return &ControlPlaneAPI{cp: cp, apiKey: adminAPIKey}
 }
 
@@ -128,6 +134,10 @@ func (api *ControlPlaneAPI) handleTenantByID(w http.ResponseWriter, r *http.Requ
 		http.Error(w, "tenant ID required", http.StatusBadRequest)
 		return
 	}
+	if !validTenantIDRegex.MatchString(tenantID) {
+		http.Error(w, "invalid tenant ID format", http.StatusBadRequest)
+		return
+	}
 
 	tenant, err := api.cp.tenantMgr.GetTenant(tenantID)
 	if err != nil {
@@ -157,6 +167,10 @@ func (api *ControlPlaneAPI) handleBilling(w http.ResponseWriter, r *http.Request
 	tenantID := strings.TrimPrefix(r.URL.Path, "/api/v1/billing/")
 	if tenantID == "" {
 		http.Error(w, "tenant ID required", http.StatusBadRequest)
+		return
+	}
+	if !validTenantIDRegex.MatchString(tenantID) {
+		http.Error(w, "invalid tenant ID format", http.StatusBadRequest)
 		return
 	}
 
@@ -193,6 +207,10 @@ func (api *ControlPlaneAPI) handleQuotas(w http.ResponseWriter, r *http.Request)
 	tenantID := strings.TrimPrefix(r.URL.Path, "/api/v1/quotas/")
 	if tenantID == "" {
 		http.Error(w, "tenant ID required", http.StatusBadRequest)
+		return
+	}
+	if !validTenantIDRegex.MatchString(tenantID) {
+		http.Error(w, "invalid tenant ID format", http.StatusBadRequest)
 		return
 	}
 
