@@ -122,7 +122,7 @@ func (s *Server) handleLockRelease(ctx context.Context, request mcp.CallToolRequ
 	err := s.collaborationCoord.ReleaseLock(agentID, resource)
 	if err != nil {
 		s.logAudit(agentID, "agent_lock_release", args, "", "error", 0, err, start)
-		return mcp.NewToolResultError(err.Error()), nil
+		return s.toolError("failed to release lock", err), nil
 	}
 
 	s.logAudit(agentID, "agent_lock_release", args, "", "success", 1, nil, start)
@@ -173,7 +173,7 @@ func (s *Server) handleMessageSend(ctx context.Context, request mcp.CallToolRequ
 	msg, err := s.collaborationCoord.SendMessage(agentID, to, msgType, subject, body)
 	if err != nil {
 		s.logAudit(agentID, "agent_message_send", args, "", "error", 0, err, start)
-		return mcp.NewToolResultError(err.Error()), nil
+		return s.toolError("failed to send message", err), nil
 	}
 
 	s.logAudit(agentID, "agent_message_send", args, "", "success", 1, nil, start)

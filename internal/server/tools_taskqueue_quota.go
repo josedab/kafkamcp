@@ -35,7 +35,7 @@ func (s *Server) handleTaskPublish(ctx context.Context, request mcp.CallToolRequ
 
 	task, err := s.taskQueueEngine.Publish(queue, taskType, agentID, priority, maxRetries, payload, deadlineSec)
 	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
+		return s.toolError("failed to publish task", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_task_publish", args, "", "success", 1, nil, start)
@@ -50,7 +50,7 @@ func (s *Server) handleTaskClaim(ctx context.Context, request mcp.CallToolReques
 
 	task, err := s.taskQueueEngine.Claim(agentID, queue)
 	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
+		return s.toolError("failed to claim task", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_task_claim", args, "", "success", 1, nil, start)
@@ -69,7 +69,7 @@ func (s *Server) handleTaskComplete(ctx context.Context, request mcp.CallToolReq
 
 	task, err := s.taskQueueEngine.Complete(agentID, taskID, status, result, errMsg)
 	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
+		return s.toolError("failed to complete task", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_task_complete", args, "", "success", 1, nil, start)
@@ -87,7 +87,7 @@ func (s *Server) handleTaskStatus(ctx context.Context, request mcp.CallToolReque
 		}
 		task, err := s.taskQueueEngine.GetTask(taskID)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("task not found", err), nil
 		}
 		s.logAudit(agentID, "kafka_task_status", args, "", "success", 1, nil, start)
 		return marshalResult(task)
@@ -111,7 +111,7 @@ func (s *Server) handleTaskStatus(ctx context.Context, request mcp.CallToolReque
 			return mcp.NewToolResultError("task_id is required"), nil
 		}
 		if err := s.taskQueueEngine.Heartbeat(agentID, taskID); err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("heartbeat failed", err), nil
 		}
 		s.logAudit(agentID, "kafka_task_status", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]string{"status": "heartbeat_recorded"})
@@ -158,7 +158,7 @@ func (s *Server) handleQuotaRequest(ctx context.Context, request mcp.CallToolReq
 
 	resp, err := s.adaptiveRateEngine.AdjustQuota(req)
 	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
+		return s.toolError("quota adjustment failed", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_quota_request", args, "", "success", 1, nil, start)

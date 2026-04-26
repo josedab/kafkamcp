@@ -62,7 +62,7 @@ func (s *Server) handleOperatorManage(ctx context.Context, request mcp.CallToolR
 
 		inst, err := s.operatorController.CreateInstance(name, namespace, spec)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("failed to create operator instance", err), nil
 		}
 		s.logAudit(agentID, "k8s_operator_manage", args, "", "success", 1, nil, start)
 		return marshalResult(inst)
@@ -73,7 +73,7 @@ func (s *Server) handleOperatorManage(ctx context.Context, request mcp.CallToolR
 		}
 		inst, err := s.operatorController.GetInstance(name, namespace)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("operator instance not found", err), nil
 		}
 		s.logAudit(agentID, "k8s_operator_manage", args, "", "success", 1, nil, start)
 		return marshalResult(inst)
@@ -89,7 +89,7 @@ func (s *Server) handleOperatorManage(ctx context.Context, request mcp.CallToolR
 		}
 		err := s.operatorController.DeleteInstance(name, namespace)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("failed to delete operator instance", err), nil
 		}
 		s.logAudit(agentID, "k8s_operator_manage", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]string{"status": "deleted"})
@@ -104,7 +104,7 @@ func (s *Server) handleOperatorManage(ctx context.Context, request mcp.CallToolR
 		}
 		inst, err := s.operatorController.ScaleInstance(name, namespace, int(replicas))
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("failed to scale operator instance", err), nil
 		}
 		s.logAudit(agentID, "k8s_operator_manage", args, "", "success", 1, nil, start)
 		return marshalResult(inst)
@@ -115,7 +115,7 @@ func (s *Server) handleOperatorManage(ctx context.Context, request mcp.CallToolR
 		}
 		inst, err := s.operatorController.GetInstance(name, namespace)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("operator instance not found", err), nil
 		}
 		manifest := s.operatorController.GenerateDeploymentManifest(inst)
 		s.logAudit(agentID, "k8s_operator_manage", args, "", "success", 1, nil, start)

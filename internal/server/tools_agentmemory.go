@@ -44,7 +44,7 @@ func (s *Server) handleMemoryStore(ctx context.Context, request mcp.CallToolRequ
 
 	entry, err := s.agentMemoryEngine.Store(agentID, key, value, category, tags, ttlSec, metadata)
 	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
+		return s.toolError("failed to store memory entry", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_memory_store", args, "", "success", 1, nil, start)
@@ -63,7 +63,7 @@ func (s *Server) handleMemoryRecall(ctx context.Context, request mcp.CallToolReq
 		}
 		entry, err := s.agentMemoryEngine.Recall(agentID, key)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("memory entry not found", err), nil
 		}
 		s.logAudit(agentID, "kafka_memory_recall", args, "", "success", 1, nil, start)
 		return marshalResult(entry)
@@ -82,7 +82,7 @@ func (s *Server) handleMemoryRecall(ctx context.Context, request mcp.CallToolReq
 			return mcp.NewToolResultError("key is required"), nil
 		}
 		if err := s.agentMemoryEngine.Delete(agentID, key); err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("failed to delete memory entry", err), nil
 		}
 		s.logAudit(agentID, "kafka_memory_recall", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]string{"status": "deleted"})

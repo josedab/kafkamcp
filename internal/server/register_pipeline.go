@@ -71,7 +71,7 @@ func (s *Server) handlePipelineCreate(ctx context.Context, request mcp.CallToolR
 
 	pipe, err := s.pipelineEngine.CreatePipeline(name, sourceTopic, sinkTopic, agentID, steps)
 	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
+		return s.toolError("failed to create pipeline", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_pipeline_create", args, "", "success", 1, nil, start)
@@ -86,7 +86,7 @@ func (s *Server) handlePipelineExecute(ctx context.Context, request mcp.CallTool
 
 	pipe, err := s.pipelineEngine.GetPipeline(pipelineID)
 	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
+		return s.toolError("pipeline not found", err), nil
 	}
 
 	cluster, _ := args["cluster"].(string)
@@ -149,7 +149,7 @@ func (s *Server) handlePipelineManage(ctx context.Context, request mcp.CallToolR
 		}
 		pipe, err := s.pipelineEngine.GetPipeline(pipelineID)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("pipeline not found", err), nil
 		}
 		s.logAudit(agentID, "kafka_pipeline_manage", args, "", "success", 1, nil, start)
 		return marshalResult(pipe)
@@ -160,7 +160,7 @@ func (s *Server) handlePipelineManage(ctx context.Context, request mcp.CallToolR
 		}
 		err := s.pipelineEngine.DeletePipeline(pipelineID)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("failed to delete pipeline", err), nil
 		}
 		s.logAudit(agentID, "kafka_pipeline_manage", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]string{"status": "deleted"})

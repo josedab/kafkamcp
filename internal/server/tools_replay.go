@@ -83,7 +83,7 @@ func (s *Server) handleReplayCreate(ctx context.Context, request mcp.CallToolReq
 			}
 			bm, err := s.replayEngine.GetBookmark(bmID)
 			if err != nil {
-				return mcp.NewToolResultError(err.Error()), nil
+				return s.toolError("bookmark not found", err), nil
 			}
 			return marshalResult(bm)
 
@@ -93,7 +93,7 @@ func (s *Server) handleReplayCreate(ctx context.Context, request mcp.CallToolReq
 				return mcp.NewToolResultError("bookmark_id is required for delete action"), nil
 			}
 			if err := s.replayEngine.DeleteBookmark(bmID); err != nil {
-				return mcp.NewToolResultError(err.Error()), nil
+				return s.toolError("failed to delete bookmark", err), nil
 			}
 			return marshalResult(map[string]any{"status": "deleted", "bookmark_id": bmID})
 
@@ -184,7 +184,7 @@ func (s *Server) handleReplaySimulate(ctx context.Context, request mcp.CallToolR
 			}
 			sim, err := s.replayEngine.GetSimulation(simID)
 			if err != nil {
-				return mcp.NewToolResultError(err.Error()), nil
+				return s.toolError("simulation not found", err), nil
 			}
 			return marshalResult(sim)
 

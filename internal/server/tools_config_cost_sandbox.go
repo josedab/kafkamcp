@@ -28,7 +28,7 @@ func (s *Server) handleConfigHistory(ctx context.Context, request mcp.CallToolRe
 	if auditReport {
 		report, err := s.configVCSEngine.AuditReport(resource, resourceID, time.Time{})
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("failed to generate audit report", err), nil
 		}
 		s.logAudit(agentID, "kafka_config_history", args, "", "success", report.TotalChanges, nil, start)
 		return marshalResult(report)
@@ -58,7 +58,7 @@ func (s *Server) handleConfigRollback(ctx context.Context, request mcp.CallToolR
 
 	result, err := s.configVCSEngine.Rollback(resource, resourceID, targetVersion, agentID, reason)
 	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
+		return s.toolError("config rollback failed", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_config_rollback", args, "", "success", 1, nil, start)
@@ -87,7 +87,7 @@ func (s *Server) handleConfigCompare(ctx context.Context, request mcp.CallToolRe
 
 	result, err := s.configVCSEngine.Compare(resource, resourceID, version1, version2)
 	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
+		return s.toolError("config comparison failed", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_config_compare", args, "", "success", len(result.Differences), nil, start)
@@ -101,7 +101,7 @@ func (s *Server) handleCostLive(ctx context.Context, request mcp.CallToolRequest
 	if resourceType != "" && resourceName != "" {
 		cost, err := s.costAttrEngine.GetLiveCost(resourceType, resourceName)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("failed to retrieve cost data", err), nil
 		}
 		s.logAudit(agentID, "kafka_cost_live", args, "", "success", 1, nil, start)
 		return marshalResult(cost)
@@ -144,7 +144,7 @@ func (s *Server) handleCostAllocate(ctx context.Context, request mcp.CallToolReq
 
 		alloc, err := s.costAttrEngine.CreateAllocation(name, owner, resources, tags)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("failed to create cost allocation", err), nil
 		}
 		s.logAudit(agentID, "kafka_cost_allocate", args, "", "success", 1, nil, start)
 		return marshalResult(alloc)
@@ -194,7 +194,7 @@ func (s *Server) handleCostBudget(ctx context.Context, request mcp.CallToolReque
 
 		budget, err := s.costAttrEngine.CreateBudget(name, agentID, monthlyLimit, resources, thresholds)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("failed to create budget", err), nil
 		}
 		s.logAudit(agentID, "kafka_cost_budget", args, "", "success", 1, nil, start)
 		return marshalResult(budget)
@@ -234,7 +234,7 @@ func (s *Server) handleSandboxCreate(ctx context.Context, request mcp.CallToolRe
 
 	sb, err := s.sandboxEngine.Create(name, description, agentID, durationSec, quotas)
 	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
+		return s.toolError("failed to create sandbox", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_sandbox_create", args, "", "success", 1, nil, start)
@@ -256,7 +256,7 @@ func (s *Server) handleSandboxExec(ctx context.Context, request mcp.CallToolRequ
 	// Record the operation (actual tool execution would be delegated in production)
 	op, err := s.sandboxEngine.Exec(sandboxID, tool, toolArgs, map[string]string{"status": "simulated"}, "", time.Since(execStart))
 	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
+		return s.toolError("sandbox execution failed", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_sandbox_exec", args, "", "success", 1, nil, start)
@@ -273,7 +273,7 @@ func (s *Server) handleSandboxManage(ctx context.Context, request mcp.CallToolRe
 			return mcp.NewToolResultError("sandbox_id is required"), nil
 		}
 		if err := s.sandboxEngine.Destroy(sandboxID); err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("failed to destroy sandbox", err), nil
 		}
 		s.logAudit(agentID, "kafka_sandbox_destroy", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]string{"status": "destroyed"})
@@ -289,7 +289,7 @@ func (s *Server) handleSandboxManage(ctx context.Context, request mcp.CallToolRe
 		}
 		sb, err := s.sandboxEngine.Get(sandboxID)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("sandbox not found", err), nil
 		}
 		s.logAudit(agentID, "kafka_sandbox_destroy", args, "", "success", 1, nil, start)
 		return marshalResult(sb)
@@ -300,7 +300,7 @@ func (s *Server) handleSandboxManage(ctx context.Context, request mcp.CallToolRe
 		}
 		report, err := s.sandboxEngine.GeneratePromotionReport(sandboxID)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("failed to generate promotion report", err), nil
 		}
 		s.logAudit(agentID, "kafka_sandbox_destroy", args, "", "success", 1, nil, start)
 		return marshalResult(report)

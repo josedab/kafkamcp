@@ -127,7 +127,7 @@ func (s *Server) handlePolicyManage(ctx context.Context, request mcp.CallToolReq
 			Enabled: true,
 		})
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("failed to register policy", err), nil
 		}
 		s.logAudit(agentID, "kafka_policy_manage", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]string{"status": "registered", "policy_id": policyID})
@@ -139,7 +139,7 @@ func (s *Server) handlePolicyManage(ctx context.Context, request mcp.CallToolReq
 		}
 		err := s.opaPolicyEngine.DeletePolicy(policyID)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("failed to delete policy", err), nil
 		}
 		s.logAudit(agentID, "kafka_policy_manage", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]string{"status": "deleted", "policy_id": policyID})

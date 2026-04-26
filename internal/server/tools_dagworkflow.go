@@ -50,7 +50,7 @@ func (s *Server) handleDAGWorkflowCreate(ctx context.Context, request mcp.CallTo
 
 	wf, err := s.dagWorkflowEngine.CreateWorkflow(name, description, agentID, params, steps, tags)
 	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
+		return s.toolError("failed to create workflow", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_workflow_create", args, "", "success", 1, nil, start)
@@ -70,7 +70,7 @@ func (s *Server) handleDAGWorkflowRun(ctx context.Context, request mcp.CallToolR
 
 	run, err := s.dagWorkflowEngine.StartRun(templateID, agentID, params)
 	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
+		return s.toolError("failed to start workflow run", err), nil
 	}
 
 	readySteps, _ := s.dagWorkflowEngine.GetReadySteps(run.ID)
@@ -104,7 +104,7 @@ func (s *Server) handleDAGWorkflowStatus(ctx context.Context, request mcp.CallTo
 		}
 		run, err := s.dagWorkflowEngine.GetRun(runID)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("workflow run not found", err), nil
 		}
 		readySteps, _ := s.dagWorkflowEngine.GetReadySteps(runID)
 		var readyIDs []string
@@ -135,11 +135,11 @@ func (s *Server) handleDAGWorkflowStatus(ctx context.Context, request mcp.CallTo
 		// Look up template to get name
 		tmpl, err := s.dagWorkflowEngine.GetWorkflow(templateID)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("workflow template not found", err), nil
 		}
 		versions, err := s.dagWorkflowEngine.GetVersions(tmpl.Name)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("failed to retrieve workflow versions", err), nil
 		}
 		s.logAudit(agentID, "kafka_workflow_status", args, "", "success", len(versions), nil, start)
 		return marshalResult(map[string]any{"versions": versions})
@@ -150,7 +150,7 @@ func (s *Server) handleDAGWorkflowStatus(ctx context.Context, request mcp.CallTo
 			return mcp.NewToolResultError("run_id is required"), nil
 		}
 		if err := s.dagWorkflowEngine.CancelRun(runID); err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("failed to cancel workflow run", err), nil
 		}
 		s.logAudit(agentID, "kafka_workflow_status", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]string{"status": "cancelled"})
@@ -167,7 +167,7 @@ func (s *Server) handleDAGWorkflowStatus(ctx context.Context, request mcp.CallTo
 		}
 
 		if err := s.dagWorkflowEngine.CompleteStep(runID, stepID, stepStatus, stepOutput, stepError); err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("failed to complete workflow step", err), nil
 		}
 
 		readySteps, _ := s.dagWorkflowEngine.GetReadySteps(runID)
@@ -199,7 +199,7 @@ func (s *Server) handleDAGWorkflowStatus(ctx context.Context, request mcp.CallTo
 		}
 		run, err := s.dagWorkflowEngine.GetRun(runID)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("workflow run not found", err), nil
 		}
 		readySteps, _ := s.dagWorkflowEngine.GetReadySteps(runID)
 		var readyInfo []map[string]any

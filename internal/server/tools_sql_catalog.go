@@ -96,7 +96,7 @@ func (s *Server) handleSQLExplain(ctx context.Context, request mcp.CallToolReque
 
 	plan, err := s.streamSQLEngine.Explain(query.ID)
 	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
+		return s.toolError("SQL explain failed", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_sql_explain", args, "", "success", 1, nil, start)
@@ -119,7 +119,7 @@ func (s *Server) handleSQLManage(ctx context.Context, request mcp.CallToolReques
 		}
 		q, err := s.streamSQLEngine.GetQuery(queryID)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("query not found", err), nil
 		}
 		s.logAudit(agentID, "kafka_sql_manage", args, "", "success", 1, nil, start)
 		return marshalResult(q)
@@ -129,7 +129,7 @@ func (s *Server) handleSQLManage(ctx context.Context, request mcp.CallToolReques
 			return mcp.NewToolResultError("query_id is required"), nil
 		}
 		if err := s.streamSQLEngine.DeleteQuery(queryID); err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("failed to delete query", err), nil
 		}
 		s.logAudit(agentID, "kafka_sql_manage", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]string{"status": "deleted"})
@@ -187,7 +187,7 @@ func (s *Server) handleCatalogTag(ctx context.Context, request mcp.CallToolReque
 		}
 		entry, err := s.catalogEngine.Tag(entryID, tags)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("failed to tag catalog entry", err), nil
 		}
 		s.logAudit(agentID, "kafka_catalog_tag", args, "", "success", 1, nil, start)
 		return marshalResult(entry)
@@ -213,7 +213,7 @@ func (s *Server) handleCatalogTag(ctx context.Context, request mcp.CallToolReque
 
 		entry, err := s.catalogEngine.Index(name, entryType, description, owner, tags, nil, nil)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("failed to index catalog entry", err), nil
 		}
 		s.logAudit(agentID, "kafka_catalog_tag", args, "", "success", 1, nil, start)
 		return marshalResult(entry)
@@ -232,7 +232,7 @@ func (s *Server) handleCatalogTag(ctx context.Context, request mcp.CallToolReque
 			json.Unmarshal(data, &lineage)
 		}
 		if err := s.catalogEngine.SetLineage(entryID, &lineage); err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("failed to set lineage", err), nil
 		}
 		s.logAudit(agentID, "kafka_catalog_tag", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]string{"status": "lineage_set"})
@@ -243,7 +243,7 @@ func (s *Server) handleCatalogTag(ctx context.Context, request mcp.CallToolReque
 			return mcp.NewToolResultError("entry_id is required"), nil
 		}
 		if err := s.catalogEngine.DeleteEntry(entryID); err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return s.toolError("failed to delete catalog entry", err), nil
 		}
 		s.logAudit(agentID, "kafka_catalog_tag", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]string{"status": "deleted"})
