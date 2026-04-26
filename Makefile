@@ -1,4 +1,4 @@
-.PHONY: build test lint lint-fix fmt fmt-check docker clean clean-all validate help run run-local dev dev-sse dev-http coverage test-coverage-report setup-hooks docker-dev docker-dev-down setup test-one setup-vscode integration-test check doctor sdk-test quickstart benchmark docker-compose-full vet sdk-setup deps changelog test-coverage-check test-short test-race-short test-all new-tool
+.PHONY: build test lint lint-fix lint-all fmt fmt-check docker clean clean-all validate help run run-local dev dev-sse dev-http coverage test-coverage-report setup-hooks docker-dev docker-dev-down setup test-one setup-vscode integration-test check doctor sdk-test quickstart benchmark docker-compose-full vet sdk-setup deps changelog test-coverage-check test-short test-race-short test-all new-tool check-deps
 
 # Build variables
 BINARY    := kafkamcp
@@ -6,6 +6,9 @@ CMD       := ./cmd/kafkamcp
 BUILD_DIR := bin
 VERSION   := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 LDFLAGS   := -s -w -X main.version=$(VERSION)
+
+# Tool versions
+GOLANGCI_LINT_VERSION := v1.62.0
 
 # Docker variables
 DOCKER_IMAGE := kafkamcp/kafkamcp
@@ -81,12 +84,14 @@ test-race-short: ## Run tests with -race and -short for fast-but-safe iteration
 test-all: test sdk-test ## Run all tests (Go unit tests + SDK tests)
 
 lint: ## Run golangci-lint
-	@command -v golangci-lint >/dev/null 2>&1 || { echo "Installing golangci-lint..."; go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest; }
+	@command -v golangci-lint >/dev/null 2>&1 || { echo "Installing golangci-lint..."; go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION); }
 	golangci-lint run ./...
 
 lint-fix: ## Run golangci-lint with auto-fix
-	@command -v golangci-lint >/dev/null 2>&1 || { echo "Installing golangci-lint..."; go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest; }
+	@command -v golangci-lint >/dev/null 2>&1 || { echo "Installing golangci-lint..."; go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION); }
 	golangci-lint run --fix ./...
+
+lint-all: vet lint ## Run all static analysis (vet + golangci-lint)
 
 fmt: ## Format code
 	gofmt -s -w .
@@ -127,12 +132,16 @@ setup-hooks: ## Install git pre-commit hook running make validate
 
 setup: setup-hooks setup-vscode ## Install all dev dependencies (golangci-lint, air, goimports)
 	@echo "Installing dev dependencies..."
-	@command -v golangci-lint >/dev/null 2>&1 || { echo "  Installing golangci-lint..."; go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest; }
+	@command -v golangci-lint >/dev/null 2>&1 || { echo "  Installing golangci-lint..."; go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION); }
 	@command -v air >/dev/null 2>&1 || { echo "  Installing air..."; go install github.com/air-verse/air@latest; }
 	@command -v goimports >/dev/null 2>&1 || { echo "  Installing goimports..."; go install golang.org/x/tools/cmd/goimports@latest; }
 	@echo "All dev dependencies installed."
 
 validate: fmt vet lint test build ## Run all checks (fmt, vet, lint, test, build)
+
+check-deps: ## Check go.mod/go.sum are tidy
+	go mod tidy
+	@git diff --exit-code go.mod go.sum || { echo "ERROR: go.mod/go.sum are not tidy. Run 'go mod tidy' and commit the changes."; exit 1; }
 
 check: validate ## Alias for validate
 
