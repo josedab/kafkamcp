@@ -1,4 +1,4 @@
-.PHONY: build test lint lint-fix fmt docker clean validate help run run-local dev dev-sse dev-http coverage setup-hooks docker-dev docker-dev-down setup test-one setup-vscode integration-test check doctor sdk-test quickstart benchmark docker-compose-full vet sdk-setup deps changelog test-coverage-check test-short
+.PHONY: build test lint lint-fix fmt fmt-check docker clean validate help run run-local dev dev-sse dev-http coverage test-coverage-report setup-hooks docker-dev docker-dev-down setup test-one setup-vscode integration-test check doctor sdk-test quickstart benchmark docker-compose-full vet sdk-setup deps changelog test-coverage-check test-short
 
 # Build variables
 BINARY    := kafkamcp
@@ -61,6 +61,16 @@ test-coverage-check: test ## Fail if total test coverage is below MIN_COVERAGE (
 		exit 1; \
 	fi; \
 	echo "OK: coverage $${total}% meets minimum $(MIN_COVERAGE)%"
+
+test-coverage-report: test ## Print per-package coverage breakdown to stdout
+@echo "=== Per-Package Coverage ==="
+@go tool cover -func=coverage.out | \
+grep -E '^[a-z]' | \
+awk '{pkg=$$1; cov=$$NF} pkg!=prev {if(prev) printf "  %-60s %s\n", prev, last; prev=pkg} {last=cov} END {if(prev) printf "  %-60s %s\n", prev, last}' | \
+sort
+@echo ""
+@echo "=== Total ==="
+@go tool cover -func=coverage.out | tail -1 | awk '{printf "  %-60s %s\n", $$1, $$NF}'
 
 test-short: ## Run tests without -race for fast iteration (respects testing.Short)
 	go test -short ./...
