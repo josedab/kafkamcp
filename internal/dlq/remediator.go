@@ -185,7 +185,7 @@ func (r *Remediator) retryMessages(ctx context.Context, mgr kafka.KafkaManager, 
 		}
 		if err != nil {
 			item.Status = "failed"
-			item.Error = err.Error()
+			item.Error = categorizeDLQError(err)
 			result.FailureCount++
 		} else {
 			item.Status = "retried"
@@ -231,7 +231,7 @@ func (r *Remediator) routeMessages(ctx context.Context, mgr kafka.KafkaManager, 
 		}
 		if err != nil {
 			item.Status = "failed"
-			item.Error = err.Error()
+			item.Error = categorizeDLQError(err)
 			result.FailureCount++
 		} else {
 			item.Status = "routed"
@@ -317,4 +317,22 @@ func deriveOriginalTopic(dlqTopic string) string {
 		}
 	}
 	return dlqTopic + "-retry"
+}
+
+func categorizeDLQError(err error) string {
+	msg := strings.ToLower(err.Error())
+	switch {
+	case strings.Contains(msg, "timeout") || strings.Contains(msg, "deadline"):
+		return "timeout_error"
+	case strings.Contains(msg, "connection") || strings.Contains(msg, "connect"):
+		return "connection_error"
+	case strings.Contains(msg, "produce") || strings.Contains(msg, "publish"):
+		return "produce_failed"
+	case strings.Contains(msg, "auth") || strings.Contains(msg, "permission"):
+		return "authentication_error"
+	case strings.Contains(msg, "serialization") || strings.Contains(msg, "marshal"):
+		return "serialization_error"
+	default:
+		return "produce_failed"
+	}
 }

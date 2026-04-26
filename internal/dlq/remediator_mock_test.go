@@ -223,8 +223,8 @@ func TestRetryMessages_ProduceFailure(t *testing.T) {
 	if result.Details[0].Status != "failed" {
 		t.Errorf("expected status 'failed', got %q", result.Details[0].Status)
 	}
-	if !strings.Contains(result.Details[0].Error, "broker unavailable") {
-		t.Errorf("expected error message in detail, got %q", result.Details[0].Error)
+	if result.Details[0].Error != "produce_failed" {
+		t.Errorf("expected categorized error 'produce_failed', got %q", result.Details[0].Error)
 	}
 }
 
