@@ -52,7 +52,10 @@ func (s *Server) handleUsageReport(ctx context.Context, request mcp.CallToolRequ
 			return marshalResult(report)
 
 		case "export_csv":
-			csv := s.usageTracker.ExportCSV(tenantID, startTime, end)
+			csv, err := s.usageTracker.ExportCSV(tenantID, startTime, end)
+			if err != nil {
+				return s.toolError("Failed to export CSV", err), nil
+			}
 			s.logAudit(agentID, "kafka_usage_report", args, "", "success", 0, nil, start)
 			return mcp.NewToolResultText(csv), nil
 

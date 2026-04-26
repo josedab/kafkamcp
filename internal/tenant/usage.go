@@ -215,7 +215,7 @@ func (ut *UsageTracker) GenerateChargebackReport(tenant *Tenant, period string, 
 }
 
 // ExportCSV generates a CSV string of usage records for a tenant.
-func (ut *UsageTracker) ExportCSV(tenantID string, start, end time.Time) string {
+func (ut *UsageTracker) ExportCSV(tenantID string, start, end time.Time) (string, error) {
 	ut.mu.RLock()
 	defer ut.mu.RUnlock()
 
@@ -241,7 +241,10 @@ func (ut *UsageTracker) ExportCSV(tenantID string, start, end time.Time) string 
 		})
 	}
 	w.Flush()
-	return buf.String()
+	if err := w.Error(); err != nil {
+		return "", fmt.Errorf("flushing CSV: %w", err)
+	}
+	return buf.String(), nil
 }
 
 // ExportJSON generates a JSON string of usage records for a tenant.

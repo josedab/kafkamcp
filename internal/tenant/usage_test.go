@@ -274,12 +274,15 @@ func TestExportCSV(t *testing.T) {
 	// different tenant, should be excluded
 	ut.Record(UsageRecord{TenantID: "t2", AgentID: "a3", ToolName: "produce", Cluster: "c1", Messages: 99, Bytes: 999, Timestamp: ts1})
 
-	result := ut.ExportCSV("t1", start, end)
+	result, err := ut.ExportCSV("t1", start, end)
+	if err != nil {
+		t.Fatalf("ExportCSV returned error: %v", err)
+	}
 
 	r := csv.NewReader(strings.NewReader(result))
-	rows, err := r.ReadAll()
-	if err != nil {
-		t.Fatalf("failed to parse CSV: %v", err)
+	rows, err2 := r.ReadAll()
+	if err2 != nil {
+		t.Fatalf("failed to parse CSV: %v", err2)
 	}
 
 	// header + 2 data rows
@@ -312,12 +315,15 @@ func TestExportCSV_Empty(t *testing.T) {
 	start := time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2024, 6, 30, 23, 59, 59, 0, time.UTC)
 
-	result := ut.ExportCSV("t1", start, end)
+	result, err := ut.ExportCSV("t1", start, end)
+	if err != nil {
+		t.Fatalf("ExportCSV returned error: %v", err)
+	}
 
 	r := csv.NewReader(strings.NewReader(result))
-	rows, err := r.ReadAll()
-	if err != nil {
-		t.Fatalf("failed to parse CSV: %v", err)
+	rows, err2 := r.ReadAll()
+	if err2 != nil {
+		t.Fatalf("failed to parse CSV: %v", err2)
 	}
 	if len(rows) != 1 {
 		t.Errorf("expected 1 row (header only), got %d", len(rows))
