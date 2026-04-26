@@ -24,6 +24,9 @@ type FilterExpression struct {
 // Compile prepares the filter for evaluation.
 func (f *FilterExpression) Compile() error {
 	if f.Operator == "regex" && f.Value != "" {
+		if len(f.Value) > 256 {
+			return fmt.Errorf("regex pattern too long (%d > 256)", len(f.Value))
+		}
 		r, err := regexp.Compile(f.Value)
 		if err != nil {
 			return fmt.Errorf("invalid regex filter %q: %w", f.Value, err)

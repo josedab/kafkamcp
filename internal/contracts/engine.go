@@ -231,6 +231,14 @@ func (e *Engine) checkRule(rule QualityRule, value map[string]any) *Violation {
 				Severity: rule.Severity,
 			}
 		}
+		if len(rule.Value) > 256 {
+			return &Violation{
+				Rule:     rule.Rule,
+				Field:    rule.Field,
+				Message:  fmt.Sprintf("regex pattern too long (%d > 256)", len(rule.Value)),
+				Severity: rule.Severity,
+			}
+		}
 		re, err := regexp.Compile(rule.Value)
 		if err != nil {
 			return &Violation{

@@ -226,6 +226,9 @@ func executeFilter(step Step, msg PipelineMessage) (PipelineMessage, bool, error
 	case "ends_with":
 		match = strings.HasSuffix(target, value)
 	case "regex", "matches":
+		if len(value) > 256 {
+			return msg, false, fmt.Errorf("regex pattern too long (%d > 256)", len(value))
+		}
 		if re, err := regexp.Compile(value); err == nil {
 			match = re.MatchString(target)
 		}
