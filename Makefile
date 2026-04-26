@@ -1,4 +1,4 @@
-.PHONY: build test lint lint-fix lint-all fmt fmt-check docker clean clean-all validate help run run-local dev dev-sse dev-http coverage test-coverage-report setup-hooks docker-dev docker-dev-down setup test-one setup-vscode integration-test check doctor sdk-test quickstart benchmark docker-compose-full vet sdk-setup deps changelog test-coverage-check test-short test-race-short test-all new-tool check-deps
+.PHONY: build test lint lint-fix lint-all fmt fmt-check docker clean clean-all validate validate-ci help run run-local dev dev-sse dev-http coverage test-coverage-report setup-hooks docker-dev docker-dev-down setup test-one setup-vscode integration-test check doctor sdk-test quickstart benchmark docker-compose-full vet sdk-setup deps changelog test-coverage-check test-short test-race-short test-all new-tool check-deps
 
 # Build variables
 BINARY    := kafkamcp
@@ -137,7 +137,9 @@ setup: setup-hooks setup-vscode ## Install all dev dependencies (golangci-lint, 
 	@command -v goimports >/dev/null 2>&1 || { echo "  Installing goimports..."; go install golang.org/x/tools/cmd/goimports@latest; }
 	@echo "All dev dependencies installed."
 
-validate: fmt vet lint test build ## Run all checks (fmt, vet, lint, test, build)
+validate: fmt-check vet lint test build ## Run all checks (fmt-check, vet, lint, test, build)
+
+validate-ci: fmt-check vet lint test build ## Read-only validation (safe for CI and pre-push)
 
 check-deps: ## Check go.mod/go.sum are tidy
 	go mod tidy
@@ -159,7 +161,17 @@ doctor: ## Check development environment prerequisites
 	@echo "=== KafkaMCP Doctor ==="
 	@echo ""
 	@printf "Go:              "; command -v go >/dev/null 2>&1 && go version | sed 's/go version //' || echo "NOT FOUND (required)"
-	@printf "golangci-lint:   "; command -v golangci-lint >/dev/null 2>&1 && echo "OK ($(golangci-lint --version 2>&1 | head -1))" || echo "NOT FOUND (run: make setup)"
+	@printf "golangci-lint:   "; \
+	if command -v golangci-lint >/dev/null 2>&1; then \
+		installed_ver=$$(golangci-lint --version 2>&1 | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1); \
+		if [ "$$installed_ver" = "$(GOLANGCI_LINT_VERSION)" ]; then \
+			echo "OK $$installed_ver"; \
+		else \
+			echo "WARNING: $$installed_ver installed, expected $(GOLANGCI_LINT_VERSION) (run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION))"; \
+		fi; \
+	else \
+		echo "NOT FOUND (run: make setup)"; \
+	fi
 	@printf "air:             "; command -v air >/dev/null 2>&1 && echo "OK" || echo "NOT FOUND (optional, run: make setup)"
 	@printf "goimports:       "; command -v goimports >/dev/null 2>&1 && echo "OK" || echo "NOT FOUND (optional, run: make setup)"
 	@printf "Docker:          "; command -v docker >/dev/null 2>&1 && (docker info >/dev/null 2>&1 && echo "OK (running)" || echo "INSTALLED but not running") || echo "NOT FOUND (needed for integration tests)"
