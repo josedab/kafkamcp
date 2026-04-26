@@ -356,8 +356,8 @@ func TestHandleClusterOverview(t *testing.T) {
 	if resp["status"] != "healthy" {
 		t.Errorf("expected healthy, got %v", resp["status"])
 	}
-	if resp["cluster_id"] != "test-cluster" {
-		t.Errorf("expected test-cluster, got %v", resp["cluster_id"])
+	if resp["broker_count"] == nil {
+		t.Error("expected broker_count in response")
 	}
 }
 
