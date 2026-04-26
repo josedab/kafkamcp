@@ -1,0 +1,22 @@
+coverage:
+  status:
+    project:
+      default:
+        target: 70%
+        threshold: 2%
+    patch:
+      default:
+        target: 70%
+
+ignore:
+  - "**/*_test.go"
+  - "**/testutil/**"
+  - "**/mock_*.go"
+  - "cmd/**"
+  - "sdk/**"
+  - "examples/**"
+
+comment:
+  layout: "reach,diff,flags,files"
+  behavior: default
+  require_changes: true
