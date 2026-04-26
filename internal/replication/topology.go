@@ -317,7 +317,7 @@ func (am *AlertManager) sendWebhook(ctx context.Context, notif *AlertNotificatio
 	if err != nil {
 		return
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 }
 
 // GetReplicationResource returns data for the kafka://replication/{source}/{target} MCP resource.
