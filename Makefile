@@ -1,4 +1,4 @@
-.PHONY: build test lint lint-fix fmt fmt-check docker clean clean-all validate help run run-local dev dev-sse dev-http coverage test-coverage-report setup-hooks docker-dev docker-dev-down setup test-one setup-vscode integration-test check doctor sdk-test quickstart benchmark docker-compose-full vet sdk-setup deps changelog test-coverage-check test-short new-tool
+.PHONY: build test lint lint-fix fmt fmt-check docker clean clean-all validate help run run-local dev dev-sse dev-http coverage test-coverage-report setup-hooks docker-dev docker-dev-down setup test-one setup-vscode integration-test check doctor sdk-test quickstart benchmark docker-compose-full vet sdk-setup deps changelog test-coverage-check test-short test-race-short test-all new-tool
 
 # Build variables
 BINARY    := kafkamcp
@@ -75,6 +75,11 @@ test-coverage-report: test ## Print per-package coverage breakdown to stdout
 test-short: ## Run tests without -race for fast iteration (respects testing.Short)
 	go test -short ./...
 
+test-race-short: ## Run tests with -race and -short for fast-but-safe iteration
+	go test -race -short ./...
+
+test-all: test sdk-test ## Run all tests (Go unit tests + SDK tests)
+
 lint: ## Run golangci-lint
 	@command -v golangci-lint >/dev/null 2>&1 || { echo "Installing golangci-lint..."; go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest; }
 	golangci-lint run ./...
@@ -138,6 +143,7 @@ setup-vscode: ## Copy .vscode example configs (if not already present)
 	@mkdir -p .vscode
 	@test -f .vscode/launch.json || (cp .vscode/launch.json.example .vscode/launch.json && echo "Created .vscode/launch.json")
 	@test -f .vscode/settings.json || (cp .vscode/settings.json.example .vscode/settings.json && echo "Created .vscode/settings.json")
+	@test -f .vscode/tasks.json || (cp .vscode/tasks.json.example .vscode/tasks.json && echo "Created .vscode/tasks.json")
 	@echo "VSCode setup complete."
 
 doctor: ## Check development environment prerequisites
