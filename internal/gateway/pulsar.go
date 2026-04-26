@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"sync"
-	"time"
 )
 
 // PulsarAdapter implements StreamBackend for Apache Pulsar.
@@ -132,6 +131,3 @@ func (p *PulsarAdapter) Healthy(ctx context.Context) error {
 
 // ensure PulsarAdapter satisfies StreamBackend
 var _ StreamBackend = (*PulsarAdapter)(nil)
-
-// ensure unused imports are used
-var _ = time.Now

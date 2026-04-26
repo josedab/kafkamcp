@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/kafkamcp/kafkamcp/internal/gateway"
@@ -193,6 +192,3 @@ func (s *Server) handleGatewayCreateTopic(ctx context.Context, request mcp.CallT
 		"backend": backendName,
 	})
 }
-
-// Ensure fmt is used
-var _ = fmt.Sprintf
