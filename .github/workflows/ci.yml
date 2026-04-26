@@ -62,9 +62,8 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      - uses: golangci/golangci-lint-action@v6
-        with:
-          version: v1.62.0
+      - name: Run linter
+        run: make lint
 
   vulncheck:
     name: Vulnerability Check
