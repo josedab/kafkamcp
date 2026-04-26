@@ -579,8 +579,11 @@ func TestHandleHealthWithSessions(t *testing.T) {
 }
 
 func TestWriteIDEJSON(t *testing.T) {
+	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	w := httptest.NewRecorder()
-	writeIDEJSON(w, http.StatusCreated, map[string]string{"key": "value"})
+	r := httptest.NewRequest(http.MethodGet, "/", nil)
+	r.Header.Set("Origin", "http://localhost:3000")
+	s.writeIDEJSON(w, r, http.StatusCreated, map[string]string{"key": "value"})
 
 	if w.Code != http.StatusCreated {
 		t.Errorf("expected 201, got %d", w.Code)
@@ -588,8 +591,11 @@ func TestWriteIDEJSON(t *testing.T) {
 	if w.Header().Get("Content-Type") != "application/json" {
 		t.Errorf("expected application/json, got %s", w.Header().Get("Content-Type"))
 	}
-	if w.Header().Get("Access-Control-Allow-Origin") != "*" {
-		t.Error("expected CORS header")
+	if w.Header().Get("Access-Control-Allow-Origin") != "http://localhost:3000" {
+		t.Errorf("expected CORS header for localhost origin, got %s", w.Header().Get("Access-Control-Allow-Origin"))
+	}
+	if w.Header().Get("Access-Control-Allow-Credentials") != "false" {
+		t.Error("expected Access-Control-Allow-Credentials: false")
 	}
 }
 

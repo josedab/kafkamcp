@@ -21,14 +21,19 @@ import (
 
 // Server provides the IDE integration API.
 type Server struct {
-	kafkaManager  kafka.KafkaManager
-	schemaClients map[string]*schema.Client
-	logger        *slog.Logger
-	mu            sync.RWMutex
-	sessions      map[string]*IDESession
+	kafkaManager   kafka.KafkaManager
+	schemaClients  map[string]*schema.Client
+	logger         *slog.Logger
+	mu             sync.RWMutex
+	sessions       map[string]*IDESession
+	allowedOrigins map[string]bool
 }
 
 const maxIDERequestSize = 1 << 20 // 1 MB
+const maxIDESessions = 1000
+const ideSessionTTL = 30 * time.Minute
+const ideSessionCleanupInterval = 5 * time.Minute
+const maxIDEInputLength = 1024
 
 // IDESession tracks a connected IDE instance.
 type IDESession struct {
@@ -104,13 +109,62 @@ type CompletionItem struct {
 	Doc        string `json:"documentation,omitempty"`
 }
 
+// Default allowed origins for IDE CORS.
+var defaultAllowedOrigins = map[string]bool{
+	"http://localhost":       true,
+	"http://127.0.0.1":      true,
+	"https://localhost":      true,
+	"https://127.0.0.1":     true,
+	"vscode-webview://":     true,
+}
+
 // NewServer creates a new IDE integration server.
 func NewServer(km kafka.KafkaManager, schemaClients map[string]*schema.Client, logger *slog.Logger) *Server {
-	return &Server{
-		kafkaManager:  km,
-		schemaClients: schemaClients,
-		logger:        logger,
-		sessions:      make(map[string]*IDESession),
+	s := &Server{
+		kafkaManager:   km,
+		schemaClients:  schemaClients,
+		logger:         logger,
+		sessions:       make(map[string]*IDESession),
+		allowedOrigins: defaultAllowedOrigins,
+	}
+	return s
+}
+
+// SetAllowedOrigins replaces the default CORS origin allowlist.
+func (s *Server) SetAllowedOrigins(origins []string) {
+	m := make(map[string]bool, len(origins))
+	for _, o := range origins {
+		m[o] = true
+	}
+	s.allowedOrigins = m
+}
+
+// StartSessionCleanup starts a background goroutine that evicts expired IDE sessions.
+// It stops when the provided context is cancelled.
+func (s *Server) StartSessionCleanup(ctx context.Context) {
+	go func() {
+		ticker := time.NewTicker(ideSessionCleanupInterval)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				s.cleanupExpiredSessions()
+			}
+		}
+	}()
+}
+
+func (s *Server) cleanupExpiredSessions() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	now := time.Now()
+	for id, sess := range s.sessions {
+		if now.Sub(sess.LastPing) > ideSessionTTL {
+			delete(s.sessions, id)
+			s.logger.Info("evicted expired IDE session", "session_id", id, "last_ping", sess.LastPing)
+		}
 	}
 }
 
@@ -147,6 +201,11 @@ func (s *Server) handleConnect(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.mu.Lock()
+	if len(s.sessions) >= maxIDESessions {
+		s.mu.Unlock()
+		http.Error(w, "maximum IDE session limit reached", http.StatusServiceUnavailable)
+		return
+	}
 	sessionID := generateIDESessionID()
 	s.sessions[sessionID] = &IDESession{
 		ID:        sessionID,
@@ -157,7 +216,7 @@ func (s *Server) handleConnect(w http.ResponseWriter, r *http.Request) {
 	}
 	s.mu.Unlock()
 
-	writeIDEJSON(w, http.StatusOK, map[string]any{
+	s.writeIDEJSON(w, r, http.StatusOK, map[string]any{
 		"session_id": sessionID,
 		"status":     "connected",
 		"capabilities": []string{
@@ -179,6 +238,9 @@ func (s *Server) handleTopicBrowse(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	cluster := r.URL.Query().Get("cluster")
+	if !validateIDEParam(w, "cluster", cluster) {
+		return
+	}
 	includeInternal := r.URL.Query().Get("internal") == "true"
 
 	topics, err := s.kafkaManager.ListTopics(ctx, cluster, includeInternal)
@@ -200,7 +262,7 @@ func (s *Server) handleTopicBrowse(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	writeIDEJSON(w, http.StatusOK, TopicBrowseResult{
+	s.writeIDEJSON(w, r, http.StatusOK, TopicBrowseResult{
 		Topics: nodes,
 		Total:  len(nodes),
 	})
@@ -217,11 +279,17 @@ func (s *Server) handleTopicDetail(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "topic name required", http.StatusBadRequest)
 		return
 	}
+	if !validateIDEParam(w, "topic", topicName) {
+		return
+	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
 	cluster := r.URL.Query().Get("cluster")
+	if !validateIDEParam(w, "cluster", cluster) {
+		return
+	}
 	detail, err := s.kafkaManager.DescribeTopic(ctx, topicName, cluster)
 	if err != nil {
 		http.Error(w, "topic not found", http.StatusNotFound)
@@ -246,7 +314,7 @@ func (s *Server) handleTopicDetail(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	writeIDEJSON(w, http.StatusOK, node)
+	s.writeIDEJSON(w, r, http.StatusOK, node)
 }
 
 func (s *Server) handleSchemas(w http.ResponseWriter, r *http.Request) {
@@ -255,7 +323,7 @@ func (s *Server) handleSchemas(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeIDEJSON(w, http.StatusOK, map[string]any{
+	s.writeIDEJSON(w, r, http.StatusOK, map[string]any{
 		"schemas":        []any{},
 		"total":          0,
 		"schema_registry": len(s.schemaClients) > 0,
@@ -268,8 +336,11 @@ func (s *Server) handleSchemaDetail(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "subject required", http.StatusBadRequest)
 		return
 	}
+	if !validateIDEParam(w, "subject", subject) {
+		return
+	}
 
-	writeIDEJSON(w, http.StatusOK, SchemaInfo{
+	s.writeIDEJSON(w, r, http.StatusOK, SchemaInfo{
 		Subject:    subject,
 		SchemaType: "AVRO",
 	})
@@ -286,11 +357,17 @@ func (s *Server) handleMessagePreview(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "topic parameter required", http.StatusBadRequest)
 		return
 	}
+	if !validateIDEParam(w, "topic", topic) {
+		return
+	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
 	cluster := r.URL.Query().Get("cluster")
+	if !validateIDEParam(w, "cluster", cluster) {
+		return
+	}
 	messages, err := s.kafkaManager.Consume(ctx, cluster, topic, -1, "latest", 5, 5000, "")
 	if err != nil {
 		http.Error(w, "failed to preview messages", http.StatusInternalServerError)
@@ -310,7 +387,7 @@ func (s *Server) handleMessagePreview(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	writeIDEJSON(w, http.StatusOK, map[string]any{
+	s.writeIDEJSON(w, r, http.StatusOK, map[string]any{
 		"messages": previews,
 		"count":    len(previews),
 	})
@@ -324,6 +401,9 @@ func (s *Server) handleCompletions(w http.ResponseWriter, r *http.Request) {
 
 	prefix := r.URL.Query().Get("prefix")
 	kind := r.URL.Query().Get("kind")
+	if !validateIDEParam(w, "prefix", prefix) || !validateIDEParam(w, "kind", kind) {
+		return
+	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
@@ -362,7 +442,7 @@ func (s *Server) handleCompletions(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	writeIDEJSON(w, http.StatusOK, map[string]any{
+	s.writeIDEJSON(w, r, http.StatusOK, map[string]any{
 		"completions": items,
 		"total":       len(items),
 	})
@@ -373,7 +453,7 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 	sessionCount := len(s.sessions)
 	s.mu.RUnlock()
 
-	writeIDEJSON(w, http.StatusOK, map[string]any{
+	s.writeIDEJSON(w, r, http.StatusOK, map[string]any{
 		"status":       "healthy",
 		"sessions":     sessionCount,
 		"capabilities": []string{"topics", "schemas", "messages", "completions"},
@@ -388,9 +468,35 @@ func generateIDESessionID() string {
 	return "ide_" + hex.EncodeToString(b)
 }
 
-func writeIDEJSON(w http.ResponseWriter, status int, v any) {
+func (s *Server) writeIDEJSON(w http.ResponseWriter, r *http.Request, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*") // IDE plugins may connect cross-origin
+	origin := r.Header.Get("Origin")
+	if origin != "" && s.isAllowedOrigin(origin) {
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+	}
+	w.Header().Set("Access-Control-Allow-Credentials", "false")
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(v)
+}
+
+func (s *Server) isAllowedOrigin(origin string) bool {
+	if s.allowedOrigins[origin] {
+		return true
+	}
+	// Allow any localhost port
+	for _, prefix := range []string{"http://localhost:", "http://127.0.0.1:", "https://localhost:", "https://127.0.0.1:"} {
+		if strings.HasPrefix(origin, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
+// validateIDEParam checks that a query parameter does not exceed the max allowed length.
+func validateIDEParam(w http.ResponseWriter, name, value string) bool {
+	if len(value) > maxIDEInputLength {
+		http.Error(w, fmt.Sprintf("%s exceeds maximum length of %d characters", name, maxIDEInputLength), http.StatusBadRequest)
+		return false
+	}
+	return true
 }
