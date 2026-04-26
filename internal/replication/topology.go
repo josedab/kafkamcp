@@ -272,7 +272,9 @@ func (am *AlertManager) ProcessAlert(alert Alert) *AlertNotification {
 		case am.webhookSem <- struct{}{}:
 			go func() {
 				defer func() { <-am.webhookSem }()
-				am.sendWebhook(am.ctx, notif)
+				if err := am.sendWebhook(notif); err != nil {
+					am.logger.Error("security alert webhook failed", "error", err, "alert_id", notif.ID, "severity", notif.Severity)
+				}
 			}()
 		default:
 			am.logger.Warn("webhook dropped due to concurrency limit", "alert_id", notif.ID, "severity", notif.Severity)
@@ -306,34 +308,36 @@ func (am *AlertManager) GetRecentNotifications(limit int) []AlertNotification {
 	return result
 }
 
-func (am *AlertManager) sendWebhook(ctx context.Context, notif *AlertNotification) {
+func (am *AlertManager) sendWebhook(notif *AlertNotification) error {
 	body, err := json.Marshal(notif)
 	if err != nil {
-		am.logger.Error("failed to marshal webhook payload", "error", err, "alert_id", notif.ID)
-		return
+		am.logger.Error("failed to marshal webhook payload", "error", err, "alert_id", notif.ID, "severity", notif.Severity)
+		return fmt.Errorf("marshal webhook payload: %w", err)
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, am.config.WebhookURL, strings.NewReader(string(body)))
 	if err != nil {
-		am.logger.Error("failed to create webhook request", "error", err, "alert_id", notif.ID)
-		return
+		am.logger.Error("failed to create webhook request", "error", err, "alert_id", notif.ID, "severity", notif.Severity, "webhook_url", am.config.WebhookURL)
+		return fmt.Errorf("create webhook request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("User-Agent", "KafkaMCP-Replication-Monitor/1.0")
 
 	resp, err := am.httpClient.Do(req)
 	if err != nil {
-		am.logger.Error("webhook delivery failed", "error", err, "alert_id", notif.ID)
-		return
+		am.logger.Error("webhook delivery failed", "error", err, "alert_id", notif.ID, "severity", notif.Severity, "webhook_url", am.config.WebhookURL)
+		return fmt.Errorf("webhook delivery: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		am.logger.Warn("webhook returned non-2xx status", "status", resp.StatusCode, "alert_id", notif.ID)
+		am.logger.Warn("webhook returned non-2xx status", "status", resp.StatusCode, "alert_id", notif.ID, "severity", notif.Severity, "webhook_url", am.config.WebhookURL)
+		return fmt.Errorf("webhook returned status %d", resp.StatusCode)
 	}
+	return nil
 }
 
 // GetReplicationResource returns data for the kafka://replication/{source}/{target} MCP resource.
