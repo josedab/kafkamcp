@@ -155,7 +155,10 @@ func (s *Server) handleCatalogSearch(ctx context.Context, request mcp.CallToolRe
 	}
 
 	if raw, ok := args["tags"]; ok {
-		data, _ := json.Marshal(raw)
+		data, err := json.Marshal(raw)
+		if err != nil {
+			return mcp.NewToolResultError(fmt.Sprintf("marshaling tags: %v", err)), nil
+		}
 		json.Unmarshal(data, &opts.Tags)
 	}
 
@@ -176,7 +179,10 @@ func (s *Server) handleCatalogTag(ctx context.Context, request mcp.CallToolReque
 		}
 		var tags []string
 		if raw, ok := args["tags"]; ok {
-			data, _ := json.Marshal(raw)
+			data, err := json.Marshal(raw)
+			if err != nil {
+				return mcp.NewToolResultError(fmt.Sprintf("marshaling tags: %v", err)), nil
+			}
 			json.Unmarshal(data, &tags)
 		}
 		entry, err := s.catalogEngine.Tag(entryID, tags)
@@ -198,7 +204,10 @@ func (s *Server) handleCatalogTag(ctx context.Context, request mcp.CallToolReque
 
 		var tags []string
 		if raw, ok := args["tags"]; ok {
-			data, _ := json.Marshal(raw)
+			data, err := json.Marshal(raw)
+			if err != nil {
+				return mcp.NewToolResultError(fmt.Sprintf("marshaling tags: %v", err)), nil
+			}
 			json.Unmarshal(data, &tags)
 		}
 
@@ -216,7 +225,10 @@ func (s *Server) handleCatalogTag(ctx context.Context, request mcp.CallToolReque
 		}
 		var lineage catalog.LineageInfo
 		if raw, ok := args["lineage"]; ok {
-			data, _ := json.Marshal(raw)
+			data, err := json.Marshal(raw)
+			if err != nil {
+				return mcp.NewToolResultError(fmt.Sprintf("marshaling lineage: %v", err)), nil
+			}
 			json.Unmarshal(data, &lineage)
 		}
 		if err := s.catalogEngine.SetLineage(entryID, &lineage); err != nil {

@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/kafkamcp/kafkamcp/internal/sandbox"
@@ -124,7 +125,10 @@ func (s *Server) handleCostAllocate(ctx context.Context, request mcp.CallToolReq
 
 		var resources []string
 		if raw, ok := args["resources"]; ok {
-			data, _ := json.Marshal(raw)
+			data, err := json.Marshal(raw)
+			if err != nil {
+				return mcp.NewToolResultError(fmt.Sprintf("marshaling resources: %v", err)), nil
+			}
 			json.Unmarshal(data, &resources)
 		}
 
@@ -172,13 +176,19 @@ func (s *Server) handleCostBudget(ctx context.Context, request mcp.CallToolReque
 
 		var resources []string
 		if raw, ok := args["resources"]; ok {
-			data, _ := json.Marshal(raw)
+			data, err := json.Marshal(raw)
+			if err != nil {
+				return mcp.NewToolResultError(fmt.Sprintf("marshaling resources: %v", err)), nil
+			}
 			json.Unmarshal(data, &resources)
 		}
 
 		var thresholds []float64
 		if raw, ok := args["alert_thresholds"]; ok {
-			data, _ := json.Marshal(raw)
+			data, err := json.Marshal(raw)
+			if err != nil {
+				return mcp.NewToolResultError(fmt.Sprintf("marshaling alert_thresholds: %v", err)), nil
+			}
 			json.Unmarshal(data, &thresholds)
 		}
 
@@ -215,7 +225,10 @@ func (s *Server) handleSandboxCreate(ctx context.Context, request mcp.CallToolRe
 	var quotas *sandbox.ResourceQuotas
 	if raw, ok := args["quotas"]; ok {
 		quotas = &sandbox.ResourceQuotas{}
-		data, _ := json.Marshal(raw)
+		data, err := json.Marshal(raw)
+		if err != nil {
+			return mcp.NewToolResultError(fmt.Sprintf("marshaling quotas: %v", err)), nil
+		}
 		json.Unmarshal(data, quotas)
 	}
 

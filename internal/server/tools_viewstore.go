@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/kafkamcp/kafkamcp/internal/viewstore"
@@ -32,11 +33,17 @@ func (s *Server) handleViewCreate(ctx context.Context, request mcp.CallToolReque
 
 	var groupByFields, valueFields []string
 	if raw, ok := args["group_by_fields"]; ok {
-		data, _ := json.Marshal(raw)
+		data, err := json.Marshal(raw)
+		if err != nil {
+			return mcp.NewToolResultError(fmt.Sprintf("marshaling group_by_fields: %v", err)), nil
+		}
 		json.Unmarshal(data, &groupByFields)
 	}
 	if raw, ok := args["value_fields"]; ok {
-		data, _ := json.Marshal(raw)
+		data, err := json.Marshal(raw)
+		if err != nil {
+			return mcp.NewToolResultError(fmt.Sprintf("marshaling value_fields: %v", err)), nil
+		}
 		json.Unmarshal(data, &valueFields)
 	}
 

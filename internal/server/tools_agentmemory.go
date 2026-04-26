@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/mark3labs/mcp-go/mcp"
@@ -19,7 +20,10 @@ func (s *Server) handleMemoryStore(ctx context.Context, request mcp.CallToolRequ
 
 	var tags []string
 	if raw, ok := args["tags"]; ok {
-		data, _ := json.Marshal(raw)
+		data, err := json.Marshal(raw)
+		if err != nil {
+			return mcp.NewToolResultError(fmt.Sprintf("marshaling tags: %v", err)), nil
+		}
 		json.Unmarshal(data, &tags)
 	}
 
