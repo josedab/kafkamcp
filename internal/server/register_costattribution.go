@@ -10,6 +10,7 @@ func (s *Server) registerCostAttributionTools() {
 	}
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_cost_live",
+		withCategory("governance"),
 		mcp.WithDescription("Get real-time cost metrics for a resource or all resources with per-hour/day/month breakdowns."),
 		mcp.WithString("resource_type", mcp.Description("Resource type: topic, consumer_group, connector")),
 		mcp.WithString("resource_name", mcp.Description("Resource name (omit for all)")),
@@ -20,6 +21,7 @@ func (s *Server) registerCostAttributionTools() {
 	}, s.handleCostLive))
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_cost_allocate",
+		withCategory("governance"),
 		mcp.WithDescription("Create or view cost allocation groups that map resources to teams, services, or projects."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: create, list")),
 		mcp.WithString("name", mcp.Description("Allocation group name (for create)")),
@@ -33,6 +35,7 @@ func (s *Server) registerCostAttributionTools() {
 	}, s.handleCostAllocate))
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_cost_budget",
+		withCategory("governance"),
 		mcp.WithDescription("Create spending budgets with alert thresholds or view budget status."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: create, list")),
 		mcp.WithString("name", mcp.Description("Budget name (for create)")),

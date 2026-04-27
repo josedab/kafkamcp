@@ -14,6 +14,7 @@ func (s *Server) registerOPATools() {
 	}
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_policy_evaluate",
+		withCategory("governance"),
 		mcp.WithDescription("Evaluate an OPA Rego policy for an authorization decision. Returns whether the action is allowed with reasoning."),
 		mcp.WithString("agent", mcp.Required(), mcp.Description("Agent ID to evaluate")),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: read, write, create, delete, admin")),
@@ -26,6 +27,7 @@ func (s *Server) registerOPATools() {
 	}, s.handlePolicyEvaluate))
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_policy_simulate",
+		withCategory("governance"),
 		mcp.WithDescription("Simulate a policy evaluation showing how each policy rule matches, without recording the decision."),
 		mcp.WithString("agent", mcp.Required(), mcp.Description("Agent ID to simulate")),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action to simulate")),
@@ -38,6 +40,7 @@ func (s *Server) registerOPATools() {
 	}, s.handlePolicySimulate))
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_policy_manage",
+		withCategory("governance"),
 		mcp.WithDescription("Manage OPA Rego policies. Actions: list (show policies), register (add/update), delete (remove), export (JSON dump), decisions (recent log)."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: list, register, delete, export, decisions")),
 		mcp.WithString("policy_id", mcp.Description("Policy ID (for register/delete)")),

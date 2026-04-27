@@ -4,6 +4,7 @@ import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerSchemaWorkflowTools() {
 	s.mcpServer.AddTool(mcp.NewTool("kafka_schema_propose",
+		withCategory("governance"),
 		mcp.WithDescription("Propose a schema change with auto-generated migration plan, compatibility validation, and consumer impact analysis. Creates an approval workflow."),
 		mcp.WithString("subject", mcp.Required(), mcp.Description("Schema Registry subject name")),
 		mcp.WithString("schema", mcp.Required(), mcp.Description("New schema definition (JSON string)")),
@@ -12,6 +13,7 @@ func (s *Server) registerSchemaWorkflowTools() {
 	), s.handleSchemaPropose)
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_schema_apply",
+		withCategory("governance"),
 		mcp.WithDescription("Apply, review, or rollback a schema proposal. Actions: review (approve/reject), apply (register schema), rollback (revert), list (show proposals), get (proposal details), timeline (version history)."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: review, apply, rollback, list, get, timeline")),
 		mcp.WithString("proposal_id", mcp.Description("Proposal ID (required for review/apply/rollback/get)")),

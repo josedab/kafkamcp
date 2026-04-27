@@ -14,6 +14,7 @@ func (s *Server) registerSemanticTools() {
 	}
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_semantic_index",
+		withCategory("streaming"),
 		mcp.WithDescription("Index Kafka messages for semantic search. Consumes recent messages from a topic and adds them to the vector index for meaning-based retrieval."),
 		mcp.WithString("topic", mcp.Required(), mcp.Description("Topic to index messages from")),
 		mcp.WithNumber("limit", mcp.Description("Max messages to index. Default: 100")),
@@ -31,6 +32,7 @@ func (s *Server) registerSemanticTools() {
 	}, s.handleSemanticIndex))
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_semantic_search",
+		withCategory("streaming"),
 		mcp.WithDescription("Search indexed Kafka messages by meaning using semantic similarity. Returns the most relevant messages matching the query intent."),
 		mcp.WithString("query", mcp.Required(), mcp.Description("Natural language search query")),
 		mcp.WithString("topic", mcp.Description("Filter results to a specific topic")),
@@ -42,6 +44,7 @@ func (s *Server) registerSemanticTools() {
 	}, s.handleSemanticSearch))
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_rag_context",
+		withCategory("streaming"),
 		mcp.WithDescription("Build RAG (Retrieval-Augmented Generation) context from indexed Kafka messages. Returns relevant message fragments optimized for LLM context windows."),
 		mcp.WithString("query", mcp.Required(), mcp.Description("Query to build context for")),
 		mcp.WithString("topic", mcp.Description("Filter to specific topic")),
@@ -53,6 +56,7 @@ func (s *Server) registerSemanticTools() {
 	}, s.handleRAGContext))
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_semantic_stats",
+		withCategory("streaming"),
 		mcp.WithDescription("Get statistics about the semantic search index including document counts, topic distribution, and vocabulary size."),
 	), s.withToolAuth(toolAuthConfig{
 		tool:         "kafka_semantic_stats",

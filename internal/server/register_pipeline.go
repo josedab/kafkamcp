@@ -16,6 +16,7 @@ func (s *Server) registerPipelineTools() {
 	}
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_pipeline_create",
+		withCategory("streaming"),
 		mcp.WithDescription("Create a streaming function pipeline with filter/map/enrich/transform steps. Pipelines process Kafka messages through a chain of micro-functions."),
 		mcp.WithString("name", mcp.Required(), mcp.Description("Pipeline name")),
 		mcp.WithString("source_topic", mcp.Required(), mcp.Description("Source topic to consume from")),
@@ -28,6 +29,7 @@ func (s *Server) registerPipelineTools() {
 	}, s.handlePipelineCreate))
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_pipeline_execute",
+		withCategory("streaming"),
 		mcp.WithDescription("Execute a pipeline on messages from the source topic. Consumes, processes through the pipeline steps, and returns the results."),
 		mcp.WithString("pipeline_id", mcp.Required(), mcp.Description("Pipeline ID to execute")),
 		mcp.WithNumber("limit", mcp.Description("Max messages to process. Default: 50")),
@@ -39,6 +41,7 @@ func (s *Server) registerPipelineTools() {
 	}, s.handlePipelineExecute))
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_pipeline_manage",
+		withCategory("streaming"),
 		mcp.WithDescription("Manage streaming function pipelines. Actions: list, get, delete, runs (execution history)."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: list, get, delete, runs")),
 		mcp.WithString("pipeline_id", mcp.Description("Pipeline ID")),

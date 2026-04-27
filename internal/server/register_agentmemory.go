@@ -10,6 +10,7 @@ func (s *Server) registerAgentMemoryTools() {
 	}
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_memory_store",
+		withCategory("ops"),
 		mcp.WithDescription("Store a memory entry for the current agent. Supports categories (preference, schema, query_history, context, note), tags, TTL expiration, and arbitrary key-value data."),
 		mcp.WithString("key", mcp.Required(), mcp.Description("Memory key")),
 		mcp.WithObject("value", mcp.Required(), mcp.Description("Value to store (any JSON)")),
@@ -24,6 +25,7 @@ func (s *Server) registerAgentMemoryTools() {
 	}, s.handleMemoryStore))
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_memory_recall",
+		withCategory("ops"),
 		mcp.WithDescription("Recall a specific memory entry by key, or list all entries. Actions: get, list, delete."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: get, list, delete")),
 		mcp.WithString("key", mcp.Description("Memory key (for get/delete)")),
@@ -35,6 +37,7 @@ func (s *Server) registerAgentMemoryTools() {
 	}, s.handleMemoryRecall))
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_memory_search",
+		withCategory("ops"),
 		mcp.WithDescription("Search agent memory using TF-IDF semantic search. Returns ranked results by relevance."),
 		mcp.WithString("query", mcp.Required(), mcp.Description("Search query")),
 		mcp.WithString("category", mcp.Description("Filter by category")),

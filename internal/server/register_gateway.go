@@ -14,6 +14,7 @@ func (s *Server) registerGatewayTools() {
 	}
 
 	s.mcpServer.AddTool(mcp.NewTool("gateway_list_backends",
+		withCategory("streaming"),
 		mcp.WithDescription("List all registered multi-protocol streaming backends (Pulsar, RabbitMQ, NATS) and their health status."),
 	), s.withToolAuth(toolAuthConfig{
 		tool:         "gateway_list_backends",
@@ -22,6 +23,7 @@ func (s *Server) registerGatewayTools() {
 	}, s.handleGatewayListBackends))
 
 	s.mcpServer.AddTool(mcp.NewTool("gateway_produce",
+		withCategory("streaming"),
 		mcp.WithDescription("Produce a message through a named streaming backend (Pulsar, RabbitMQ, NATS)."),
 		mcp.WithString("backend", mcp.Required(), mcp.Description("Backend name")),
 		mcp.WithString("topic", mcp.Required(), mcp.Description("Topic/queue/subject name")),
@@ -40,6 +42,7 @@ func (s *Server) registerGatewayTools() {
 	}, s.handleGatewayProduce))
 
 	s.mcpServer.AddTool(mcp.NewTool("gateway_consume",
+		withCategory("streaming"),
 		mcp.WithDescription("Consume messages from a named streaming backend (Pulsar, RabbitMQ, NATS)."),
 		mcp.WithString("backend", mcp.Required(), mcp.Description("Backend name")),
 		mcp.WithString("topic", mcp.Required(), mcp.Description("Topic/queue/subject name")),
@@ -58,6 +61,7 @@ func (s *Server) registerGatewayTools() {
 	}, s.handleGatewayConsume))
 
 	s.mcpServer.AddTool(mcp.NewTool("gateway_list_topics",
+		withCategory("streaming"),
 		mcp.WithDescription("List topics/queues/subjects on a named streaming backend."),
 		mcp.WithString("backend", mcp.Required(), mcp.Description("Backend name")),
 	), s.withToolAuth(toolAuthConfig{
@@ -67,6 +71,7 @@ func (s *Server) registerGatewayTools() {
 	}, s.handleGatewayListTopics))
 
 	s.mcpServer.AddTool(mcp.NewTool("gateway_create_topic",
+		withCategory("streaming"),
 		mcp.WithDescription("Create a topic/queue/subject on a named streaming backend."),
 		mcp.WithString("backend", mcp.Required(), mcp.Description("Backend name")),
 		mcp.WithString("topic", mcp.Required(), mcp.Description("Topic/queue/subject name")),

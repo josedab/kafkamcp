@@ -4,6 +4,7 @@ import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerReplayTools() {
 	s.mcpServer.AddTool(mcp.NewTool("kafka_replay_create",
+		withCategory("streaming"),
 		mcp.WithDescription("Create a bookmark capturing message state at the current point in time. Stores offsets, sample messages, and metadata for later comparison or replay."),
 		mcp.WithString("topic", mcp.Required(), mcp.Description("Topic to bookmark")),
 		mcp.WithString("name", mcp.Description("Bookmark name")),
@@ -14,12 +15,14 @@ func (s *Server) registerReplayTools() {
 	), s.handleReplayCreate)
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_replay_diff",
+		withCategory("streaming"),
 		mcp.WithDescription("Compare message payloads between two bookmarks. Detects schema changes, content drift, and message volume differences."),
 		mcp.WithString("bookmark_a", mcp.Required(), mcp.Description("First bookmark ID")),
 		mcp.WithString("bookmark_b", mcp.Required(), mcp.Description("Second bookmark ID")),
 	), s.handleReplayDiff)
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_replay_simulate",
+		withCategory("streaming"),
 		mcp.WithDescription("Simulate replaying messages through a consumer group. Predicts processing impact and estimates reprocessing time."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: create, run, get, list")),
 		mcp.WithString("topic", mcp.Description("Topic for simulation")),

@@ -13,6 +13,7 @@ func (s *Server) registerCollaborationTools() {
 	}
 
 	s.mcpServer.AddTool(mcp.NewTool("agent_lock_acquire",
+		withCategory("ops"),
 		mcp.WithDescription("Acquire a distributed lock on a shared resource (topic, consumer group, schema) to prevent concurrent modifications by multiple agents."),
 		mcp.WithString("resource", mcp.Required(), mcp.Description("Resource to lock (e.g., 'topic:orders', 'group:my-group')")),
 		mcp.WithNumber("ttl_seconds", mcp.Description("Lock TTL in seconds. Default: 30, Max: 3600")),
@@ -23,6 +24,7 @@ func (s *Server) registerCollaborationTools() {
 	}, s.handleLockAcquire))
 
 	s.mcpServer.AddTool(mcp.NewTool("agent_lock_release",
+		withCategory("ops"),
 		mcp.WithDescription("Release a previously acquired distributed lock on a resource."),
 		mcp.WithString("resource", mcp.Required(), mcp.Description("Resource to unlock")),
 	), s.withToolAuth(toolAuthConfig{
@@ -32,6 +34,7 @@ func (s *Server) registerCollaborationTools() {
 	}, s.handleLockRelease))
 
 	s.mcpServer.AddTool(mcp.NewTool("agent_lock_list",
+		withCategory("ops"),
 		mcp.WithDescription("List all active distributed locks showing resource, owner, and expiration."),
 	), s.withToolAuth(toolAuthConfig{
 		tool:         "agent_lock_list",
@@ -40,6 +43,7 @@ func (s *Server) registerCollaborationTools() {
 	}, s.handleLockList))
 
 	s.mcpServer.AddTool(mcp.NewTool("agent_clock_get",
+		withCategory("ops"),
 		mcp.WithDescription("Get the vector clock for a resource to check causal ordering of operations across agents."),
 		mcp.WithString("resource", mcp.Required(), mcp.Description("Resource to get clock for")),
 	), s.withToolAuth(toolAuthConfig{
@@ -49,6 +53,7 @@ func (s *Server) registerCollaborationTools() {
 	}, s.handleClockGet))
 
 	s.mcpServer.AddTool(mcp.NewTool("agent_clock_increment",
+		withCategory("ops"),
 		mcp.WithDescription("Increment the vector clock for a resource, recording an operation by this agent."),
 		mcp.WithString("resource", mcp.Required(), mcp.Description("Resource to increment clock for")),
 	), s.withToolAuth(toolAuthConfig{
@@ -58,6 +63,7 @@ func (s *Server) registerCollaborationTools() {
 	}, s.handleClockIncrement))
 
 	s.mcpServer.AddTool(mcp.NewTool("agent_message_send",
+		withCategory("ops"),
 		mcp.WithDescription("Send a message to another agent for coordination. Use '*' as recipient for broadcasts."),
 		mcp.WithString("to", mcp.Required(), mcp.Description("Recipient agent ID or '*' for broadcast")),
 		mcp.WithString("type", mcp.Description("Message type: request, response, broadcast, notification. Default: notification")),
@@ -70,6 +76,7 @@ func (s *Server) registerCollaborationTools() {
 	}, s.handleMessageSend))
 
 	s.mcpServer.AddTool(mcp.NewTool("agent_message_inbox",
+		withCategory("ops"),
 		mcp.WithDescription("Read messages sent to this agent. Supports filtering to unread-only."),
 		mcp.WithBoolean("unread_only", mcp.Description("Only return unread messages. Default: false")),
 	), s.withToolAuth(toolAuthConfig{
@@ -79,6 +86,7 @@ func (s *Server) registerCollaborationTools() {
 	}, s.handleMessageInbox))
 
 	s.mcpServer.AddTool(mcp.NewTool("agent_coordinate_register",
+		withCategory("ops"),
 		mcp.WithDescription("Register this agent's capabilities and status for coordination with other agents."),
 		mcp.WithString("status", mcp.Description("Agent status: active, idle, busy. Default: active")),
 		mcp.WithObject("capabilities", mcp.Description("List of agent capabilities")),
@@ -89,6 +97,7 @@ func (s *Server) registerCollaborationTools() {
 	}, s.handleAgentRegister))
 
 	s.mcpServer.AddTool(mcp.NewTool("agent_coordinate_list",
+		withCategory("ops"),
 		mcp.WithDescription("List all registered agents with their status, capabilities, and last seen time."),
 	), s.withToolAuth(toolAuthConfig{
 		tool:         "agent_coordinate_list",

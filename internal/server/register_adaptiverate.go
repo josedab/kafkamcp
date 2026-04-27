@@ -10,6 +10,7 @@ func (s *Server) registerAdaptiveRateTools() {
 	}
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_quota_status",
+		withCategory("ops"),
 		mcp.WithDescription("Get adaptive rate limit status for an agent or all agents. Shows current rate, dynamic quota, burst credits, utilization, and recommendations."),
 		mcp.WithString("agent_id", mcp.Description("Agent ID (omit for all agents)")),
 	), s.withToolAuth(toolAuthConfig{
@@ -19,6 +20,7 @@ func (s *Server) registerAdaptiveRateTools() {
 	}, s.handleQuotaStatus))
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_quota_request",
+		withCategory("ops"),
 		mcp.WithDescription("Request a quota adjustment: increase, decrease, reset, or grant burst credits."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: increase, decrease, reset, grant_credits")),
 		mcp.WithString("agent_id", mcp.Description("Target agent ID (default: self)")),

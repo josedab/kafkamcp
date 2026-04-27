@@ -4,6 +4,7 @@ import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerAdvisorTools() {
 	s.mcpServer.AddTool(mcp.NewTool("kafka_advisor_scan",
+		withCategory("ops"),
 		mcp.WithDescription("Scan topics for best-practice violations, anti-patterns, and improvement opportunities. Checks replication factors, partition counts, retention policies, naming conventions, orphaned topics, and topic sprawl."),
 		mcp.WithString("cluster", mcp.Description("Cluster name")),
 		mcp.WithString("severity", mcp.Description("Filter by severity: info, warning, critical")),
@@ -11,6 +12,7 @@ func (s *Server) registerAdvisorTools() {
 	), s.handleAdvisorScan)
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_advisor_report",
+		withCategory("ops"),
 		mcp.WithDescription("Generate a detailed advisory report with health scores, category breakdowns, and prioritized recommendations."),
 		mcp.WithString("cluster", mcp.Description("Cluster name")),
 	), s.handleAdvisorReport)

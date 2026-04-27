@@ -10,6 +10,7 @@ func (s *Server) registerDAGWorkflowTools() {
 	}
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_workflow_create",
+		withCategory("ops"),
 		mcp.WithDescription("Create a reusable DAG-based workflow template for multi-step Kafka operations with conditional branching, parallel fan-out, and error recovery."),
 		mcp.WithString("name", mcp.Required(), mcp.Description("Workflow name")),
 		mcp.WithString("description", mcp.Description("Workflow description")),
@@ -23,6 +24,7 @@ func (s *Server) registerDAGWorkflowTools() {
 	}, s.handleDAGWorkflowCreate))
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_workflow_run",
+		withCategory("ops"),
 		mcp.WithDescription("Start a workflow execution from a template. Returns the run ID and initial ready steps for the agent to execute."),
 		mcp.WithString("template_id", mcp.Required(), mcp.Description("Workflow template ID")),
 		mcp.WithObject("parameters", mcp.Description("Input parameters for the workflow")),
@@ -33,6 +35,7 @@ func (s *Server) registerDAGWorkflowTools() {
 	}, s.handleDAGWorkflowRun))
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_workflow_status",
+		withCategory("ops"),
 		mcp.WithDescription("Get workflow status, manage workflows, or advance a running workflow. Actions: status, list, versions, cancel, complete_step, ready_steps."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: status, list, versions, cancel, complete_step, ready_steps")),
 		mcp.WithString("run_id", mcp.Description("Run ID (for status, cancel, complete_step, ready_steps)")),

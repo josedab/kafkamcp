@@ -4,6 +4,7 @@ import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerP1Tools() {
 	s.mcpServer.AddTool(mcp.NewTool("kafka_create_topic",
+		withCategory("streaming"),
 		mcp.WithDescription("Create a new Kafka topic with specified partitions, replication factor, and configuration."),
 		mcp.WithString("name", mcp.Required(), mcp.Description("Topic name")),
 		mcp.WithNumber("partitions", mcp.Description("Number of partitions. Default: 1")),
@@ -13,6 +14,7 @@ func (s *Server) registerP1Tools() {
 	), s.handleCreateTopic)
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_alter_topic",
+		withCategory("streaming"),
 		mcp.WithDescription("Modify configuration of an existing Kafka topic."),
 		mcp.WithString("name", mcp.Required(), mcp.Description("Topic name")),
 		mcp.WithObject("configs", mcp.Required(), mcp.Description("Configs to change (e.g., {\"retention.ms\": \"86400000\"})")),
@@ -20,12 +22,14 @@ func (s *Server) registerP1Tools() {
 	), s.handleAlterTopic)
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_delete_topic",
+		withCategory("streaming"),
 		mcp.WithDescription("Delete a Kafka topic. This is a destructive operation."),
 		mcp.WithString("name", mcp.Required(), mcp.Description("Topic name to delete")),
 		mcp.WithString("cluster", mcp.Description("Cluster name.")),
 	), s.handleDeleteTopic)
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_search",
+		withCategory("streaming"),
 		mcp.WithDescription("Search/filter messages in a topic by key, header, value content, or time range. Bounded scan."),
 		mcp.WithString("topic", mcp.Required(), mcp.Description("Topic name")),
 		mcp.WithString("key_filter", mcp.Description("Filter messages where key contains this string")),
@@ -40,6 +44,7 @@ func (s *Server) registerP1Tools() {
 	), s.handleSearch)
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_reset_offsets",
+		withCategory("streaming"),
 		mcp.WithDescription("Reset consumer group offsets. Supports earliest, latest, or timestamp strategies with dry-run mode."),
 		mcp.WithString("group_id", mcp.Required(), mcp.Description("Consumer group ID")),
 		mcp.WithString("topic", mcp.Required(), mcp.Description("Topic name")),
@@ -50,6 +55,7 @@ func (s *Server) registerP1Tools() {
 	), s.handleResetOffsets)
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_analyze_dlq",
+		withCategory("streaming"),
 		mcp.WithDescription("Analyze a dead-letter queue topic: consume recent messages, parse error headers, categorize failure types, and return a statistical summary with samples."),
 		mcp.WithString("topic", mcp.Required(), mcp.Description("DLQ topic name")),
 		mcp.WithNumber("limit", mcp.Description("Max messages to analyze. Default: 100")),
@@ -58,6 +64,7 @@ func (s *Server) registerP1Tools() {
 
 	// FR-11: Streaming Subscription
 	s.mcpServer.AddTool(mcp.NewTool("kafka_subscribe",
+		withCategory("streaming"),
 		mcp.WithDescription("Subscribe to a Kafka topic using consumer group semantics. Polls for new messages for the specified duration and returns them as a batch. Supports auto-commit for offset management."),
 		mcp.WithString("topic", mcp.Required(), mcp.Description("Topic name to subscribe to")),
 		mcp.WithString("group_id", mcp.Description("Consumer group ID. If omitted, an ephemeral group is created.")),

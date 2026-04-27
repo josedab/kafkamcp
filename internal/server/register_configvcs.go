@@ -10,6 +10,7 @@ func (s *Server) registerConfigVCSTools() {
 	}
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_config_history",
+		withCategory("governance"),
 		mcp.WithDescription("Get configuration change history for a resource with full diff details. Supports SOC2-ready audit reports."),
 		mcp.WithString("resource", mcp.Required(), mcp.Description("Resource type: topic, acl, schema, policy, cluster")),
 		mcp.WithString("resource_id", mcp.Required(), mcp.Description("Resource identifier (e.g., topic name)")),
@@ -22,6 +23,7 @@ func (s *Server) registerConfigVCSTools() {
 	}, s.handleConfigHistory))
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_config_rollback",
+		withCategory("governance"),
 		mcp.WithDescription("Rollback a resource configuration to a previous version."),
 		mcp.WithString("resource", mcp.Required(), mcp.Description("Resource type")),
 		mcp.WithString("resource_id", mcp.Required(), mcp.Description("Resource identifier")),
@@ -34,6 +36,7 @@ func (s *Server) registerConfigVCSTools() {
 	}, s.handleConfigRollback))
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_config_compare",
+		withCategory("governance"),
 		mcp.WithDescription("Compare two versions of a resource configuration showing a unified diff."),
 		mcp.WithString("resource", mcp.Required(), mcp.Description("Resource type")),
 		mcp.WithString("resource_id", mcp.Required(), mcp.Description("Resource identifier")),

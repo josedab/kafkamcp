@@ -4,6 +4,7 @@ import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerStreamingTools() {
 	s.mcpServer.AddTool(mcp.NewTool("kafka_stream",
+		withCategory("streaming"),
 		mcp.WithDescription("Manage streaming consumer sessions for real-time message delivery. Actions: start (create session), poll (get messages), pause/resume/stop (control), list (show sessions)."),
 		mcp.WithString("action", mcp.Description("Action: start, poll, pause, resume, stop, list. Default: start")),
 		mcp.WithString("topic", mcp.Description("Topic name (required for start)")),
@@ -21,6 +22,7 @@ func (s *Server) registerStreamingTools() {
 
 	// Multi-agent collaboration
 	s.mcpServer.AddTool(mcp.NewTool("kafka_agent_registry",
+		withCategory("streaming"),
 		mcp.WithDescription("Multi-agent collaboration: register agents, claim partitions, share cursors, and handoff messages. Actions: register, heartbeat, claim, release, share_cursor, handoff, list_agents."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: register, heartbeat, claim, release, share_cursor, handoff, list_agents")),
 		mcp.WithString("agent_name", mcp.Description("Agent name for registration")),
