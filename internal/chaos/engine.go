@@ -1,14 +1,13 @@
 package chaos
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"sync"
 	"sync/atomic"
 	"time"
 )
-
-var experimentCounter atomic.Uint64
 
 // ExperimentType defines the type of chaos experiment.
 type ExperimentType string
@@ -117,17 +116,20 @@ type Scenario struct {
 
 // Engine manages chaos experiments.
 type Engine struct {
-	experiments map[string]*Experiment
-	scenarios   []Scenario
-	logger      *slog.Logger
-	mu          sync.RWMutex
+	experiments       map[string]*Experiment
+	experimentCancels map[string]context.CancelFunc
+	scenarios         []Scenario
+	logger            *slog.Logger
+	mu                sync.RWMutex
+	experimentCounter atomic.Uint64
 }
 
 // NewEngine creates a new chaos engineering engine.
 func NewEngine(logger *slog.Logger) *Engine {
 	e := &Engine{
-		experiments: make(map[string]*Experiment),
-		logger:      logger,
+		experiments:       make(map[string]*Experiment),
+		experimentCancels: make(map[string]context.CancelFunc),
+		logger:            logger,
 	}
 	e.initScenarios()
 	return e
@@ -212,7 +214,7 @@ func (e *Engine) Inject(expType ExperimentType, cluster string, topics, groups [
 	}
 
 	exp := &Experiment{
-		ID:            fmt.Sprintf("chaos-%d-%d", time.Now().UnixNano(), experimentCounter.Add(1)),
+		ID:            fmt.Sprintf("chaos-%d-%d", time.Now().UnixNano(), e.experimentCounter.Add(1)),
 		Type:          expType,
 		Status:        StatusRunning,
 		Description:   fmt.Sprintf("%s experiment on cluster %s", expType, cluster),
@@ -245,21 +247,30 @@ func (e *Engine) Inject(expType ExperimentType, cluster string, topics, groups [
 
 	// Auto-rollback timer
 	if sg.AutoRollbackEnabled {
+		ctx, cancel := context.WithCancel(context.Background())
+		e.mu.Lock()
+		e.experimentCancels[exp.ID] = cancel
+		e.mu.Unlock()
 		go func() {
 			timer := time.NewTimer(sg.MaxDuration)
 			defer timer.Stop()
-			<-timer.C
-			e.mu.Lock()
-			if exp.Status == StatusRunning {
-				exp.Status = StatusRolledBack
-				exp.CompletedAt = time.Now().UTC().Format(time.RFC3339)
-				for i := range exp.AffectedItems {
-					exp.AffectedItems[i].Recovered = true
+			select {
+			case <-timer.C:
+				e.mu.Lock()
+				if exp.Status == StatusRunning {
+					exp.Status = StatusRolledBack
+					exp.CompletedAt = time.Now().UTC().Format(time.RFC3339)
+					for i := range exp.AffectedItems {
+						exp.AffectedItems[i].Recovered = true
+					}
+					exp.HealthReport = e.generateHealthReport(exp)
+					e.logger.Info("chaos experiment auto-rolled-back", "id", exp.ID)
 				}
-				exp.HealthReport = e.generateHealthReport(exp)
-				e.logger.Info("chaos experiment auto-rolled-back", "id", exp.ID)
+				delete(e.experimentCancels, exp.ID)
+				e.mu.Unlock()
+			case <-ctx.Done():
+				return
 			}
-			e.mu.Unlock()
 		}()
 	}
 
@@ -293,6 +304,10 @@ func (e *Engine) Stop(experimentID string) (*Experiment, error) {
 
 	exp.Status = StatusStopped
 	exp.CompletedAt = time.Now().UTC().Format(time.RFC3339)
+	if cancel, ok := e.experimentCancels[exp.ID]; ok {
+		cancel()
+		delete(e.experimentCancels, exp.ID)
+	}
 	if exp.StartedAt != "" {
 		if startTime, err := time.Parse(time.RFC3339, exp.StartedAt); err == nil {
 			exp.Duration = time.Since(startTime).String()
