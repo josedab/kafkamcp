@@ -1,5 +1,7 @@
 package server
 
+//go:generate go run ../../cmd/gen-tool-docs
+
 func (s *Server) registerTools() {
 	s.registerP0Tools()
 	s.registerP1Tools()

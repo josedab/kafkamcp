@@ -40,3 +40,4 @@ website/build/
 
 # Air hot-reload temp files
 tmp/
+/gen-tool-docs
