@@ -35,6 +35,11 @@ jobs:
       - name: Build
         run: make build
 
+      - name: Check tool docs are up to date
+        run: |
+          go run ./cmd/gen-tool-docs
+          git diff --exit-code docs/tool-reference.md
+
       - name: Test
         run: make test
 
