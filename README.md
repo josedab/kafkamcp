@@ -244,6 +244,254 @@ Once connected, your AI agent can:
 | `kafka_persona` | Declarative agent personas (SRE, data-engineer, etc.) |
 | `kafka_forecast` | ML-based capacity forecasting (throughput, storage, lag) |
 
+### Advisor
+| Tool | Description |
+|------|-------------|
+| `kafka_advisor_scan` | Scan topics for best-practice violations and improvement opportunities |
+| `kafka_advisor_report` | Generate a detailed advisory report with health scores and recommendations |
+
+### Agent Profiling
+| Tool | Description |
+|------|-------------|
+| `kafka_agent_profile` | Profile agent performance: latency, tool call patterns, error rates |
+| `kafka_agent_optimize` | Get optimization suggestions based on agent call patterns |
+| `kafka_agent_report` | Generate a comprehensive agent efficiency report |
+
+### Alerting
+| Tool | Description |
+|------|-------------|
+| `kafka_alert_create` | Create an alerting rule for Kafka metrics with configurable thresholds |
+| `kafka_alert_list` | List all configured alerting rules |
+| `kafka_alert_delete` | Delete an alerting rule by ID |
+
+### Capacity
+| Tool | Description |
+|------|-------------|
+| `kafka_capacity_plan` | Generate a comprehensive capacity plan with ML-based forecasting |
+| `kafka_capacity_forecast` | Forecast capacity for a specific topic using exponential smoothing |
+
+### Catalog
+| Tool | Description |
+|------|-------------|
+| `kafka_catalog_search` | Search the data catalog by name, tag, owner, or quality score |
+| `kafka_catalog_tag` | Add tags to a catalog entry or set lineage information |
+| `kafka_catalog_stats` | Get catalog statistics: entry counts, freshness, quality scores |
+
+### Chaos Engineering
+| Tool | Description |
+|------|-------------|
+| `kafka_chaos_inject` | Inject controlled chaos: broker outage, network partition, slow consumer, etc. |
+| `kafka_chaos_status` | Get status of chaos experiments |
+| `kafka_chaos_stop` | Stop a running chaos experiment and trigger rollback |
+
+### Compliance
+| Tool | Description |
+|------|-------------|
+| `kafka_compliance_scan` | Scan topics for GDPR, HIPAA, SOC2, or PCI-DSS compliance |
+| `kafka_compliance_report` | Generate a comprehensive compliance report with scores and violations |
+| `kafka_compliance_violations` | List detected compliance violations with filters |
+
+### Config VCS
+| Tool | Description |
+|------|-------------|
+| `kafka_config_history` | Get configuration change history with full diff details |
+| `kafka_config_rollback` | Rollback a resource configuration to a previous version |
+| `kafka_config_compare` | Compare two versions of a resource configuration |
+
+### Cost Attribution
+| Tool | Description |
+|------|-------------|
+| `kafka_cost_live` | Get real-time cost metrics with per-hour/day/month breakdowns |
+| `kafka_cost_allocate` | Create or view cost allocation groups for teams or services |
+| `kafka_cost_budget` | Create spending budgets with alert thresholds |
+
+### Contracts
+| Tool | Description |
+|------|-------------|
+| `kafka_contract_violations` | View contract violations, enforce contracts, or infer from samples |
+
+### Dashboard
+| Tool | Description |
+|------|-------------|
+| `kafka_dashboard_create` | Auto-provision Kafka monitoring dashboards for Grafana or Datadog |
+
+### Federation
+| Tool | Description |
+|------|-------------|
+| `kafka_federation_join` | Manage federation membership: join, leave, heartbeat |
+| `kafka_federation_query` | Execute a query across all federated instances |
+| `kafka_federation_status` | Get federation status: instances, policies, health |
+
+### Flow Debug
+| Tool | Description |
+|------|-------------|
+| `kafka_flow_debug` | Live message flow debugging with real-time throughput/latency graphs |
+| `kafka_flow_bottlenecks` | Detect bottlenecks: high lag, low throughput, high error rates |
+
+### Memory
+| Tool | Description |
+|------|-------------|
+| `kafka_memory_store` | Store a memory entry for the current agent with TTL and tags |
+| `kafka_memory_recall` | Recall a specific memory entry by key or list all entries |
+| `kafka_memory_search` | Search agent memory using TF-IDF semantic search |
+
+### Migration
+| Tool | Description |
+|------|-------------|
+| `kafka_migrate_execute` | Execute a migration plan with dry-run and progress tracking |
+| `kafka_migrate_status` | Get the status and progress of a migration execution |
+| `kafka_migrate_rollback` | Rollback a completed or failed migration |
+
+### OpenAPI
+| Tool | Description |
+|------|-------------|
+| `kafka_openapi_spec` | Generate an OpenAPI 3.0 specification from registered MCP tools |
+
+### Plugin
+| Tool | Description |
+|------|-------------|
+| `kafka_plugin_search` | Search the plugin marketplace for extensions |
+| `kafka_plugin_install` | Install a plugin from the marketplace |
+| `kafka_plugin_list` | List installed plugins with status and version |
+
+### Quota
+| Tool | Description |
+|------|-------------|
+| `kafka_quota_status` | Get adaptive rate limit status for an agent |
+| `kafka_quota_request` | Request a quota adjustment: increase, decrease, reset, or burst |
+
+### Replay
+| Tool | Description |
+|------|-------------|
+| `kafka_replay_create` | Create a bookmark capturing message state for later replay |
+| `kafka_replay_diff` | Compare message payloads between two bookmarks |
+| `kafka_replay_simulate` | Simulate replaying messages through a consumer group |
+
+### Replication
+| Tool | Description |
+|------|-------------|
+| `kafka_replication_status` | Get real-time cross-cluster replication status |
+| `kafka_replication_lag` | Get partition-level replication lag for a link |
+| `kafka_failover_readiness` | Evaluate failover readiness with RPO/RTO estimates |
+
+### Sandbox
+| Tool | Description |
+|------|-------------|
+| `kafka_sandbox_create` | Create an isolated sandbox environment for safe experimentation |
+| `kafka_sandbox_exec` | Execute a Kafka tool within a sandbox |
+| `kafka_sandbox_destroy` | Destroy a sandbox or generate a promotion report |
+
+### Schema Workflow
+| Tool | Description |
+|------|-------------|
+| `kafka_schema_propose` | Propose a schema change with migration plan and compatibility validation |
+| `kafka_schema_apply` | Apply, review, or rollback a schema proposal |
+
+### StreamSQL
+| Tool | Description |
+|------|-------------|
+| `kafka_sql_execute` | Execute a streaming SQL query against Kafka topics |
+| `kafka_sql_explain` | Explain a streaming SQL query plan without executing it |
+| `kafka_sql_manage` | Manage SQL queries: list, get, delete |
+
+### Task Queue
+| Tool | Description |
+|------|-------------|
+| `kafka_task_publish` | Publish a task to a priority queue for other agents |
+| `kafka_task_claim` | Claim the highest-priority pending task from a queue |
+| `kafka_task_complete` | Mark a claimed task as completed or failed |
+| `kafka_task_status` | Get task status, queue statistics, or list tasks |
+
+### TimeSeries
+| Tool | Description |
+|------|-------------|
+| `kafka_timeseries_analyze` | Advanced time-series analysis: trend detection, seasonality, outliers |
+
+### Tracing Flow
+| Tool | Description |
+|------|-------------|
+| `kafka_trace_flow` | Distributed tracing for Kafka messages with W3C Trace Context |
+
+### Usage
+| Tool | Description |
+|------|-------------|
+| `kafka_usage_report` | Generate usage analytics and chargeback reports |
+
+### View Store
+| Tool | Description |
+|------|-------------|
+| `kafka_view_create` | Create a materialized view over a Kafka topic |
+| `kafka_view_query` | Query a materialized view with point lookups or range scans |
+| `kafka_view_status` | Manage materialized views: list, get, delete, stats |
+
+### DAG Workflow
+| Tool | Description |
+|------|-------------|
+| `kafka_workflow_create` | Create a reusable DAG-based workflow with conditional branching |
+| `kafka_workflow_run` | Start a workflow execution from a template |
+| `kafka_workflow_status` | Get workflow status, manage workflows, or advance a run |
+
+### Pipeline
+| Tool | Description |
+|------|-------------|
+| `kafka_pipeline_create` | Create a streaming function pipeline with filter/map/enrich steps |
+| `kafka_pipeline_execute` | Execute a pipeline on messages from a source topic |
+| `kafka_pipeline_manage` | Manage streaming function pipelines |
+
+### Semantic Search
+| Tool | Description |
+|------|-------------|
+| `kafka_semantic_index` | Index Kafka messages for semantic search |
+| `kafka_semantic_search` | Search indexed messages by meaning using semantic similarity |
+| `kafka_rag_context` | Build RAG context from indexed Kafka messages |
+| `kafka_semantic_stats` | Get statistics about the semantic search index |
+
+### Onboarding
+| Tool | Description |
+|------|-------------|
+| `kafka_quickstart` | Guided onboarding: auto-discovers clusters and generates getting started guide |
+| `kafka_discover_clusters` | Auto-discover Kafka clusters by scanning common ports and DNS |
+| `kafka_suggest_rbac` | Generate recommended RBAC configuration based on topology |
+
+### OPA Policy
+| Tool | Description |
+|------|-------------|
+| `kafka_policy_evaluate` | Evaluate an OPA Rego policy for an authorization decision |
+| `kafka_policy_simulate` | Simulate a policy evaluation showing rule matching |
+| `kafka_policy_manage` | Manage OPA Rego policies: list, register, delete, export |
+
+### Auto-Heal
+| Tool | Description |
+|------|-------------|
+| `kafka_group_heal` | Auto-heal consumer groups: diagnose root cause and generate remediation |
+
+### Collaboration
+| Tool | Description |
+|------|-------------|
+| `agent_lock_acquire` | Acquire a distributed lock on a shared resource |
+| `agent_lock_release` | Release a previously acquired distributed lock |
+| `agent_lock_list` | List all active distributed locks |
+| `agent_clock_get` | Get the vector clock for a resource |
+| `agent_clock_increment` | Increment the vector clock for a resource |
+| `agent_message_send` | Send a message to another agent for coordination |
+| `agent_message_inbox` | Read messages sent to this agent |
+| `agent_coordinate_register` | Register agent capabilities for coordination |
+| `agent_coordinate_list` | List all registered agents with status and capabilities |
+
+### Gateway
+| Tool | Description |
+|------|-------------|
+| `gateway_list_backends` | List registered multi-protocol streaming backends |
+| `gateway_produce` | Produce a message through a named streaming backend |
+| `gateway_consume` | Consume messages from a named streaming backend |
+| `gateway_list_topics` | List topics/queues/subjects on a backend |
+| `gateway_create_topic` | Create a topic/queue/subject on a backend |
+
+### Kubernetes Operator
+| Tool | Description |
+|------|-------------|
+| `k8s_operator_manage` | Manage KafkaMCP Kubernetes operator instances |
+
 > **Note:** Schema tools (`kafka_list_schemas`, `kafka_get_schema`, `kafka_check_schema_compatibility`, `kafka_schema_diff`) require `schema_registry.url` in cluster config.
 > Kafka Connect tools require `connect_url` in cluster config.
 
@@ -261,6 +509,12 @@ Once connected, your AI agent can:
 | `kafka://groups/{id}` | Individual consumer group detail |
 | `kafka://audit/log` | Agent audit trail (recent 1000 entries) |
 | `kafka://topic_graph` | Producer → topic → consumer group topology graph |
+| `kafka://replication/status` | Cross-cluster replication status with lag |
+| `kafka://plugins` | Registered plugins and extensions |
+| `kafka://watch/subscriptions` | Active watch subscriptions |
+| `kafka://anomalies` | AI-detected anomaly alerts |
+| `kafka://workflows` | Pre-built workflow templates |
+| `kafka://knowledge_graph` | Topic relationships and schema dependencies |
 | `kafka://flow_graph` | Real-time message flow visualization with throughput and latency data |
 | `kafka://platforms` | Configured Kafka-compatible platforms and their capabilities |
 
@@ -451,10 +705,14 @@ sasl_username: "${KAFKA_USERNAME}"
 sasl_password: "${KAFKA_PASSWORD:-changeme}"
 ```
 
-The `KAFKAMCP_TRANSPORT` environment variable overrides `server.transport` from the config file at runtime. Valid values: `stdio`, `sse`, `streamable-http`.
+| Variable | Description |
+|----------|-------------|
+| `KAFKAMCP_TRANSPORT` | Overrides `server.transport` from the config file at runtime. Valid values: `stdio`, `sse`, `streamable-http`. |
+| `KAFKAMCP_ALLOW_INSECURE` | Set to `true` to allow `insecure_skip_verify` in `connect_tls` settings. Required as an explicit opt-in for skipping TLS certificate verification. **Not recommended for production.** |
 
 ```bash
 KAFKAMCP_TRANSPORT=sse ./bin/kafkamcp --config kafkamcp.yaml
+KAFKAMCP_ALLOW_INSECURE=true ./bin/kafkamcp --config kafkamcp.yaml
 ```
 
 ### Config Validation
