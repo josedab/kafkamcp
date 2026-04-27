@@ -155,7 +155,10 @@ func TestCreateIncident(t *testing.T) {
 	m := NewManager()
 
 	// Create and list
-	inc1 := m.CreateIncident("High Consumer Lag", "critical", "anomaly_detector", map[string]any{"group": "my-group"})
+	inc1, err := m.CreateIncident("High Consumer Lag", "critical", "anomaly_detector", map[string]any{"group": "my-group"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if inc1.Status != "open" {
 		t.Fatalf("expected status 'open', got %q", inc1.Status)
 	}
@@ -164,7 +167,10 @@ func TestCreateIncident(t *testing.T) {
 	}
 
 	time.Sleep(5 * time.Millisecond)
-	m.CreateIncident("Broker Down", "warning", "alert_rule", nil)
+	_, err = m.CreateIncident("Broker Down", "warning", "alert_rule", nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	incidents := m.ListIncidents("")
 	if len(incidents) != 2 {

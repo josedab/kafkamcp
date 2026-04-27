@@ -91,7 +91,11 @@ func (m *Manager) CreateDashboard(name, provider, dashType, target, createdBy st
 		dashType = "cluster"
 	}
 
-	id := fmt.Sprintf("dash_%s", randomID())
+	rid, err := randomID()
+	if err != nil {
+		return nil, fmt.Errorf("generating dashboard ID: %w", err)
+	}
+	id := fmt.Sprintf("dash_%s", rid)
 
 	panels := m.generatePanels(dashType, target)
 
@@ -175,7 +179,11 @@ func (m *Manager) CreateAlertRule(name, metric, condition string, threshold floa
 		duration = "5m"
 	}
 
-	id := fmt.Sprintf("alert_%s", randomID())
+	rid, err := randomID()
+	if err != nil {
+		return nil, fmt.Errorf("generating alert rule ID: %w", err)
+	}
+	id := fmt.Sprintf("alert_%s", rid)
 
 	rule := &AlertRule{
 		ID:        id,
@@ -225,8 +233,12 @@ func (m *Manager) DeleteAlertRule(id string) error {
 }
 
 // CreateIncident creates an incident from an anomaly detection.
-func (m *Manager) CreateIncident(title, severity, source string, context map[string]any) *Incident {
-	id := fmt.Sprintf("inc_%s", randomID())
+func (m *Manager) CreateIncident(title, severity, source string, context map[string]any) (*Incident, error) {
+	rid, err := randomID()
+	if err != nil {
+		return nil, fmt.Errorf("generating incident ID: %w", err)
+	}
+	id := fmt.Sprintf("inc_%s", rid)
 
 	incident := &Incident{
 		ID:        id,
@@ -242,7 +254,7 @@ func (m *Manager) CreateIncident(title, severity, source string, context map[str
 	m.incidents[id] = incident
 	m.mu.Unlock()
 
-	return incident
+	return incident, nil
 }
 
 // ListIncidents returns incidents, optionally filtered by status.
@@ -262,10 +274,10 @@ func (m *Manager) ListIncidents(status string) []Incident {
 	return result
 }
 
-func randomID() string {
+func randomID() (string, error) {
 	b := make([]byte, 8)
 	if _, err := rand.Read(b); err != nil {
-		panic("crypto/rand failed: " + err.Error())
+		return "", fmt.Errorf("crypto/rand failed: %w", err)
 	}
-	return hex.EncodeToString(b)
+	return hex.EncodeToString(b), nil
 }
