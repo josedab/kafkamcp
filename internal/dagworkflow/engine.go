@@ -142,6 +142,9 @@ func (e *Engine) CreateWorkflow(name, description, createdBy string, params []Pa
 	return tmpl, nil
 }
 
+// Close is a no-op placeholder for future goroutine cleanup.
+func (e *Engine) Close() {}
+
 // GetWorkflow returns a workflow template by ID.
 func (e *Engine) GetWorkflow(id string) (*WorkflowTemplate, error) {
 	e.mu.RLock()

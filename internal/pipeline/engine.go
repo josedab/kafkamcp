@@ -357,6 +357,9 @@ func executeTransform(step Step, msg PipelineMessage) (PipelineMessage, bool, er
 	return msg, true, nil
 }
 
+// Close is a no-op placeholder for future goroutine cleanup.
+func (e *Engine) Close() {}
+
 // ListPipelines returns all pipelines.
 func (e *Engine) ListPipelines() []Pipeline {
 	e.mu.RLock()

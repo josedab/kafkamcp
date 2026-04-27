@@ -232,6 +232,9 @@ func (e *Engine) registerBuiltinTemplates() {
 	}
 }
 
+// Close is a no-op placeholder for future goroutine cleanup.
+func (e *Engine) Close() {}
+
 // ListTemplates returns all available templates, optionally filtered by category.
 func (e *Engine) ListTemplates(category string) []Template {
 	e.mu.RLock()
