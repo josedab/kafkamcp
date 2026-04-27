@@ -2,8 +2,12 @@ package server
 
 import (
 	"net/http"
+	"runtime"
 	"testing"
+	"time"
 
+	"github.com/kafkamcp/kafkamcp/internal/chaos"
+	"github.com/kafkamcp/kafkamcp/internal/kafka"
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
@@ -90,5 +94,51 @@ func TestExtractAgentIDFromResourceWithHeader(t *testing.T) {
 	id := extractAgentIDFromResource(req)
 	if id != "resource-agent" {
 		t.Errorf("expected 'resource-agent', got %q", id)
+	}
+}
+
+func TestServerCloseStopsSubsystems(t *testing.T) {
+	s := newTestServer(t)
+
+	// Replace nil kafkaManager with a mock so Close() doesn't panic.
+	closeCalled := false
+	s.kafkaManager = &kafka.MockKafkaManager{
+		CloseFn: func() { closeCalled = true },
+	}
+
+	// Initialize a chaos engine with an active experiment to verify
+	// that Close() cancels its goroutines.
+	s.chaosEngine = chaos.NewEngine(s.logger)
+	_, err := s.chaosEngine.Inject(
+		chaos.TypeSlowConsumer, "test-cluster",
+		[]string{"test-topic"}, nil, nil, nil,
+	)
+	if err != nil {
+		t.Fatalf("failed to inject chaos experiment: %v", err)
+	}
+
+	goroutinesBefore := runtime.NumGoroutine()
+
+	if err := s.Close(); err != nil {
+		t.Fatalf("Server.Close() returned error: %v", err)
+	}
+
+	if !closeCalled {
+		t.Error("expected kafkaManager.Close() to be called")
+	}
+
+	// Allow goroutines time to exit.
+	time.Sleep(50 * time.Millisecond)
+	goroutinesAfter := runtime.NumGoroutine()
+
+	// The chaos experiment goroutine should have been cleaned up.
+	if goroutinesAfter > goroutinesBefore {
+		t.Errorf("possible goroutine leak: before=%d after=%d", goroutinesBefore, goroutinesAfter)
+	}
+
+	// Verify chaos engine state was cleared.
+	exps := s.chaosEngine.ListExperiments("")
+	if len(exps) != 0 {
+		t.Errorf("expected 0 experiments after Close(), got %d", len(exps))
 	}
 }
