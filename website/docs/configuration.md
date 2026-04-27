@@ -254,13 +254,32 @@ If you use `${VAR}` and the environment variable is missing, KafkaMCP refuses to
 
 ### Runtime transport override
 
-The `KAFKAMCP_TRANSPORT` environment variable overrides `server.transport` from the config file at runtime. This is the only hardcoded env var (not part of `${VAR}` expansion).
+The `KAFKAMCP_TRANSPORT` environment variable overrides `server.transport` from the config file at runtime.
 
 Valid values: `stdio`, `sse`, `streamable-http`.
 
 ```bash
 KAFKAMCP_TRANSPORT=sse ./bin/kafkamcp --config kafkamcp.yaml
 ```
+
+### Insecure TLS override
+
+The `KAFKAMCP_ALLOW_INSECURE` environment variable must be set to `true` to allow `insecure_skip_verify: true` in `connect_tls` settings. This is a safety mechanism requiring explicit opt-in for skipping TLS certificate verification on Kafka Connect REST API connections.
+
+:::warning
+Setting `KAFKAMCP_ALLOW_INSECURE=true` disables TLS certificate verification for Connect REST API calls. **Do not use in production.** This is intended for development and testing environments only.
+:::
+
+```bash
+KAFKAMCP_ALLOW_INSECURE=true ./bin/kafkamcp --config kafkamcp.yaml
+```
+
+### Environment variables reference
+
+| Variable | Description |
+|----------|-------------|
+| `KAFKAMCP_TRANSPORT` | Overrides `server.transport` from the config file at runtime. Valid values: `stdio`, `sse`, `streamable-http`. |
+| `KAFKAMCP_ALLOW_INSECURE` | Set to `true` to allow `insecure_skip_verify` in `connect_tls` settings. Required as an explicit opt-in for skipping TLS certificate verification. |
 
 ## Config validation
 
