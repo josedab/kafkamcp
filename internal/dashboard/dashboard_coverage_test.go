@@ -190,7 +190,9 @@ func TestHandleActivityResponseHasAllFields(t *testing.T) {
 		t.Errorf("expected Content-Type application/json, got %q", ct)
 	}
 	var result map[string]any
-	json.NewDecoder(w.Body).Decode(&result)
+	if err := json.NewDecoder(w.Body).Decode(&result); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 	if _, ok := result["activity"]; !ok {
 		t.Error("expected 'activity' key")
 	}

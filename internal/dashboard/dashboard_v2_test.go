@@ -71,7 +71,9 @@ func TestHandleTopologyV2(t *testing.T) {
 	}
 
 	var resp TopologyResponse
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 	if len(resp.Nodes) < 2 {
 		t.Errorf("expected at least 2 nodes (topic + group), got %d", len(resp.Nodes))
 	}
@@ -127,7 +129,9 @@ func TestHandleHeatmap(t *testing.T) {
 	}
 
 	var resp HeatmapResponse
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 	if resp.TimeRange != "6h" {
 		t.Errorf("expected 6h time range, got %s", resp.TimeRange)
 	}
@@ -146,7 +150,9 @@ func TestHandleHeatmapDefaultHours(t *testing.T) {
 	mux.ServeHTTP(w, req)
 
 	var resp HeatmapResponse
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 	if resp.TimeRange != "24h" {
 		t.Errorf("expected 24h default time range, got %s", resp.TimeRange)
 	}
@@ -165,7 +171,9 @@ func TestHandleHeatmap12Hours(t *testing.T) {
 	mux.ServeHTTP(w, req)
 
 	var resp HeatmapResponse
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 	if resp.BucketMin != 30 {
 		t.Errorf("expected 30min buckets for 12h, got %d", resp.BucketMin)
 	}
@@ -206,7 +214,9 @@ func TestHandleMessageTail(t *testing.T) {
 	}
 
 	var resp map[string]any
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 	if resp["topic"] != "orders" {
 		t.Errorf("expected topic orders, got %v", resp["topic"])
 	}
@@ -298,7 +308,9 @@ func TestHandleListTailers(t *testing.T) {
 	}
 
 	var resp map[string]any
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 	if resp["count"].(float64) != 0 {
 		t.Errorf("expected 0 tailers, got %v", resp["count"])
 	}
@@ -352,7 +364,9 @@ func TestHandleClusterOverview(t *testing.T) {
 	}
 
 	var resp map[string]any
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 	if resp["status"] != "healthy" {
 		t.Errorf("expected healthy, got %v", resp["status"])
 	}
@@ -383,7 +397,9 @@ func TestHandleClusterOverviewUnhealthy(t *testing.T) {
 	mux.ServeHTTP(w, req)
 
 	var resp map[string]any
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 	if resp["status"] != "unhealthy" {
 		t.Errorf("expected unhealthy, got %v", resp["status"])
 	}
@@ -467,7 +483,9 @@ func TestHandleConsumerGroupsDetailListAll(t *testing.T) {
 	}
 
 	var resp map[string]any
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 	if resp["total"].(float64) != 2 {
 		t.Errorf("expected 2 groups, got %v", resp["total"])
 	}
@@ -532,7 +550,9 @@ func TestHandlePartitionView(t *testing.T) {
 	}
 
 	var resp map[string]any
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 	if resp["total"].(float64) != 2 {
 		t.Errorf("expected 2 partitions, got %v", resp["total"])
 	}

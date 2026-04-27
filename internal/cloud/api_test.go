@@ -34,7 +34,9 @@ func TestHandleWorkspacesGET(t *testing.T) {
 		t.Fatalf("expected 200, got %d", w.Code)
 	}
 	var body map[string]any
-	json.NewDecoder(w.Body).Decode(&body)
+	if err := json.NewDecoder(w.Body).Decode(&body); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 	if body["total"].(float64) != 1 {
 		t.Errorf("expected total 1, got %v", body["total"])
 	}
@@ -52,7 +54,9 @@ func TestHandleWorkspacesPOST(t *testing.T) {
 		t.Fatalf("expected 201, got %d", w.Code)
 	}
 	var body map[string]any
-	json.NewDecoder(w.Body).Decode(&body)
+	if err := json.NewDecoder(w.Body).Decode(&body); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 	if body["api_key"] == nil {
 		t.Error("expected api_key in response")
 	}
@@ -295,7 +299,9 @@ func TestHandleProvisionValid(t *testing.T) {
 		t.Fatalf("expected 202, got %d", w.Code)
 	}
 	var body map[string]any
-	json.NewDecoder(w.Body).Decode(&body)
+	if err := json.NewDecoder(w.Body).Decode(&body); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 	if body["region"] != "eu-west-1" {
 		t.Errorf("expected region eu-west-1, got %v", body["region"])
 	}
@@ -314,7 +320,9 @@ func TestHandleProvisionDefaultRegion(t *testing.T) {
 		t.Fatalf("expected 202, got %d", w.Code)
 	}
 	var body map[string]any
-	json.NewDecoder(w.Body).Decode(&body)
+	if err := json.NewDecoder(w.Body).Decode(&body); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 	if body["region"] != "us-east-1" {
 		t.Errorf("expected default region us-east-1, got %v", body["region"])
 	}
@@ -384,7 +392,9 @@ func TestWriteCloudError(t *testing.T) {
 		t.Errorf("expected 400, got %d", w.Code)
 	}
 	var body map[string]string
-	json.NewDecoder(w.Body).Decode(&body)
+	if err := json.NewDecoder(w.Body).Decode(&body); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 	if body["error"] != "bad request" {
 		t.Errorf("expected error 'bad request', got %s", body["error"])
 	}
@@ -430,7 +440,9 @@ func TestHandlePlans(t *testing.T) {
 		t.Fatalf("expected 200, got %d", w.Code)
 	}
 	var body map[string]any
-	json.NewDecoder(w.Body).Decode(&body)
+	if err := json.NewDecoder(w.Body).Decode(&body); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 	plans := body["plans"].([]any)
 	if len(plans) != 3 {
 		t.Errorf("expected 3 plans, got %d", len(plans))

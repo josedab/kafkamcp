@@ -82,7 +82,9 @@ func TestHandleConnect(t *testing.T) {
 	}
 
 	var resp map[string]any
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 	if resp["status"] != "connected" {
 		t.Errorf("expected connected status, got %v", resp["status"])
 	}
@@ -141,7 +143,9 @@ func TestHandleTopicBrowse(t *testing.T) {
 	}
 
 	var resp TopicBrowseResult
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 	if resp.Total != 2 {
 		t.Errorf("expected 2 topics, got %d", resp.Total)
 	}
@@ -231,7 +235,9 @@ func TestHandleTopicDetail(t *testing.T) {
 	}
 
 	var resp TopicNode
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 	if resp.Name != "orders" {
 		t.Errorf("expected orders, got %s", resp.Name)
 	}
@@ -309,7 +315,9 @@ func TestHandleSchemas(t *testing.T) {
 	}
 
 	var resp map[string]any
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 	if resp["schema_registry"] != false {
 		t.Errorf("expected no schema registry, got %v", resp["schema_registry"])
 	}
@@ -326,7 +334,9 @@ func TestHandleSchemasWithClients(t *testing.T) {
 	mux.ServeHTTP(w, req)
 
 	var resp map[string]any
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 	if resp["schema_registry"] != true {
 		t.Errorf("expected schema registry true, got %v", resp["schema_registry"])
 	}
@@ -360,7 +370,9 @@ func TestHandleSchemaDetail(t *testing.T) {
 	}
 
 	var resp SchemaInfo
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 	if resp.Subject != "orders-value" {
 		t.Errorf("expected orders-value, got %s", resp.Subject)
 	}
@@ -404,7 +416,9 @@ func TestHandleMessagePreview(t *testing.T) {
 	}
 
 	var resp map[string]any
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 	if resp["count"].(float64) != 1 {
 		t.Errorf("expected 1 message, got %v", resp["count"])
 	}
@@ -506,7 +520,9 @@ func TestHandleCompletions(t *testing.T) {
 	}
 
 	var resp map[string]any
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 	total := int(resp["total"].(float64))
 	if total != 3 {
 		t.Errorf("expected 3 completions (2 topics + 1 group), got %d", total)
@@ -534,7 +550,9 @@ func TestHandleCompletionsWithPrefix(t *testing.T) {
 	mux.ServeHTTP(w, req)
 
 	var resp map[string]any
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 	if int(resp["total"].(float64)) != 1 {
 		t.Errorf("expected 1 filtered completion, got %v", resp["total"])
 	}
@@ -568,7 +586,9 @@ func TestHandleHealth(t *testing.T) {
 	}
 
 	var resp map[string]any
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 	if resp["status"] != "healthy" {
 		t.Errorf("expected healthy, got %v", resp["status"])
 	}
@@ -589,7 +609,9 @@ func TestHandleHealthWithSessions(t *testing.T) {
 	mux.ServeHTTP(w, req)
 
 	var resp map[string]any
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 	if resp["sessions"].(float64) != 1 {
 		t.Errorf("expected 1 session, got %v", resp["sessions"])
 	}
