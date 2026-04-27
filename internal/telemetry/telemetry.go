@@ -66,8 +66,7 @@ func NewProvider(ctx context.Context, cfg Config, logger *slog.Logger) (*Provide
 
 	res, err := resource.Merge(
 		resource.Default(),
-		resource.NewWithAttributes(
-			semconv.SchemaURL,
+		resource.NewSchemaless(
 			semconv.ServiceName(serviceName),
 			semconv.ServiceVersion("1.0.0"),
 		),
