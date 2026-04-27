@@ -129,7 +129,9 @@ func (s *Server) handleCostAllocate(ctx context.Context, request mcp.CallToolReq
 			if err != nil {
 				return mcp.NewToolResultError(fmt.Sprintf("marshaling resources: %v", err)), nil
 			}
-			json.Unmarshal(data, &resources)
+			if err := json.Unmarshal(data, &resources); err != nil {
+				return mcp.NewToolResultError(fmt.Sprintf("unmarshaling resources: %v", err)), nil
+			}
 		}
 
 		var tags map[string]string
@@ -180,7 +182,9 @@ func (s *Server) handleCostBudget(ctx context.Context, request mcp.CallToolReque
 			if err != nil {
 				return mcp.NewToolResultError(fmt.Sprintf("marshaling resources: %v", err)), nil
 			}
-			json.Unmarshal(data, &resources)
+			if err := json.Unmarshal(data, &resources); err != nil {
+				return mcp.NewToolResultError(fmt.Sprintf("unmarshaling resources: %v", err)), nil
+			}
 		}
 
 		var thresholds []float64
@@ -189,7 +193,9 @@ func (s *Server) handleCostBudget(ctx context.Context, request mcp.CallToolReque
 			if err != nil {
 				return mcp.NewToolResultError(fmt.Sprintf("marshaling alert_thresholds: %v", err)), nil
 			}
-			json.Unmarshal(data, &thresholds)
+			if err := json.Unmarshal(data, &thresholds); err != nil {
+				return mcp.NewToolResultError(fmt.Sprintf("unmarshaling alert_thresholds: %v", err)), nil
+			}
 		}
 
 		budget, err := s.costAttrEngine.CreateBudget(name, agentID, monthlyLimit, resources, thresholds)
@@ -229,7 +235,9 @@ func (s *Server) handleSandboxCreate(ctx context.Context, request mcp.CallToolRe
 		if err != nil {
 			return mcp.NewToolResultError(fmt.Sprintf("marshaling quotas: %v", err)), nil
 		}
-		json.Unmarshal(data, quotas)
+		if err := json.Unmarshal(data, quotas); err != nil {
+			return mcp.NewToolResultError(fmt.Sprintf("unmarshaling quotas: %v", err)), nil
+		}
 	}
 
 	sb, err := s.sandboxEngine.Create(name, description, agentID, durationSec, quotas)

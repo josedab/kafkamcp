@@ -37,14 +37,18 @@ func (s *Server) handleViewCreate(ctx context.Context, request mcp.CallToolReque
 		if err != nil {
 			return mcp.NewToolResultError(fmt.Sprintf("marshaling group_by_fields: %v", err)), nil
 		}
-		json.Unmarshal(data, &groupByFields)
+		if err := json.Unmarshal(data, &groupByFields); err != nil {
+			return mcp.NewToolResultError(fmt.Sprintf("unmarshaling group_by_fields: %v", err)), nil
+		}
 	}
 	if raw, ok := args["value_fields"]; ok {
 		data, err := json.Marshal(raw)
 		if err != nil {
 			return mcp.NewToolResultError(fmt.Sprintf("marshaling value_fields: %v", err)), nil
 		}
-		json.Unmarshal(data, &valueFields)
+		if err := json.Unmarshal(data, &valueFields); err != nil {
+			return mcp.NewToolResultError(fmt.Sprintf("unmarshaling value_fields: %v", err)), nil
+		}
 	}
 
 	view, err := s.viewStoreEngine.CreateView(name, sourceTopic, keyField, aggType, windowType, windowSizeMs, retentionMs, groupByFields, valueFields, filterExpr, description, agentID)

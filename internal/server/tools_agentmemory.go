@@ -24,7 +24,9 @@ func (s *Server) handleMemoryStore(ctx context.Context, request mcp.CallToolRequ
 		if err != nil {
 			return mcp.NewToolResultError(fmt.Sprintf("marshaling tags: %v", err)), nil
 		}
-		json.Unmarshal(data, &tags)
+		if err := json.Unmarshal(data, &tags); err != nil {
+			return mcp.NewToolResultError(fmt.Sprintf("unmarshaling tags: %v", err)), nil
+		}
 	}
 
 	var ttlSec int64

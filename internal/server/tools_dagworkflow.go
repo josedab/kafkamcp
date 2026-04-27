@@ -44,7 +44,9 @@ func (s *Server) handleDAGWorkflowCreate(ctx context.Context, request mcp.CallTo
 	if tagsRaw, ok := args["tags"]; ok {
 		tagsJSON, err := json.Marshal(tagsRaw)
 		if err == nil {
-			json.Unmarshal(tagsJSON, &tags)
+			if err := json.Unmarshal(tagsJSON, &tags); err != nil {
+				return mcp.NewToolResultError(fmt.Sprintf("unmarshaling tags: %v", err)), nil
+			}
 		}
 	}
 

@@ -159,7 +159,9 @@ func (s *Server) handleCatalogSearch(ctx context.Context, request mcp.CallToolRe
 		if err != nil {
 			return mcp.NewToolResultError(fmt.Sprintf("marshaling tags: %v", err)), nil
 		}
-		json.Unmarshal(data, &opts.Tags)
+		if err := json.Unmarshal(data, &opts.Tags); err != nil {
+			return mcp.NewToolResultError(fmt.Sprintf("unmarshaling tags: %v", err)), nil
+		}
 	}
 
 	results := s.catalogEngine.Search(opts)
@@ -183,7 +185,9 @@ func (s *Server) handleCatalogTag(ctx context.Context, request mcp.CallToolReque
 			if err != nil {
 				return mcp.NewToolResultError(fmt.Sprintf("marshaling tags: %v", err)), nil
 			}
-			json.Unmarshal(data, &tags)
+			if err := json.Unmarshal(data, &tags); err != nil {
+				return mcp.NewToolResultError(fmt.Sprintf("unmarshaling tags: %v", err)), nil
+			}
 		}
 		entry, err := s.catalogEngine.Tag(entryID, tags)
 		if err != nil {
@@ -208,7 +212,9 @@ func (s *Server) handleCatalogTag(ctx context.Context, request mcp.CallToolReque
 			if err != nil {
 				return mcp.NewToolResultError(fmt.Sprintf("marshaling tags: %v", err)), nil
 			}
-			json.Unmarshal(data, &tags)
+			if err := json.Unmarshal(data, &tags); err != nil {
+				return mcp.NewToolResultError(fmt.Sprintf("unmarshaling tags: %v", err)), nil
+			}
 		}
 
 		entry, err := s.catalogEngine.Index(name, entryType, description, owner, tags, nil, nil)
@@ -229,7 +235,9 @@ func (s *Server) handleCatalogTag(ctx context.Context, request mcp.CallToolReque
 			if err != nil {
 				return mcp.NewToolResultError(fmt.Sprintf("marshaling lineage: %v", err)), nil
 			}
-			json.Unmarshal(data, &lineage)
+			if err := json.Unmarshal(data, &lineage); err != nil {
+				return mcp.NewToolResultError(fmt.Sprintf("unmarshaling lineage: %v", err)), nil
+			}
 		}
 		if err := s.catalogEngine.SetLineage(entryID, &lineage); err != nil {
 			return s.toolError("failed to set lineage", err), nil
