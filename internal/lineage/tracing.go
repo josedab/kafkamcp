@@ -86,22 +86,34 @@ func NewMessageTracer() *MessageTracer {
 }
 
 // GenerateTraceContext creates a new W3C Trace Context.
-func GenerateTraceContext() *TraceContext {
-	return &TraceContext{
-		TraceID: generateHexID(16),
-		SpanID:  generateHexID(8),
-		Flags:   "01",
+func GenerateTraceContext() (*TraceContext, error) {
+	traceID, err := generateHexID(16)
+	if err != nil {
+		return nil, fmt.Errorf("generating trace ID: %w", err)
 	}
+	spanID, err := generateHexID(8)
+	if err != nil {
+		return nil, fmt.Errorf("generating span ID: %w", err)
+	}
+	return &TraceContext{
+		TraceID: traceID,
+		SpanID:  spanID,
+		Flags:   "01",
+	}, nil
 }
 
 // CreateChildContext creates a child span context from a parent.
-func CreateChildContext(parent *TraceContext) *TraceContext {
+func CreateChildContext(parent *TraceContext) (*TraceContext, error) {
+	spanID, err := generateHexID(8)
+	if err != nil {
+		return nil, fmt.Errorf("generating child span ID: %w", err)
+	}
 	return &TraceContext{
 		TraceID:  parent.TraceID,
-		SpanID:   generateHexID(8),
+		SpanID:   spanID,
 		ParentID: parent.SpanID,
 		Flags:    parent.Flags,
-	}
+	}, nil
 }
 
 // FormatTraceparent formats the context as a W3C traceparent header value.
@@ -109,12 +121,12 @@ func (tc *TraceContext) FormatTraceparent() string {
 	return fmt.Sprintf("00-%s-%s-%s", tc.TraceID, tc.SpanID, tc.Flags)
 }
 
-func generateHexID(bytes int) string {
+func generateHexID(bytes int) (string, error) {
 	b := make([]byte, bytes)
 	if _, err := rand.Read(b); err != nil {
-		panic("crypto/rand failed: " + err.Error())
+		return "", fmt.Errorf("crypto/rand failed: %w", err)
 	}
-	return hex.EncodeToString(b)
+	return hex.EncodeToString(b), nil
 }
 
 // RecordSpan records a trace span for a message operation.
@@ -123,7 +135,11 @@ func (mt *MessageTracer) RecordSpan(span TraceSpan) {
 	defer mt.mu.Unlock()
 
 	if span.SpanID == "" {
-		span.SpanID = generateHexID(8)
+		id, err := generateHexID(8)
+		if err != nil {
+			id = fmt.Sprintf("%x", time.Now().UnixNano())
+		}
+		span.SpanID = id
 	}
 	if span.StartTime == "" {
 		span.StartTime = time.Now().UTC().Format(time.RFC3339Nano)

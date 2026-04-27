@@ -7,7 +7,10 @@ import (
 )
 
 func TestGenerateTraceContext(t *testing.T) {
-	ctx := GenerateTraceContext()
+	ctx, err := GenerateTraceContext()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if ctx == nil {
 		t.Fatal("expected non-nil trace context")
 	}
@@ -32,7 +35,10 @@ func TestGenerateTraceContext(t *testing.T) {
 	}
 
 	// Verify uniqueness
-	ctx2 := GenerateTraceContext()
+	ctx2, err := GenerateTraceContext()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if ctx.TraceID == ctx2.TraceID {
 		t.Fatal("expected unique trace IDs")
 	}
@@ -42,8 +48,14 @@ func TestGenerateTraceContext(t *testing.T) {
 }
 
 func TestCreateChildContext(t *testing.T) {
-	parent := GenerateTraceContext()
-	child := CreateChildContext(parent)
+	parent, err := GenerateTraceContext()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	child, err := CreateChildContext(parent)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	if child.TraceID != parent.TraceID {
 		t.Fatalf("expected child trace ID %s, got %s", parent.TraceID, child.TraceID)

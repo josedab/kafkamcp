@@ -96,9 +96,17 @@ func (s *Server) handleTraceFlow(ctx context.Context, request mcp.CallToolReques
 					return mcp.NewToolResultError("trace_id is required when creating child context"), nil
 				}
 				parent := &lineage.TraceContext{TraceID: traceID, SpanID: parentSpanID}
-				tc = lineage.CreateChildContext(parent)
+				var err error
+				tc, err = lineage.CreateChildContext(parent)
+				if err != nil {
+					return s.toolError("failed to create child context", err), nil
+				}
 			} else {
-				tc = lineage.GenerateTraceContext()
+				var err error
+				tc, err = lineage.GenerateTraceContext()
+				if err != nil {
+					return s.toolError("failed to generate trace context", err), nil
+				}
 			}
 			s.logAudit(agentID, "kafka_trace_flow", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{
