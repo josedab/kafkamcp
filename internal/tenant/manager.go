@@ -124,7 +124,10 @@ func (m *Manager) CreateTenant(name, email, plan string) (*Tenant, string, error
 		}
 	}
 
-	id := generateID("tenant")
+	id, err := generateID("tenant")
+	if err != nil {
+		return nil, "", fmt.Errorf("generating tenant ID: %w", err)
+	}
 	if plan == "" {
 		plan = "free"
 	}
@@ -252,12 +255,12 @@ func (m *Manager) AddCluster(tenantID string, cluster TenantCluster) error {
 	return nil
 }
 
-func generateID(prefix string) string {
+func generateID(prefix string) (string, error) {
 	b := make([]byte, 8)
 	if _, err := rand.Read(b); err != nil {
-		panic("crypto/rand failed: " + err.Error())
+		return "", fmt.Errorf("crypto/rand failed: %w", err)
 	}
-	return fmt.Sprintf("%s_%s", prefix, hex.EncodeToString(b))
+	return fmt.Sprintf("%s_%s", prefix, hex.EncodeToString(b)), nil
 }
 
 func generateAPIKey(name string) (APIKey, string, error) {
@@ -269,8 +272,13 @@ func generateAPIKey(name string) (APIKey, string, error) {
 	keyPlaintext := fmt.Sprintf("kmcp_%s", hex.EncodeToString(b))
 	prefix := keyPlaintext[:12]
 
+	keyID, err := generateID("key")
+	if err != nil {
+		return APIKey{}, "", fmt.Errorf("generating key ID: %w", err)
+	}
+
 	return APIKey{
-		ID:        generateID("key"),
+		ID:        keyID,
 		Prefix:    prefix,
 		Name:      fmt.Sprintf("%s-default", name),
 		CreatedAt: time.Now(),
