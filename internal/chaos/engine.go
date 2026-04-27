@@ -323,6 +323,18 @@ func (e *Engine) Stop(experimentID string) (*Experiment, error) {
 	return exp, nil
 }
 
+// Close cancels all running experiments and clears engine state.
+func (e *Engine) Close() {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	for id, cancel := range e.experimentCancels {
+		cancel()
+		delete(e.experimentCancels, id)
+	}
+	e.experiments = make(map[string]*Experiment)
+}
+
 // ListExperiments returns all experiments with optional status filter.
 func (e *Engine) ListExperiments(statusFilter string) []Experiment {
 	e.mu.RLock()
