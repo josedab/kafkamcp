@@ -319,6 +319,9 @@ if s.otelProvider != nil {
 if s.pluginRegistry != nil {
 	s.pluginRegistry.Close()
 }
+if s.chaosEngine != nil {
+	s.chaosEngine.Close()
+}
 return s.auditLogger.Close()
 }
 
