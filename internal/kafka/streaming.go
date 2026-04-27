@@ -124,6 +124,33 @@ func (m *Manager) StartStream(ctx context.Context, cluster string, cfg StreamCon
 		groupID = fmt.Sprintf("kafkamcp-stream-%s", hex.EncodeToString(b))
 	}
 
+	if m.streamMgr == nil {
+		m.streamMgr = newStreamSessionManager()
+	}
+
+	// Check session capacity before creating the Kafka consumer to avoid
+	// wasted connections when limits are exceeded.
+	m.streamMgr.mu.Lock()
+	activeCount := 0
+	agentCount := 0
+	for _, s := range m.streamMgr.sessions {
+		if s.Status != "stopped" {
+			activeCount++
+			if s.AgentID == cfg.AgentID {
+				agentCount++
+			}
+		}
+	}
+	if activeCount >= maxSessionsGlobal {
+		m.streamMgr.mu.Unlock()
+		return nil, fmt.Errorf("global streaming session limit (%d) reached", maxSessionsGlobal)
+	}
+	if cfg.AgentID != "" && agentCount >= maxSessionsPerAgent {
+		m.streamMgr.mu.Unlock()
+		return nil, fmt.Errorf("per-agent streaming session limit (%d) reached", maxSessionsPerAgent)
+	}
+	m.streamMgr.mu.Unlock()
+
 	opts, err := m.clientOpts(clCfg)
 	if err != nil {
 		return nil, fmt.Errorf("building client options: %w", err)
@@ -155,33 +182,7 @@ func (m *Manager) StartStream(ctx context.Context, cluster string, cfg StreamCon
 		errChan:   make(chan error, 1),
 	}
 
-	if m.streamMgr == nil {
-		m.streamMgr = newStreamSessionManager()
-	}
 	m.streamMgr.mu.Lock()
-	// Check global session cap
-	activeCount := 0
-	agentCount := 0
-	for _, s := range m.streamMgr.sessions {
-		if s.Status != "stopped" {
-			activeCount++
-			if s.AgentID == cfg.AgentID {
-				agentCount++
-			}
-		}
-	}
-	if activeCount >= maxSessionsGlobal {
-		m.streamMgr.mu.Unlock()
-		cancel()
-		consumer.Close()
-		return nil, fmt.Errorf("global streaming session limit (%d) reached", maxSessionsGlobal)
-	}
-	if cfg.AgentID != "" && agentCount >= maxSessionsPerAgent {
-		m.streamMgr.mu.Unlock()
-		cancel()
-		consumer.Close()
-		return nil, fmt.Errorf("per-agent streaming session limit (%d) reached", maxSessionsPerAgent)
-	}
 	m.streamMgr.sessions[session.ID] = session
 	m.streamMgr.mu.Unlock()
 
