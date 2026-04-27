@@ -65,6 +65,37 @@ and compose — with zero custom integration code.`,
 		},
 	})
 
+	rootCmd.AddCommand(&cobra.Command{
+		Use:   "validate-config [file]",
+		Short: "Validate a configuration file (accepts path as argument or --config flag)",
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			path := cfgFile
+			if len(args) > 0 {
+				path = args[0]
+			}
+			cfg, err := config.Load(path)
+			if err != nil {
+				return fmt.Errorf("configuration validation failed: %w", err)
+			}
+			fmt.Printf("Configuration %s is valid.\n", path)
+			fmt.Printf("  Transport: %s\n", cfg.Server.Transport)
+			fmt.Printf("  Clusters:  %d\n", len(cfg.Clusters))
+			for i, c := range cfg.Clusters {
+				fmt.Printf("    [%d] %s (%s)\n", i, c.Name, c.BootstrapServers)
+			}
+			if cfg.Policies.DefaultDeny {
+				fmt.Printf("  Policy:    default_deny=true (%d agent rules)\n", len(cfg.Policies.Agents))
+			} else {
+				fmt.Printf("  Policy:    default_deny=false (open access)\n")
+			}
+			if cfg.Masking.Enabled {
+				fmt.Printf("  Masking:   enabled (%d rules)\n", len(cfg.Masking.Rules))
+			}
+			return nil
+		},
+	})
+
 	initCmd := &cobra.Command{
 		Use:   "init",
 		Short: "Generate a starter configuration file",
