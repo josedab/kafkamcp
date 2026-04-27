@@ -1,11 +1,12 @@
 ---
 sidebar_position: 1
 title: "API Reference: Tools"
+toc_max_heading_level: 3
 ---
 
 # API Reference: Tools
 
-KafkaMCP exposes 59 MCP tools grouped into six tiers:
+KafkaMCP exposes 155 MCP tools across the following categories:
 
 - **Core (P0)** — discovery, read, write, schemas, consumer groups
 - **Advanced (P1)** — subscriptions, admin operations, search, offset resets, DLQ analysis
@@ -14,6 +15,43 @@ KafkaMCP exposes 59 MCP tools grouped into six tiers:
 - **Connector & Operations (Advanced)** — connector lifecycle, time travel, recommendations, tracing, ACLs, drift, playground
 - **AI & Analytics (Feature)** — anomaly detection, NL queries, cost analysis, workflows, GitOps, knowledge graph, contracts, lag diagnosis, migration, lineage, personas, forecasting
 - **Streaming** — real-time streaming sessions, multi-agent collaboration
+- **Advisor** — best-practice scanning and advisory reports
+- **Agent Profiling** — agent performance profiling and optimization
+- **Alerting** — alerting rules for Kafka metrics
+- **Capacity** — capacity planning and forecasting
+- **Catalog** — data catalog search, tagging, and statistics
+- **Chaos Engineering** — controlled fault injection and chaos experiments
+- **Compliance** — GDPR, HIPAA, SOC2, PCI-DSS compliance scanning
+- **Config VCS** — configuration version control and rollback
+- **Cost Attribution** — real-time cost metrics, allocation, and budgets
+- **Contracts** — data contract enforcement and inference
+- **Dashboard** — auto-provisioned monitoring dashboards
+- **Federation** — multi-instance federation and cross-instance queries
+- **Flow Debug** — live message flow debugging and bottleneck detection
+- **Memory** — agent memory storage, recall, and semantic search
+- **Migration** — migration execution, status tracking, and rollback
+- **OpenAPI** — OpenAPI spec generation from MCP tools
+- **Plugin** — plugin marketplace search and installation
+- **Quota** — adaptive rate limit status and quota adjustments
+- **Replay** — message bookmarking, diff, and replay simulation
+- **Replication** — cross-cluster replication status and failover readiness
+- **Sandbox** — isolated sandbox environments for experimentation
+- **Schema Workflow** — schema proposal, approval, and rollback workflows
+- **StreamSQL** — streaming SQL queries against Kafka topics
+- **Task Queue** — priority task queues for multi-agent coordination
+- **TimeSeries** — advanced time-series analysis and trend detection
+- **Tracing Flow** — distributed tracing with W3C Trace Context
+- **Usage** — usage analytics and chargeback reports
+- **View Store** — materialized views over Kafka topics
+- **DAG Workflow** — reusable DAG-based workflow templates
+- **Pipeline** — streaming function pipelines
+- **Semantic Search** — semantic indexing and RAG context building
+- **Onboarding** — guided onboarding and cluster discovery
+- **OPA Policy** — OPA Rego policy evaluation and management
+- **Auto-Heal** — consumer group auto-healing and remediation
+- **Collaboration** — distributed locks, vector clocks, and agent messaging
+- **Gateway** — multi-protocol streaming backend gateway
+- **Kubernetes Operator** — Kubernetes operator management
 
 :::info
 The request snippets below show the **tool name and arguments payload**. In a real MCP session, the server wraps the JSON result inside the standard tool response envelope.
@@ -114,6 +152,286 @@ The request snippets below show the **tool name and arguments payload**. In a re
 |---|---|
 | `kafka_stream` | Manage streaming consumer sessions for real-time delivery |
 | `kafka_agent_registry` | Multi-agent collaboration: register, claim partitions, handoff |
+
+### Advisor
+
+| Tool | Purpose |
+|---|---|
+| `kafka_advisor_scan` | Scan topics for best-practice violations and improvement opportunities |
+| `kafka_advisor_report` | Generate a detailed advisory report with health scores and recommendations |
+
+### Agent Profiling
+
+| Tool | Purpose |
+|---|---|
+| `kafka_agent_profile` | Profile agent performance: latency, tool call patterns, error rates |
+| `kafka_agent_optimize` | Get optimization suggestions based on agent call patterns |
+| `kafka_agent_report` | Generate a comprehensive agent efficiency report |
+
+### Alerting
+
+| Tool | Purpose |
+|---|---|
+| `kafka_dashboard_create` | Auto-provision Kafka monitoring dashboards for Grafana or Datadog |
+| `kafka_alert_create` | Create an alerting rule for Kafka metrics with configurable thresholds |
+| `kafka_alert_list` | List all configured alerting rules |
+| `kafka_alert_delete` | Delete an alerting rule by ID |
+
+### Capacity
+
+| Tool | Purpose |
+|---|---|
+| `kafka_capacity_plan` | Generate a comprehensive capacity plan with ML-based forecasting |
+| `kafka_capacity_forecast` | Forecast capacity for a specific topic using exponential smoothing |
+
+### Catalog
+
+| Tool | Purpose |
+|---|---|
+| `kafka_catalog_search` | Search the data catalog by name, tag, owner, or quality score |
+| `kafka_catalog_tag` | Add tags to a catalog entry or set lineage information |
+| `kafka_catalog_stats` | Get catalog statistics: entry counts, freshness, quality scores |
+
+### Chaos Engineering
+
+| Tool | Purpose |
+|---|---|
+| `kafka_chaos_inject` | Inject controlled chaos: broker outage, network partition, slow consumer, etc. |
+| `kafka_chaos_status` | Get status of chaos experiments |
+| `kafka_chaos_stop` | Stop a running chaos experiment and trigger rollback |
+
+### Compliance
+
+| Tool | Purpose |
+|---|---|
+| `kafka_compliance_scan` | Scan topics for GDPR, HIPAA, SOC2, or PCI-DSS compliance |
+| `kafka_compliance_report` | Generate a comprehensive compliance report with scores and violations |
+| `kafka_compliance_violations` | List detected compliance violations with filters |
+
+### Config VCS
+
+| Tool | Purpose |
+|---|---|
+| `kafka_config_history` | Get configuration change history with full diff details |
+| `kafka_config_rollback` | Rollback a resource configuration to a previous version |
+| `kafka_config_compare` | Compare two versions of a resource configuration |
+
+### Cost Attribution
+
+| Tool | Purpose |
+|---|---|
+| `kafka_cost_live` | Get real-time cost metrics with per-hour/day/month breakdowns |
+| `kafka_cost_allocate` | Create or view cost allocation groups for teams or services |
+| `kafka_cost_budget` | Create spending budgets with alert thresholds |
+
+### Contracts
+
+| Tool | Purpose |
+|---|---|
+| `kafka_contract_violations` | View contract violations, enforce contracts, or infer from samples |
+
+### Federation
+
+| Tool | Purpose |
+|---|---|
+| `kafka_federation_join` | Manage federation membership: join, leave, heartbeat |
+| `kafka_federation_query` | Execute a query across all federated instances |
+| `kafka_federation_status` | Get federation status: instances, policies, health |
+
+### Flow Debug
+
+| Tool | Purpose |
+|---|---|
+| `kafka_flow_debug` | Live message flow debugging with real-time throughput/latency graphs |
+| `kafka_flow_bottlenecks` | Detect bottlenecks: high lag, low throughput, high error rates |
+
+### Memory
+
+| Tool | Purpose |
+|---|---|
+| `kafka_memory_store` | Store a memory entry for the current agent with TTL and tags |
+| `kafka_memory_recall` | Recall a specific memory entry by key or list all entries |
+| `kafka_memory_search` | Search agent memory using TF-IDF semantic search |
+
+### Migration
+
+| Tool | Purpose |
+|---|---|
+| `kafka_migrate_execute` | Execute a migration plan with dry-run and progress tracking |
+| `kafka_migrate_status` | Get the status and progress of a migration execution |
+| `kafka_migrate_rollback` | Rollback a completed or failed migration |
+
+### OpenAPI
+
+| Tool | Purpose |
+|---|---|
+| `kafka_openapi_spec` | Generate an OpenAPI 3.0 specification from registered MCP tools |
+
+### Plugin
+
+| Tool | Purpose |
+|---|---|
+| `kafka_plugin_search` | Search the plugin marketplace for extensions |
+| `kafka_plugin_install` | Install a plugin from the marketplace |
+| `kafka_plugin_list` | List installed plugins with status and version |
+
+### Quota
+
+| Tool | Purpose |
+|---|---|
+| `kafka_quota_status` | Get adaptive rate limit status for an agent |
+| `kafka_quota_request` | Request a quota adjustment: increase, decrease, reset, or burst |
+
+### Replay
+
+| Tool | Purpose |
+|---|---|
+| `kafka_replay_create` | Create a bookmark capturing message state for later replay |
+| `kafka_replay_diff` | Compare message payloads between two bookmarks |
+| `kafka_replay_simulate` | Simulate replaying messages through a consumer group |
+
+### Replication
+
+| Tool | Purpose |
+|---|---|
+| `kafka_replication_status` | Get real-time cross-cluster replication status |
+| `kafka_replication_lag` | Get partition-level replication lag for a link |
+| `kafka_failover_readiness` | Evaluate failover readiness with RPO/RTO estimates |
+
+### Sandbox
+
+| Tool | Purpose |
+|---|---|
+| `kafka_sandbox_create` | Create an isolated sandbox environment for safe experimentation |
+| `kafka_sandbox_exec` | Execute a Kafka tool within a sandbox |
+| `kafka_sandbox_destroy` | Destroy a sandbox or generate a promotion report |
+
+### Schema Workflow
+
+| Tool | Purpose |
+|---|---|
+| `kafka_schema_propose` | Propose a schema change with migration plan and compatibility validation |
+| `kafka_schema_apply` | Apply, review, or rollback a schema proposal |
+
+### StreamSQL
+
+| Tool | Purpose |
+|---|---|
+| `kafka_sql_execute` | Execute a streaming SQL query against Kafka topics |
+| `kafka_sql_explain` | Explain a streaming SQL query plan without executing it |
+| `kafka_sql_manage` | Manage SQL queries: list, get, delete |
+
+### Task Queue
+
+| Tool | Purpose |
+|---|---|
+| `kafka_task_publish` | Publish a task to a priority queue for other agents |
+| `kafka_task_claim` | Claim the highest-priority pending task from a queue |
+| `kafka_task_complete` | Mark a claimed task as completed or failed |
+| `kafka_task_status` | Get task status, queue statistics, or list tasks |
+
+### TimeSeries
+
+| Tool | Purpose |
+|---|---|
+| `kafka_timeseries_analyze` | Advanced time-series analysis: trend detection, seasonality, outliers |
+
+### Tracing Flow
+
+| Tool | Purpose |
+|---|---|
+| `kafka_trace_flow` | Distributed tracing for Kafka messages with W3C Trace Context |
+
+### Usage
+
+| Tool | Purpose |
+|---|---|
+| `kafka_usage_report` | Generate usage analytics and chargeback reports |
+
+### View Store
+
+| Tool | Purpose |
+|---|---|
+| `kafka_view_create` | Create a materialized view over a Kafka topic |
+| `kafka_view_query` | Query a materialized view with point lookups or range scans |
+| `kafka_view_status` | Manage materialized views: list, get, delete, stats |
+
+### DAG Workflow
+
+| Tool | Purpose |
+|---|---|
+| `kafka_workflow_create` | Create a reusable DAG-based workflow with conditional branching |
+| `kafka_workflow_run` | Start a workflow execution from a template |
+| `kafka_workflow_status` | Get workflow status, manage workflows, or advance a run |
+
+### Pipeline
+
+| Tool | Purpose |
+|---|---|
+| `kafka_pipeline_create` | Create a streaming function pipeline with filter/map/enrich steps |
+| `kafka_pipeline_execute` | Execute a pipeline on messages from a source topic |
+| `kafka_pipeline_manage` | Manage streaming function pipelines |
+
+### Semantic Search
+
+| Tool | Purpose |
+|---|---|
+| `kafka_semantic_index` | Index Kafka messages for semantic search |
+| `kafka_semantic_search` | Search indexed messages by meaning using semantic similarity |
+| `kafka_rag_context` | Build RAG context from indexed Kafka messages |
+| `kafka_semantic_stats` | Get statistics about the semantic search index |
+
+### Onboarding
+
+| Tool | Purpose |
+|---|---|
+| `kafka_quickstart` | Guided onboarding: auto-discovers clusters and generates getting started guide |
+| `kafka_discover_clusters` | Auto-discover Kafka clusters by scanning common ports and DNS |
+| `kafka_suggest_rbac` | Generate recommended RBAC configuration based on topology |
+
+### OPA Policy
+
+| Tool | Purpose |
+|---|---|
+| `kafka_policy_evaluate` | Evaluate an OPA Rego policy for an authorization decision |
+| `kafka_policy_simulate` | Simulate a policy evaluation showing rule matching |
+| `kafka_policy_manage` | Manage OPA Rego policies: list, register, delete, export |
+
+### Auto-Heal
+
+| Tool | Purpose |
+|---|---|
+| `kafka_group_heal` | Auto-heal consumer groups: diagnose root cause and generate remediation |
+
+### Collaboration
+
+| Tool | Purpose |
+|---|---|
+| `agent_lock_acquire` | Acquire a distributed lock on a shared resource |
+| `agent_lock_release` | Release a previously acquired distributed lock |
+| `agent_lock_list` | List all active distributed locks |
+| `agent_clock_get` | Get the vector clock for a resource |
+| `agent_clock_increment` | Increment the vector clock for a resource |
+| `agent_message_send` | Send a message to another agent for coordination |
+| `agent_message_inbox` | Read messages sent to this agent |
+| `agent_coordinate_register` | Register agent capabilities for coordination |
+| `agent_coordinate_list` | List all registered agents with status and capabilities |
+
+### Gateway
+
+| Tool | Purpose |
+|---|---|
+| `gateway_list_backends` | List registered multi-protocol streaming backends |
+| `gateway_produce` | Produce a message through a named streaming backend |
+| `gateway_consume` | Consume messages from a named streaming backend |
+| `gateway_list_topics` | List topics/queues/subjects on a backend |
+| `gateway_create_topic` | Create a topic/queue/subject on a backend |
+
+### Kubernetes Operator
+
+| Tool | Purpose |
+|---|---|
+| `k8s_operator_manage` | Manage KafkaMCP Kubernetes operator instances |
 
 ## Core (P0)
 
@@ -1929,6 +2247,2240 @@ Multi-agent collaboration: register agents, claim partitions, share cursors, and
     "action": "register",
     "agent_name": "order-processor-agent",
     "cluster": "production"
+  }
+}
+```
+
+## AI & Analytics (Feature)
+
+### `kafka_migrate_execute`
+
+Execute a migration plan. Supports dry-run mode, parallel execution, and progress tracking.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `plan_id` | string | No |  |
+| `dry_run` | boolean | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_migrate_execute",
+  "arguments": {
+    "plan_id": "example",
+    "dry_run": true
+  }
+}
+```
+
+### `kafka_migrate_status`
+
+Get the status and progress of a migration execution.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `plan_id` | string | No |  |
+| `view` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_migrate_status",
+  "arguments": {
+    "plan_id": "example",
+    "view": "example"
+  }
+}
+```
+
+### `kafka_migrate_rollback`
+
+Rollback a completed or failed migration.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `plan_id` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_migrate_rollback",
+  "arguments": {
+    "plan_id": "example"
+  }
+}
+```
+
+## Advisor
+
+### `kafka_advisor_scan`
+
+Scan topics for best-practice violations, anti-patterns, and improvement opportunities. Checks replication factors, partition counts, retention policies, naming conventions, orphaned topics, and topic sprawl.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `cluster` | string | No |  |
+| `severity` | string | No |  |
+| `category` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_advisor_scan",
+  "arguments": {
+    "cluster": "example",
+    "severity": "example"
+  }
+}
+```
+
+### `kafka_advisor_report`
+
+Generate a detailed advisory report with health scores, category breakdowns, and prioritized recommendations.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `cluster` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_advisor_report",
+  "arguments": {
+    "cluster": "example"
+  }
+}
+```
+
+## Agent Profiling
+
+### `kafka_agent_profile`
+
+Profile agent performance: latency distributions, tool call patterns, error rates, and efficiency scoring. Actions: profile (agent metrics), slow_queries (find slow calls), list_agents (all agents).
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `action` | string | No |  |
+| `agent_id` | string | No |  |
+| `since_hours` | number | No |  |
+| `threshold_ms` | number | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_agent_profile",
+  "arguments": {
+    "action": "example",
+    "agent_id": "example"
+  }
+}
+```
+
+### `kafka_agent_optimize`
+
+Get optimization suggestions for an agent based on its call patterns. Detects redundant calls, suboptimal tool sequences, and suggests improvements.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `agent_id` | string | No |  |
+| `since_hours` | number | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_agent_optimize",
+  "arguments": {
+    "agent_id": "example",
+    "since_hours": 10
+  }
+}
+```
+
+### `kafka_agent_report`
+
+Generate a comprehensive agent efficiency report with trends, comparisons, and scoring.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `agent_id` | string | No |  |
+| `since_hours` | number | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_agent_report",
+  "arguments": {
+    "agent_id": "example",
+    "since_hours": 10
+  }
+}
+```
+
+## Alerting
+
+### `kafka_dashboard_create`
+
+Auto-provision Kafka monitoring dashboards for Grafana, Datadog, or custom providers. Creates pre-configured panels for cluster, topic, or consumer group metrics.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `name` | string | No |  |
+| `provider` | string | No |  |
+| `type` | string | No |  |
+| `target` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_dashboard_create",
+  "arguments": {
+    "name": "example",
+    "provider": "example"
+  }
+}
+```
+
+### `kafka_alert_create`
+
+Create an alerting rule for Kafka metrics. Supports consumer lag, throughput, error rate, and partition metrics with configurable thresholds and notification channels.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `name` | string | No |  |
+| `metric` | string | No |  |
+| `condition` | string | No |  |
+| `threshold` | number | No |  |
+| `severity` | string | No |  |
+| `duration` | string | No |  |
+| `topic` | string | No |  |
+| `group_id` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_alert_create",
+  "arguments": {
+    "name": "example",
+    "metric": "example"
+  }
+}
+```
+
+### `kafka_alert_list`
+
+List all configured alerting rules.
+
+**Example request**
+
+```json
+{
+  "name": "kafka_alert_list",
+  "arguments": {}
+}
+```
+
+### `kafka_alert_delete`
+
+Delete an alerting rule by ID.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `alert_id` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_alert_delete",
+  "arguments": {
+    "alert_id": "example"
+  }
+}
+```
+
+## Auto-Heal
+
+### `kafka_group_heal`
+
+Auto-heal consumer groups: diagnose root cause (stuck partition, slow consumer, GC pressure, rebalance storm), generate remediation playbook, and optionally apply fixes. Combines health scoring with rule-based diagnosis.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `group_id` | string | No |  |
+| `auto_execute` | boolean | No |  |
+| `cluster` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_group_heal",
+  "arguments": {
+    "group_id": "example",
+    "auto_execute": true
+  }
+}
+```
+
+## Capacity
+
+### `kafka_capacity_plan`
+
+Generate a comprehensive capacity plan with ML-based forecasting, storage growth analysis, and scaling recommendations for all tracked topics.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `horizon_days` | number | No |  |
+| `max_storage_gb` | number | No |  |
+| `cluster` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_capacity_plan",
+  "arguments": {
+    "horizon_days": 10,
+    "max_storage_gb": 10
+  }
+}
+```
+
+### `kafka_capacity_forecast`
+
+Forecast capacity for a specific topic using exponential smoothing and linear regression. Predicts throughput, storage, and lag trends.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `topic` | string | No |  |
+| `metric` | string | No |  |
+| `horizon_days` | number | No |  |
+| `cluster` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_capacity_forecast",
+  "arguments": {
+    "topic": "example",
+    "metric": "example"
+  }
+}
+```
+
+## Catalog
+
+### `kafka_catalog_search`
+
+Search the data catalog for topics, schemas, connectors by name, description, tag, owner, freshness, or quality score.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `query` | string | No |  |
+| `type` | string | No |  |
+| `tags` | object | No |  |
+| `owner` | string | No |  |
+| `min_quality` | number | No |  |
+| `freshness` | string | No |  |
+| `limit` | number | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_catalog_search",
+  "arguments": {
+    "query": "example",
+    "type": "example"
+  }
+}
+```
+
+### `kafka_catalog_tag`
+
+Add tags to a catalog entry, index a new entry, or set lineage information.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `action` | string | No |  |
+| `entry_id` | string | No |  |
+| `tags` | object | No |  |
+| `name` | string | No |  |
+| `type` | string | No |  |
+| `description` | string | No |  |
+| `owner` | string | No |  |
+| `lineage` | object | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_catalog_tag",
+  "arguments": {
+    "action": "example",
+    "entry_id": "example"
+  }
+}
+```
+
+### `kafka_catalog_stats`
+
+Get catalog statistics: entry counts by type, freshness distribution, quality scores, tag usage.
+
+**Example request**
+
+```json
+{
+  "name": "kafka_catalog_stats",
+  "arguments": {}
+}
+```
+
+## Chaos Engineering
+
+### `kafka_chaos_inject`
+
+Inject controlled chaos into a Kafka environment. Types: broker_outage, network_partition, slow_consumer, schema_corruption, rebalance_storm, producer_flood. Actions: inject (start experiment), scenario (run pre-built scenario), list_scenarios.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `action` | string | No |  |
+| `type` | string | No |  |
+| `scenario` | string | No |  |
+| `cluster` | string | No |  |
+| `topics` | object | No |  |
+| `groups` | object | No |  |
+| `parameters` | object | No |  |
+| `max_duration_minutes` | number | No |  |
+| `category` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_chaos_inject",
+  "arguments": {
+    "action": "example",
+    "type": "example"
+  }
+}
+```
+
+### `kafka_chaos_status`
+
+Get the status of chaos experiments. Provide experiment_id for a specific experiment, or omit for all experiments.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `experiment_id` | string | No |  |
+| `status_filter` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_chaos_status",
+  "arguments": {
+    "experiment_id": "example",
+    "status_filter": "example"
+  }
+}
+```
+
+### `kafka_chaos_stop`
+
+Stop a running chaos experiment and trigger rollback.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `experiment_id` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_chaos_stop",
+  "arguments": {
+    "experiment_id": "example"
+  }
+}
+```
+
+## Collaboration
+
+### `agent_lock_acquire`
+
+Acquire a distributed lock on a shared resource (topic, consumer group, schema) to prevent concurrent modifications by multiple agents.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `resource` | string | No |  |
+| `ttl_seconds` | number | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "agent_lock_acquire",
+  "arguments": {
+    "resource": "example",
+    "ttl_seconds": 10
+  }
+}
+```
+
+### `agent_lock_release`
+
+Release a previously acquired distributed lock on a resource.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `resource` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "agent_lock_release",
+  "arguments": {
+    "resource": "example"
+  }
+}
+```
+
+### `agent_lock_list`
+
+List all active distributed locks showing resource, owner, and expiration.
+
+**Example request**
+
+```json
+{
+  "name": "agent_lock_list",
+  "arguments": {}
+}
+```
+
+### `agent_clock_get`
+
+Get the vector clock for a resource to check causal ordering of operations across agents.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `resource` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "agent_clock_get",
+  "arguments": {
+    "resource": "example"
+  }
+}
+```
+
+### `agent_clock_increment`
+
+Increment the vector clock for a resource, recording an operation by this agent.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `resource` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "agent_clock_increment",
+  "arguments": {
+    "resource": "example"
+  }
+}
+```
+
+### `agent_message_send`
+
+Send a message to another agent for coordination. Use '*' as recipient for broadcasts.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `to` | string | No |  |
+| `type` | string | No |  |
+| `subject` | string | No |  |
+| `body` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "agent_message_send",
+  "arguments": {
+    "to": "example",
+    "type": "example"
+  }
+}
+```
+
+### `agent_message_inbox`
+
+Read messages sent to this agent. Supports filtering to unread-only.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `unread_only` | boolean | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "agent_message_inbox",
+  "arguments": {
+    "unread_only": true
+  }
+}
+```
+
+### `agent_coordinate_register`
+
+Register this agent's capabilities and status for coordination with other agents.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `status` | string | No |  |
+| `capabilities` | object | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "agent_coordinate_register",
+  "arguments": {
+    "status": "example",
+    "capabilities": {}
+  }
+}
+```
+
+### `agent_coordinate_list`
+
+List all registered agents with their status, capabilities, and last seen time.
+
+**Example request**
+
+```json
+{
+  "name": "agent_coordinate_list",
+  "arguments": {}
+}
+```
+
+## Compliance
+
+### `kafka_compliance_scan`
+
+Scan topics for compliance with GDPR, HIPAA, SOC2, or PCI-DSS. Detects PII exposure, retention policy violations, and missing data masking.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `regulation` | string | No |  |
+| `cluster` | string | No |  |
+| `topic` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_compliance_scan",
+  "arguments": {
+    "regulation": "example",
+    "cluster": "example"
+  }
+}
+```
+
+### `kafka_compliance_report`
+
+Generate a comprehensive compliance report with scores, violations, retention checks, and recommendations.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `regulation` | string | No |  |
+| `cluster` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_compliance_report",
+  "arguments": {
+    "regulation": "example",
+    "cluster": "example"
+  }
+}
+```
+
+### `kafka_compliance_violations`
+
+List detected compliance violations with optional filters.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `regulation` | string | No |  |
+| `severity` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_compliance_violations",
+  "arguments": {
+    "regulation": "example",
+    "severity": "example"
+  }
+}
+```
+
+## Config VCS
+
+### `kafka_config_history`
+
+Get configuration change history for a resource with full diff details. Supports SOC2-ready audit reports.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `resource` | string | No |  |
+| `resource_id` | string | No |  |
+| `limit` | number | No |  |
+| `audit_report` | boolean | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_config_history",
+  "arguments": {
+    "resource": "example",
+    "resource_id": "example"
+  }
+}
+```
+
+### `kafka_config_rollback`
+
+Rollback a resource configuration to a previous version.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `resource` | string | No |  |
+| `resource_id` | string | No |  |
+| `target_version` | number | No |  |
+| `reason` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_config_rollback",
+  "arguments": {
+    "resource": "example",
+    "resource_id": "example"
+  }
+}
+```
+
+### `kafka_config_compare`
+
+Compare two versions of a resource configuration showing a unified diff.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `resource` | string | No |  |
+| `resource_id` | string | No |  |
+| `version1` | number | No |  |
+| `version2` | number | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_config_compare",
+  "arguments": {
+    "resource": "example",
+    "resource_id": "example"
+  }
+}
+```
+
+## Contracts
+
+### `kafka_contract_violations`
+
+View contract violations, enforce contracts on messages, set enforcement mode, or infer contracts from samples. Actions: violations (get violation summary), enforce (validate with enforcement), set_mode (set enforcement mode: warn/reject/quarantine), infer (generate contract from samples).
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `action` | string | No |  |
+| `topic` | string | No |  |
+| `message` | object | No |  |
+| `mode` | string | No |  |
+| `samples` | object | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_contract_violations",
+  "arguments": {
+    "action": "example",
+    "topic": "example"
+  }
+}
+```
+
+## Cost Attribution
+
+### `kafka_cost_live`
+
+Get real-time cost metrics for a resource or all resources with per-hour/day/month breakdowns.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `resource_type` | string | No |  |
+| `resource_name` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_cost_live",
+  "arguments": {
+    "resource_type": "example",
+    "resource_name": "example"
+  }
+}
+```
+
+### `kafka_cost_allocate`
+
+Create or view cost allocation groups that map resources to teams, services, or projects.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `action` | string | No |  |
+| `name` | string | No |  |
+| `owner` | string | No |  |
+| `resources` | object | No |  |
+| `tags` | object | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_cost_allocate",
+  "arguments": {
+    "action": "example",
+    "name": "example"
+  }
+}
+```
+
+### `kafka_cost_budget`
+
+Create spending budgets with alert thresholds or view budget status.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `action` | string | No |  |
+| `name` | string | No |  |
+| `monthly_limit` | number | No |  |
+| `resources` | object | No |  |
+| `alert_thresholds` | object | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_cost_budget",
+  "arguments": {
+    "action": "example",
+    "name": "example"
+  }
+}
+```
+
+## DAG Workflow
+
+### `kafka_workflow_create`
+
+Create a reusable DAG-based workflow template for multi-step Kafka operations with conditional branching, parallel fan-out, and error recovery.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `name` | string | No |  |
+| `description` | string | No |  |
+| `steps` | object | No |  |
+| `parameters` | object | No |  |
+| `tags` | object | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_workflow_create",
+  "arguments": {
+    "name": "example",
+    "description": "example"
+  }
+}
+```
+
+### `kafka_workflow_run`
+
+Start a workflow execution from a template. Returns the run ID and initial ready steps for the agent to execute.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `template_id` | string | No |  |
+| `parameters` | object | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_workflow_run",
+  "arguments": {
+    "template_id": "example",
+    "parameters": {}
+  }
+}
+```
+
+### `kafka_workflow_status`
+
+Get workflow status, manage workflows, or advance a running workflow. Actions: status, list, versions, cancel, complete_step, ready_steps.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `action` | string | No |  |
+| `run_id` | string | No |  |
+| `template_id` | string | No |  |
+| `step_id` | string | No |  |
+| `step_status` | string | No |  |
+| `step_output` | object | No |  |
+| `step_error` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_workflow_status",
+  "arguments": {
+    "action": "example",
+    "run_id": "example"
+  }
+}
+```
+
+## Federation
+
+### `kafka_federation_join`
+
+Manage federation membership. Actions: join (register instance), leave (deregister), heartbeat (update status).
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `action` | string | No |  |
+| `instance_id` | string | No |  |
+| `name` | string | No |  |
+| `endpoint` | string | No |  |
+| `capabilities` | object | No |  |
+| `clusters` | object | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_federation_join",
+  "arguments": {
+    "action": "example",
+    "instance_id": "example"
+  }
+}
+```
+
+### `kafka_federation_query`
+
+Execute a query across all federated instances. Routes tool calls to matching instances and aggregates results.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `tool` | string | No |  |
+| `args` | object | No |  |
+| `targets` | object | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_federation_query",
+  "arguments": {
+    "tool": "example",
+    "args": {}
+  }
+}
+```
+
+### `kafka_federation_status`
+
+Get federation status: instances, policies, health. Actions: status (overview), instances (list), policies (list), audit (audit log).
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `action` | string | No |  |
+| `limit` | number | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_federation_status",
+  "arguments": {
+    "action": "example",
+    "limit": 10
+  }
+}
+```
+
+## Flow Debug
+
+### `kafka_flow_debug`
+
+Live message flow debugging. Builds a real-time graph of producers, topics, and consumer groups with throughput/latency metrics. Actions: graph (get current flow graph), snapshots (historical snapshots), config (get/set bottleneck thresholds), collect (trigger metric collection from cluster).
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `action` | string | No |  |
+| `cluster` | string | No |  |
+| `since_minutes` | number | No |  |
+| `limit` | number | No |  |
+| `thresholds` | object | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_flow_debug",
+  "arguments": {
+    "action": "example",
+    "cluster": "example"
+  }
+}
+```
+
+### `kafka_flow_bottlenecks`
+
+Detect bottlenecks in the message flow: high consumer lag, low throughput, high error rates, and high latency. Returns chart-ready JSON with severity levels.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `cluster` | string | No |  |
+| `severity` | string | No |  |
+| `type` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_flow_bottlenecks",
+  "arguments": {
+    "cluster": "example",
+    "severity": "example"
+  }
+}
+```
+
+## Gateway
+
+### `gateway_list_backends`
+
+List all registered multi-protocol streaming backends (Pulsar, RabbitMQ, NATS) and their health status.
+
+**Example request**
+
+```json
+{
+  "name": "gateway_list_backends",
+  "arguments": {}
+}
+```
+
+### `gateway_produce`
+
+Produce a message through a named streaming backend (Pulsar, RabbitMQ, NATS).
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `backend` | string | No |  |
+| `topic` | string | No |  |
+| `key` | string | No |  |
+| `value` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "gateway_produce",
+  "arguments": {
+    "backend": "example",
+    "topic": "example"
+  }
+}
+```
+
+### `gateway_consume`
+
+Consume messages from a named streaming backend (Pulsar, RabbitMQ, NATS).
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `backend` | string | No |  |
+| `topic` | string | No |  |
+| `group` | string | No |  |
+| `limit` | number | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "gateway_consume",
+  "arguments": {
+    "backend": "example",
+    "topic": "example"
+  }
+}
+```
+
+### `gateway_list_topics`
+
+List topics/queues/subjects on a named streaming backend.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `backend` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "gateway_list_topics",
+  "arguments": {
+    "backend": "example"
+  }
+}
+```
+
+### `gateway_create_topic`
+
+Create a topic/queue/subject on a named streaming backend.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `backend` | string | No |  |
+| `topic` | string | No |  |
+| `partitions` | number | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "gateway_create_topic",
+  "arguments": {
+    "backend": "example",
+    "topic": "example"
+  }
+}
+```
+
+## Kubernetes Operator
+
+### `k8s_operator_manage`
+
+Manage KafkaMCP Kubernetes operator instances. Actions: create, get, list, update, delete, scale, manifest, crd.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `action` | string | No |  |
+| `name` | string | No |  |
+| `namespace` | string | No |  |
+| `replicas` | number | No |  |
+| `image` | string | No |  |
+| `version` | string | No |  |
+| `transport` | string | No |  |
+| `port` | number | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "k8s_operator_manage",
+  "arguments": {
+    "action": "example",
+    "name": "example"
+  }
+}
+```
+
+## Memory
+
+### `kafka_memory_store`
+
+Store a memory entry for the current agent. Supports categories (preference, schema, query_history, context, note), tags, TTL expiration, and arbitrary key-value data.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `key` | string | No |  |
+| `value` | object | No |  |
+| `category` | string | No |  |
+| `tags` | object | No |  |
+| `ttl_sec` | number | No |  |
+| `metadata` | object | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_memory_store",
+  "arguments": {
+    "key": "example",
+    "value": {}
+  }
+}
+```
+
+### `kafka_memory_recall`
+
+Recall a specific memory entry by key, or list all entries. Actions: get, list, delete.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `action` | string | No |  |
+| `key` | string | No |  |
+| `category` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_memory_recall",
+  "arguments": {
+    "action": "example",
+    "key": "example"
+  }
+}
+```
+
+### `kafka_memory_search`
+
+Search agent memory using TF-IDF semantic search. Returns ranked results by relevance.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `query` | string | No |  |
+| `category` | string | No |  |
+| `limit` | number | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_memory_search",
+  "arguments": {
+    "query": "example",
+    "category": "example"
+  }
+}
+```
+
+## OPA Policy
+
+### `kafka_policy_evaluate`
+
+Evaluate an OPA Rego policy for an authorization decision. Returns whether the action is allowed with reasoning.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `agent` | string | No |  |
+| `action` | string | No |  |
+| `resource` | string | No |  |
+| `resource_name` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_policy_evaluate",
+  "arguments": {
+    "agent": "example",
+    "action": "example"
+  }
+}
+```
+
+### `kafka_policy_simulate`
+
+Simulate a policy evaluation showing how each policy rule matches, without recording the decision.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `agent` | string | No |  |
+| `action` | string | No |  |
+| `resource` | string | No |  |
+| `resource_name` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_policy_simulate",
+  "arguments": {
+    "agent": "example",
+    "action": "example"
+  }
+}
+```
+
+### `kafka_policy_manage`
+
+Manage OPA Rego policies. Actions: list (show policies), register (add/update), delete (remove), export (JSON dump), decisions (recent log).
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `action` | string | No |  |
+| `policy_id` | string | No |  |
+| `name` | string | No |  |
+| `rego` | string | No |  |
+| `limit` | number | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_policy_manage",
+  "arguments": {
+    "action": "example",
+    "policy_id": "example"
+  }
+}
+```
+
+## Onboarding
+
+### `kafka_quickstart`
+
+Guided onboarding: auto-discovers Kafka clusters, suggests configuration, and generates a step-by-step getting started guide.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `action` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_quickstart",
+  "arguments": {
+    "action": "example"
+  }
+}
+```
+
+### `kafka_discover_clusters`
+
+Auto-discover Kafka clusters by scanning common ports, environment variables, and DNS records.
+
+**Example request**
+
+```json
+{
+  "name": "kafka_discover_clusters",
+  "arguments": {}
+}
+```
+
+### `kafka_suggest_rbac`
+
+Generate recommended RBAC configuration based on your Kafka topology. Outputs ready-to-use YAML config.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `cluster` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_suggest_rbac",
+  "arguments": {
+    "cluster": "example"
+  }
+}
+```
+
+## OpenAPI
+
+### `kafka_openapi_spec`
+
+Generate an OpenAPI 3.0 specification from all registered MCP tools. Returns JSON-formatted OpenAPI spec for SDK code generation.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `format` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_openapi_spec",
+  "arguments": {
+    "format": "example"
+  }
+}
+```
+
+## Pipeline
+
+### `kafka_pipeline_create`
+
+Create a streaming function pipeline with filter/map/enrich/transform steps. Pipelines process Kafka messages through a chain of micro-functions.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `name` | string | No |  |
+| `source_topic` | string | No |  |
+| `sink_topic` | string | No |  |
+| `steps` | object | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_pipeline_create",
+  "arguments": {
+    "name": "example",
+    "source_topic": "example"
+  }
+}
+```
+
+### `kafka_pipeline_execute`
+
+Execute a pipeline on messages from the source topic. Consumes, processes through the pipeline steps, and returns the results.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `pipeline_id` | string | No |  |
+| `limit` | number | No |  |
+| `cluster` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_pipeline_execute",
+  "arguments": {
+    "pipeline_id": "example",
+    "limit": 10
+  }
+}
+```
+
+### `kafka_pipeline_manage`
+
+Manage streaming function pipelines. Actions: list, get, delete, runs (execution history).
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `action` | string | No |  |
+| `pipeline_id` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_pipeline_manage",
+  "arguments": {
+    "action": "example",
+    "pipeline_id": "example"
+  }
+}
+```
+
+## Plugin
+
+### `kafka_plugin_search`
+
+Search the plugin marketplace for extensions. Find monitoring, security, analytics, integration, and utility plugins with ratings and verification status.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `query` | string | No |  |
+| `category` | string | No |  |
+| `verified_only` | boolean | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_plugin_search",
+  "arguments": {
+    "query": "example",
+    "category": "example"
+  }
+}
+```
+
+### `kafka_plugin_install`
+
+Install a plugin from the marketplace. Validates dependencies and security capabilities before installation.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `name` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_plugin_install",
+  "arguments": {
+    "name": "example"
+  }
+}
+```
+
+### `kafka_plugin_list`
+
+List installed plugins with their status, version, provided tools, and resources.
+
+**Example request**
+
+```json
+{
+  "name": "kafka_plugin_list",
+  "arguments": {}
+}
+```
+
+## Quota
+
+### `kafka_quota_status`
+
+Get adaptive rate limit status for an agent or all agents. Shows current rate, dynamic quota, burst credits, utilization, and recommendations.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `agent_id` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_quota_status",
+  "arguments": {
+    "agent_id": "example"
+  }
+}
+```
+
+### `kafka_quota_request`
+
+Request a quota adjustment: increase, decrease, reset, or grant burst credits.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `action` | string | No |  |
+| `agent_id` | string | No |  |
+| `amount` | number | No |  |
+| `reason` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_quota_request",
+  "arguments": {
+    "action": "example",
+    "agent_id": "example"
+  }
+}
+```
+
+## Replay
+
+### `kafka_replay_create`
+
+Create a bookmark capturing message state at the current point in time. Stores offsets, sample messages, and metadata for later comparison or replay.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `topic` | string | No |  |
+| `name` | string | No |  |
+| `cluster` | string | No |  |
+| `tags` | object | No |  |
+| `action` | string | No |  |
+| `bookmark_id` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_replay_create",
+  "arguments": {
+    "topic": "example",
+    "name": "example"
+  }
+}
+```
+
+### `kafka_replay_diff`
+
+Compare message payloads between two bookmarks. Detects schema changes, content drift, and message volume differences.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `bookmark_a` | string | No |  |
+| `bookmark_b` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_replay_diff",
+  "arguments": {
+    "bookmark_a": "example",
+    "bookmark_b": "example"
+  }
+}
+```
+
+### `kafka_replay_simulate`
+
+Simulate replaying messages through a consumer group. Predicts processing impact and estimates reprocessing time.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `action` | string | No |  |
+| `topic` | string | No |  |
+| `group_id` | string | No |  |
+| `from_bookmark` | string | No |  |
+| `simulation_id` | string | No |  |
+| `name` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_replay_simulate",
+  "arguments": {
+    "action": "example",
+    "topic": "example"
+  }
+}
+```
+
+## Replication
+
+### `kafka_replication_status`
+
+Get real-time cross-cluster replication status for MirrorMaker2/Confluent Replicator links. Shows active links, topic-level sync state, and recent alerts.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `source_cluster` | string | No |  |
+| `target_cluster` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_replication_status",
+  "arguments": {
+    "source_cluster": "example",
+    "target_cluster": "example"
+  }
+}
+```
+
+### `kafka_replication_lag`
+
+Get detailed partition-level replication lag for a specific replication link.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `source_cluster` | string | No |  |
+| `target_cluster` | string | No |  |
+| `topic` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_replication_lag",
+  "arguments": {
+    "source_cluster": "example",
+    "target_cluster": "example"
+  }
+}
+```
+
+### `kafka_failover_readiness`
+
+Evaluate failover readiness for a replication link. Provides readiness score (0-100), RPO/RTO estimates, and actionable recommendations.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `source_cluster` | string | No |  |
+| `target_cluster` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_failover_readiness",
+  "arguments": {
+    "source_cluster": "example",
+    "target_cluster": "example"
+  }
+}
+```
+
+## Sandbox
+
+### `kafka_sandbox_create`
+
+Create an isolated sandbox environment for safe experimentation with Kafka operations. Sandboxes have resource quotas and auto-expire.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `name` | string | No |  |
+| `description` | string | No |  |
+| `duration_sec` | number | No |  |
+| `quotas` | object | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_sandbox_create",
+  "arguments": {
+    "name": "example",
+    "description": "example"
+  }
+}
+```
+
+### `kafka_sandbox_exec`
+
+Execute a Kafka tool within a sandbox. All operations are tracked with resource accounting.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `sandbox_id` | string | No |  |
+| `tool` | string | No |  |
+| `args` | object | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_sandbox_exec",
+  "arguments": {
+    "sandbox_id": "example",
+    "tool": "example"
+  }
+}
+```
+
+### `kafka_sandbox_destroy`
+
+Destroy a sandbox, list sandboxes, get details, or generate a promotion report.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `action` | string | No |  |
+| `sandbox_id` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_sandbox_destroy",
+  "arguments": {
+    "action": "example",
+    "sandbox_id": "example"
+  }
+}
+```
+
+## Schema Workflow
+
+### `kafka_schema_propose`
+
+Propose a schema change with auto-generated migration plan, compatibility validation, and consumer impact analysis. Creates an approval workflow.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `subject` | string | No |  |
+| `schema` | string | No |  |
+| `schema_type` | string | No |  |
+| `cluster` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_schema_propose",
+  "arguments": {
+    "subject": "example",
+    "schema": "example"
+  }
+}
+```
+
+### `kafka_schema_apply`
+
+Apply, review, or rollback a schema proposal. Actions: review (approve/reject), apply (register schema), rollback (revert), list (show proposals), get (proposal details), timeline (version history).
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `action` | string | No |  |
+| `proposal_id` | string | No |  |
+| `review_action` | string | No |  |
+| `note` | string | No |  |
+| `status_filter` | string | No |  |
+| `subject` | string | No |  |
+| `cluster` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_schema_apply",
+  "arguments": {
+    "action": "example",
+    "proposal_id": "example"
+  }
+}
+```
+
+## Semantic Search
+
+### `kafka_semantic_index`
+
+Index Kafka messages for semantic search. Consumes recent messages from a topic and adds them to the vector index for meaning-based retrieval.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `topic` | string | No |  |
+| `limit` | number | No |  |
+| `cluster` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_semantic_index",
+  "arguments": {
+    "topic": "example",
+    "limit": 10
+  }
+}
+```
+
+### `kafka_semantic_search`
+
+Search indexed Kafka messages by meaning using semantic similarity. Returns the most relevant messages matching the query intent.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `query` | string | No |  |
+| `topic` | string | No |  |
+| `limit` | number | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_semantic_search",
+  "arguments": {
+    "query": "example",
+    "topic": "example"
+  }
+}
+```
+
+### `kafka_rag_context`
+
+Build RAG (Retrieval-Augmented Generation) context from indexed Kafka messages. Returns relevant message fragments optimized for LLM context windows.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `query` | string | No |  |
+| `topic` | string | No |  |
+| `max_tokens` | number | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_rag_context",
+  "arguments": {
+    "query": "example",
+    "topic": "example"
+  }
+}
+```
+
+### `kafka_semantic_stats`
+
+Get statistics about the semantic search index including document counts, topic distribution, and vocabulary size.
+
+**Example request**
+
+```json
+{
+  "name": "kafka_semantic_stats",
+  "arguments": {}
+}
+```
+
+## StreamSQL
+
+### `kafka_sql_execute`
+
+Execute a streaming SQL query against Kafka topics. Supports SELECT, WHERE, GROUP BY, aggregations (COUNT/SUM/AVG/MIN/MAX), and WINDOW (TUMBLING/SLIDING/SESSION) clauses.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `sql` | string | No |  |
+| `limit` | number | No |  |
+| `cluster` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_sql_execute",
+  "arguments": {
+    "sql": "example",
+    "limit": 10
+  }
+}
+```
+
+### `kafka_sql_explain`
+
+Explain a streaming SQL query plan without executing it. Shows execution steps and estimated cost.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `sql` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_sql_explain",
+  "arguments": {
+    "sql": "example"
+  }
+}
+```
+
+### `kafka_sql_manage`
+
+Manage SQL queries. Actions: list, get, delete.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `action` | string | No |  |
+| `query_id` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_sql_manage",
+  "arguments": {
+    "action": "example",
+    "query_id": "example"
+  }
+}
+```
+
+## Task Queue
+
+### `kafka_task_publish`
+
+Publish a task to a priority queue for other agents to claim and execute.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `queue` | string | No |  |
+| `type` | string | No |  |
+| `priority` | number | No |  |
+| `payload` | object | No |  |
+| `max_retries` | number | No |  |
+| `deadline_sec` | number | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_task_publish",
+  "arguments": {
+    "queue": "example",
+    "type": "example"
+  }
+}
+```
+
+### `kafka_task_claim`
+
+Claim the highest-priority pending task from a queue.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `queue` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_task_claim",
+  "arguments": {
+    "queue": "example"
+  }
+}
+```
+
+### `kafka_task_complete`
+
+Mark a claimed task as completed or failed.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `task_id` | string | No |  |
+| `status` | string | No |  |
+| `result` | object | No |  |
+| `error` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_task_complete",
+  "arguments": {
+    "task_id": "example",
+    "status": "example"
+  }
+}
+```
+
+### `kafka_task_status`
+
+Get task status, queue statistics, or list tasks. Actions: get, stats, list, heartbeat.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `action` | string | No |  |
+| `task_id` | string | No |  |
+| `queue` | string | No |  |
+| `filter_status` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_task_status",
+  "arguments": {
+    "action": "example",
+    "task_id": "example"
+  }
+}
+```
+
+## TimeSeries
+
+### `kafka_timeseries_analyze`
+
+Advanced time-series analysis: Mann-Kendall trend detection, FFT seasonality analysis, outlier identification, and cross-metric correlation. Returns chart-ready JSON.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `action` | string | No |  |
+| `metric` | string | No |  |
+| `source` | string | No |  |
+| `metric2` | string | No |  |
+| `source2` | string | No |  |
+| `since_hours` | number | No |  |
+| `value` | number | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_timeseries_analyze",
+  "arguments": {
+    "action": "example",
+    "metric": "example"
+  }
+}
+```
+
+## Tracing Flow
+
+### `kafka_trace_flow`
+
+Distributed tracing for Kafka messages: inject W3C Trace Context headers, correlate across topic chains, and visualize message flow graphs. Actions: trace (get trace by ID), record (record a span), create_context (generate trace context), list (recent traces).
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `action` | string | No |  |
+| `trace_id` | string | No |  |
+| `operation` | string | No |  |
+| `topic` | string | No |  |
+| `producer` | string | No |  |
+| `consumer` | string | No |  |
+| `parent_span_id` | string | No |  |
+| `partition` | number | No |  |
+| `offset` | number | No |  |
+| `duration_ms` | number | No |  |
+| `limit` | number | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_trace_flow",
+  "arguments": {
+    "action": "example",
+    "trace_id": "example"
+  }
+}
+```
+
+## Usage
+
+### `kafka_usage_report`
+
+Generate usage analytics and chargeback reports. Actions: rollup (usage summary), chargeback (cost attribution), export_csv (CSV export), export_json (JSON export).
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `action` | string | No |  |
+| `tenant_id` | string | No |  |
+| `period` | string | No |  |
+| `days_back` | number | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_usage_report",
+  "arguments": {
+    "action": "example",
+    "tenant_id": "example"
+  }
+}
+```
+
+## View Store
+
+### `kafka_view_create`
+
+Create a materialized view over a Kafka topic with projections, aggregations (count/sum/avg/min/max), windowed computations, and GROUP BY support for instant analytical queries.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `name` | string | No |  |
+| `source_topic` | string | No |  |
+| `key_field` | string | No |  |
+| `aggregation_type` | string | No |  |
+| `window_type` | string | No |  |
+| `window_size_ms` | number | No |  |
+| `group_by_fields` | object | No |  |
+| `value_fields` | object | No |  |
+| `filter_expr` | string | No |  |
+| `description` | string | No |  |
+| `retention_ms` | number | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_view_create",
+  "arguments": {
+    "name": "example",
+    "source_topic": "example"
+  }
+}
+```
+
+### `kafka_view_query`
+
+Query a materialized view with point lookups, range scans, or full scans. Returns instant results without re-scanning the source topic.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `view_id` | string | No |  |
+| `key_exact` | string | No |  |
+| `key_prefix` | string | No |  |
+| `limit` | number | No |  |
+| `offset` | number | No |  |
+| `descending` | boolean | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_view_query",
+  "arguments": {
+    "view_id": "example",
+    "key_exact": "example"
+  }
+}
+```
+
+### `kafka_view_status`
+
+Manage materialized views. Actions: list, get, delete, stats.
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `action` | string | No |  |
+| `view_id` | string | No |  |
+
+**Example request**
+
+```json
+{
+  "name": "kafka_view_status",
+  "arguments": {
+    "action": "example",
+    "view_id": "example"
   }
 }
 ```
