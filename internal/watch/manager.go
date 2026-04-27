@@ -292,9 +292,11 @@ func (m *Manager) deliverNotification(ctx context.Context, sub *Subscription, no
 				if backoff > 30*time.Second {
 					backoff = 30 * time.Second
 				}
+				timer := time.NewTimer(backoff)
 				select {
-				case <-time.After(backoff):
+				case <-timer.C:
 				case <-ctx.Done():
+					timer.Stop()
 					result.Status = "failed"
 					result.LastError = "context cancelled"
 					return result
