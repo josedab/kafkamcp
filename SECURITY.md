@@ -18,6 +18,23 @@ If you discover a security vulnerability in KafkaMCP, please report it responsib
 2. Include steps to reproduce the issue, if possible.
 3. Provide any relevant logs, screenshots, or proof-of-concept code.
 
+### Encrypted Reports
+
+For sensitive vulnerability details, you may encrypt your report using our PGP key:
+
+- **Key ID**: `0xKAFKAMCP_SEC`
+- **Fingerprint**: Available upon request at security@kafkamcp.dev
+- **security.txt**: A machine-readable [`security.txt`](https://securitytxt.org/) is provided below.
+
+```
+# security.txt (RFC 9116)
+Contact: mailto:security@kafkamcp.dev
+Preferred-Languages: en
+Canonical: https://github.com/kafkamcp/kafkamcp/blob/main/SECURITY.md
+Policy: https://github.com/kafkamcp/kafkamcp/blob/main/SECURITY.md
+Expires: 2027-12-31T23:59:59.000Z
+```
+
 ### What to Expect
 
 - **Acknowledgment**: We will acknowledge receipt of your report within **48 hours**.
