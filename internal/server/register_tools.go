@@ -52,4 +52,5 @@ s.registerSchemaAdvisorTools()
 s.registerNLPipelineTools()
 s.registerPlaybookTools()
 s.registerCloudDeployTools()
+s.registerVectorSyncTools()
 }

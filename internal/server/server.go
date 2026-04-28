@@ -63,6 +63,7 @@ import (
 "github.com/kafkamcp/kafkamcp/internal/streamsql"
 "github.com/kafkamcp/kafkamcp/internal/taskqueue"
 "github.com/kafkamcp/kafkamcp/internal/telemetry"
+"github.com/kafkamcp/kafkamcp/internal/vectorsync"
 "github.com/kafkamcp/kafkamcp/internal/viewstore"
 "github.com/kafkamcp/kafkamcp/internal/watch"
 "github.com/kafkamcp/kafkamcp/internal/workflow"
@@ -147,6 +148,7 @@ schemaAdvisor       *schemaadvisor.Advisor     // schema evolution advisor
 nlPipelineBuilder   *nlpipeline.Builder        // NL data pipeline builder
 playbookEngine      *playbook.Engine           // anomaly response playbooks
 cloudDeployGenerator *clouddeploy.Generator    // cloud deployment generator
+vectorSyncEngine    *vectorsync.Engine         // vector DB sync bridge
 }
 
 // Server is the KafkaMCP MCP server.
@@ -280,6 +282,7 @@ schemaAdvisor:       schemaadvisor.NewAdvisor(logger),
 nlPipelineBuilder:   nlpipeline.NewBuilder(logger),
 playbookEngine:      playbook.NewEngine(logger),
 cloudDeployGenerator: clouddeploy.NewGenerator(logger),
+vectorSyncEngine:    vectorsync.NewEngine(logger),
 },
 }
 
