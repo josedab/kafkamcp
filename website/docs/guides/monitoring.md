@@ -164,3 +164,27 @@ KafkaMCP limits concurrent execution of expensive tools (`kafka_aggregate`, `kaf
 :::tip
 Start with latency, denials, and throughput. Those three views answer most production questions quickly.
 :::
+
+## Pre-built Grafana dashboard
+
+KafkaMCP ships a ready-to-use Grafana dashboard at [`deploy/grafana/kafkamcp-overview.json`](https://github.com/kafkamcp/kafkamcp/tree/main/deploy/grafana/kafkamcp-overview.json).
+
+### Panels included (23 total)
+
+| Section | Panels |
+|---|---|
+| **Overview** | Tool Calls (rate/min), Active Connections, Errors (rate/min), Avg Tool Latency (p50) |
+| **Tool Performance** | Call Rate by Tool, Latency (p95) by Tool, Errors by Tool, Error Rate by Tool |
+| **Kafka Messages** | Messages Consumed (rate) by Topic, Messages Produced (rate) by Topic |
+| **Schema Registry** | Cache Hit/Miss Rate, Cache Hit Rate |
+| **Security & Rate Limiting** | Kafka Connection Errors, Authorization Denials, Rate Limit Denials |
+| **Connections** | Active Connections by Transport, Tool Call Rate by Agent |
+
+### Import into Grafana
+
+1. Open Grafana → **Dashboards** → **Import**
+2. Upload `deploy/grafana/kafkamcp-overview.json` (or paste its contents)
+3. Select your **Prometheus** data source when prompted
+4. Click **Import**
+
+The dashboard expects the default `kafkamcp_*` metric names. No additional configuration is required if you are scraping the KafkaMCP metrics endpoint.
