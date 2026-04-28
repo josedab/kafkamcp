@@ -40,8 +40,8 @@ Agents can now:
 
 | Feature | Description |
 |---------|-------------|
-| **22 MCP Tools** | From basic consume/produce to windowed joins and natural language queries |
-| **10 MCP Resources** | Browsable cluster metadata, topic catalogs, schema registry, audit logs |
+| **155+ MCP Tools** | From basic consume/produce to windowed joins and natural language queries |
+| **18 MCP Resources** | Browsable cluster metadata, topic catalogs, schema registry, audit logs |
 | **Schema-Aware** | Auto-discovers Avro/Protobuf/JSON Schema from Schema Registry |
 | **Secure** | Per-agent access control, rate limiting, TLS, audit logging |
 | **Multi-Cluster** | Connect to multiple Kafka clusters with per-cluster configuration |
@@ -64,4 +64,4 @@ docker run ghcr.io/kafkamcp/kafkamcp:latest
 
 - [**Getting Started**](./getting-started) — Connect to Kafka in 5 minutes
 - [**Core Concepts**](./core-concepts) — Understand the mental model
-- [**API Reference**](./api-reference/tools) — All 22 tools documented
+- [**API Reference**](./api-reference/tools) — All 155+ tools documented

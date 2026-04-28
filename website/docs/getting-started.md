@@ -155,4 +155,4 @@ Try more:
 - [**Core Concepts**](./core-concepts) — Understand tools, resources, and the auth model
 - [**Claude Desktop Guide**](./guides/claude-desktop) — Detailed Claude Desktop setup
 - [**Docker Compose Guide**](./guides/docker-compose) — Full local environment with Kafka + KafkaMCP
-- [**API Reference**](./api-reference/tools) — All 22 tools with examples
+- [**API Reference**](./api-reference/tools) — All 155+ tools with examples
