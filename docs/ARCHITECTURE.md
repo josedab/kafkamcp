@@ -75,6 +75,23 @@ Resources follow a similar pattern in `resources.go` / `resources_features.go`:
 - `s.mcpServer.AddResource(...)` registers static and templated resources.
 - Resources provide read-only discovery of topics, schemas, and cluster metadata.
 
+#### Static vs Templated Resources
+
+- **Static resources** have a fixed URI (e.g., `kafka://cluster/topics`) and return a snapshot of cluster state when read. They are registered once at startup and always available.
+- **Templated resources** use URI templates with placeholders (e.g., `kafka://cluster/topics/{topicName}`). The MCP client fills in the template parameters at read time, allowing dynamic lookup of specific topics, schemas, or consumer groups without registering a resource per entity.
+
+### Shutdown Order
+
+When the server receives SIGINT/SIGTERM, `Close()` tears down resources in reverse initialization order:
+
+1. **Cancel context** — signals all in-flight handlers and background goroutines to stop.
+2. **HTTP server shutdown** — gracefully drains active HTTP connections (10-second timeout).
+3. **Metrics server shutdown** — stops the Prometheus endpoint.
+4. **Server.Close()** — closes subsystems (Analytics, Governance, Streaming, Platform) and their internal resources.
+5. **KafkaManager.Close()** — closes all Kafka client connections and consumer groups.
+
+This ordering ensures that no new requests are accepted while in-flight operations complete, and that Kafka connections are the last resources released.
+
 ## Package Groupings
 
 The `Server` struct embeds four composite subsystem groups:
