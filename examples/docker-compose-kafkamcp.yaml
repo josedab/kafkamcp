@@ -1,22 +1,26 @@
 # KafkaMCP config for Docker Compose environment
+# This file is mounted into the kafkamcp container by docker-compose.yaml.
+# It configures KafkaMCP to connect to the local Kafka and Schema Registry
+# services running in the same Docker Compose stack.
+
 server:
-  transport: sse
-  host: 0.0.0.0
-  port: 3100
-  log_level: info
+  transport: sse          # SSE transport enables remote access and the embedded web dashboard
+  host: 0.0.0.0           # Bind to all interfaces (required inside Docker containers)
+  port: 3100              # MCP server port; metrics/health available on port 3101
+  log_level: info         # Log verbosity: debug, info, warn, error
 
 clusters:
-  - name: local
-    bootstrap_servers: "kafka:9092"
-    security_protocol: PLAINTEXT
+  - name: local                            # Logical cluster name
+    bootstrap_servers: "kafka:9092"        # Docker Compose service name resolves to the Kafka container
+    security_protocol: PLAINTEXT           # No auth needed for local dev; use SASL_SSL for production
     schema_registry:
-      url: "http://schema-registry:8081"
-    default: true
+      url: "http://schema-registry:8081"   # Docker Compose service name for Schema Registry
+    default: true                          # Default cluster when no cluster is specified in tool calls
 
 schema_cache:
-  max_entries: 10000
-  ttl_seconds: 300
+  max_entries: 10000    # Maximum cached schema entries
+  ttl_seconds: 300      # Re-fetch schemas after 5 minutes
 
 audit:
-  enabled: true
-  max_entries: 10000
+  enabled: true         # Log all agent tool calls for debugging
+  max_entries: 10000    # In-memory ring buffer size

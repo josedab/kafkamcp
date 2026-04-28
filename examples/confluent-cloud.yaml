@@ -1,26 +1,28 @@
 # KafkaMCP with Confluent Cloud
+# See https://kafkamcp.dev/docs/guides/multi-cluster for full reference.
+
 server:
-  transport: stdio
-  log_level: info
+  transport: stdio          # Use "stdio" for local/Claude Desktop, "sse" or "streamable-http" for remote
+  log_level: info           # Log verbosity: debug, info, warn, error
 
 clusters:
-  - name: confluent-cloud
-    bootstrap_servers: "${CONFLUENT_BOOTSTRAP_SERVERS}"
-    security_protocol: SASL_SSL
-    sasl_mechanism: PLAIN
-    sasl_username: "${CONFLUENT_API_KEY}"
-    sasl_password: "${CONFLUENT_API_SECRET}"
+  - name: confluent-cloud                              # Logical name used in multi-cluster tool calls
+    bootstrap_servers: "${CONFLUENT_BOOTSTRAP_SERVERS}" # Confluent Cloud bootstrap endpoint (e.g., pkc-xxxxx.us-east-1.aws.confluent.cloud:9092)
+    security_protocol: SASL_SSL                        # Required for Confluent Cloud; encrypts traffic and authenticates via SASL
+    sasl_mechanism: PLAIN                              # Confluent Cloud uses PLAIN over TLS; other options: SCRAM-SHA-256, SCRAM-SHA-512
+    sasl_username: "${CONFLUENT_API_KEY}"               # Confluent Cloud API key (set via environment variable to avoid hardcoding)
+    sasl_password: "${CONFLUENT_API_SECRET}"            # Confluent Cloud API secret (set via environment variable)
     schema_registry:
-      url: "${CONFLUENT_SR_URL}"
+      url: "${CONFLUENT_SR_URL}"                       # Confluent Schema Registry endpoint (e.g., https://psrc-xxxxx.us-east-1.aws.confluent.cloud)
       auth:
-        username: "${CONFLUENT_SR_API_KEY}"
-        password: "${CONFLUENT_SR_API_SECRET}"
-    default: true
+        username: "${CONFLUENT_SR_API_KEY}"             # Schema Registry API key (separate from cluster API key)
+        password: "${CONFLUENT_SR_API_SECRET}"          # Schema Registry API secret
+    default: true                                      # Mark as default cluster; tools use this when no cluster is specified
 
 schema_cache:
-  max_entries: 10000
-  ttl_seconds: 300
+  max_entries: 10000    # Maximum number of cached schema entries (increase for large registries)
+  ttl_seconds: 300      # Cache TTL in seconds; schemas are re-fetched after expiry
 
 audit:
-  enabled: true
-  max_entries: 10000
+  enabled: true         # Enable structured JSON audit logging of all agent interactions
+  max_entries: 10000    # Ring buffer size for in-memory audit log (oldest entries evicted first)

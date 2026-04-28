@@ -1,43 +1,56 @@
 # Docker Compose: Local Kafka + KafkaMCP development environment
+#
+# Starts a single-node Kafka broker (KRaft mode, no ZooKeeper), a Confluent
+# Schema Registry, and the KafkaMCP MCP server. Use this for local development
+# and testing.
+#
+# Usage:
+#   docker compose -f examples/docker-compose.yaml up -d
+#   open http://localhost:3100          # KafkaMCP dashboard / SSE endpoint
+#   curl http://localhost:3101/healthz  # Health check (metrics port = server port + 1)
+
 services:
+  # --- Apache Kafka (KRaft mode, single-node) ---
   kafka:
     image: bitnami/kafka:3.7
     ports:
-      - "9092:9092"
+      - "9092:9092"       # Client listener — connect from host machine or other containers
     environment:
-      - KAFKA_CFG_NODE_ID=0
-      - KAFKA_CFG_PROCESS_ROLES=controller,broker
-      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
-      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+      - KAFKA_CFG_NODE_ID=0                                         # Unique node ID for this broker
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker                   # Combined controller+broker (KRaft single-node)
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093             # Raft quorum — self-referencing for single node
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093    # Two listeners: client (9092) and Raft controller (9093)
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092   # Advertised to clients; change if running on a remote host
       - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
-      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER              # Controller uses its own listener
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT              # Inter-broker communication (single node, so same)
     volumes:
-      - kafka-data:/bitnami/kafka
+      - kafka-data:/bitnami/kafka    # Persist Kafka data across container restarts
 
+  # --- Confluent Schema Registry ---
   schema-registry:
     image: confluentinc/cp-schema-registry:7.6.0
     ports:
-      - "8081:8081"
+      - "8081:8081"       # Schema Registry HTTP API
     environment:
-      SCHEMA_REGISTRY_HOST_NAME: schema-registry
-      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka:9092
-      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry                    # Hostname used in registration
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka:9092      # Points to the Kafka broker above
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081                # Bind to all interfaces inside the container
     depends_on:
-      - kafka
+      - kafka             # Wait for Kafka to start before launching
 
+  # --- KafkaMCP MCP Server ---
   kafkamcp:
     build:
-      context: ..
+      context: ..                       # Build from the repo root (parent of examples/)
       dockerfile: Dockerfile
     ports:
-      - "3100:3100"
+      - "3100:3100"       # MCP SSE endpoint and embedded web dashboard
     volumes:
-      - ./docker-compose-kafkamcp.yaml:/etc/kafkamcp/kafkamcp.yaml
+      - ./docker-compose-kafkamcp.yaml:/etc/kafkamcp/kafkamcp.yaml  # Mount the KafkaMCP config file
     depends_on:
-      - kafka
-      - schema-registry
+      - kafka             # Needs Kafka for topic/consumer operations
+      - schema-registry   # Needs Schema Registry for schema tools
 
 volumes:
-  kafka-data:
+  kafka-data:             # Named volume for Kafka log segments and metadata

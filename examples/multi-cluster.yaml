@@ -1,66 +1,74 @@
 # KafkaMCP with Multi-Cluster Setup
+# Connects to multiple Kafka clusters with per-agent access control policies.
+# See https://kafkamcp.dev/docs/guides/multi-cluster for full reference.
+
 server:
-  transport: sse
-  host: 0.0.0.0
-  port: 3100
-  log_level: info
+  transport: sse        # SSE transport for remote/multi-agent access (also supports "streamable-http")
+  host: 0.0.0.0         # Bind address; 0.0.0.0 listens on all interfaces
+  port: 3100            # MCP server port; metrics endpoint runs on port+1 (3101)
+  log_level: info       # Log verbosity: debug, info, warn, error
 
 clusters:
+  # Production cluster — SASL_SSL with SCRAM authentication
   - name: production
-    bootstrap_servers: "prod-broker-1:9092,prod-broker-2:9092,prod-broker-3:9092"
-    security_protocol: SASL_SSL
-    sasl_mechanism: SCRAM-SHA-512
-    sasl_username: "${PROD_KAFKA_USERNAME}"
+    bootstrap_servers: "prod-broker-1:9092,prod-broker-2:9092,prod-broker-3:9092"  # Comma-separated broker list
+    security_protocol: SASL_SSL        # Encrypt traffic and authenticate via SASL
+    sasl_mechanism: SCRAM-SHA-512      # SCRAM is preferred over PLAIN for on-prem; options: PLAIN, SCRAM-SHA-256, SCRAM-SHA-512
+    sasl_username: "${PROD_KAFKA_USERNAME}"   # Use env vars to avoid hardcoding credentials
     sasl_password: "${PROD_KAFKA_PASSWORD}"
     schema_registry:
-      url: "https://prod-schema-registry:8081"
+      url: "https://prod-schema-registry:8081"   # HTTPS endpoint for Schema Registry
       auth:
-        username: "${PROD_SR_USERNAME}"
+        username: "${PROD_SR_USERNAME}"           # Schema Registry basic auth credentials
         password: "${PROD_SR_PASSWORD}"
-    default: true
+    default: true      # Default cluster used when agent doesn't specify a cluster name
 
+  # Staging cluster — PLAINTEXT (no auth, suitable for development)
   - name: staging
     bootstrap_servers: "staging-broker-1:9092"
-    security_protocol: PLAINTEXT
+    security_protocol: PLAINTEXT       # No encryption or auth; use only in trusted networks
     schema_registry:
       url: "http://staging-schema-registry:8081"
 
+# Access control policies — per-agent authorization with default-deny semantics
 policies:
-  default_deny: true
+  default_deny: true     # When true, agents without an explicit policy are denied all access
   agents:
-    - id: "incident-agent"
-      role: reader
+    # Read-only agent scoped to specific topic patterns
+    - id: "incident-agent"             # Agent identifier (matched via X-Agent-ID or X-Client-ID header)
+      role: reader                     # Informational role label (does not affect enforcement)
       topics:
-        - pattern: "*.dlq"
+        - pattern: "*.dlq"             # Glob pattern matching dead-letter-queue topics across all namespaces
           permissions: [read]
-        - pattern: "orders.*"
+        - pattern: "orders.*"          # All topics starting with "orders."
           permissions: [read]
-        - pattern: "monitoring.*"
+        - pattern: "monitoring.*"      # Monitoring topics — this agent can also write alerts
           permissions: [read, write]
       consumer_groups:
-        permissions: [describe]
+        permissions: [describe]        # Can inspect consumer groups but not reset offsets
       schemas:
-        permissions: [read]
+        permissions: [read]            # Read-only access to Schema Registry
       rate_limit:
-        requests_per_minute: 120
+        requests_per_minute: 120       # Token bucket rate limit; requests beyond this are throttled
 
+    # Admin agent with full access
     - id: "pipeline-agent"
       role: admin
       topics:
-        - pattern: "*"
+        - pattern: "*"                 # Wildcard — full access to all topics
           permissions: [read, write, create, delete]
       consumer_groups:
-        permissions: [describe, reset]
+        permissions: [describe, reset] # Can reset consumer group offsets (group must be inactive)
       schemas:
-        permissions: [read, write]
+        permissions: [read, write]     # Can register and evolve schemas
       rate_limit:
-        requests_per_minute: 600
+        requests_per_minute: 600       # Higher limit for admin/pipeline workloads
 
 schema_cache:
-  max_entries: 10000
-  ttl_seconds: 300
+  max_entries: 10000    # Maximum cached schema entries
+  ttl_seconds: 300      # Cache TTL in seconds
 
 audit:
-  enabled: true
-  max_entries: 10000
-  log_file: /var/log/kafkamcp/audit.jsonl
+  enabled: true         # Enable structured JSON audit logging
+  max_entries: 10000    # In-memory ring buffer size
+  log_file: /var/log/kafkamcp/audit.jsonl  # Persistent audit log file (JSONL format, one entry per line)
