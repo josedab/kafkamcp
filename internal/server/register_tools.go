@@ -47,4 +47,5 @@ func (s *Server) registerTools() {
 	s.registerSandboxTools()
 s.registerAgentStoreTools()
 s.registerCDCTools()
+s.registerOrchestrationTools()
 }

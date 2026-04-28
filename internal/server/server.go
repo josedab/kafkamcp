@@ -44,6 +44,7 @@ import (
 "github.com/kafkamcp/kafkamcp/internal/onboarding"
 "github.com/kafkamcp/kafkamcp/internal/opa"
 "github.com/kafkamcp/kafkamcp/internal/operator"
+"github.com/kafkamcp/kafkamcp/internal/orchestration"
 "github.com/kafkamcp/kafkamcp/internal/pipeline"
 "github.com/kafkamcp/kafkamcp/internal/platform"
 "github.com/kafkamcp/kafkamcp/internal/plugin"
@@ -137,6 +138,7 @@ type Platform struct {
 	sandboxEngine      *sandbox.Engine            // agent sandbox environments
 agentConfigStore   *plugin.AgentConfigStore   // agent config marketplace
 cdcEngine          *cdc.Engine                // CDC bridge engine
+orchestrationEngine *orchestration.Engine      // multi-agent orchestration
 }
 
 // Server is the KafkaMCP MCP server.
@@ -265,6 +267,7 @@ Platform: Platform{
 	sandboxEngine:      sandbox.NewEngine(logger),
 agentConfigStore:   plugin.NewAgentConfigStore(),
 cdcEngine:          cdc.NewEngine(logger),
+orchestrationEngine: orchestration.NewEngine(logger),
 },
 }
 
