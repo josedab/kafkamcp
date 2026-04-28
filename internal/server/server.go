@@ -14,6 +14,7 @@ import (
 "github.com/kafkamcp/kafkamcp/internal/audit"
 "github.com/kafkamcp/kafkamcp/internal/auth"
 "github.com/kafkamcp/kafkamcp/internal/catalog"
+"github.com/kafkamcp/kafkamcp/internal/cdc"
 "github.com/kafkamcp/kafkamcp/internal/chaos"
 "github.com/kafkamcp/kafkamcp/internal/collaboration"
 "github.com/kafkamcp/kafkamcp/internal/compliance"
@@ -135,6 +136,7 @@ type Platform struct {
 	costAttrEngine     *costattribution.Engine    // real-time cost attribution
 	sandboxEngine      *sandbox.Engine            // agent sandbox environments
 agentConfigStore   *plugin.AgentConfigStore   // agent config marketplace
+cdcEngine          *cdc.Engine                // CDC bridge engine
 }
 
 // Server is the KafkaMCP MCP server.
@@ -262,6 +264,7 @@ Platform: Platform{
 	costAttrEngine:     costattribution.NewEngine(logger),
 	sandboxEngine:      sandbox.NewEngine(logger),
 agentConfigStore:   plugin.NewAgentConfigStore(),
+cdcEngine:          cdc.NewEngine(logger),
 },
 }
 

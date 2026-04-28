@@ -46,4 +46,5 @@ func (s *Server) registerTools() {
 	s.registerCostAttributionTools()
 	s.registerSandboxTools()
 s.registerAgentStoreTools()
+s.registerCDCTools()
 }
