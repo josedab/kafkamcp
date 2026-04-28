@@ -71,6 +71,42 @@ Error: configuration validation failed: at least one cluster is required
 
 Use this before deploying config changes to catch errors early.
 
+### `kafkamcp validate-config`
+
+Validate a configuration file with detailed output. Unlike `validate`, this command accepts a positional file argument and prints a summary of the parsed configuration (transport, clusters, policies, masking).
+
+```bash
+kafkamcp validate-config /path/to/kafkamcp.yaml
+kafkamcp validate-config --config /path/to/kafkamcp.yaml
+```
+
+**Example output (success):**
+
+```
+Configuration /path/to/kafkamcp.yaml is valid.
+  Transport: stdio
+  Clusters:  1
+    [0] local (localhost:9092)
+  Policy:    default_deny=false (open access)
+```
+
+**Example output (failure):**
+
+```
+Error: configuration validation failed: at least one cluster is required
+```
+
+### `kafkamcp serve`
+
+Start the MCP server. This is an alias for running `kafkamcp` without a subcommand — the behavior is identical.
+
+```bash
+kafkamcp serve --config /path/to/kafkamcp.yaml
+kafkamcp serve --config kafkamcp.yaml --log-level debug
+```
+
+Use `serve` when you want an explicit subcommand for clarity in scripts or process managers.
+
 ### `kafkamcp init`
 
 Generate a starter configuration file. Writes to stdout by default or to a file with `--output`.
