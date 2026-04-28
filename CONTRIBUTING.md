@@ -156,27 +156,60 @@ internal/
   match/            — Topic pattern matching utilities
   metrics/          — Prometheus metrics
   ratelimit/        — Per-agent rate limiting
+  adaptiverate/     — Adaptive rate limiting
+  advisor/          — Cluster health advisor
+  agentmemory/      — Agent memory persistence
   anomaly/          — AI-powered anomaly detection
+  catalog/          — Data catalog discovery
+  chaos/            — Chaos testing toolkit
+  cloud/            — Cloud provider integrations
+  collaboration/    — Multi-agent collaboration
+  compliance/       — Compliance policy enforcement
+  configvcs/        — Configuration version control
+  contracts/        — Schema-aware data contracts
   cost/             — Kafka cost analysis
+  costattribution/  — Cost attribution per team/topic
+  dagworkflow/      — DAG-based workflow engine
+  dashboard/        — Dashboard data aggregation
   dlq/              — Dead-letter queue remediation
+  evolution/        — Schema evolution advisor
+  federation/       — Multi-cluster federation
+  flowdebug/        — Message flow debugging
   forecast/         — Capacity forecasting
+  gateway/          — API gateway integration
   gitops/           — GitOps configuration management
   graph/            — Embedded knowledge graph
+  ide/              — IDE integration utilities
   lagdiag/          — Consumer lag root cause analysis
   lineage/          — Data lineage tracking
   masking/          — PII redaction engine
   migration/        — Migration planning
   nlquery/          — Natural language query engine
+  observability/    — Observability pipeline
+  onboarding/       — Guided onboarding flows
+  opa/              — Open Policy Agent integration
+  operator/         — Kubernetes operator support
   persona/          — Declarative agent personas
+  pipeline/         — Stream processing pipelines
   platform/         — Multi-platform abstraction
   plugin/           — Plugin/extension registry
+  profiler/         — Performance profiling
+  replay/           — Message replay engine
+  replication/      — Cross-cluster replication monitoring
+  sandbox/          — Sandboxed execution environment
   selfheal/         — Self-healing consumer groups
+  semantic/         — Semantic search over messages
+  streamsql/        — SQL over Kafka streams
+  taskqueue/        — Background task queue
   telemetry/        — OpenTelemetry tracing
+  tenant/           — Multi-tenant isolation
+  urlutil/          — URL validation utilities
+  viewstore/        — Materialized view store
   watch/            — Event-driven watch subscriptions
   workflow/         — Agent workflow templates
-sdk/                — Client SDKs (Go, Python, VS Code, Cursor, IntelliJ)
+sdk/                — Client SDKs (Go, Python, TypeScript, VS Code, Cursor, IntelliJ)
 examples/           — Example configs (docker-compose, Confluent Cloud)
-deploy/             — Deployment (Helm chart)
+deploy/             — Deployment (Helm chart, Grafana dashboard)
 ```
 
 ## Package Tiers
@@ -184,20 +217,24 @@ deploy/             — Deployment (Helm chart)
 Internal packages are grouped into three tiers. Higher tiers may depend on lower tiers but not the reverse.
 
 ```
-┌─────────────────────────────────────────────────────┐
-│  Feature (optional modules — safe to disable)       │
-│  anomaly, chaos, cost, dlq, forecast, gitops,       │
-│  graph, lagdiag, lineage, migration, nlquery,       │
-│  persona, plugin, sandbox, selfheal, watch,         │
-│  workflow, profiler                                  │
-├─────────────────────────────────────────────────────┤
-│  Infrastructure (cross-cutting concerns)            │
-│  audit, auth, masking, match, metrics, ratelimit,   │
-│  telemetry, platform, urlutil                       │
-├─────────────────────────────────────────────────────┤
-│  Core (always needed)                               │
-│  kafka, server, config, schema                      │
-└─────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│  Feature (optional modules — safe to disable)                    │
+│  adaptiverate, advisor, agentmemory, anomaly, catalog, chaos,    │
+│  collaboration, compliance, configvcs, contracts, cost,          │
+│  costattribution, dagworkflow, dashboard, dlq, evolution,        │
+│  federation, flowdebug, forecast, gateway, gitops, graph, ide,   │
+│  lagdiag, lineage, migration, nlquery, observability, onboarding,│
+│  opa, operator, persona, pipeline, plugin, profiler, replay,     │
+│  replication, sandbox, selfheal, semantic, streamsql, taskqueue, │
+│  viewstore, watch, workflow                                      │
+├──────────────────────────────────────────────────────────────────┤
+│  Infrastructure (cross-cutting concerns)                         │
+│  audit, auth, cloud, masking, match, metrics, ratelimit,         │
+│  telemetry, tenant, platform, urlutil                            │
+├──────────────────────────────────────────────────────────────────┤
+│  Core (always needed)                                            │
+│  kafka, server, config, schema                                   │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 - **Core** packages provide the Kafka client, MCP server, configuration parsing, and schema registry integration. Every deployment uses them.
