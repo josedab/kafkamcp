@@ -19,6 +19,7 @@ KafkaMCP is an MCP (Model Context Protocol) server that transforms Apache Kafka 
 - [Observability](#observability)
 - [SDKs & Editor Integrations](#sdks--editor-integrations)
 - [Architecture](#architecture)
+- [Examples](#examples)
 - [Configuration Reference](#configuration-reference)
 - [Development](#development)
 - [Project Structure](#project-structure)
@@ -44,6 +45,8 @@ KafkaMCP is an MCP (Model Context Protocol) server that transforms Apache Kafka 
 - **🩺 Self-Healing** — Consumer group health monitoring with automated remediation recommendations
 
 ## Quick Start
+
+> **One-command quickstart:** If you have Go and Docker installed, run `make quickstart` to install dependencies, start a local Kafka cluster, build KafkaMCP, and run it — all in one step.
 
 ### 1. Install
 
@@ -541,6 +544,7 @@ Once connected, your AI agent can:
 - **Structured JSON logging** via `slog`
 - **OpenTelemetry tracing** — optional OTLP export for distributed trace analysis (see [Telemetry config](#telemetry-opentelemetry))
 - **Grafana dashboard** — a ready-to-use dashboard ships at [`deploy/grafana/kafkamcp-overview.json`](deploy/grafana/kafkamcp-overview.json) with 23 panels covering tool call rates, latency percentiles, message throughput, schema cache performance, auth/rate-limit denials, and active connections. Import it into Grafana and select your Prometheus data source.
+- **Web Dashboard** — an embedded web UI is served at the MCP server's root URL when using SSE or streamable-http transport. It provides real-time agent activity monitoring, audit trail browsing, topic topology visualization, rate limit status, and schema browsing. Secure it with an API key via `server.dashboard.api_key`. See the [Dashboard Guide](https://kafkamcp.dev/docs/guides/dashboard) for details.
 
 ## SDKs & Editor Integrations
 
@@ -552,6 +556,7 @@ Once connected, your AI agent can:
 | **VS Code Extension** | [`sdk/vscode/`](sdk/vscode/) | Topic explorer, schema browser, NL query, and workflow templates inside VS Code |
 | **Cursor Integration** | [`sdk/cursor/`](sdk/cursor/) | Native MCP support — configure `.cursor/mcp.json` and use all tools directly |
 | **IntelliJ Plugin** | [`sdk/intellij/`](sdk/intellij/) | IntelliJ/JetBrains IDE integration |
+| **TypeScript SDK** | [`sdk/typescript/`](sdk/typescript/) | Type-safe async/await client for Node.js and TypeScript agents |
 
 **Go SDK quick example:**
 ```go
@@ -625,6 +630,20 @@ graph LR
         B --> I[Metrics]
     end
 ```
+
+## Examples
+
+The [`examples/`](examples/) directory contains ready-to-use configurations and sample agents:
+
+| Example | Description |
+|---------|-------------|
+| [`confluent-cloud.yaml`](examples/confluent-cloud.yaml) | Connect to Confluent Cloud with SASL_SSL and Schema Registry |
+| [`multi-cluster.yaml`](examples/multi-cluster.yaml) | Multi-cluster setup with per-agent access control policies |
+| [`docker-compose.yaml`](examples/docker-compose.yaml) | Local Kafka + Schema Registry + KafkaMCP dev environment |
+| [`masking.yaml`](examples/masking.yaml) | Data masking and PII redaction configuration |
+| [`go-sdk/`](examples/go-sdk/) | Go SDK example — programmatic topic listing and message consumption |
+| [`crewai-agent/`](examples/crewai-agent/) | CrewAI multi-agent crew with Kafka tools |
+| [`langchain-agent/`](examples/langchain-agent/) | LangChain agent with KafkaMCP toolkit integration |
 
 ## Configuration Reference
 
