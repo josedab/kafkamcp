@@ -11,6 +11,7 @@ ADRs document significant architectural decisions made during the project's deve
 | [ADR-001](001-mcp-protocol.md) | Use Model Context Protocol (MCP) | Accepted |
 | [ADR-002](002-multi-cluster-support.md) | Multi-Cluster Architecture | Accepted |
 | [ADR-003](003-policy-engine.md) | YAML-Based Policy Engine | Accepted |
+| [ADR-004](004-subsystem-grouping.md) | Subsystem Grouping Architecture | Accepted |
 
 ## Format
 
