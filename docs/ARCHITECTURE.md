@@ -135,3 +135,23 @@ Environment variables `KAFKAMCP_TRANSPORT` and `KAFKAMCP_LOG_LEVEL` override con
 - **Mock tests** use `*_mock_test.go` for isolated handler testing.
 - **Integration tests** are tagged with `//go:build integration` and require a running Kafka cluster.
 - Run `make test` for unit tests, `make integration-test` for integration tests.
+
+## Error Handling Conventions
+
+All tool handlers should follow these error handling patterns:
+
+1. **Return structured errors** — Use `fmt.Errorf("context: %w", err)` to wrap errors with context. Never discard errors silently.
+2. **Validate inputs early** — Check required arguments at the top of the handler before calling domain logic. Return `mcp.NewToolResultError("message")` for user-facing validation errors.
+3. **Distinguish user errors from system errors** — User errors (invalid topic name, missing argument) should return a tool result error with a clear message. System errors (Kafka unreachable, timeout) should be logged and returned as an error to the MCP framework.
+4. **Include actionable context** — Error messages should tell the caller what went wrong and, when possible, how to fix it (e.g., `"topic 'foo' not found; use kafka_list_topics to see available topics"`).
+5. **Respect cancellation** — Pass `ctx` through to all I/O operations so that cancelled requests are cleaned up promptly.
+
+## Deprecating and Removing Tools
+
+When a tool needs to be deprecated or removed:
+
+1. **Deprecation notice** — Add a `[DEPRECATED]` prefix to the tool's description in its `register_<domain>.go` file. Include the replacement tool name if applicable.
+2. **Log a warning** — In the handler, log a deprecation warning on each invocation: `logger.Warn("tool is deprecated", "tool", toolName, "replacement", newToolName)`.
+3. **Migration period** — Keep deprecated tools functional for at least one minor release cycle to give users time to migrate.
+4. **Removal** — When removing, delete the handler, registration, and domain package (if no longer shared). Update `registerTools()` in `register_tools.go` accordingly.
+5. **Changelog** — Document deprecations and removals in CHANGELOG.md under the appropriate version header.
