@@ -16,6 +16,7 @@ import (
 "github.com/kafkamcp/kafkamcp/internal/catalog"
 "github.com/kafkamcp/kafkamcp/internal/cdc"
 "github.com/kafkamcp/kafkamcp/internal/chaos"
+"github.com/kafkamcp/kafkamcp/internal/clouddeploy"
 "github.com/kafkamcp/kafkamcp/internal/collaboration"
 "github.com/kafkamcp/kafkamcp/internal/compliance"
 "github.com/kafkamcp/kafkamcp/internal/config"
@@ -145,6 +146,7 @@ orchestrationEngine *orchestration.Engine      // multi-agent orchestration
 schemaAdvisor       *schemaadvisor.Advisor     // schema evolution advisor
 nlPipelineBuilder   *nlpipeline.Builder        // NL data pipeline builder
 playbookEngine      *playbook.Engine           // anomaly response playbooks
+cloudDeployGenerator *clouddeploy.Generator    // cloud deployment generator
 }
 
 // Server is the KafkaMCP MCP server.
@@ -277,6 +279,7 @@ orchestrationEngine: orchestration.NewEngine(logger),
 schemaAdvisor:       schemaadvisor.NewAdvisor(logger),
 nlPipelineBuilder:   nlpipeline.NewBuilder(logger),
 playbookEngine:      playbook.NewEngine(logger),
+cloudDeployGenerator: clouddeploy.NewGenerator(logger),
 },
 }
 

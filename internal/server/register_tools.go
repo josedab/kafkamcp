@@ -51,4 +51,5 @@ s.registerOrchestrationTools()
 s.registerSchemaAdvisorTools()
 s.registerNLPipelineTools()
 s.registerPlaybookTools()
+s.registerCloudDeployTools()
 }
