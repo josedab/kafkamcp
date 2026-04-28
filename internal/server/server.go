@@ -39,6 +39,7 @@ import (
 "github.com/kafkamcp/kafkamcp/internal/match"
 "github.com/kafkamcp/kafkamcp/internal/metrics"
 "github.com/kafkamcp/kafkamcp/internal/migration"
+"github.com/kafkamcp/kafkamcp/internal/nlpipeline"
 "github.com/kafkamcp/kafkamcp/internal/nlquery"
 "github.com/kafkamcp/kafkamcp/internal/observability"
 "github.com/kafkamcp/kafkamcp/internal/onboarding"
@@ -141,6 +142,7 @@ agentConfigStore   *plugin.AgentConfigStore   // agent config marketplace
 cdcEngine          *cdc.Engine                // CDC bridge engine
 orchestrationEngine *orchestration.Engine      // multi-agent orchestration
 schemaAdvisor       *schemaadvisor.Advisor     // schema evolution advisor
+nlPipelineBuilder   *nlpipeline.Builder        // NL data pipeline builder
 }
 
 // Server is the KafkaMCP MCP server.
@@ -271,6 +273,7 @@ agentConfigStore:   plugin.NewAgentConfigStore(),
 cdcEngine:          cdc.NewEngine(logger),
 orchestrationEngine: orchestration.NewEngine(logger),
 schemaAdvisor:       schemaadvisor.NewAdvisor(logger),
+nlPipelineBuilder:   nlpipeline.NewBuilder(logger),
 },
 }
 

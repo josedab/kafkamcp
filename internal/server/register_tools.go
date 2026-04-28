@@ -49,4 +49,5 @@ s.registerAgentStoreTools()
 s.registerCDCTools()
 s.registerOrchestrationTools()
 s.registerSchemaAdvisorTools()
+s.registerNLPipelineTools()
 }
