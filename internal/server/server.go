@@ -134,6 +134,7 @@ type Platform struct {
 	configVCSEngine    *configvcs.Engine          // config version control
 	costAttrEngine     *costattribution.Engine    // real-time cost attribution
 	sandboxEngine      *sandbox.Engine            // agent sandbox environments
+agentConfigStore   *plugin.AgentConfigStore   // agent config marketplace
 }
 
 // Server is the KafkaMCP MCP server.
@@ -260,6 +261,7 @@ Platform: Platform{
 	configVCSEngine:    configvcs.NewEngine(logger),
 	costAttrEngine:     costattribution.NewEngine(logger),
 	sandboxEngine:      sandbox.NewEngine(logger),
+agentConfigStore:   plugin.NewAgentConfigStore(),
 },
 }
 
