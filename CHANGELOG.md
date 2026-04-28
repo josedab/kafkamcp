@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Schema Registry client with LRU cache and field summary
 - YAML-based policy engine with glob pattern matching for authorization
 - Structured JSON audit logger with ring buffer
-- MCP server with 22 tools and 10 resource handlers
+- MCP server with 155 tools and 18 resource handlers
 - Token bucket rate limiter (per-agent and global)
 - Prometheus metrics for all tool operations
 - Topic management: create, alter, delete topics
