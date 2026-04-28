@@ -15,6 +15,10 @@ const sidebars: SidebarsConfig = {
         'guides/multi-cluster',
         'guides/access-control',
         'guides/monitoring',
+        'guides/dashboard',
+        'guides/typescript-sdk',
+        'guides/openapi-spec',
+        'guides/intellij',
       ],
     },
     {
@@ -26,6 +30,7 @@ const sidebars: SidebarsConfig = {
         'api-reference/resources',
       ],
     },
+    'cli-reference',
     'configuration',
     {
       type: 'category',
