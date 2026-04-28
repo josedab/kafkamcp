@@ -48,6 +48,7 @@ import (
 "github.com/kafkamcp/kafkamcp/internal/orchestration"
 "github.com/kafkamcp/kafkamcp/internal/pipeline"
 "github.com/kafkamcp/kafkamcp/internal/platform"
+"github.com/kafkamcp/kafkamcp/internal/playbook"
 "github.com/kafkamcp/kafkamcp/internal/plugin"
 "github.com/kafkamcp/kafkamcp/internal/profiler"
 "github.com/kafkamcp/kafkamcp/internal/ratelimit"
@@ -143,6 +144,7 @@ cdcEngine          *cdc.Engine                // CDC bridge engine
 orchestrationEngine *orchestration.Engine      // multi-agent orchestration
 schemaAdvisor       *schemaadvisor.Advisor     // schema evolution advisor
 nlPipelineBuilder   *nlpipeline.Builder        // NL data pipeline builder
+playbookEngine      *playbook.Engine           // anomaly response playbooks
 }
 
 // Server is the KafkaMCP MCP server.
@@ -274,6 +276,7 @@ cdcEngine:          cdc.NewEngine(logger),
 orchestrationEngine: orchestration.NewEngine(logger),
 schemaAdvisor:       schemaadvisor.NewAdvisor(logger),
 nlPipelineBuilder:   nlpipeline.NewBuilder(logger),
+playbookEngine:      playbook.NewEngine(logger),
 },
 }
 
