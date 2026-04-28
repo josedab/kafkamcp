@@ -70,7 +70,13 @@ docker run --rm -v $(pwd)/kafkamcp.yaml:/etc/kafkamcp/kafkamcp.yaml \
 
 ### 2. Configure
 
-Create `kafkamcp.yaml`:
+Generate a starter configuration:
+
+```bash
+kafkamcp init
+```
+
+This creates a `kafkamcp.yaml` in the current directory. Edit it to match your environment, or create one manually:
 
 ```yaml
 server:
@@ -534,6 +540,7 @@ Once connected, your AI agent can:
 - **Health check** at `/healthz`
 - **Structured JSON logging** via `slog`
 - **OpenTelemetry tracing** — optional OTLP export for distributed trace analysis (see [Telemetry config](#telemetry-opentelemetry))
+- **Grafana dashboard** — a ready-to-use dashboard ships at [`deploy/grafana/kafkamcp-overview.json`](deploy/grafana/kafkamcp-overview.json) with 23 panels covering tool call rates, latency percentiles, message throughput, schema cache performance, auth/rate-limit denials, and active connections. Import it into Grafana and select your Prometheus data source.
 
 ## SDKs & Editor Integrations
 
@@ -800,20 +807,33 @@ kafkamcp/
 ├── cmd/kafkamcp/          # CLI entrypoint
 │   └── main.go
 ├── internal/
+│   ├── adaptiverate/      # Adaptive rate limiting
+│   ├── advisor/           # Cluster health advisor
+│   ├── agentmemory/       # Agent memory persistence
 │   ├── anomaly/           # AI-powered anomaly detection (z-score, IQR)
 │   ├── audit/             # Structured JSON audit logger
 │   ├── auth/              # Policy engine (per-agent access control)
+│   ├── catalog/           # Data catalog discovery
+│   ├── chaos/             # Chaos testing toolkit
 │   ├── cloud/             # Cloud provider integrations
+│   ├── collaboration/     # Multi-agent collaboration
+│   ├── compliance/        # Compliance policy enforcement
 │   ├── config/            # YAML config loader with env var expansion
+│   ├── configvcs/         # Configuration version control
 │   ├── contracts/         # Schema-aware data contracts
 │   ├── cost/              # Kafka cost analysis and waste detection
+│   ├── costattribution/   # Cost attribution per team/topic
+│   ├── dagworkflow/       # DAG-based workflow engine
 │   ├── dashboard/         # Dashboard data aggregation
 │   ├── dlq/               # Dead-letter queue remediation
 │   ├── evolution/         # Schema evolution advisor
+│   ├── federation/        # Multi-cluster federation
 │   ├── flowdebug/         # Message flow debugging
 │   ├── forecast/          # ML-based capacity forecasting
+│   ├── gateway/           # API gateway integration
 │   ├── gitops/            # GitOps configuration management
 │   ├── graph/             # Embedded knowledge graph
+│   ├── ide/               # IDE integration utilities
 │   ├── kafka/             # Kafka client manager (admin, consume, produce)
 │   ├── lagdiag/           # Consumer lag root cause analysis
 │   ├── lineage/           # Topic data lineage tracking
@@ -822,17 +842,29 @@ kafkamcp/
 │   ├── metrics/           # Prometheus metrics collection
 │   ├── migration/         # Kafka migration planning assistant
 │   ├── nlquery/           # Natural language query engine
+│   ├── observability/     # Observability pipeline
+│   ├── onboarding/        # Guided onboarding flows
+│   ├── opa/               # Open Policy Agent integration
+│   ├── operator/          # Kubernetes operator support
 │   ├── persona/           # Declarative agent personas
+│   ├── pipeline/          # Stream processing pipelines
 │   ├── platform/          # Multi-platform abstraction (Kafka, Redpanda, MSK)
 │   ├── plugin/            # Plugin/extension registry
+│   ├── profiler/          # Performance profiling
 │   ├── ratelimit/         # Per-agent rate limiting
+│   ├── replay/            # Message replay engine
 │   ├── replication/       # Cross-cluster replication monitoring
+│   ├── sandbox/           # Sandboxed execution environment
 │   ├── schema/            # Schema Registry client with LRU cache
 │   ├── selfheal/          # Self-healing consumer group monitor
+│   ├── semantic/          # Semantic search over messages
 │   ├── server/            # MCP server, tool/resource handlers
+│   ├── streamsql/         # SQL over Kafka streams
+│   ├── taskqueue/         # Background task queue
 │   ├── telemetry/         # OpenTelemetry tracing provider
 │   ├── tenant/            # Multi-tenant isolation
 │   ├── urlutil/           # URL validation utilities
+│   ├── viewstore/         # Materialized view store
 │   ├── watch/             # Event-driven watch subscriptions
 │   └── workflow/          # Agent workflow templates
 ├── sdk/
@@ -842,9 +874,10 @@ kafkamcp/
 │   ├── cursor/            # Cursor editor integration
 │   └── intellij/          # IntelliJ plugin (placeholder — VS Code and Cursor are prioritized)
 ├── deploy/
+│   ├── grafana/            # Grafana dashboard (kafkamcp-overview.json)
 │   └── helm/              # Helm chart for Kubernetes
 ├── docs/
-│   ├── adr/               # Architecture Decision Records (001–003)
+│   ├── adr/               # Architecture Decision Records (001–004)
 │   └── internal/          # Internal docs (PRD.md, GTM.md)
 ├── blog/                  # Blog posts & content strategy
 ├── website/               # Docusaurus documentation site (kafkamcp.dev)
@@ -930,6 +963,11 @@ To report a vulnerability, please see [SECURITY.md](SECURITY.md).
 - [x] **v0.4**: P2 tools (aggregate, join, NL query, schema evolution, Kafka Connect, topic graph)
 - [x] **v0.4**: All MCP resources (15 static + 3 templates)
 - [x] **v0.5**: Data masking and PII redaction
+- [x] **v0.6**: Anomaly detection, cost analysis, self-healing consumer groups, lag diagnostics
+- [x] **v0.7**: Knowledge graph, data lineage, migration planning, capacity forecasting
+- [x] **v0.8**: Multi-platform support (Redpanda, MSK), GitOps, agent personas, workflows
+- [x] **v0.9**: Advisor, catalog, compliance, federation, OPA integration, Grafana dashboard
+- [ ] **v0.10**: DAG workflows, semantic search, stream SQL, replay engine, sandbox execution
 - [ ] **v1.0**: Cloud managed service, enterprise features (SSO)
 
 See the [PRD](docs/internal/PRD.md) for the complete roadmap.
