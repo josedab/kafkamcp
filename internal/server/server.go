@@ -54,6 +54,7 @@ import (
 "github.com/kafkamcp/kafkamcp/internal/replication"
 "github.com/kafkamcp/kafkamcp/internal/sandbox"
 "github.com/kafkamcp/kafkamcp/internal/schema"
+"github.com/kafkamcp/kafkamcp/internal/schemaadvisor"
 "github.com/kafkamcp/kafkamcp/internal/selfheal"
 "github.com/kafkamcp/kafkamcp/internal/semantic"
 "github.com/kafkamcp/kafkamcp/internal/streamsql"
@@ -139,6 +140,7 @@ type Platform struct {
 agentConfigStore   *plugin.AgentConfigStore   // agent config marketplace
 cdcEngine          *cdc.Engine                // CDC bridge engine
 orchestrationEngine *orchestration.Engine      // multi-agent orchestration
+schemaAdvisor       *schemaadvisor.Advisor     // schema evolution advisor
 }
 
 // Server is the KafkaMCP MCP server.
@@ -268,6 +270,7 @@ Platform: Platform{
 agentConfigStore:   plugin.NewAgentConfigStore(),
 cdcEngine:          cdc.NewEngine(logger),
 orchestrationEngine: orchestration.NewEngine(logger),
+schemaAdvisor:       schemaadvisor.NewAdvisor(logger),
 },
 }
 
