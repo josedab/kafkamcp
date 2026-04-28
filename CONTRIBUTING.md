@@ -245,6 +245,37 @@ Internal packages are grouped into three tiers. Higher tiers may depend on lower
 
 Open a [GitHub Discussion](https://github.com/kafkamcp/kafkamcp/discussions) or file an issue.
 
+## Documentation Standards
+
+When contributing new tools, features, or configuration options, follow these guidelines:
+
+### Documenting New Tools
+
+- Add a description to the tool's `mcp.NewTool()` definition — this is the primary documentation surface for MCP clients.
+- Include parameter descriptions with types, defaults, and constraints in the tool registration.
+- Add an entry to the API reference in `website/docs/api-reference/tools.md` with at least one usage example.
+
+### Documenting New Features
+
+- Update `docs/ARCHITECTURE.md` if the feature introduces a new package, subsystem, or changes the server lifecycle.
+- Add a new ADR in `docs/adr/` for significant architectural decisions, and update the ADR index in `docs/adr/README.md`.
+- Update `website/docs/` if the feature is user-facing (configuration options, new CLI flags, new resources).
+
+### Windows Development
+
+KafkaMCP is developed primarily on macOS and Linux. If developing on Windows:
+
+- Use Git Bash, WSL2, or a similar Unix-compatible shell — the Makefile targets assume a Unix environment.
+- Ensure `CGO_ENABLED=1` if running tests with `-race` (requires a C compiler, e.g., via [tdm-gcc](https://jmeubank.github.io/tdm-gcc/)).
+- File paths in configuration should use forward slashes or raw strings to avoid escaping issues.
+
+### Dependency Management
+
+- Run `go mod tidy` after adding or removing dependencies.
+- Do not commit vendored dependencies — the project uses module mode.
+- Pin indirect dependencies only when necessary to resolve version conflicts.
+- When upgrading a dependency, verify that `make validate` still passes before submitting.
+
 ## Troubleshooting
 
 If you run into build failures or unexpected behavior, start with:
