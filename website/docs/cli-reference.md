@@ -139,6 +139,7 @@ KafkaMCP recognizes the following environment variables at runtime:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `KAFKAMCP_TRANSPORT` | — | Overrides `server.transport` from the config file. Valid values: `stdio`, `sse`, `streamable-http`. |
+| `KAFKAMCP_LOG_LEVEL` | — | Overrides `server.log_level` from the config file. Valid values: `debug`, `info`, `warn`, `error`. The `--log-level` CLI flag takes precedence over this variable. |
 | `KAFKAMCP_ALLOW_INSECURE` | — | Set to `true` to allow `insecure_skip_verify` in `connect_tls` settings. Required as an explicit opt-in for skipping TLS certificate verification. **Not recommended for production.** |
 
 Additionally, KafkaMCP expands `${VAR}` and `${VAR:-default}` syntax in the YAML config file using process environment variables. See [Configuration](/docs/configuration) for details.

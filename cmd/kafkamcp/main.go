@@ -194,6 +194,11 @@ func runServer(cmd *cobra.Command, args []string) error {
 		cfg.Server.Transport = t
 	}
 
+	// Environment variable overrides config file log level
+	if l := os.Getenv("KAFKAMCP_LOG_LEVEL"); l != "" && logLevel == "" {
+		cfg.Server.LogLevel = l
+	}
+
 	level := slog.LevelInfo
 	switch cfg.Server.LogLevel {
 	case "debug":
