@@ -15,7 +15,9 @@ import (
 "github.com/kafkamcp/kafkamcp/internal/audit"
 "github.com/kafkamcp/kafkamcp/internal/auth"
 "github.com/kafkamcp/kafkamcp/internal/catalog"
+"github.com/kafkamcp/kafkamcp/internal/capability"
 "github.com/kafkamcp/kafkamcp/internal/cdc"
+"github.com/kafkamcp/kafkamcp/internal/chat"
 "github.com/kafkamcp/kafkamcp/internal/chaos"
 "github.com/kafkamcp/kafkamcp/internal/clouddeploy"
 "github.com/kafkamcp/kafkamcp/internal/collaboration"
@@ -24,10 +26,14 @@ import (
 "github.com/kafkamcp/kafkamcp/internal/config"
 "github.com/kafkamcp/kafkamcp/internal/configvcs"
 "github.com/kafkamcp/kafkamcp/internal/contracts"
+"github.com/kafkamcp/kafkamcp/internal/controlplane"
+"github.com/kafkamcp/kafkamcp/internal/correlation"
 "github.com/kafkamcp/kafkamcp/internal/cost"
 "github.com/kafkamcp/kafkamcp/internal/costattribution"
 "github.com/kafkamcp/kafkamcp/internal/dagworkflow"
 "github.com/kafkamcp/kafkamcp/internal/dataquality"
+"github.com/kafkamcp/kafkamcp/internal/devmode"
+"github.com/kafkamcp/kafkamcp/internal/digitaltwin"
 "github.com/kafkamcp/kafkamcp/internal/dlq"
 "github.com/kafkamcp/kafkamcp/internal/evolution"
 "github.com/kafkamcp/kafkamcp/internal/eventsourcing"
@@ -66,11 +72,14 @@ import (
 "github.com/kafkamcp/kafkamcp/internal/sandbox"
 "github.com/kafkamcp/kafkamcp/internal/schema"
 "github.com/kafkamcp/kafkamcp/internal/schemaadvisor"
+"github.com/kafkamcp/kafkamcp/internal/schemaplayground"
 "github.com/kafkamcp/kafkamcp/internal/selfheal"
 "github.com/kafkamcp/kafkamcp/internal/semantic"
+"github.com/kafkamcp/kafkamcp/internal/smartroute"
 "github.com/kafkamcp/kafkamcp/internal/streamsql"
 "github.com/kafkamcp/kafkamcp/internal/taskqueue"
 "github.com/kafkamcp/kafkamcp/internal/telemetry"
+"github.com/kafkamcp/kafkamcp/internal/timeseries"
 "github.com/kafkamcp/kafkamcp/internal/topicportal"
 "github.com/kafkamcp/kafkamcp/internal/vectorsync"
 "github.com/kafkamcp/kafkamcp/internal/viewstore"
@@ -168,6 +177,15 @@ type Platform struct {
 	topicPortalEngine   *topicportal.Engine         // self-service topic portal
 	gitopsReconciler    *gitops.Reconciler          // GitOps reconciliation loop
 	llmPipelineEngine   *llmpipeline.Engine         // LLM training data pipeline
+	chatEngine          *chat.Engine                // conversational REPL chat engine
+	smartRouter         *smartroute.Router          // intelligent tool routing & composition
+	timeseriesEngine    *timeseries.Engine          // time-series analytics engine
+	controlPlane        *controlplane.Manager       // multi-tenant SaaS control plane
+	schemaPlayground    *schemaplayground.Engine    // interactive schema playground
+	capabilityNegotiator *capability.Negotiator    // agent capability negotiation
+	digitalTwin         *digitaltwin.Engine        // cluster digital twin simulation
+	correlationEngine   *correlation.Engine        // observability correlation engine
+	devModeEngine       *devmode.Engine            // offline-first local dev mode
 }
 
 // Server is the KafkaMCP MCP server.
@@ -312,6 +330,15 @@ Platform: Platform{
 	topicPortalEngine:   topicportal.NewEngine(topicportal.DefaultApprovalChainConfig(), logger),
 	gitopsReconciler:    gitops.NewReconciler(gitops.DefaultReconcilerConfig(), gitops.NewManager(logger), logger),
 	llmPipelineEngine:   llmpipeline.NewEngine(logger),
+	chatEngine:          chat.NewEngine(logger),
+	smartRouter:         smartroute.NewRouter(logger),
+	timeseriesEngine:    timeseries.NewEngine(logger),
+	controlPlane:        controlplane.NewManager(logger),
+	schemaPlayground:    schemaplayground.NewEngine(logger),
+	capabilityNegotiator: capability.NewNegotiator(logger),
+	digitalTwin:         digitaltwin.NewEngine(logger),
+	correlationEngine:   correlation.NewEngine(logger),
+	devModeEngine:       devmode.NewEngine(logger),
 },
 }
 
