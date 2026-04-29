@@ -1,0 +1,263 @@
+package crosslineage
+
+import (
+	"fmt"
+	"log/slog"
+	"sort"
+	"sync"
+	"time"
+)
+
+// NodeType represents the type of entity in the lineage graph.
+type NodeType string
+
+const (
+	NodeTopic     NodeType = "topic"
+	NodeConnector NodeType = "connector"
+	NodeStream    NodeType = "stream_app"
+	NodeConsumer  NodeType = "consumer_group"
+	NodeExternal  NodeType = "external"
+)
+
+// Node is an entity in the lineage graph.
+type Node struct {
+	ID       string            `json:"id"`
+	Name     string            `json:"name"`
+	Type     NodeType          `json:"type"`
+	Metadata map[string]string `json:"metadata,omitempty"`
+}
+
+// Edge represents a data flow relationship between nodes.
+type Edge struct {
+	ID        string            `json:"id"`
+	SourceID  string            `json:"source_id"`
+	TargetID  string            `json:"target_id"`
+	Label     string            `json:"label,omitempty"`
+	Type      string            `json:"type"` // produces, consumes, transforms, replicates
+	Metadata  map[string]string `json:"metadata,omitempty"`
+	CreatedAt time.Time         `json:"created_at"`
+}
+
+// LineageGraph is the complete lineage visualization.
+type LineageGraph struct {
+	Nodes       []Node   `json:"nodes"`
+	Edges       []Edge   `json:"edges"`
+	TotalNodes  int      `json:"total_nodes"`
+	TotalEdges  int      `json:"total_edges"`
+	GeneratedAt time.Time `json:"generated_at"`
+}
+
+// Lineage describes the upstream/downstream lineage of a topic.
+type Lineage struct {
+	Topic      string     `json:"topic"`
+	Upstream   []FlowPath `json:"upstream"`
+	Downstream []FlowPath `json:"downstream"`
+	Depth      int        `json:"depth"`
+}
+
+// FlowPath represents a single data flow path.
+type FlowPath struct {
+	From     string `json:"from"`
+	To       string `json:"to"`
+	Via      string `json:"via,omitempty"`
+	ViaType  string `json:"via_type,omitempty"`
+	FlowType string `json:"flow_type"`
+}
+
+// Engine manages cross-topic lineage tracking.
+type Engine struct {
+	mu     sync.RWMutex
+	nodes  map[string]*Node
+	edges  map[string]*Edge
+	logger *slog.Logger
+	nextID int64
+}
+
+// NewEngine creates a new cross-lineage engine.
+func NewEngine(logger *slog.Logger) *Engine {
+	return &Engine{
+		nodes:  make(map[string]*Node),
+		edges:  make(map[string]*Edge),
+		logger: logger,
+	}
+}
+
+// RegisterNode adds a node to the lineage graph.
+func (e *Engine) RegisterNode(name string, nodeType NodeType, metadata map[string]string) *Node {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	id := fmt.Sprintf("%s:%s", nodeType, name)
+	if existing, ok := e.nodes[id]; ok {
+		for k, v := range metadata {
+			if existing.Metadata == nil {
+				existing.Metadata = make(map[string]string)
+			}
+			existing.Metadata[k] = v
+		}
+		return existing
+	}
+
+	node := &Node{ID: id, Name: name, Type: nodeType, Metadata: metadata}
+	e.nodes[id] = node
+	return node
+}
+
+// AddEdge creates a data flow edge between two nodes.
+func (e *Engine) AddEdge(sourceID, targetID, label, flowType string, metadata map[string]string) (*Edge, error) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	if _, ok := e.nodes[sourceID]; !ok {
+		return nil, fmt.Errorf("source node %q not found", sourceID)
+	}
+	if _, ok := e.nodes[targetID]; !ok {
+		return nil, fmt.Errorf("target node %q not found", targetID)
+	}
+
+	e.nextID++
+	id := fmt.Sprintf("edge_%d", e.nextID)
+
+	edge := &Edge{
+		ID:        id,
+		SourceID:  sourceID,
+		TargetID:  targetID,
+		Label:     label,
+		Type:      flowType,
+		Metadata:  metadata,
+		CreatedAt: time.Now(),
+	}
+	e.edges[id] = edge
+	return edge, nil
+}
+
+// GetGraph returns the complete lineage graph.
+func (e *Engine) GetGraph() *LineageGraph {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+
+	var nodes []Node
+	for _, n := range e.nodes {
+		nodes = append(nodes, *n)
+	}
+	sort.Slice(nodes, func(i, j int) bool { return nodes[i].ID < nodes[j].ID })
+
+	var edges []Edge
+	for _, edge := range e.edges {
+		edges = append(edges, *edge)
+	}
+	sort.Slice(edges, func(i, j int) bool { return edges[i].ID < edges[j].ID })
+
+	return &LineageGraph{
+		Nodes:       nodes,
+		Edges:       edges,
+		TotalNodes:  len(nodes),
+		TotalEdges:  len(edges),
+		GeneratedAt: time.Now(),
+	}
+}
+
+// TraceLineage returns upstream and downstream lineage for a topic.
+func (e *Engine) TraceLineage(topicName string, maxDepth int) *Lineage {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+
+	if maxDepth <= 0 {
+		maxDepth = 5
+	}
+
+	topicID := fmt.Sprintf("topic:%s", topicName)
+	lineage := &Lineage{
+		Topic: topicName,
+		Depth: maxDepth,
+	}
+
+	// Trace upstream (who sends data to this topic)
+	visited := make(map[string]bool)
+	lineage.Upstream = e.traceUpstream(topicID, maxDepth, visited)
+
+	// Trace downstream (where does data from this topic go)
+	visited = make(map[string]bool)
+	lineage.Downstream = e.traceDownstream(topicID, maxDepth, visited)
+
+	return lineage
+}
+
+func (e *Engine) traceUpstream(nodeID string, depth int, visited map[string]bool) []FlowPath {
+	if depth <= 0 || visited[nodeID] {
+		return nil
+	}
+	visited[nodeID] = true
+
+	var paths []FlowPath
+	for _, edge := range e.edges {
+		if edge.TargetID == nodeID {
+			source := e.nodes[edge.SourceID]
+			target := e.nodes[edge.TargetID]
+			if source != nil && target != nil {
+				paths = append(paths, FlowPath{
+					From:     source.Name,
+					To:       target.Name,
+					FlowType: edge.Type,
+				})
+				paths = append(paths, e.traceUpstream(edge.SourceID, depth-1, visited)...)
+			}
+		}
+	}
+	return paths
+}
+
+func (e *Engine) traceDownstream(nodeID string, depth int, visited map[string]bool) []FlowPath {
+	if depth <= 0 || visited[nodeID] {
+		return nil
+	}
+	visited[nodeID] = true
+
+	var paths []FlowPath
+	for _, edge := range e.edges {
+		if edge.SourceID == nodeID {
+			source := e.nodes[edge.SourceID]
+			target := e.nodes[edge.TargetID]
+			if source != nil && target != nil {
+				paths = append(paths, FlowPath{
+					From:     source.Name,
+					To:       target.Name,
+					FlowType: edge.Type,
+				})
+				paths = append(paths, e.traceDownstream(edge.TargetID, depth-1, visited)...)
+			}
+		}
+	}
+	return paths
+}
+
+// RemoveNode removes a node and its associated edges.
+func (e *Engine) RemoveNode(nodeID string) error {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	if _, ok := e.nodes[nodeID]; !ok {
+		return fmt.Errorf("node %q not found", nodeID)
+	}
+
+	// Remove associated edges
+	for id, edge := range e.edges {
+		if edge.SourceID == nodeID || edge.TargetID == nodeID {
+			delete(e.edges, id)
+		}
+	}
+	delete(e.nodes, nodeID)
+	return nil
+}
+
+// RemoveEdge removes a single edge.
+func (e *Engine) RemoveEdge(edgeID string) error {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	if _, ok := e.edges[edgeID]; !ok {
+		return fmt.Errorf("edge %q not found", edgeID)
+	}
+	delete(e.edges, edgeID)
+	return nil
+}
