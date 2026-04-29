@@ -142,15 +142,15 @@ type Platform struct {
 	configVCSEngine    *configvcs.Engine          // config version control
 	costAttrEngine     *costattribution.Engine    // real-time cost attribution
 	sandboxEngine      *sandbox.Engine            // agent sandbox environments
-agentConfigStore   *plugin.AgentConfigStore   // agent config marketplace
-cdcEngine          *cdc.Engine                // CDC bridge engine
-orchestrationEngine *orchestration.Engine      // multi-agent orchestration
-schemaAdvisor       *schemaadvisor.Advisor     // schema evolution advisor
-nlPipelineBuilder   *nlpipeline.Builder        // NL data pipeline builder
-playbookEngine      *playbook.Engine           // anomaly response playbooks
-cloudDeployGenerator *clouddeploy.Generator    // cloud deployment generator
-vectorSyncEngine    *vectorsync.Engine         // vector DB sync bridge
-finOpsDashboard     *finops.Dashboard          // FinOps cost intelligence
+	agentConfigStore   *plugin.AgentConfigStore   // agent config marketplace
+	cdcEngine          *cdc.Engine                // CDC bridge engine
+	orchestrationEngine *orchestration.Engine      // multi-agent orchestration
+	schemaAdvisor       *schemaadvisor.Advisor     // schema evolution advisor
+	nlPipelineBuilder   *nlpipeline.Builder        // NL data pipeline builder
+	playbookEngine      *playbook.Engine           // anomaly response playbooks
+	cloudDeployGenerator *clouddeploy.Generator    // cloud deployment generator
+	vectorSyncEngine    *vectorsync.Engine         // vector DB sync bridge
+	finOpsDashboard     *finops.Dashboard          // FinOps cost intelligence
 }
 
 // Server is the KafkaMCP MCP server.
@@ -277,15 +277,15 @@ Platform: Platform{
 	configVCSEngine:    configvcs.NewEngine(logger),
 	costAttrEngine:     costattribution.NewEngine(logger),
 	sandboxEngine:      sandbox.NewEngine(logger),
-agentConfigStore:   plugin.NewAgentConfigStore(),
-cdcEngine:          cdc.NewEngine(logger),
-orchestrationEngine: orchestration.NewEngine(logger),
-schemaAdvisor:       schemaadvisor.NewAdvisor(logger),
-nlPipelineBuilder:   nlpipeline.NewBuilder(logger),
-playbookEngine:      playbook.NewEngine(logger),
-cloudDeployGenerator: clouddeploy.NewGenerator(logger),
-vectorSyncEngine:    vectorsync.NewEngine(logger),
-finOpsDashboard:     finops.NewDashboard(logger),
+	agentConfigStore:   plugin.NewAgentConfigStore(),
+	cdcEngine:          cdc.NewEngine(logger),
+	orchestrationEngine: orchestration.NewEngine(logger),
+	schemaAdvisor:       schemaadvisor.NewAdvisor(logger),
+	nlPipelineBuilder:   nlpipeline.NewBuilder(logger),
+	playbookEngine:      playbook.NewEngine(logger),
+	cloudDeployGenerator: clouddeploy.NewGenerator(logger),
+	vectorSyncEngine:    vectorsync.NewEngine(logger),
+	finOpsDashboard:     finops.NewDashboard(logger),
 },
 }
 
