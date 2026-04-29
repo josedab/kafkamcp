@@ -103,6 +103,9 @@ func (d *Dashboard) Handler() http.Handler {
 	// SSE endpoint for live updates (protected by auth middleware)
 	mux.HandleFunc("/api/v1/events", d.requireAuth(d.handleSSE))
 
+	// Enhanced dashboard routes (consumer lag, agent activity, flow rates, summary)
+	d.RegisterDashboardRoutes(mux)
+
 	// V2 enhanced dashboard APIs
 	v2 := NewDashboardV2(d.kafkaManager, d.auditLogger, d.logger)
 	v2.RegisterRoutes(mux, d.requireAuth)

@@ -124,6 +124,39 @@
       </div>
       <div id="partition-view" class="topology-placeholder">Enter a topic name to view partition health</div>
     </div>
+
+    <!-- Consumer Group Monitoring -->
+    <div class="card" style="margin-bottom: 16px;">
+      <h2>👥 Consumer Group Monitor</h2>
+      <div style="margin-bottom:8px;display:flex;gap:8px;align-items:center;">
+        <input id="cg-filter" type="text" placeholder="Filter groups..." style="background:#0d1117;border:1px solid #30363d;color:#c9d1d9;padding:6px 12px;border-radius:6px;flex:1;">
+        <button class="refresh-btn" onclick="loadConsumerGroups()">Refresh Groups</button>
+      </div>
+      <div class="activity-feed" id="cg-feed" style="max-height:400px;">
+        <table>
+          <thead><tr><th>Group ID</th><th>State</th><th>Members</th><th>Total Lag</th><th>Actions</th></tr></thead>
+          <tbody id="cg-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Consumer Lag Timeline -->
+    <div class="card" style="margin-bottom: 16px;">
+      <h2>📉 Consumer Lag Overview</h2>
+      <div id="lag-overview" class="topology-placeholder">Click Refresh to load lag data</div>
+    </div>
+
+    <!-- Dashboard Summary -->
+    <div class="card" style="margin-bottom: 16px;">
+      <h2>📋 Dashboard Summary</h2>
+      <div id="dashboard-summary" class="topology-placeholder">Loading summary...</div>
+    </div>
+
+    <!-- Schema Browser -->
+    <div class="card" style="margin-bottom: 16px;">
+      <h2>📐 Schema Browser</h2>
+      <div id="schema-browser" class="topology-placeholder">Loading schemas...</div>
+    </div>
   </div>
 
   <script>
@@ -312,9 +345,76 @@
       el.innerHTML = html;
     }
 
+    // Consumer Group Monitor
+    async function loadConsumerGroups() {
+      const filter = document.getElementById('cg-filter').value.toLowerCase();
+      const data = await fetchJSON('/api/v2/consumer-groups/detail');
+      if (!data) return;
+      const tbody = document.getElementById('cg-body');
+      tbody.innerHTML = '';
+      const groups = data.consumer_groups || [];
+      groups.filter(g => !filter || g.group_id.toLowerCase().includes(filter)).forEach(g => {
+        const tr = document.createElement('tr');
+        const stateColor = g.state === 'Stable' ? '#3fb950' : (g.state === 'Empty' ? '#8b949e' : '#e3b341');
+        const lagColor = g.total_lag > 1000 ? '#f85149' : (g.total_lag > 100 ? '#e3b341' : '#3fb950');
+        tr.innerHTML = `<td>${esc(g.group_id)}</td><td style="color:${stateColor}">${g.state}</td><td>${g.members || 0}</td><td style="color:${lagColor}">${g.total_lag}</td><td><button class="refresh-btn" onclick="showGroupDetail('${esc(g.group_id)}')">Detail</button></td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function showGroupDetail(groupId) {
+      const data = await fetchJSON('/api/v2/consumer-groups/detail?group_id=' + encodeURIComponent(groupId));
+      if (!data) return;
+      const el = document.getElementById('cg-feed');
+      const detail = document.createElement('div');
+      detail.style.cssText = 'background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:12px;margin-top:8px;';
+      detail.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><strong>${esc(groupId)}</strong><button class="refresh-btn" onclick="this.parentElement.parentElement.remove()">✕</button></div><pre style="font-size:11px;color:#8b949e;overflow-x:auto;">${JSON.stringify(data, null, 2).substring(0, 2000)}</pre>`;
+      el.appendChild(detail);
+    }
+
+    // Consumer Lag Overview
+    async function loadLagOverview() {
+      const data = await fetchJSON('/api/v1/consumer-lag');
+      const el = document.getElementById('lag-overview');
+      if (!data || !data.groups || data.groups.length === 0) { el.textContent = 'No consumer groups found'; return; }
+      let html = `<div style="margin-bottom:12px;font-size:18px;color:#58a6ff;">Total Lag: <strong>${data.total_lag}</strong></div>`;
+      html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;">';
+      data.groups.sort((a, b) => b.total_lag - a.total_lag).slice(0, 20).forEach(g => {
+        const lagColor = g.total_lag > 1000 ? '#f85149' : (g.total_lag > 100 ? '#e3b341' : '#3fb950');
+        html += `<div style="background:#0d1117;border:1px solid #21262d;border-radius:6px;padding:8px;"><div style="font-size:12px;color:#8b949e;margin-bottom:4px;">${esc(g.group_id)}</div><div style="font-size:20px;color:${lagColor};font-weight:600;">${g.total_lag}</div><div style="font-size:11px;color:#8b949e;">${g.state}</div></div>`;
+      });
+      html += '</div>';
+      el.innerHTML = html;
+    }
+
+    // Dashboard Summary
+    async function loadDashboardSummary() {
+      const data = await fetchJSON('/api/v1/dashboard-summary');
+      const el = document.getElementById('dashboard-summary');
+      if (!data) { el.textContent = 'Failed to load summary'; return; }
+      const statusColor = data.cluster_status === 'healthy' ? '#3fb950' : '#f85149';
+      el.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;">
+        <div><div style="color:#8b949e;font-size:11px;">Cluster Status</div><div style="font-size:18px;color:${statusColor};">${data.cluster_status}</div></div>
+        <div><div style="color:#8b949e;font-size:11px;">Topics</div><div style="font-size:18px;color:#58a6ff;">${data.topic_count || 0}</div></div>
+        <div><div style="color:#8b949e;font-size:11px;">Consumer Groups</div><div style="font-size:18px;color:#58a6ff;">${data.consumer_group_count || 0}</div></div>
+        <div><div style="color:#8b949e;font-size:11px;">Total Lag</div><div style="font-size:18px;color:#e3b341;">${data.total_consumer_lag || 0}</div></div>
+        <div><div style="color:#8b949e;font-size:11px;">SSE Clients</div><div style="font-size:18px;color:#58a6ff;">${data.connected_clients || 0}</div></div>
+        <div><div style="color:#8b949e;font-size:11px;">Recent Events</div><div style="font-size:18px;color:#58a6ff;">${data.recent_activity_count || 0}</div></div>
+      </div>`;
+    }
+
+    // Schema Browser
+    async function loadSchemas() {
+      const data = await fetchJSON('/api/v1/schemas');
+      const el = document.getElementById('schema-browser');
+      if (!data) { el.textContent = 'Failed to load schemas'; return; }
+      if (data.message) { el.textContent = data.message; return; }
+      el.innerHTML = `<pre style="font-size:11px;color:#8b949e;">${JSON.stringify(data, null, 2).substring(0, 3000)}</pre>`;
+    }
+
     // Enhanced refresh
     const origRefresh = refreshAll;
-    function refreshAll() { origRefresh(); loadHeatmap(); loadClusterOverview(); }
+    function refreshAll() { origRefresh(); loadHeatmap(); loadClusterOverview(); loadConsumerGroups(); loadLagOverview(); loadDashboardSummary(); loadSchemas(); }
     refreshAll();
   </script>
 </body>
