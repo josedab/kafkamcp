@@ -197,6 +197,32 @@ func (c *ConnectClient) ConnectorHealth(ctx context.Context, name string) (*Conn
 	return result, nil
 }
 
+// PauseConnector pauses a running connector via the Connect REST API.
+func (c *ConnectClient) PauseConnector(ctx context.Context, name string) error {
+	if c == nil {
+		return fmt.Errorf("Kafka Connect URL not configured")
+	}
+	reqURL := c.baseURL + "/connectors/" + url.PathEscape(name) + "/pause"
+	_, err := c.httpPut(ctx, reqURL, nil)
+	if err != nil {
+		return fmt.Errorf("pausing connector %q: %w", name, err)
+	}
+	return nil
+}
+
+// ResumeConnector resumes a paused connector via the Connect REST API.
+func (c *ConnectClient) ResumeConnector(ctx context.Context, name string) error {
+	if c == nil {
+		return fmt.Errorf("Kafka Connect URL not configured")
+	}
+	reqURL := c.baseURL + "/connectors/" + url.PathEscape(name) + "/resume"
+	_, err := c.httpPut(ctx, reqURL, nil)
+	if err != nil {
+		return fmt.Errorf("resuming connector %q: %w", name, err)
+	}
+	return nil
+}
+
 func (c *ConnectClient) httpPost(ctx context.Context, reqURL string, payload any) ([]byte, error) {
 	data, err := json.Marshal(payload)
 	if err != nil {
