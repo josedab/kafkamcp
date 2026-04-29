@@ -8,12 +8,14 @@ import (
 "time"
 
 "github.com/kafkamcp/kafkamcp/internal/adaptiverate"
+"github.com/kafkamcp/kafkamcp/internal/aclmgmt"
 "github.com/kafkamcp/kafkamcp/internal/agentmemory"
 "github.com/kafkamcp/kafkamcp/internal/agentprofile"
 "github.com/kafkamcp/kafkamcp/internal/anomaly"
 "github.com/kafkamcp/kafkamcp/internal/advisor"
 "github.com/kafkamcp/kafkamcp/internal/audit"
 "github.com/kafkamcp/kafkamcp/internal/auth"
+"github.com/kafkamcp/kafkamcp/internal/benchmark"
 "github.com/kafkamcp/kafkamcp/internal/catalog"
 "github.com/kafkamcp/kafkamcp/internal/capability"
 "github.com/kafkamcp/kafkamcp/internal/cdc"
@@ -30,6 +32,7 @@ import (
 "github.com/kafkamcp/kafkamcp/internal/correlation"
 "github.com/kafkamcp/kafkamcp/internal/cost"
 "github.com/kafkamcp/kafkamcp/internal/costattribution"
+"github.com/kafkamcp/kafkamcp/internal/crosslineage"
 "github.com/kafkamcp/kafkamcp/internal/dagworkflow"
 "github.com/kafkamcp/kafkamcp/internal/dataquality"
 "github.com/kafkamcp/kafkamcp/internal/devmode"
@@ -44,6 +47,7 @@ import (
 "github.com/kafkamcp/kafkamcp/internal/gateway"
 "github.com/kafkamcp/kafkamcp/internal/gitops"
 "github.com/kafkamcp/kafkamcp/internal/graph"
+"github.com/kafkamcp/kafkamcp/internal/healthscore"
 "github.com/kafkamcp/kafkamcp/internal/incident"
 "github.com/kafkamcp/kafkamcp/internal/kafka"
 "github.com/kafkamcp/kafkamcp/internal/lagdiag"
@@ -53,6 +57,7 @@ import (
 "github.com/kafkamcp/kafkamcp/internal/match"
 "github.com/kafkamcp/kafkamcp/internal/metrics"
 "github.com/kafkamcp/kafkamcp/internal/migration"
+"github.com/kafkamcp/kafkamcp/internal/msgsampling"
 "github.com/kafkamcp/kafkamcp/internal/nlpipeline"
 "github.com/kafkamcp/kafkamcp/internal/nlquery"
 "github.com/kafkamcp/kafkamcp/internal/observability"
@@ -63,24 +68,28 @@ import (
 "github.com/kafkamcp/kafkamcp/internal/pipeline"
 "github.com/kafkamcp/kafkamcp/internal/platform"
 "github.com/kafkamcp/kafkamcp/internal/playbook"
+"github.com/kafkamcp/kafkamcp/internal/predictalert"
 "github.com/kafkamcp/kafkamcp/internal/plugin"
 "github.com/kafkamcp/kafkamcp/internal/profiler"
 "github.com/kafkamcp/kafkamcp/internal/ratelimit"
 "github.com/kafkamcp/kafkamcp/internal/replay"
 "github.com/kafkamcp/kafkamcp/internal/replication"
 "github.com/kafkamcp/kafkamcp/internal/retention"
+"github.com/kafkamcp/kafkamcp/internal/runbook"
 "github.com/kafkamcp/kafkamcp/internal/sandbox"
 "github.com/kafkamcp/kafkamcp/internal/schema"
 "github.com/kafkamcp/kafkamcp/internal/schemaadvisor"
 "github.com/kafkamcp/kafkamcp/internal/schemaplayground"
 "github.com/kafkamcp/kafkamcp/internal/selfheal"
 "github.com/kafkamcp/kafkamcp/internal/semantic"
+"github.com/kafkamcp/kafkamcp/internal/sessionreplay"
 "github.com/kafkamcp/kafkamcp/internal/smartroute"
 "github.com/kafkamcp/kafkamcp/internal/streamsql"
 "github.com/kafkamcp/kafkamcp/internal/taskqueue"
 "github.com/kafkamcp/kafkamcp/internal/telemetry"
 "github.com/kafkamcp/kafkamcp/internal/timeseries"
 "github.com/kafkamcp/kafkamcp/internal/topicportal"
+"github.com/kafkamcp/kafkamcp/internal/topictemplate"
 "github.com/kafkamcp/kafkamcp/internal/vectorsync"
 "github.com/kafkamcp/kafkamcp/internal/viewstore"
 "github.com/kafkamcp/kafkamcp/internal/watch"
@@ -186,6 +195,15 @@ type Platform struct {
 	digitalTwin         *digitaltwin.Engine        // cluster digital twin simulation
 	correlationEngine   *correlation.Engine        // observability correlation engine
 	devModeEngine       *devmode.Engine            // offline-first local dev mode
+	healthScoreEngine   *healthscore.Engine        // unified cluster health scoring
+	topicTemplateEngine *topictemplate.Engine       // declarative topic-as-code templates
+	sessionReplayEngine *sessionreplay.Engine       // agent session recording & replay
+	predictAlertEngine  *predictalert.Engine        // predictive consumer group alerting
+	msgSamplingEngine   *msgsampling.Engine         // message sampling & profiling
+	runbookEngine       *runbook.Engine             // automated runbook executor
+	crossLineageEngine  *crosslineage.Engine       // cross-topic data lineage
+	aclMgmtEngine       *aclmgmt.Engine            // ACL management with diff/audit
+	benchmarkEngine     *benchmark.Engine          // embedded benchmarking & load testing
 }
 
 // Server is the KafkaMCP MCP server.
@@ -339,6 +357,15 @@ Platform: Platform{
 	digitalTwin:         digitaltwin.NewEngine(logger),
 	correlationEngine:   correlation.NewEngine(logger),
 	devModeEngine:       devmode.NewEngine(logger),
+	healthScoreEngine:   healthscore.NewEngine(logger),
+	topicTemplateEngine: topictemplate.NewEngine(logger),
+	sessionReplayEngine: sessionreplay.NewEngine(logger),
+	predictAlertEngine:  predictalert.NewEngine(logger),
+	msgSamplingEngine:   msgsampling.NewEngine(logger),
+	runbookEngine:       runbook.NewEngine(logger),
+	crossLineageEngine:  crosslineage.NewEngine(logger),
+	aclMgmtEngine:       aclmgmt.NewEngine(logger),
+	benchmarkEngine:     benchmark.NewEngine(logger),
 },
 }
 
