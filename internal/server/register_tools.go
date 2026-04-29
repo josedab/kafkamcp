@@ -53,4 +53,5 @@ s.registerNLPipelineTools()
 s.registerPlaybookTools()
 s.registerCloudDeployTools()
 s.registerVectorSyncTools()
+s.registerFinOpsTools()
 }

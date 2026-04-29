@@ -28,6 +28,7 @@ import (
 "github.com/kafkamcp/kafkamcp/internal/dlq"
 "github.com/kafkamcp/kafkamcp/internal/evolution"
 "github.com/kafkamcp/kafkamcp/internal/federation"
+"github.com/kafkamcp/kafkamcp/internal/finops"
 "github.com/kafkamcp/kafkamcp/internal/flowdebug"
 "github.com/kafkamcp/kafkamcp/internal/forecast"
 "github.com/kafkamcp/kafkamcp/internal/gateway"
@@ -149,6 +150,7 @@ nlPipelineBuilder   *nlpipeline.Builder        // NL data pipeline builder
 playbookEngine      *playbook.Engine           // anomaly response playbooks
 cloudDeployGenerator *clouddeploy.Generator    // cloud deployment generator
 vectorSyncEngine    *vectorsync.Engine         // vector DB sync bridge
+finOpsDashboard     *finops.Dashboard          // FinOps cost intelligence
 }
 
 // Server is the KafkaMCP MCP server.
@@ -283,6 +285,7 @@ nlPipelineBuilder:   nlpipeline.NewBuilder(logger),
 playbookEngine:      playbook.NewEngine(logger),
 cloudDeployGenerator: clouddeploy.NewGenerator(logger),
 vectorSyncEngine:    vectorsync.NewEngine(logger),
+finOpsDashboard:     finops.NewDashboard(logger),
 },
 }
 
