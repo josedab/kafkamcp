@@ -9,6 +9,7 @@ import (
 
 "github.com/kafkamcp/kafkamcp/internal/adaptiverate"
 "github.com/kafkamcp/kafkamcp/internal/agentmemory"
+"github.com/kafkamcp/kafkamcp/internal/agentprofile"
 "github.com/kafkamcp/kafkamcp/internal/anomaly"
 "github.com/kafkamcp/kafkamcp/internal/advisor"
 "github.com/kafkamcp/kafkamcp/internal/audit"
@@ -18,6 +19,7 @@ import (
 "github.com/kafkamcp/kafkamcp/internal/chaos"
 "github.com/kafkamcp/kafkamcp/internal/clouddeploy"
 "github.com/kafkamcp/kafkamcp/internal/collaboration"
+"github.com/kafkamcp/kafkamcp/internal/codec"
 "github.com/kafkamcp/kafkamcp/internal/compliance"
 "github.com/kafkamcp/kafkamcp/internal/config"
 "github.com/kafkamcp/kafkamcp/internal/configvcs"
@@ -25,8 +27,10 @@ import (
 "github.com/kafkamcp/kafkamcp/internal/cost"
 "github.com/kafkamcp/kafkamcp/internal/costattribution"
 "github.com/kafkamcp/kafkamcp/internal/dagworkflow"
+"github.com/kafkamcp/kafkamcp/internal/dataquality"
 "github.com/kafkamcp/kafkamcp/internal/dlq"
 "github.com/kafkamcp/kafkamcp/internal/evolution"
+"github.com/kafkamcp/kafkamcp/internal/eventsourcing"
 "github.com/kafkamcp/kafkamcp/internal/federation"
 "github.com/kafkamcp/kafkamcp/internal/finops"
 "github.com/kafkamcp/kafkamcp/internal/flowdebug"
@@ -34,9 +38,11 @@ import (
 "github.com/kafkamcp/kafkamcp/internal/gateway"
 "github.com/kafkamcp/kafkamcp/internal/gitops"
 "github.com/kafkamcp/kafkamcp/internal/graph"
+"github.com/kafkamcp/kafkamcp/internal/incident"
 "github.com/kafkamcp/kafkamcp/internal/kafka"
 "github.com/kafkamcp/kafkamcp/internal/lagdiag"
 "github.com/kafkamcp/kafkamcp/internal/lineage"
+"github.com/kafkamcp/kafkamcp/internal/llmpipeline"
 "github.com/kafkamcp/kafkamcp/internal/masking"
 "github.com/kafkamcp/kafkamcp/internal/match"
 "github.com/kafkamcp/kafkamcp/internal/metrics"
@@ -56,6 +62,7 @@ import (
 "github.com/kafkamcp/kafkamcp/internal/ratelimit"
 "github.com/kafkamcp/kafkamcp/internal/replay"
 "github.com/kafkamcp/kafkamcp/internal/replication"
+"github.com/kafkamcp/kafkamcp/internal/retention"
 "github.com/kafkamcp/kafkamcp/internal/sandbox"
 "github.com/kafkamcp/kafkamcp/internal/schema"
 "github.com/kafkamcp/kafkamcp/internal/schemaadvisor"
@@ -64,6 +71,7 @@ import (
 "github.com/kafkamcp/kafkamcp/internal/streamsql"
 "github.com/kafkamcp/kafkamcp/internal/taskqueue"
 "github.com/kafkamcp/kafkamcp/internal/telemetry"
+"github.com/kafkamcp/kafkamcp/internal/topicportal"
 "github.com/kafkamcp/kafkamcp/internal/vectorsync"
 "github.com/kafkamcp/kafkamcp/internal/viewstore"
 "github.com/kafkamcp/kafkamcp/internal/watch"
@@ -84,6 +92,8 @@ type Analytics struct {
 	schemaWorkflow      *evolution.WorkflowEngine   // schema evolution workflow engine
 	timeseriesAnalyzer  *anomaly.TimeSeriesAnalyzer // time-series analytics
 	advisorEngine   *advisor.Engine      // intelligent topic advisor
+	dataQualityEngine   *dataquality.Engine       // data quality scoring & SLA
+	incidentCorrelator  *incident.Correlator      // cross-cluster incident correlation
 }
 
 // Governance groups policy, audit, security, and compliance subsystems.
@@ -97,6 +107,8 @@ type Governance struct {
 	tenantManager    *tenant.Manager    // multi-tenant management
 	usageTracker     *tenant.UsageTracker // usage analytics tracking
 	complianceEngine *compliance.Engine // compliance & regulatory reporting
+	threatDetector   *agentprofile.Detector // agent behavioral threat detection
+	retentionEngine  *retention.Engine      // intelligent retention policy
 }
 
 // Streaming groups event-driven and stream-processing subsystems.
@@ -151,6 +163,11 @@ type Platform struct {
 	cloudDeployGenerator *clouddeploy.Generator    // cloud deployment generator
 	vectorSyncEngine    *vectorsync.Engine         // vector DB sync bridge
 	finOpsDashboard     *finops.Dashboard          // FinOps cost intelligence
+	codecEngine         *codec.Engine              // Avro/Protobuf wire codec
+	eventSourcingEngine *eventsourcing.Engine       // agent action event sourcing
+	topicPortalEngine   *topicportal.Engine         // self-service topic portal
+	gitopsReconciler    *gitops.Reconciler          // GitOps reconciliation loop
+	llmPipelineEngine   *llmpipeline.Engine         // LLM training data pipeline
 }
 
 // Server is the KafkaMCP MCP server.
@@ -226,6 +243,8 @@ Analytics: Analytics{
 	schemaWorkflow:     evolution.NewWorkflowEngine(),
 	timeseriesAnalyzer: anomaly.NewTimeSeriesAnalyzer(),
 	advisorEngine:      advisor.NewEngine(logger),
+	dataQualityEngine:  dataquality.NewEngine(logger),
+	incidentCorrelator: incident.NewCorrelator(incident.DefaultCorrelatorConfig(), logger),
 },
 Governance: Governance{
 	policyEngine:   policyEngine,
@@ -237,6 +256,8 @@ Governance: Governance{
 	tenantManager:  tenant.NewManager(),
 	usageTracker:     tenant.NewUsageTracker(),
 	complianceEngine: compliance.NewEngine(logger),
+	threatDetector:   agentprofile.NewDetector(agentprofile.DefaultDetectorConfig(), logger),
+	retentionEngine:  retention.NewEngine(logger),
 },
 Streaming: Streaming{
 	watchManager:   watch.NewManager(logger),
@@ -286,6 +307,11 @@ Platform: Platform{
 	cloudDeployGenerator: clouddeploy.NewGenerator(logger),
 	vectorSyncEngine:    vectorsync.NewEngine(logger),
 	finOpsDashboard:     finops.NewDashboard(logger),
+	codecEngine:         codec.NewEngine(nil),
+	eventSourcingEngine: eventsourcing.NewEngine(logger),
+	topicPortalEngine:   topicportal.NewEngine(topicportal.DefaultApprovalChainConfig(), logger),
+	gitopsReconciler:    gitops.NewReconciler(gitops.DefaultReconcilerConfig(), gitops.NewManager(logger), logger),
+	llmPipelineEngine:   llmpipeline.NewEngine(logger),
 },
 }
 
