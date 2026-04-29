@@ -45,6 +45,10 @@ func (m *Manager) RegisterBackend(cfg BackendConfig) error {
 		backend = NewRabbitMQAdapter(cfg, m.logger)
 	case ProtocolNATS:
 		backend = NewNATSAdapter(cfg, m.logger)
+	case ProtocolKinesis:
+		backend = NewKinesisAdapter(cfg, m.logger)
+	case ProtocolEventHubs:
+		backend = NewEventHubsAdapter(cfg, m.logger)
 	default:
 		return fmt.Errorf("unsupported protocol: %s", cfg.Protocol)
 	}

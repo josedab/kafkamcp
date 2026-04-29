@@ -9,10 +9,12 @@ import (
 type Protocol string
 
 const (
-	ProtocolKafka    Protocol = "kafka"
-	ProtocolPulsar   Protocol = "pulsar"
-	ProtocolRabbitMQ Protocol = "rabbitmq"
-	ProtocolNATS     Protocol = "nats"
+	ProtocolKafka     Protocol = "kafka"
+	ProtocolPulsar    Protocol = "pulsar"
+	ProtocolRabbitMQ  Protocol = "rabbitmq"
+	ProtocolNATS      Protocol = "nats"
+	ProtocolKinesis   Protocol = "kinesis"
+	ProtocolEventHubs Protocol = "eventhubs"
 )
 
 // Message represents a protocol-agnostic message.
