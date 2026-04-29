@@ -116,6 +116,34 @@ and compose — with zero custom integration code.`,
 	}
 	rootCmd.AddCommand(serveCmd)
 
+	devCmd := &cobra.Command{
+		Use:   "dev",
+		Short: "Start a local development environment with sample data",
+		Long: `Start KafkaMCP in local development mode with pre-populated sample topics
+and guided tutorials. Requires a local Kafka broker (or use 'make docker-dev').
+
+This mode creates sample topics (orders, user-events, iot-sensors, click-stream,
+payments) and provides interactive tutorials for exploring KafkaMCP capabilities.`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println("🚀 KafkaMCP Development Mode")
+			fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+			fmt.Println()
+			fmt.Println("Quick Start:")
+			fmt.Println("  1. Ensure a local Kafka broker is running (make docker-dev)")
+			fmt.Println("  2. Connect with your MCP client")
+			fmt.Println("  3. Call kafka_dev_environment for setup info")
+			fmt.Println("  4. Call kafka_dev_tutorial action=list to see tutorials")
+			fmt.Println()
+			fmt.Println("Sample Topics: orders, user-events, iot-sensors, click-stream, payments")
+			fmt.Println("Tutorials:     getting-started, anomaly-detection, schema-management")
+			fmt.Println()
+
+			// Run the normal server
+			return runServer(cmd, args)
+		},
+	}
+	rootCmd.AddCommand(devCmd)
+
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
