@@ -586,6 +586,8 @@ tools = create_kafka_tools(mcp_client=session)
 
 ## Architecture
 
+> **📐 For a detailed architecture guide**, including package tiers, server lifecycle, and design decisions, see [**docs/ARCHITECTURE.md**](docs/ARCHITECTURE.md).
+
 ```
 ┌──────────────────────────────────────────────────────────┐
 │                     KafkaMCP                              │
