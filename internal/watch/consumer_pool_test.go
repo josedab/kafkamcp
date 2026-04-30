@@ -2,10 +2,14 @@ package watch
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
+	"sync"
 	"testing"
 	"time"
+
+	"github.com/kafkamcp/kafkamcp/internal/kafka"
 )
 
 func testWatchLogger() *slog.Logger {
@@ -281,5 +285,233 @@ func TestDeliveryTracker_LastDeliveryTimestamp(t *testing.T) {
 	}
 	if time.Since(stats.LastDelivery) > 5*time.Second {
 		t.Error("expected recent last delivery timestamp")
+	}
+}
+
+// --- runConsumer and hasSubscriptionsForTopic tests ---
+
+func TestHasSubscriptionsForTopic_Matching(t *testing.T) {
+	mgr := NewManager(testWatchLogger())
+	defer mgr.Close()
+
+	// Create a subscription with a matching topic pattern
+	mgr.Subscribe("agent-1", "orders.*", "", "", "", nil)
+
+	pool := NewConsumerPool(context.Background(), mgr, nil, "default", 10)
+	defer pool.Stop()
+
+	if !pool.hasSubscriptionsForTopic("orders.created") {
+		t.Error("expected subscription match for orders.created")
+	}
+}
+
+func TestHasSubscriptionsForTopic_NoMatch(t *testing.T) {
+	mgr := NewManager(testWatchLogger())
+	defer mgr.Close()
+
+	mgr.Subscribe("agent-1", "orders.*", "", "", "", nil)
+
+	pool := NewConsumerPool(context.Background(), mgr, nil, "default", 10)
+	defer pool.Stop()
+
+	if pool.hasSubscriptionsForTopic("payments.completed") {
+		t.Error("expected no subscription match for payments.completed")
+	}
+}
+
+func TestHasSubscriptionsForTopic_NoSubscriptions(t *testing.T) {
+	mgr := NewManager(testWatchLogger())
+	defer mgr.Close()
+
+	pool := NewConsumerPool(context.Background(), mgr, nil, "default", 10)
+	defer pool.Stop()
+
+	if pool.hasSubscriptionsForTopic("anything") {
+		t.Error("expected false with no subscriptions")
+	}
+}
+
+func TestHasSubscriptionsForTopic_ExactMatch(t *testing.T) {
+	mgr := NewManager(testWatchLogger())
+	defer mgr.Close()
+
+	mgr.Subscribe("agent-1", "orders", "", "", "", nil)
+
+	pool := NewConsumerPool(context.Background(), mgr, nil, "default", 10)
+	defer pool.Stop()
+
+	if !pool.hasSubscriptionsForTopic("orders") {
+		t.Error("expected exact match for orders")
+	}
+}
+
+func TestRunConsumer_ExitsOnContextCancellation(t *testing.T) {
+	mgr := NewManager(testWatchLogger())
+	defer mgr.Close()
+
+	// No subscription so runConsumer will exit quickly when it detects no subscriptions
+	pool := NewConsumerPool(context.Background(), mgr, nil, "default", 10)
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	done := make(chan struct{})
+	pool.activeConsumers.Add(1)
+	go func() {
+		pool.runConsumer(ctx, "test-topic")
+		close(done)
+	}()
+
+	cancel()
+
+	select {
+	case <-done:
+		// OK - exited
+	case <-time.After(2 * time.Second):
+		t.Fatal("runConsumer did not exit within 1s after context cancellation")
+	}
+}
+
+func TestRunConsumer_SkipsNonMatchingTopics(t *testing.T) {
+	mgr := NewManager(testWatchLogger())
+	defer mgr.Close()
+
+	// Subscribe to "orders" only
+	mgr.Subscribe("agent-1", "orders", "", "", "", nil)
+
+	pool := NewConsumerPool(context.Background(), mgr, nil, "default", 10)
+	defer pool.Stop()
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	done := make(chan struct{})
+	pool.activeConsumers.Add(1)
+	go func() {
+		pool.runConsumer(ctx, "payments") // not matching "orders"
+		close(done)
+	}()
+
+	// runConsumer should exit because "payments" has no subscriptions
+	select {
+	case <-done:
+		// OK
+	case <-time.After(3 * time.Second):
+		cancel()
+		t.Fatal("runConsumer should exit when topic has no subscriptions")
+	}
+	cancel()
+}
+
+func TestRunConsumer_WithMockKafka(t *testing.T) {
+	mgr := NewManager(testWatchLogger())
+	defer mgr.Close()
+
+	mgr.Subscribe("agent-1", "orders", "", "", "", nil)
+
+	mock := &kafka.MockKafkaManager{
+		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
+			return []kafka.Message{
+				{Partition: 0, Offset: 1, Key: "k1", Value: "v1", Headers: map[string]string{}},
+			}, nil
+		},
+	}
+
+	pool := NewConsumerPool(context.Background(), mgr, mock, "default", 10)
+	defer pool.Stop()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	done := make(chan struct{})
+	pool.activeConsumers.Add(1)
+	go func() {
+		pool.runConsumer(ctx, "orders")
+		close(done)
+	}()
+
+	// Let it process at least one tick
+	time.Sleep(1500 * time.Millisecond)
+	cancel()
+
+	select {
+	case <-done:
+		// OK
+	case <-time.After(3 * time.Second):
+		t.Fatal("runConsumer did not exit")
+	}
+}
+
+func TestRunConsumer_HandlesConsumeError(t *testing.T) {
+	mgr := NewManager(testWatchLogger())
+	defer mgr.Close()
+
+	mgr.Subscribe("agent-1", "orders", "", "", "", nil)
+
+	mock := &kafka.MockKafkaManager{
+		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
+			return nil, fmt.Errorf("connection refused")
+		},
+	}
+
+	pool := NewConsumerPool(context.Background(), mgr, mock, "default", 10)
+	defer pool.Stop()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	done := make(chan struct{})
+	pool.activeConsumers.Add(1)
+	go func() {
+		pool.runConsumer(ctx, "orders")
+		close(done)
+	}()
+
+	// Should continue running despite errors
+	time.Sleep(1500 * time.Millisecond)
+	cancel()
+
+	select {
+	case <-done:
+		// OK
+	case <-time.After(3 * time.Second):
+		t.Fatal("runConsumer did not exit after cancel")
+	}
+}
+
+func TestConsumerPool_ConcurrentEnsureConsumer(t *testing.T) {
+	mgr := NewManager(testWatchLogger())
+	defer mgr.Close()
+
+	pool := NewConsumerPool(context.Background(), mgr, nil, "default", 100)
+	defer pool.Stop()
+
+	var wg sync.WaitGroup
+	for i := 0; i < 20; i++ {
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			topic := fmt.Sprintf("topic-%d", idx%5)
+			pool.EnsureConsumer(topic)
+		}(i)
+	}
+	wg.Wait()
+}
+
+func TestConsumerPool_EnsureConsumer_Idempotent(t *testing.T) {
+	mgr := NewManager(testWatchLogger())
+	defer mgr.Close()
+
+	pool := NewConsumerPool(context.Background(), mgr, nil, "default", 10)
+	defer pool.Stop()
+
+	// First call creates the consumer
+	err := pool.EnsureConsumer("test-topic")
+	if err != nil {
+		t.Fatalf("first EnsureConsumer: %v", err)
+	}
+
+	// Second call is idempotent
+	err = pool.EnsureConsumer("test-topic")
+	if err != nil {
+		t.Fatalf("second EnsureConsumer: %v", err)
 	}
 }
