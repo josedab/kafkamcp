@@ -770,6 +770,20 @@ Install all dev dependencies in one command:
 make setup
 ```
 
+### IDE Setup
+
+**VS Code** — copy example configs for launch, settings, and tasks:
+
+```bash
+make setup-vscode
+```
+
+**GoLand / IntelliJ** — run configurations in `.run/` are auto-discovered when you open the project. Verify with:
+
+```bash
+make setup-goland
+```
+
 ### Build
 
 ```bash
@@ -818,6 +832,18 @@ make help
 | `make docker-dev-down` | Stop local dev stack |
 | `make doctor` | Check development environment prerequisites |
 | `make test-one TEST=TestName PKG=./internal/...` | Run a single test by name |
+| `make test-func FUNC=TestName` | Auto-find and run a single test by function name |
+| `make test-short` | Run tests without `-race` for fast iteration |
+| `make test-race-short` | Run tests with `-race` and `-short` for fast-but-safe iteration |
+| `make benchmark` | Run Go benchmarks with memory stats |
+| `make new-tool NAME=xyz` | Scaffold a new tool (engine, handler, registration) |
+| `make sdk-setup` | Install SDK test dependencies (Python, Node.js) |
+| `make sdk-test` | Run tests for all SDKs (Go, Python, VS Code) |
+| `make docs-serve` | Serve the Docusaurus documentation site locally |
+| `make changelog` | Generate CHANGELOG.md from Conventional Commits |
+| `make check-deps` | Check that go.mod/go.sum are tidy |
+| `make deps` | Check for outdated and vulnerable Go dependencies |
+| `make security` | Run govulncheck for known vulnerabilities |
 
 ## Project Structure
 
