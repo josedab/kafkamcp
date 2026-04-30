@@ -242,6 +242,153 @@ Internal packages are grouped into three tiers. Higher tiers may depend on lower
 - **Infrastructure** packages supply cross-cutting capabilities (auth, audit, metrics, masking) used by both Core and Feature packages.
 - **Feature** packages are self-contained modules that add optional functionality. They depend on Core and Infrastructure but never on each other.
 
+### Package Reference
+
+#### Core
+
+| Package | Description |
+|---------|-------------|
+| `config` | YAML configuration loading, validation, and env-var expansion |
+| `kafka` | Kafka client abstraction (admin, consumer, producer via franz-go) |
+| `schema` | Schema Registry client with caching (Avro/Protobuf/JSON) |
+| `server` | MCP server core: tool registration, handlers, resources, transport |
+
+#### Infrastructure
+
+| Package | Description |
+|---------|-------------|
+| `aclmgmt` | Kafka ACL management and enforcement |
+| `audit` | Structured JSON audit logging of agent interactions |
+| `auth` | Policy-based authorization engine (default-deny) |
+| `cloud` | Cloud provider integrations (AWS, GCP, Azure) |
+| `masking` | PII redaction engine with field-level masking rules |
+| `match` | Topic name glob/pattern matching utilities |
+| `metrics` | Prometheus metrics collection and export |
+| `platform` | Multi-platform abstraction layer |
+| `ratelimit` | Per-agent token-bucket rate limiting |
+| `telemetry` | OpenTelemetry distributed tracing |
+| `tenant` | Multi-tenant isolation and routing |
+| `urlutil` | URL validation and normalization utilities |
+
+#### Feature — Kafka Operations
+
+| Package | Description |
+|---------|-------------|
+| `cdc` | Change data capture stream processing |
+| `chaos` | Chaos testing toolkit for Kafka resilience |
+| `codec` | Message encoding/decoding utilities |
+| `dlq` | Dead-letter queue inspection and remediation |
+| `eventsourcing` | Event sourcing pattern support |
+| `lagdiag` | Consumer lag root-cause analysis |
+| `migration` | Topic and consumer group migration planning |
+| `msgsampling` | Statistical message sampling from topics |
+| `replay` | Message replay engine for topic reprocessing |
+| `replication` | Cross-cluster replication monitoring |
+| `retention` | Topic retention policy management |
+| `selfheal` | Self-healing consumer group remediation |
+| `smartroute` | Intelligent message routing across topics |
+| `streamsql` | SQL query engine over Kafka streams |
+| `topicportal` | Topic portal UI data provider |
+| `topictemplate` | Topic creation templates and standards |
+| `viewstore` | Materialized view store from Kafka topics |
+| `watch` | Event-driven watch subscriptions |
+
+#### Feature — Schema & Data Quality
+
+| Package | Description |
+|---------|-------------|
+| `contracts` | Schema-aware data contracts |
+| `dataquality` | Data quality scoring and validation |
+| `evolution` | Schema evolution advisor and compatibility checks |
+| `schemaadvisor` | Schema design recommendations |
+| `schemaplayground` | Interactive schema testing sandbox |
+
+#### Feature — Observability & Monitoring
+
+| Package | Description |
+|---------|-------------|
+| `anomaly` | AI-powered anomaly detection on metrics |
+| `correlation` | Cross-signal event correlation |
+| `dashboard` | Dashboard data aggregation |
+| `flowdebug` | Message flow debugging and tracing |
+| `forecast` | Capacity and growth forecasting |
+| `healthscore` | Cluster and topic health scoring |
+| `incident` | Incident detection and management |
+| `observability` | Observability pipeline integration |
+| `predictalert` | Predictive alerting based on trends |
+| `profiler` | Performance profiling utilities |
+| `sessionreplay` | Agent session replay and debugging |
+| `timeseries` | Time-series metric storage and queries |
+
+#### Feature — AI & Analytics
+
+| Package | Description |
+|---------|-------------|
+| `advisor` | Cluster health advisor with recommendations |
+| `catalog` | Data catalog discovery and metadata |
+| `chat` | Conversational agent interface |
+| `crosslineage` | Cross-cluster data lineage |
+| `digitaltwin` | Digital twin simulation of Kafka clusters |
+| `graph` | Embedded knowledge graph of cluster topology |
+| `lineage` | Data lineage tracking across topics |
+| `llmpipeline` | LLM-powered data processing pipelines |
+| `nlpipeline` | Natural language processing pipelines |
+| `nlquery` | Natural language query engine for Kafka |
+| `semantic` | Semantic search over message content |
+| `vectorsync` | Vector embedding synchronization |
+
+#### Feature — Agent & Workflow
+
+| Package | Description |
+|---------|-------------|
+| `agentmemory` | Agent memory persistence across sessions |
+| `agentprofile` | Agent profile and preference management |
+| `capability` | Dynamic capability discovery |
+| `collaboration` | Multi-agent collaboration primitives |
+| `dagworkflow` | DAG-based workflow execution engine |
+| `onboarding` | Guided onboarding flows for new agents |
+| `orchestration` | Multi-step task orchestration |
+| `persona` | Declarative agent persona definitions |
+| `pipeline` | Stream processing pipeline builder |
+| `playbook` | Operational playbook execution |
+| `runbook` | Automated runbook procedures |
+| `taskqueue` | Background task queue with retries |
+| `workflow` | Agent workflow templates |
+
+#### Feature — Infrastructure & Deployment
+
+| Package | Description |
+|---------|-------------|
+| `clouddeploy` | Cloud deployment automation |
+| `controlplane` | Control plane for multi-cluster management |
+| `federation` | Multi-cluster federation and routing |
+| `gateway` | API gateway integration |
+| `operator` | Kubernetes operator support |
+| `sidecar` | Sidecar proxy pattern support |
+
+#### Feature — Cost & Governance
+
+| Package | Description |
+|---------|-------------|
+| `compliance` | Compliance policy enforcement |
+| `configvcs` | Configuration version control |
+| `cost` | Kafka infrastructure cost analysis |
+| `costattribution` | Per-team/topic cost attribution |
+| `finops` | Financial operations and optimization |
+| `gitops` | GitOps configuration management |
+| `opa` | Open Policy Agent integration |
+
+#### Feature — Misc
+
+| Package | Description |
+|---------|-------------|
+| `adaptiverate` | Adaptive rate limiting based on load |
+| `benchmark` | Benchmark utilities and harnesses |
+| `devmode` | Development mode helpers |
+| `ide` | IDE integration utilities (LSP, completions) |
+| `plugin` | Plugin/extension registry |
+| `sandbox` | Sandboxed execution environment |
+
 ## Questions?
 
 Open a [GitHub Discussion](https://github.com/kafkamcp/kafkamcp/discussions) or file an issue.
@@ -267,6 +414,17 @@ After scaffolding, complete these manual steps:
 3. Call `s.registerMyToolTools()` from `registerTools()` in `internal/server/register_tools.go`
 4. Implement the handler logic in `internal/server/tools_mytool.go`
 5. Add tests in `internal/mytool/engine_test.go`
+6. Run `make generate` to regenerate tool reference docs
+
+## Code Generation
+
+After modifying tool definitions in `register_*.go` files, or any code with `//go:generate` directives, run:
+
+```bash
+make generate
+```
+
+This runs all code generation steps including tool reference docs (`cmd/gen-tool-docs/`) and `go generate ./...`. Always run this before submitting a PR that modifies tools.
 
 ## SDK Development
 
