@@ -1,4 +1,4 @@
-.PHONY: build test lint lint-fix lint-all fmt fmt-check docker clean clean-all validate validate-ci help run run-local dev dev-sse dev-http coverage test-coverage-report setup-hooks docker-dev docker-dev-down setup test-one setup-vscode integration-test check doctor sdk-test quickstart benchmark docker-compose-full vet sdk-setup deps changelog test-coverage-check test-short test-race-short test-all new-tool check-deps
+.PHONY: build test lint lint-fix lint-all fmt fmt-check docker clean clean-all validate validate-ci help run run-local dev dev-sse dev-http coverage test-coverage-report setup-hooks docker-dev docker-dev-down setup test-one setup-vscode integration-test check doctor sdk-test quickstart benchmark docker-compose-full vet sdk-setup deps changelog test-coverage-check test-short test-race-short test-all new-tool check-deps install docs docs-serve test-func security ci
 
 # Build variables
 BINARY    := kafkamcp
@@ -22,6 +22,9 @@ help: ## Show this help
 
 build: ## Build the binary
 	go build -trimpath -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY) $(CMD)
+
+install: ## Install binary to $GOPATH/bin
+	go install -trimpath -ldflags="$(LDFLAGS)" $(CMD)
 
 run: build ## Build and run with default config
 	$(BUILD_DIR)/$(BINARY) --config kafkamcp.yaml
@@ -146,6 +149,13 @@ check: validate ## Alias for validate
 
 test-one: ## Run a single test: make test-one TEST=TestName PKG=./internal/...
 	go test -race -v -run $(TEST) $(PKG)
+
+test-func: ## Run a single test by name: make test-func FUNC=TestName
+	@if [ -z "$(FUNC)" ]; then echo "Usage: make test-func FUNC=TestName"; exit 1; fi
+	@pkg=$$(grep -rl 'func $(FUNC)' --include='*_test.go' . | head -1 | xargs -I{} dirname {} 2>/dev/null); \
+	if [ -z "$$pkg" ]; then echo "ERROR: test function '$(FUNC)' not found in any *_test.go file"; exit 1; fi; \
+	echo "Found $(FUNC) in $$pkg"; \
+	go test -race -v -run $(FUNC) $$pkg
 
 setup-vscode: ## Copy .vscode example configs (if not already present)
 	@mkdir -p .vscode
@@ -281,3 +291,15 @@ sdk-test: ## Run tests for all SDKs (Go, Python, VS Code)
 	@echo "--- VS Code Extension ---"
 	cd sdk/vscode && npm install --silent && npm test
 	@echo "All SDK tests complete."
+
+docs: ## Build the Docusaurus documentation site
+	cd website && npm run build
+
+docs-serve: ## Serve the documentation site locally for preview
+	cd website && npm run start
+
+security: ## Run govulncheck for known vulnerabilities
+	@command -v govulncheck >/dev/null 2>&1 || { echo "Installing govulncheck..."; go install golang.org/x/vuln/cmd/govulncheck@latest; }
+	govulncheck ./...
+
+ci: validate-ci ## Alias for validate-ci
