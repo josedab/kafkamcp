@@ -1,0 +1,14 @@
+# Minimal KafkaMCP configuration — single broker, no auth.
+# Copy this file and adjust bootstrap_servers to match your Kafka cluster.
+#
+# Usage:
+#   kafkamcp --config examples/minimal.yaml
+
+server:
+  transport: stdio
+
+clusters:
+  - name: local
+    bootstrap_servers: "localhost:9092"
+    security_protocol: PLAINTEXT
+    default: true
