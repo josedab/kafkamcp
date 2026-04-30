@@ -23,7 +23,7 @@ cd kafkamcp
 make setup
 ```
 
-This installs dev dependencies and a **git pre-commit hook** that runs `make validate` (fmt-check → vet → lint → test → build) before each commit. You can also install the hook separately:
+This installs dev dependencies and a **git pre-commit hook** that runs `make fmt-check`, `make vet`, and `make lint` before each commit. You can also install the hook separately:
 
 ```bash
 make setup-hooks
@@ -128,6 +128,7 @@ Keep commits focused — one logical change per commit.
    git checkout -b feat/my-feature
    ```
 2. Make your changes and ensure `make validate` passes.
+3. Run `make pre-push` before pushing (runs fmt-check, vet, lint, test, build).
 3. Push and open a PR against `main`.
 4. Fill in the PR template with a description of changes.
 5. Respond to review feedback promptly.
@@ -245,6 +246,88 @@ Internal packages are grouped into three tiers. Higher tiers may depend on lower
 
 Open a [GitHub Discussion](https://github.com/kafkamcp/kafkamcp/discussions) or file an issue.
 
+## Adding a New Tool
+
+Use the scaffolding command to create a new tool with all the required boilerplate:
+
+```bash
+make new-tool NAME=mytool
+```
+
+This generates three files:
+
+- `internal/mytool/engine.go` — Business logic package with an `Engine` struct
+- `internal/server/tools_mytool.go` — MCP tool handler with a placeholder implementation
+- `internal/server/register_mytool.go` — Tool registration function
+
+After scaffolding, complete these manual steps:
+
+1. Add the engine field to the appropriate group struct in `internal/server/server.go`
+2. Initialise it in `New()` in `internal/server/server.go`
+3. Call `s.registerMyToolTools()` from `registerTools()` in `internal/server/register_tools.go`
+4. Implement the handler logic in `internal/server/tools_mytool.go`
+5. Add tests in `internal/mytool/engine_test.go`
+
+## SDK Development
+
+KafkaMCP ships with client SDKs for multiple languages and editors. All SDKs live under the `sdk/` directory:
+
+| SDK | Path | Language |
+|-----|------|----------|
+| Go SDK | `sdk/go/` | Go |
+| Python LangChain | `sdk/python/kafkamcp_langchain/` | Python |
+| Python CrewAI | `sdk/python/kafkamcp_crewai/` | Python |
+| TypeScript SDK | `sdk/typescript/` | TypeScript |
+| VS Code Extension | `sdk/vscode/` | TypeScript |
+| IntelliJ Plugin | `sdk/intellij/` | Kotlin/Java |
+| Cursor Integration | `sdk/cursor/` | JSON config |
+
+### Setup
+
+Install all SDK test dependencies (requires Python 3.8+ and Node.js 18+):
+
+```bash
+make sdk-setup
+```
+
+### Running SDK Tests
+
+Run tests across all SDKs:
+
+```bash
+make sdk-test
+```
+
+### Per-SDK Workflows
+
+**Go SDK** — standard Go workflow:
+```bash
+go test ./sdk/go/...
+```
+
+**Python SDKs** (LangChain / CrewAI):
+```bash
+cd sdk/python/kafkamcp_langchain
+pip install -e ".[test]"
+python -m pytest -q
+```
+
+**VS Code Extension**:
+```bash
+cd sdk/vscode
+npm install
+npm test
+```
+
+**TypeScript SDK**:
+```bash
+cd sdk/typescript
+npm install
+npm test
+```
+
+When adding or modifying SDK functionality, ensure `make sdk-test` passes before submitting a PR.
+
 ## Documentation Standards
 
 When contributing new tools, features, or configuration options, follow these guidelines:
@@ -296,4 +379,4 @@ This checks your Go version, linting tools, Docker status, Kafka reachability, a
 | `make dev` fails with "air: command not found" | `air` hot-reload tool is not installed | Run `go install github.com/air-verse/air@latest` or `make setup` |
 | Tests fail with `-race` on macOS | The Go race detector requires CGO on macOS; `CGO_ENABLED=0` or missing Xcode CLI tools | Install Xcode CLI tools: `xcode-select --install` and ensure `CGO_ENABLED=1` (the default) |
 
-> **Note:** `make check` is an alias for `make validate` — both run the full fmt-check → lint → test → build pipeline. Use `make validate-ci` as a read-only pre-push check that never modifies your working tree. If formatting issues are reported, run `make fmt` first, then re-run validation.
+> **Note:** `make check` is an alias for `make validate` — both run the full fmt-check → vet → lint → test → build pipeline. `make validate-ci` and `make pre-push` run the same checks but signal CI/pre-push intent. If formatting issues are reported, run `make fmt` first, then re-run validation.
