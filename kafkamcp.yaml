@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=docs/kafkamcp.schema.json
 # KafkaMCP Server Configuration
 server:
   transport: stdio          # stdio | sse | streamable-http

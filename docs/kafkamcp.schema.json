@@ -1,0 +1,372 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/kafkamcp/kafkamcp/docs/kafkamcp.schema.json",
+  "title": "KafkaMCP Configuration",
+  "description": "Configuration schema for KafkaMCP — an MCP server for Apache Kafka.",
+  "type": "object",
+  "properties": {
+    "server": {
+      "type": "object",
+      "description": "MCP server transport and network settings.",
+      "properties": {
+        "transport": {
+          "type": "string",
+          "enum": ["stdio", "sse", "streamable-http"],
+          "default": "stdio",
+          "description": "Protocol used by the MCP server."
+        },
+        "host": {
+          "type": "string",
+          "default": "0.0.0.0",
+          "description": "Bind address for SSE/HTTP transports."
+        },
+        "port": {
+          "type": "integer",
+          "default": 3100,
+          "minimum": 1,
+          "maximum": 65535,
+          "description": "Listen port for SSE/HTTP transports."
+        },
+        "log_level": {
+          "type": "string",
+          "enum": ["debug", "info", "warn", "error"],
+          "default": "info",
+          "description": "Log verbosity level."
+        },
+        "max_message_size": {
+          "type": "integer",
+          "default": 1048576,
+          "minimum": 1,
+          "description": "Maximum MCP message size in bytes."
+        },
+        "tls_cert": {
+          "type": "string",
+          "description": "Path to TLS certificate file."
+        },
+        "tls_key": {
+          "type": "string",
+          "description": "Path to TLS private key file."
+        }
+      },
+      "additionalProperties": false
+    },
+    "clusters": {
+      "type": "array",
+      "description": "Kafka cluster connection configurations.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "bootstrap_servers"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Unique cluster identifier."
+          },
+          "bootstrap_servers": {
+            "type": "string",
+            "description": "Comma-separated broker addresses (e.g., 'localhost:9092')."
+          },
+          "security_protocol": {
+            "type": "string",
+            "enum": ["PLAINTEXT", "SSL", "SASL_SSL", "SASL_PLAINTEXT"],
+            "default": "PLAINTEXT",
+            "description": "Kafka security protocol."
+          },
+          "sasl_mechanism": {
+            "type": "string",
+            "enum": ["PLAIN", "SCRAM-SHA-256", "SCRAM-SHA-512", "OAUTHBEARER"],
+            "description": "SASL authentication mechanism."
+          },
+          "sasl_username": {
+            "type": "string",
+            "description": "SASL username (required when sasl_mechanism is set)."
+          },
+          "sasl_password": {
+            "type": "string",
+            "description": "SASL password (required when sasl_mechanism is set)."
+          },
+          "ssl_ca_location": {
+            "type": "string",
+            "description": "Path to CA certificate bundle for SSL connections."
+          },
+          "schema_registry": {
+            "type": "object",
+            "description": "Optional Schema Registry connection.",
+            "properties": {
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "description": "Schema Registry URL."
+              },
+              "auth": {
+                "type": "object",
+                "description": "Basic authentication credentials.",
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "description": "Schema Registry username."
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "Schema Registry password."
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          },
+          "connect_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Kafka Connect REST API base URL."
+          },
+          "connect_tls": {
+            "type": "object",
+            "description": "TLS settings for Kafka Connect REST API.",
+            "properties": {
+              "ca_file": {
+                "type": "string",
+                "description": "Path to CA certificate for Connect API."
+              },
+              "insecure_skip_verify": {
+                "type": "boolean",
+                "default": false,
+                "description": "Skip TLS verification (requires KAFKAMCP_ALLOW_INSECURE=true)."
+              }
+            },
+            "additionalProperties": false
+          },
+          "default": {
+            "type": "boolean",
+            "default": false,
+            "description": "Mark this cluster as the default."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "schema_cache": {
+      "type": "object",
+      "description": "In-memory schema cache configuration.",
+      "properties": {
+        "max_entries": {
+          "type": "integer",
+          "default": 10000,
+          "minimum": 1,
+          "description": "Maximum number of cached schemas."
+        },
+        "ttl_seconds": {
+          "type": "integer",
+          "default": 300,
+          "minimum": 1,
+          "description": "Cache entry time-to-live in seconds."
+        }
+      },
+      "additionalProperties": false
+    },
+    "policies": {
+      "type": "object",
+      "description": "Access control policies for MCP agents.",
+      "properties": {
+        "default_deny": {
+          "type": "boolean",
+          "default": false,
+          "description": "When true, deny access unless explicitly allowed."
+        },
+        "agents": {
+          "type": "array",
+          "description": "Per-agent permission definitions.",
+          "items": {
+            "type": "object",
+            "required": ["id"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Agent identifier."
+              },
+              "role": {
+                "type": "string",
+                "enum": ["reader", "writer", "admin"],
+                "description": "Agent role shorthand."
+              },
+              "topics": {
+                "type": "array",
+                "description": "Topic-level permissions.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "pattern": {
+                      "type": "string",
+                      "description": "Glob pattern matching topic names (e.g., 'orders.*')."
+                    },
+                    "permissions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": ["read", "write", "create", "delete"]
+                      },
+                      "description": "Allowed operations on matching topics."
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "consumer_groups": {
+                "type": "object",
+                "description": "Consumer group permissions.",
+                "properties": {
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": ["describe", "reset"]
+                    },
+                    "description": "Allowed consumer group operations."
+                  }
+                },
+                "additionalProperties": false
+              },
+              "schemas": {
+                "type": "object",
+                "description": "Schema Registry permissions.",
+                "properties": {
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": ["read", "write"]
+                    },
+                    "description": "Allowed schema operations."
+                  }
+                },
+                "additionalProperties": false
+              },
+              "rate_limit": {
+                "type": "object",
+                "description": "Rate limiting configuration for this agent.",
+                "properties": {
+                  "requests_per_minute": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Maximum requests per minute."
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "audit": {
+      "type": "object",
+      "description": "Audit logging configuration.",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable structured audit logging."
+        },
+        "max_entries": {
+          "type": "integer",
+          "default": 10000,
+          "minimum": 1,
+          "description": "Maximum in-memory audit entries."
+        },
+        "log_file": {
+          "type": "string",
+          "description": "Path to audit log file (JSONL format)."
+        }
+      },
+      "additionalProperties": false
+    },
+    "masking": {
+      "type": "object",
+      "description": "Data masking and PII redaction configuration.",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable data masking."
+        },
+        "rules": {
+          "type": "array",
+          "description": "Masking rules applied to message content.",
+          "items": {
+            "type": "object",
+            "required": ["name", "type"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Rule identifier."
+              },
+              "type": {
+                "type": "string",
+                "enum": ["email", "ssn", "credit_card", "phone", "regex", "ner"],
+                "description": "Built-in masking rule type."
+              },
+              "field_path": {
+                "type": "string",
+                "description": "JSON path pattern (e.g., '**email**')."
+              },
+              "pattern": {
+                "type": "string",
+                "description": "Custom regex pattern (for type=regex)."
+              },
+              "replace": {
+                "type": "string",
+                "default": "***REDACTED***",
+                "description": "Replacement string for masked values."
+              },
+              "agents": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Apply only to these agents (empty = all)."
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "telemetry": {
+      "type": "object",
+      "description": "OpenTelemetry tracing configuration.",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable distributed tracing."
+        },
+        "endpoint": {
+          "type": "string",
+          "description": "OTLP gRPC collector endpoint (e.g., 'localhost:4317')."
+        },
+        "insecure": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use insecure connection (disable TLS)."
+        },
+        "service_name": {
+          "type": "string",
+          "default": "kafkamcp",
+          "description": "Service name reported in traces."
+        },
+        "sample_rate": {
+          "type": "number",
+          "default": 1.0,
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Trace sampling rate (0.0 = none, 1.0 = all)."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["clusters"],
+  "additionalProperties": false
+}
