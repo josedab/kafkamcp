@@ -156,3 +156,88 @@ func TestListBridges(t *testing.T) {
 		t.Errorf("expected 2 bridges, got %d", len(bridges))
 	}
 }
+
+func TestExtractFieldValue(t *testing.T) {
+	tests := []struct {
+		name     string
+		json     string
+		field    string
+		expected string
+	}{
+		{
+			name:     "simple quoted string",
+			json:     `{"name": "John", "age": 30}`,
+			field:    "name",
+			expected: "John",
+		},
+		{
+			name:     "field not found returns full JSON",
+			json:     `{"name": "John"}`,
+			field:    "missing",
+			expected: `{"name": "John"}`,
+		},
+		{
+			name:     "field at end of object",
+			json:     `{"a": "first", "b": "last"}`,
+			field:    "b",
+			expected: "last",
+		},
+		{
+			name:     "numeric value returns original (silent fallback)",
+			json:     `{"count": 42}`,
+			field:    "count",
+			expected: `{"count": 42}`,
+		},
+		{
+			name:     "nested object returns original",
+			json:     `{"data": {"inner": "val"}}`,
+			field:    "data",
+			expected: `{"data": {"inner": "val"}}`,
+		},
+		{
+			name:     "empty JSON returns original",
+			json:     `{}`,
+			field:    "name",
+			expected: `{}`,
+		},
+		{
+			name:     "non-JSON input returns original",
+			json:     "plain text message",
+			field:    "name",
+			expected: "plain text message",
+		},
+		{
+			name:     "unicode field name",
+			json:     `{"名前": "太郎"}`,
+			field:    "名前",
+			expected: "太郎",
+		},
+		{
+			name:     "unicode value",
+			json:     `{"name": "日本語テスト"}`,
+			field:    "name",
+			expected: "日本語テスト",
+		},
+		{
+			name:     "empty field value",
+			json:     `{"name": ""}`,
+			field:    "name",
+			expected: "",
+		},
+		{
+			name:     "field with spaces in value",
+			json:     `{"msg": "hello world"}`,
+			field:    "msg",
+			expected: "hello world",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := extractFieldValue(tt.json, tt.field)
+			if result != tt.expected {
+				t.Errorf("extractFieldValue(%q, %q) = %q, want %q", tt.json, tt.field, result, tt.expected)
+			}
+		})
+	}
+}
