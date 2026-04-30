@@ -1,9 +1,9 @@
 #!/bin/sh
-# Pre-commit hook: runs formatting check and static analysis.
+# Pre-commit hook: runs formatting check, static analysis, and linting.
 # Installed via: make setup-hooks
 
 set -e
 
 echo "Running pre-commit checks..."
-make fmt-check && make vet
+make fmt-check && make vet && make lint
 echo "Pre-commit checks passed."
