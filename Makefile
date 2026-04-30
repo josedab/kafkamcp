@@ -1,4 +1,4 @@
-.PHONY: build test lint lint-fix lint-all fmt fmt-check docker clean clean-all validate validate-ci help run run-local dev dev-sse dev-http coverage test-coverage-report setup-hooks docker-dev docker-dev-down setup test-one setup-vscode setup-goland integration-test check doctor sdk-test quickstart benchmark docker-compose-full vet sdk-setup deps changelog test-coverage-check test-short test-race-short test-all new-tool check-deps install docs docs-serve test-func security ci deps-outdated pre-push
+.PHONY: build test lint lint-fix lint-all lint-changed fmt fmt-check docker clean clean-all validate validate-ci help run run-local dev dev-sse dev-http coverage test-coverage-map test-coverage-report setup-hooks docker-dev docker-dev-down setup test-one setup-vscode setup-goland integration-test test-integration-setup check doctor sdk-test quickstart benchmark docker-compose-full vet sdk-setup deps changelog test-coverage-check test-short test-race-short test-all new-tool check-deps install docs docs-serve test-func security ci deps-outdated pre-push profile generate
 
 # Build variables
 BINARY    := kafkamcp
@@ -36,21 +36,58 @@ run-local: build ## Build and run without Docker (for remote Kafka clusters)
 
 dev: ## Run with auto-reload (requires air: go install github.com/air-verse/air@latest)
 	@command -v air >/dev/null 2>&1 || { echo "Installing air..."; go install github.com/air-verse/air@latest; }
-	air
+	@set -a && [ -f .env ] && . ./.env && set +a; air
 
 dev-sse: ## Run with SSE transport and auto-reload
 	@command -v air >/dev/null 2>&1 || { echo "Installing air..."; go install github.com/air-verse/air@latest; }
-	KAFKAMCP_TRANSPORT=sse air
+	@set -a && [ -f .env ] && . ./.env && set +a; KAFKAMCP_TRANSPORT=sse air
 
 dev-http: ## Run with streamable-http transport and auto-reload
 	@command -v air >/dev/null 2>&1 || { echo "Installing air..."; go install github.com/air-verse/air@latest; }
-	KAFKAMCP_TRANSPORT=streamable-http air
+	@set -a && [ -f .env ] && . ./.env && set +a; KAFKAMCP_TRANSPORT=streamable-http air
 
 test: ## Run unit tests with race detection
 	go test -race -coverprofile=coverage.out ./...
 
 integration-test: ## Run integration tests (requires Kafka cluster)
 	go test -race -tags integration -v ./...
+
+test-integration-setup: ## Check Kafka connectivity and start docker-dev if needed
+	@echo "=== Integration Test Setup ==="
+	@printf "Kafka (localhost:9092): "
+	@if (echo > /dev/tcp/localhost/9092) 2>/dev/null; then \
+		echo "REACHABLE — ready to run integration tests."; \
+	else \
+		echo "NOT REACHABLE"; \
+		echo ""; \
+		if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then \
+			echo "Starting local Kafka with 'make docker-dev'..."; \
+			$(MAKE) docker-dev; \
+			echo "Waiting for Kafka to become reachable..."; \
+			for i in 1 2 3 4 5 6 7 8 9 10; do \
+				if (echo > /dev/tcp/localhost/9092) 2>/dev/null; then \
+					echo "Kafka is up after $${i}s."; \
+					break; \
+				fi; \
+				sleep 3; \
+			done; \
+			if ! (echo > /dev/tcp/localhost/9092) 2>/dev/null; then \
+				echo "ERROR: Kafka did not become reachable within 30s."; \
+				echo "Check 'docker compose -f $(COMPOSE_FILE) logs' for details."; \
+				exit 1; \
+			fi; \
+		else \
+			echo "ERROR: Docker is not available. Cannot auto-start Kafka."; \
+			echo ""; \
+			echo "Options:"; \
+			echo "  1. Install and start Docker, then re-run 'make test-integration-setup'"; \
+			echo "  2. Point to an existing Kafka cluster in kafkamcp.yaml"; \
+			echo "  3. Run 'make test' for unit tests only"; \
+			exit 1; \
+		fi; \
+	fi
+	@echo ""
+	@echo "Run 'make integration-test' to execute integration tests."
 
 coverage: test ## Generate and open HTML coverage report
 	go tool cover -html=coverage.out -o coverage.html
@@ -67,6 +104,29 @@ test-coverage-check: test ## Fail if total test coverage is below MIN_COVERAGE (
 		exit 1; \
 	fi; \
 	echo "OK: coverage $${total}% meets minimum $(MIN_COVERAGE)%"
+
+test-coverage-map: ## Print sorted file-level coverage table (highlights files below 50%)
+	@if [ ! -f coverage.out ]; then echo "No coverage.out found. Run 'make test' first."; exit 1; fi
+	@echo "=== File Coverage Map ==="
+	@go tool cover -func=coverage.out | \
+		grep -v '^total:' | \
+		awk '{ file=$$1; cov=$$NF } \
+		     file != prev { if (prev) printf "%s\t%s\n", last, prev; prev=file } \
+		     { last=cov } \
+		     END { if (prev) printf "%s\t%s\n", last, prev }' | \
+		sort -t'%' -k1 -n | \
+		awk -F'\t' '{ \
+			pct = $$1 + 0; \
+			if (pct < 50.0) \
+				printf "  \033[31m%-6s\033[0m %s\n", $$1, $$2; \
+			else \
+				printf "  %-6s %s\n", $$1, $$2; \
+		}'
+	@echo ""
+	@echo "=== Total ==="
+	@go tool cover -func=coverage.out | tail -1 | awk '{printf "  %-6s %s\n", $$NF, $$1}'
+	@echo ""
+	@echo "(Files below 50% are shown in red)"
 
 test-coverage-report: test ## Print per-package coverage breakdown to stdout
 	@echo "=== Per-Package Coverage ==="
@@ -93,6 +153,10 @@ lint: ## Run golangci-lint
 lint-fix: ## Run golangci-lint with auto-fix
 	@command -v golangci-lint >/dev/null 2>&1 || { echo "Installing golangci-lint..."; go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION); }
 	golangci-lint run --fix ./...
+
+lint-changed: ## Run golangci-lint only on files changed since HEAD~1
+	@command -v golangci-lint >/dev/null 2>&1 || { echo "Installing golangci-lint..."; go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION); }
+	golangci-lint run --new-from-rev=HEAD~1 ./...
 
 lint-all: vet lint ## Run all static analysis (vet + golangci-lint)
 
@@ -213,6 +277,19 @@ quickstart: ## One-command setup: install deps, start Kafka, build, and run
 benchmark: ## Run Go benchmarks with memory stats
 	go test -bench=. -benchmem -run=^$$ ./...
 
+PROFILE_PKG ?= ./internal/kafka
+
+profile: ## Run benchmarks with CPU and memory profiling: make profile PKG=./internal/kafka
+	@mkdir -p $(BUILD_DIR)/profiles
+	go test -bench=. -benchmem -run=^$$ -cpuprofile=$(BUILD_DIR)/profiles/cpu.prof -memprofile=$(BUILD_DIR)/profiles/mem.prof $(PROFILE_PKG)
+	@echo ""
+	@echo "Profiles saved to $(BUILD_DIR)/profiles/"
+	@echo "  CPU:    go tool pprof $(BUILD_DIR)/profiles/cpu.prof"
+	@echo "  Memory: go tool pprof $(BUILD_DIR)/profiles/mem.prof"
+	@echo ""
+	@echo "Opening CPU profile..."
+	go tool pprof -http=:6060 $(BUILD_DIR)/profiles/cpu.prof || go tool pprof $(BUILD_DIR)/profiles/cpu.prof
+
 docker-compose-full: ## Start full Kafka + KafkaMCP stack
 	docker compose -f examples/docker-compose-kafkamcp.yaml up -d
 
@@ -284,6 +361,14 @@ new-tool: ## Scaffold a new tool: make new-tool NAME=xyz
 	@echo "  1. Add the engine field to the appropriate group struct in internal/server/server.go"
 	@echo "  2. Initialise it in New() in internal/server/server.go"
 	@echo "  3. Add s.register<Name>Tools() to registerTools() in internal/server/register_tools.go"
+
+generate: ## Run all code generation (tool docs, go generate)
+	@echo "=== Code Generation ==="
+	@echo "--- Tool reference docs ---"
+	go run ./cmd/gen-tool-docs/
+	@echo "--- go generate ---"
+	go generate ./...
+	@echo "All code generation complete."
 
 sdk-setup: ## Install SDK test dependencies (Python, Node.js)
 	@echo "=== SDK Dependency Setup ==="
