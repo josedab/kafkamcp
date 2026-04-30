@@ -123,12 +123,9 @@ clean-all: clean ## Remove build artifacts and Docker dev volumes
 	docker compose -f $(COMPOSE_FILE) down -v 2>/dev/null || true
 	@echo "Cleaned build artifacts and Docker volumes."
 
-setup-hooks: ## Install git pre-commit hook running make validate
-	@mkdir -p .git/hooks
-	@echo '#!/bin/sh' > .git/hooks/pre-commit
-	@echo 'make validate' >> .git/hooks/pre-commit
-	@chmod +x .git/hooks/pre-commit
-	@echo "Pre-commit hook installed."
+setup-hooks: ## Install git pre-commit hook (uses version-controlled .githooks/)
+	git config core.hooksPath .githooks
+	@echo "Pre-commit hook installed (using .githooks/ directory)."
 
 setup: setup-hooks setup-vscode ## Install all dev dependencies (golangci-lint, air, goimports)
 	@echo "Installing dev dependencies..."
@@ -176,7 +173,7 @@ doctor: ## Check development environment prerequisites
 	@printf "goimports:       "; command -v goimports >/dev/null 2>&1 && echo "OK" || echo "NOT FOUND (optional, run: make setup)"
 	@printf "Docker:          "; command -v docker >/dev/null 2>&1 && (docker info >/dev/null 2>&1 && echo "OK (running)" || echo "INSTALLED but not running") || echo "NOT FOUND (needed for integration tests)"
 	@printf "Kafka (localhost:9092): "; (echo > /dev/tcp/localhost/9092) 2>/dev/null && echo "REACHABLE" || echo "NOT REACHABLE (run: make docker-dev)"
-	@printf "Pre-commit hook: "; test -x .git/hooks/pre-commit && echo "INSTALLED" || echo "NOT INSTALLED (run: make setup)"
+	@printf "Pre-commit hook: "; git config core.hooksPath 2>/dev/null | grep -q .githooks && echo "INSTALLED (.githooks/)" || echo "NOT INSTALLED (run: make setup)"
 	@printf "Python 3.8+:     "; command -v python3 >/dev/null 2>&1 && echo "OK ($$(python3 --version 2>&1))" || echo "NOT FOUND (needed for SDK tests: make sdk-test)"
 	@printf "Node.js 18+:     "; command -v node >/dev/null 2>&1 && echo "OK ($$(node --version 2>&1))" || echo "NOT FOUND (needed for SDK setup: make sdk-setup)"
 	@echo ""
