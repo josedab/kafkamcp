@@ -1,44 +1,134 @@
 # Default owners for everything
 * @kafkamcp/maintainers
 
-# Security-sensitive code
-/internal/auth/ @kafkamcp/security
-/internal/masking/ @kafkamcp/security
-/internal/audit/ @kafkamcp/security
-/internal/compliance/ @kafkamcp/security
-/internal/opa/ @kafkamcp/security
-
-# Kafka client code
-/internal/kafka/ @kafkamcp/kafka
-/internal/streamsql/ @kafkamcp/kafka
-/internal/dlq/ @kafkamcp/kafka
-/internal/replication/ @kafkamcp/kafka
-/internal/replay/ @kafkamcp/kafka
-
-# Core server and configuration
+# ──────────────────────────────────────────────
+# Core tier (always needed)
+# ──────────────────────────────────────────────
 /internal/config/ @kafkamcp/maintainers
 /internal/server/ @kafkamcp/maintainers
-
-# Schema Registry integration
+/internal/kafka/ @kafkamcp/kafka
 /internal/schema/ @kafkamcp/kafka
 
-# Observability and monitoring
+# ──────────────────────────────────────────────
+# Infrastructure tier (cross-cutting concerns)
+# ──────────────────────────────────────────────
+/internal/auth/ @kafkamcp/security
+/internal/audit/ @kafkamcp/security
+/internal/masking/ @kafkamcp/security
+/internal/compliance/ @kafkamcp/security
+/internal/opa/ @kafkamcp/security
+/internal/aclmgmt/ @kafkamcp/security
+/internal/cloud/ @kafkamcp/infra
+/internal/match/ @kafkamcp/maintainers
 /internal/metrics/ @kafkamcp/infra
+/internal/ratelimit/ @kafkamcp/maintainers
 /internal/telemetry/ @kafkamcp/infra
-/internal/observability/ @kafkamcp/infra
+/internal/tenant/ @kafkamcp/infra
+/internal/platform/ @kafkamcp/infra
+/internal/urlutil/ @kafkamcp/maintainers
+
+# ──────────────────────────────────────────────
+# Feature tier — Kafka operations
+# ──────────────────────────────────────────────
+/internal/dlq/ @kafkamcp/kafka
+/internal/replay/ @kafkamcp/kafka
+/internal/replication/ @kafkamcp/kafka
+/internal/streamsql/ @kafkamcp/kafka
 /internal/lagdiag/ @kafkamcp/kafka
 /internal/anomaly/ @kafkamcp/kafka
 /internal/forecast/ @kafkamcp/kafka
+/internal/selfheal/ @kafkamcp/kafka
+/internal/migration/ @kafkamcp/kafka
+/internal/cdc/ @kafkamcp/kafka
+/internal/eventsourcing/ @kafkamcp/kafka
+/internal/retention/ @kafkamcp/kafka
+/internal/topictemplate/ @kafkamcp/kafka
+/internal/topicportal/ @kafkamcp/kafka
+/internal/msgsampling/ @kafkamcp/kafka
+/internal/smartroute/ @kafkamcp/kafka
+/internal/codec/ @kafkamcp/kafka
 
-# Infrastructure and deployment
-/deploy/helm/ @kafkamcp/infra
+# Feature tier — Schema & data quality
+/internal/evolution/ @kafkamcp/kafka
+/internal/contracts/ @kafkamcp/kafka
+/internal/dataquality/ @kafkamcp/kafka
+/internal/schemaadvisor/ @kafkamcp/kafka
+/internal/schemaplayground/ @kafkamcp/kafka
+
+# Feature tier — Observability & monitoring
+/internal/observability/ @kafkamcp/infra
+/internal/flowdebug/ @kafkamcp/infra
+/internal/healthscore/ @kafkamcp/infra
+/internal/incident/ @kafkamcp/infra
+/internal/predictalert/ @kafkamcp/infra
+/internal/timeseries/ @kafkamcp/infra
+/internal/correlation/ @kafkamcp/infra
+/internal/dashboard/ @kafkamcp/infra
+/internal/profiler/ @kafkamcp/infra
+/internal/sessionreplay/ @kafkamcp/infra
+
+# Feature tier — AI & advanced analytics
+/internal/nlquery/ @kafkamcp/kafka
+/internal/semantic/ @kafkamcp/kafka
+/internal/graph/ @kafkamcp/kafka
+/internal/lineage/ @kafkamcp/kafka
+/internal/crosslineage/ @kafkamcp/kafka
+/internal/catalog/ @kafkamcp/kafka
+/internal/advisor/ @kafkamcp/kafka
+/internal/llmpipeline/ @kafkamcp/kafka
+/internal/nlpipeline/ @kafkamcp/kafka
+/internal/vectorsync/ @kafkamcp/kafka
+/internal/digitaltwin/ @kafkamcp/kafka
+/internal/chat/ @kafkamcp/kafka
+
+# Feature tier — Agent & workflow
+/internal/agentmemory/ @kafkamcp/maintainers
+/internal/agentprofile/ @kafkamcp/maintainers
+/internal/persona/ @kafkamcp/maintainers
+/internal/collaboration/ @kafkamcp/maintainers
+/internal/workflow/ @kafkamcp/maintainers
+/internal/dagworkflow/ @kafkamcp/maintainers
+/internal/orchestration/ @kafkamcp/maintainers
+/internal/pipeline/ @kafkamcp/maintainers
+/internal/taskqueue/ @kafkamcp/maintainers
+/internal/onboarding/ @kafkamcp/maintainers
+/internal/capability/ @kafkamcp/maintainers
+/internal/playbook/ @kafkamcp/maintainers
+/internal/runbook/ @kafkamcp/maintainers
+
+# Feature tier — Infrastructure & deployment
 /internal/operator/ @kafkamcp/infra
 /internal/gateway/ @kafkamcp/infra
-/internal/tenant/ @kafkamcp/infra
+/internal/sidecar/ @kafkamcp/infra
+/internal/controlplane/ @kafkamcp/infra
+/internal/clouddeploy/ @kafkamcp/infra
+/internal/federation/ @kafkamcp/infra
 
-# SDKs
-/sdk/ @kafkamcp/sdk
+# Feature tier — Cost & governance
+/internal/cost/ @kafkamcp/infra
+/internal/costattribution/ @kafkamcp/infra
+/internal/finops/ @kafkamcp/infra
+/internal/configvcs/ @kafkamcp/maintainers
+/internal/gitops/ @kafkamcp/maintainers
+
+# Feature tier — Misc features
+/internal/adaptiverate/ @kafkamcp/maintainers
+/internal/benchmark/ @kafkamcp/maintainers
+/internal/chaos/ @kafkamcp/kafka
+/internal/devmode/ @kafkamcp/maintainers
+/internal/plugin/ @kafkamcp/maintainers
+/internal/sandbox/ @kafkamcp/maintainers
+/internal/viewstore/ @kafkamcp/kafka
+/internal/watch/ @kafkamcp/kafka
 /internal/ide/ @kafkamcp/sdk
 
-# CI/CD workflows
+# ──────────────────────────────────────────────
+# SDKs & editor integrations
+# ──────────────────────────────────────────────
+/sdk/ @kafkamcp/sdk
+
+# ──────────────────────────────────────────────
+# Infrastructure & CI/CD
+# ──────────────────────────────────────────────
 /.github/workflows/ @kafkamcp/maintainers
+/deploy/ @kafkamcp/infra
