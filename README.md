@@ -948,6 +948,8 @@ If using access control (`default_deny: true`), ensure the connecting agent's ID
 
 ### More Help
 
+> 📖 **[See full troubleshooting guide →](https://kafkamcp.dev/docs/troubleshooting)**
+
 For additional troubleshooting guides, see the [full troubleshooting documentation](https://kafkamcp.dev/docs/troubleshooting).
 
 ## Documentation & Community
