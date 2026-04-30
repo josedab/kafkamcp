@@ -1,4 +1,4 @@
-.PHONY: build test lint lint-fix lint-all fmt fmt-check docker clean clean-all validate validate-ci help run run-local dev dev-sse dev-http coverage test-coverage-report setup-hooks docker-dev docker-dev-down setup test-one setup-vscode integration-test check doctor sdk-test quickstart benchmark docker-compose-full vet sdk-setup deps changelog test-coverage-check test-short test-race-short test-all new-tool check-deps install docs docs-serve test-func security ci
+.PHONY: build test lint lint-fix lint-all fmt fmt-check docker clean clean-all validate validate-ci help run run-local dev dev-sse dev-http coverage test-coverage-report setup-hooks docker-dev docker-dev-down setup test-one setup-vscode setup-goland integration-test check doctor sdk-test quickstart benchmark docker-compose-full vet sdk-setup deps changelog test-coverage-check test-short test-race-short test-all new-tool check-deps install docs docs-serve test-func security ci deps-outdated pre-push
 
 # Build variables
 BINARY    := kafkamcp
@@ -139,6 +139,8 @@ setup: setup-hooks setup-vscode ## Install all dev dependencies (golangci-lint, 
 
 validate: fmt-check vet lint test build ## Run all checks (fmt-check, vet, lint, test, build)
 
+# validate-ci is semantically identical to validate but signals intent:
+# use 'validate' during local development, 'validate-ci' in CI pipelines and pre-push.
 validate-ci: fmt-check vet lint test build ## Read-only validation (safe for CI and pre-push)
 
 check-deps: ## Check go.mod/go.sum are tidy
@@ -163,6 +165,20 @@ setup-vscode: ## Copy .vscode example configs (if not already present)
 	@test -f .vscode/settings.json || (cp .vscode/settings.json.example .vscode/settings.json && echo "Created .vscode/settings.json")
 	@test -f .vscode/tasks.json || (cp .vscode/tasks.json.example .vscode/tasks.json && echo "Created .vscode/tasks.json")
 	@echo "VSCode setup complete."
+
+setup-goland: ## Confirm GoLand/IntelliJ run configurations are ready
+	@echo "=== GoLand / IntelliJ Setup ==="
+	@echo ""
+	@if [ -d .run ]; then \
+		echo "Run configurations found in .run/:"; \
+		ls -1 .run/*.xml 2>/dev/null | sed 's/^/  /'; \
+		echo ""; \
+		echo "GoLand automatically discovers .run/ configs — no setup needed."; \
+		echo "Open the project in GoLand and select a configuration from the Run dropdown."; \
+	else \
+		echo "WARNING: .run/ directory not found."; \
+		echo "Run configurations may not be available."; \
+	fi
 
 doctor: ## Check development environment prerequisites
 	@echo "=== KafkaMCP Doctor ==="
@@ -303,3 +319,8 @@ security: ## Run govulncheck for known vulnerabilities
 	govulncheck ./...
 
 ci: validate-ci ## Alias for validate-ci
+
+deps-outdated: ## Show Go modules with available updates
+	@go list -m -u all 2>/dev/null | grep '\[' || echo "All dependencies are up to date."
+
+pre-push: validate-ci ## Run all checks before pushing (alias for validate-ci)
