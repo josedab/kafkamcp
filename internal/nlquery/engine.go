@@ -92,14 +92,15 @@ type CachedResult struct {
 
 // Engine is the natural language query processing engine.
 type Engine struct {
-	logger        *slog.Logger
-	schemas       map[string]SchemaInfo
-	queryPatterns []queryPattern
-	queryHistory  []QueryHistoryEntry
-	queryCache    map[string]*CachedResult
-	cacheTTL      time.Duration
-	maxHistory    int
-	mu            sync.RWMutex
+	logger          *slog.Logger
+	schemas         map[string]SchemaInfo
+	queryPatterns   []queryPattern
+	queryHistory    []QueryHistoryEntry
+	queryCache      map[string]*CachedResult
+	cacheTTL        time.Duration
+	maxHistory      int
+	maxCacheEntries int
+	mu              sync.RWMutex
 }
 
 type queryPattern struct {
@@ -118,11 +119,12 @@ type partialPlan struct {
 // NewEngine creates a new NL query engine.
 func NewEngine(logger *slog.Logger) *Engine {
 	e := &Engine{
-		logger:     logger,
-		schemas:    make(map[string]SchemaInfo),
-		queryCache: make(map[string]*CachedResult),
-		cacheTTL:   5 * time.Minute,
-		maxHistory: 100,
+		logger:          logger,
+		schemas:         make(map[string]SchemaInfo),
+		queryCache:      make(map[string]*CachedResult),
+		cacheTTL:        5 * time.Minute,
+		maxHistory:      100,
+		maxCacheEntries: 1000,
 	}
 	e.initPatterns()
 	return e
