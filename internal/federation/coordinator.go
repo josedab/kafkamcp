@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"sync"
 	"time"
+	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
 // InstanceStatus represents the status of a federated instance.
@@ -171,7 +172,7 @@ func (c *Coordinator) Query(tool string, args map[string]any, targets []string) 
 	defer c.mu.Unlock()
 
 	query := &FederatedQuery{
-		ID:        fmt.Sprintf("fq-%d", time.Now().UnixNano()),
+		ID:        randid.New("fq"),
 		Tool:      tool,
 		Args:      args,
 		Targets:   targets,
@@ -192,7 +193,7 @@ func (c *Coordinator) Query(tool string, args map[string]any, targets []string) 
 			InstanceID:   inst.ID,
 			InstanceName: inst.Name,
 			Status:       "success",
-			Data:         map[string]any{"routed": true, "endpoint": inst.Endpoint},
+			Data:         map[string]any{"routed": true},
 			LatencyMs:    1,
 		})
 	}

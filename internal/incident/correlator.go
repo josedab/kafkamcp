@@ -9,6 +9,7 @@ import (
 	"sort"
 	"sync"
 	"time"
+	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
 // Severity represents incident severity.
@@ -140,7 +141,7 @@ func (c *Correlator) IngestEvent(event AnomalyEvent) *IncidentCluster {
 	defer c.mu.Unlock()
 
 	if event.ID == "" {
-		event.ID = fmt.Sprintf("evt-%d", time.Now().UnixNano())
+		event.ID = randid.New("evt")
 	}
 	if event.Timestamp.IsZero() {
 		event.Timestamp = time.Now()
@@ -287,7 +288,7 @@ func (c *Correlator) mergeIntoIncident(incident *IncidentCluster, events []Anoma
 
 func (c *Correlator) createIncident(events []AnomalyEvent) IncidentCluster {
 	incident := IncidentCluster{
-		ID:     fmt.Sprintf("inc-%d", time.Now().UnixNano()),
+		ID:     randid.New("inc"),
 		Events: events,
 		Status: "active",
 	}

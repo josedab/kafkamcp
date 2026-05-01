@@ -14,6 +14,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
 // SamplingStrategy defines how messages are sampled from topics.
@@ -138,7 +139,7 @@ func (e *Engine) CreatePipeline(cfg PipelineConfig) (*PipelineConfig, error) {
 	}
 	if cfg.ID == "" {
 		e.idCounter++
-		cfg.ID = fmt.Sprintf("pipeline-%d-%d", time.Now().UnixNano(), e.idCounter)
+		cfg.ID = randid.New("pipeline")
 	}
 
 	e.mu.Lock()

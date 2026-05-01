@@ -6,6 +6,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
 const (
@@ -84,7 +85,7 @@ func (e *Engine) CreateSession(agentID string) *Session {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
-	id := fmt.Sprintf("chat_%s_%d", agentID, time.Now().UnixNano())
+	id := fmt.Sprintf("chat_%s_%s", agentID, randid.New(""))
 	s := &Session{
 		ID:        id,
 		AgentID:   agentID,

@@ -6,6 +6,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
 var bookmarkCounter atomic.Uint64
@@ -107,7 +108,7 @@ func (e *Engine) CreateBookmark(name, topic, cluster string, offsets map[int32]i
 	defer e.mu.Unlock()
 
 	bookmark := &Bookmark{
-		ID:             fmt.Sprintf("bm-%d-%d", time.Now().UnixNano(), bookmarkCounter.Add(1)),
+		ID:             randid.New("bm"),
 		Name:           name,
 		Topic:          topic,
 		Cluster:        cluster,
@@ -243,7 +244,7 @@ func (e *Engine) CreateSimulation(name, topic, groupID string, startOffsets map[
 	defer e.mu.Unlock()
 
 	sim := &Simulation{
-		ID:          fmt.Sprintf("sim-%d-%d", time.Now().UnixNano(), simulationCounter.Add(1)),
+		ID:          randid.New("sim"),
 		Name:        name,
 		Topic:       topic,
 		GroupID:     groupID,

@@ -9,6 +9,7 @@ import (
 	"sort"
 	"sync"
 	"time"
+	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
 // SignalSource identifies the origin of an external signal.
@@ -107,7 +108,7 @@ func (e *Engine) IngestSignal(signal Signal) {
 	defer e.mu.Unlock()
 
 	if signal.ID == "" {
-		signal.ID = fmt.Sprintf("sig_%d", time.Now().UnixNano())
+		signal.ID = randid.New("sig")
 	}
 	if signal.Timestamp.IsZero() {
 		signal.Timestamp = time.Now()
@@ -159,7 +160,7 @@ func (e *Engine) Correlate(windowDuration time.Duration, metricFilter string) *C
 	}
 
 	result := &CorrelationResult{
-		ID:          fmt.Sprintf("corr_%d", time.Now().UnixNano()),
+		ID:          randid.New("corr"),
 		TimeWindow:  windowDuration.String(),
 		SignalCount: len(filtered),
 		GeneratedAt: time.Now(),

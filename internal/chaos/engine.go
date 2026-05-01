@@ -7,6 +7,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
 // ExperimentType defines the type of chaos experiment.
@@ -214,7 +215,7 @@ func (e *Engine) Inject(expType ExperimentType, cluster string, topics, groups [
 	}
 
 	exp := &Experiment{
-		ID:            fmt.Sprintf("chaos-%d-%d", time.Now().UnixNano(), e.experimentCounter.Add(1)),
+		ID:            randid.New("chaos"),
 		Type:          expType,
 		Status:        StatusRunning,
 		Description:   fmt.Sprintf("%s experiment on cluster %s", expType, cluster),

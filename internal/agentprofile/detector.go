@@ -9,6 +9,7 @@ import (
 	"math"
 	"sync"
 	"time"
+	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
 // ThreatType categorizes detected threats.
@@ -248,7 +249,7 @@ func (d *Detector) checkBulkRead(profile *AgentProfile, event AccessEvent) *Thre
 	}
 
 	return &ThreatAlert{
-		ID:          fmt.Sprintf("threat-%s-%d", profile.AgentID, time.Now().UnixNano()),
+		ID:          fmt.Sprintf("threat-%s-%s", profile.AgentID, randid.New("")),
 		AgentID:     profile.AgentID,
 		ThreatType:  ThreatBulkRead,
 		Severity:    severity,
@@ -275,7 +276,7 @@ func (d *Detector) checkOffHoursAccess(profile *AgentProfile, event AccessEvent,
 	}
 
 	return &ThreatAlert{
-		ID:          fmt.Sprintf("threat-%s-%d", profile.AgentID, time.Now().UnixNano()),
+		ID:          fmt.Sprintf("threat-%s-%s", profile.AgentID, randid.New("")),
 		AgentID:     profile.AgentID,
 		ThreatType:  ThreatOffHoursAccess,
 		Severity:    SeverityLow,
@@ -295,7 +296,7 @@ func (d *Detector) checkNewTopicAccess(profile *AgentProfile, event AccessEvent)
 		return nil
 	}
 	return &ThreatAlert{
-		ID:          fmt.Sprintf("threat-%s-%d", profile.AgentID, time.Now().UnixNano()),
+		ID:          fmt.Sprintf("threat-%s-%s", profile.AgentID, randid.New("")),
 		AgentID:     profile.AgentID,
 		ThreatType:  ThreatNewTopicAccess,
 		Severity:    SeverityLow,
@@ -330,7 +331,7 @@ func (d *Detector) checkReadWriteRatio(profile *AgentProfile) *ThreatAlert {
 	}
 
 	return &ThreatAlert{
-		ID:          fmt.Sprintf("threat-%s-%d", profile.AgentID, time.Now().UnixNano()),
+		ID:          fmt.Sprintf("threat-%s-%s", profile.AgentID, randid.New("")),
 		AgentID:     profile.AgentID,
 		ThreatType:  ThreatRatioAnomaly,
 		Severity:    SeverityMedium,

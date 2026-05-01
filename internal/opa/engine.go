@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
 // PolicyEngine evaluates OPA Rego policies for authorization decisions.
@@ -177,7 +178,7 @@ func (pe *PolicyEngine) Evaluate(input PolicyInput) Decision {
 	finalDecision := allowed && !denied
 
 	decision := Decision{
-		ID:        fmt.Sprintf("dec_%d", time.Now().UnixNano()),
+		ID:        randid.New("dec"),
 		Input:     input,
 		Allowed:   finalDecision,
 		PolicyID:  matchedPolicy,

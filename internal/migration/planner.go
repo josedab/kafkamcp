@@ -5,6 +5,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
 var planCounter atomic.Uint64
@@ -196,7 +197,7 @@ func (p *Planner) CreatePlan(sourceCluster, targetCluster string, sourceTopics, 
 	}
 
 	plan := &MigrationPlan{
-		ID:            fmt.Sprintf("plan-%d-%d", time.Now().UnixNano(), planCounter.Add(1)),
+		ID:            randid.New("plan"),
 		SourceCluster: sourceCluster,
 		TargetCluster: targetCluster,
 		Status:        "pending",

@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
 // FieldDiff represents a change to a single schema field.
@@ -421,7 +422,7 @@ func countBreaking(fields []FieldDiff) int {
 func randomSuffix() string {
 	b := make([]byte, 8)
 	if _, err := rand.Read(b); err != nil {
-		return fmt.Sprintf("%d", time.Now().UnixNano())
+		return randid.New("ev")
 	}
 	return hex.EncodeToString(b)
 }

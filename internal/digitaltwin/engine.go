@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"sync"
 	"time"
+	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
 // TopicState represents a topic in the simulated cluster.
@@ -129,7 +130,7 @@ func (e *Engine) CaptureSnapshot(clusterName string, topics map[string]TopicStat
 	defer e.mu.Unlock()
 
 	snapshot := &ClusterSnapshot{
-		ID:             fmt.Sprintf("snap_%d", time.Now().UnixNano()),
+		ID:             randid.New("snap"),
 		SourceCluster:  clusterName,
 		Topics:         topics,
 		ConsumerGroups: groups,
@@ -151,7 +152,7 @@ func (e *Engine) CreateTwin(snapshotID string) (*ClusterSnapshot, error) {
 	}
 
 	twin := &ClusterSnapshot{
-		ID:            fmt.Sprintf("twin_%d", time.Now().UnixNano()),
+		ID:            randid.New("twin"),
 		SourceCluster: snap.SourceCluster,
 		Topics:        make(map[string]TopicState, len(snap.Topics)),
 		ConsumerGroups: make(map[string]ConsumerGroupState, len(snap.ConsumerGroups)),

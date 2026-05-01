@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
 // DraftStatus tracks the lifecycle of a schema draft.
@@ -124,7 +125,7 @@ func (e *Engine) CreateDraft(subject string, schemaType SchemaType, schema, crea
 		schemaType = SchemaAvro
 	}
 
-	id := fmt.Sprintf("draft_%d", time.Now().UnixNano())
+	id := randid.New("draft")
 	draft := &Draft{
 		ID:         id,
 		Subject:    subject,

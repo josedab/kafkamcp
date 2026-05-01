@@ -6,6 +6,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
 // ToolNode represents a tool in the dependency graph.
@@ -118,7 +119,7 @@ func (r *Router) ClassifyAndPlan(request string) (*ExecutionPlan, error) {
 	}
 
 	plan := &ExecutionPlan{
-		ID:          fmt.Sprintf("plan_%d", time.Now().UnixNano()),
+		ID:          randid.New("plan"),
 		Intent:      matched.ID,
 		Description: matched.Description,
 		Steps:       matched.ToolChain,

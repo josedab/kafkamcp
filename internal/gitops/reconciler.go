@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"sync"
 	"time"
+	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
 // ReconcileStatus represents the state of a reconciliation run.
@@ -116,7 +117,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, live LiveState, dryRun bool)
 	}
 
 	result := &ReconcileResult{
-		ID:        fmt.Sprintf("reconcile-%d", time.Now().UnixNano()),
+		ID:        randid.New("reconcile"),
 		DryRun:    dryRun,
 		StartedAt: time.Now(),
 	}

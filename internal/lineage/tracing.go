@@ -7,6 +7,7 @@ import (
 	"sort"
 	"sync"
 	"time"
+	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
 // TraceContext represents W3C Trace Context propagation headers.
@@ -137,7 +138,7 @@ func (mt *MessageTracer) RecordSpan(span TraceSpan) {
 	if span.SpanID == "" {
 		id, err := generateHexID(8)
 		if err != nil {
-			id = fmt.Sprintf("%x", time.Now().UnixNano())
+			id = randid.New("tr")
 		}
 		span.SpanID = id
 	}

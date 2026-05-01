@@ -9,6 +9,7 @@ import (
 	"math"
 	"sync"
 	"time"
+	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
 // ComplianceFramework represents a regulatory framework.
@@ -200,7 +201,7 @@ func (e *Engine) RequestChange(topic string, targetMs int64, reason string) (*Re
 	}
 
 	req := &RetentionChangeRequest{
-		ID:          fmt.Sprintf("ret-%s-%d", topic, time.Now().UnixNano()),
+		ID:          fmt.Sprintf("ret-%s-%s", topic, randid.New("")),
 		Topic:       topic,
 		CurrentMs:   policy.CurrentRetentionMs,
 		TargetMs:    targetMs,

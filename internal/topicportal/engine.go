@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"sync"
 	"time"
+	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
 // RequestStatus represents the state of a topic provisioning request.
@@ -129,7 +130,7 @@ func (e *Engine) SubmitRequest(req TopicRequest) (*TopicRequest, error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
-	req.ID = fmt.Sprintf("req-%s-%d", req.TopicName, time.Now().UnixNano())
+	req.ID = fmt.Sprintf("req-%s-%s", req.TopicName, randid.New(""))
 	req.CreatedAt = time.Now()
 	req.UpdatedAt = time.Now()
 	req.Status = StatusPending
