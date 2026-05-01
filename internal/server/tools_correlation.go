@@ -8,6 +8,7 @@ import (
 
 	"github.com/kafkamcp/kafkamcp/internal/auth"
 	"github.com/kafkamcp/kafkamcp/internal/correlation"
+	"github.com/kafkamcp/kafkamcp/internal/urlutil"
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
@@ -98,6 +99,10 @@ func (s *Server) handleCorrelationEndpoints(ctx context.Context, request mcp.Cal
 			}
 			if deny := validateStringLength("url", url); deny != nil {
 				return deny, nil
+			}
+
+			if err := urlutil.ValidateWebhookURL(url); err != nil {
+				return mcp.NewToolResultError(fmt.Sprintf("invalid endpoint URL: %v", err)), nil
 			}
 
 			s.correlationEngine.RegisterEndpoint(correlation.ExternalEndpoint{
