@@ -320,7 +320,7 @@ func (am *AlertManager) sendWebhook(notif *AlertNotification) error {
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, am.config.WebhookURL, strings.NewReader(string(body)))
 	if err != nil {
-		am.logger.Error("failed to create webhook request", "error", err, "alert_id", notif.ID, "severity", notif.Severity, "webhook_url", am.config.WebhookURL)
+		am.logger.Error("failed to create webhook request", "error", err, "alert_id", notif.ID, "severity", notif.Severity, "webhook_url", redactURL(am.config.WebhookURL))
 		return fmt.Errorf("create webhook request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
@@ -328,16 +328,31 @@ func (am *AlertManager) sendWebhook(notif *AlertNotification) error {
 
 	resp, err := am.httpClient.Do(req)
 	if err != nil {
-		am.logger.Error("webhook delivery failed", "error", err, "alert_id", notif.ID, "severity", notif.Severity, "webhook_url", am.config.WebhookURL)
+		am.logger.Error("webhook delivery failed", "error", err, "alert_id", notif.ID, "severity", notif.Severity, "webhook_url", redactURL(am.config.WebhookURL))
 		return fmt.Errorf("webhook delivery: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		am.logger.Warn("webhook returned non-2xx status", "status", resp.StatusCode, "alert_id", notif.ID, "severity", notif.Severity, "webhook_url", am.config.WebhookURL)
+		am.logger.Warn("webhook returned non-2xx status", "status", resp.StatusCode, "alert_id", notif.ID, "severity", notif.Severity, "webhook_url", redactURL(am.config.WebhookURL))
 		return fmt.Errorf("webhook returned status %d", resp.StatusCode)
 	}
 	return nil
+}
+
+// redactURL masks a URL for safe inclusion in logs, preserving only the scheme and host.
+func redactURL(rawURL string) string {
+	if rawURL == "" {
+		return ""
+	}
+	if idx := strings.Index(rawURL, "://"); idx >= 0 {
+		rest := rawURL[idx+3:]
+		if slashIdx := strings.Index(rest, "/"); slashIdx >= 0 {
+			return rawURL[:idx+3+slashIdx] + "/***"
+		}
+		return rawURL + "/***"
+	}
+	return "***"
 }
 
 // GetReplicationResource returns data for the kafka://replication/{source}/{target} MCP resource.
