@@ -5,5 +5,9 @@
 set -e
 
 echo "Running pre-commit checks..."
-make fmt-check && make vet && make lint
+if ! (make fmt-check && make vet && make lint); then
+	echo ""
+	echo "Hint: try 'make clean && make validate' if failures seem stale."
+	exit 1
+fi
 echo "Pre-commit checks passed."
