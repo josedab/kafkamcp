@@ -2,6 +2,18 @@
 
 This document describes the high-level architecture of KafkaMCP to help new contributors navigate the codebase and understand where new code belongs.
 
+## Start Here
+
+New to the codebase? Read these five files in order to understand the full request lifecycle:
+
+1. **`cmd/kafkamcp/main.go`** — CLI entrypoint: parses flags, loads config, creates the Kafka manager, and starts the server.
+2. **`internal/config/config.go`** — YAML configuration loading, validation, and environment variable expansion.
+3. **`internal/server/server.go`** — `Server` struct definition and `New()` constructor that initialises all subsystems.
+4. **`internal/server/register_tools.go`** — Tool registration orchestrator: wires every MCP tool into the server.
+5. **`internal/kafka/manager.go`** — Kafka client abstraction: all broker communication flows through this package.
+
+After reading these, see [Adding a New Tool](#adding-a-new-tool) for the standard three-file pattern used by every feature.
+
 ## Directory Structure
 
 ```
