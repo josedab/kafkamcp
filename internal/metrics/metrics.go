@@ -11,12 +11,19 @@ import (
 )
 
 const maxUniqueAgents = 1000
+const maxUniqueTopics = 500
 
 // SanitizeAgentLabel caps unique agent_id label values to prevent unbounded cardinality.
 // If the agent is already known or the allowlist has capacity, the original ID is returned.
 // Otherwise, the ID is hashed into a fixed number of overflow buckets.
 func SanitizeAgentLabel(agentID string) string {
 	return ensureDefaultMetrics().SanitizeAgentLabel(agentID)
+}
+
+// SanitizeTopicLabel caps unique topic label values to prevent leaking topic names
+// through the unauthenticated metrics endpoint.
+func SanitizeTopicLabel(topic string) string {
+	return ensureDefaultMetrics().SanitizeTopicLabel(topic)
 }
 
 // Metrics holds all KafkaMCP Prometheus metrics.
@@ -35,6 +42,9 @@ type Metrics struct {
 
 	agentMu     sync.RWMutex
 	knownAgents map[string]struct{}
+
+	topicMu     sync.RWMutex
+	knownTopics map[string]struct{}
 }
 
 // New creates and registers all KafkaMCP metrics on a dedicated registry.
@@ -45,6 +55,7 @@ func New() *Metrics {
 	m := &Metrics{
 		Registry:    reg,
 		knownAgents: make(map[string]struct{}),
+		knownTopics: make(map[string]struct{}),
 
 		ToolCallsTotal: factory.NewCounterVec(prometheus.CounterOpts{
 			Name: "kafkamcp_tool_calls_total",
@@ -102,6 +113,25 @@ func New() *Metrics {
 	return m
 }
 
+// SanitizeTopicLabel on a Metrics instance caps unique topic label values.
+// Topics beyond the limit are hashed into overflow buckets to prevent
+// leaking topic names via the unauthenticated metrics endpoint.
+func (m *Metrics) SanitizeTopicLabel(topic string) string {
+	m.topicMu.Lock()
+	defer m.topicMu.Unlock()
+
+	if _, ok := m.knownTopics[topic]; ok {
+		return topic
+	}
+	if len(m.knownTopics) < maxUniqueTopics {
+		m.knownTopics[topic] = struct{}{}
+		return topic
+	}
+	h := sha256.Sum256([]byte(topic))
+	bucket := h[0] % 32
+	return fmt.Sprintf("topic_overflow_%02d", bucket)
+}
+
 // SanitizeAgentLabel on a Metrics instance caps unique agent_id label values.
 func (m *Metrics) SanitizeAgentLabel(agentID string) string {
 	m.agentMu.Lock()
@@ -142,7 +172,7 @@ func ensureDefaultMetrics() *Metrics {
 	if m := defaultMetrics.Load(); m != nil {
 		return m
 	}
-	m := &Metrics{knownAgents: make(map[string]struct{})}
+	m := &Metrics{knownAgents: make(map[string]struct{}), knownTopics: make(map[string]struct{})}
 	defaultMetrics.CompareAndSwap(nil, m)
 	return defaultMetrics.Load()
 }
