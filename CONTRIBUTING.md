@@ -538,3 +538,5 @@ This checks your Go version, linting tools, Docker status, Kafka reachability, a
 | Tests fail with `-race` on macOS | The Go race detector requires CGO on macOS; `CGO_ENABLED=0` or missing Xcode CLI tools | Install Xcode CLI tools: `xcode-select --install` and ensure `CGO_ENABLED=1` (the default) |
 
 > **Note:** `make check` is an alias for `make validate` — both run the full fmt-check → vet → lint → test → build pipeline. `make validate-ci` and `make pre-push` run the same checks but signal CI/pre-push intent. If formatting issues are reported, run `make fmt` first, then re-run validation.
+
+> **CI vs Local:** In CI (`.github/workflows/ci.yml`), `lint` runs as a **separate parallel job** alongside `test` for faster feedback. Locally, `make validate` runs fmt-check → vet → lint → test → build as a single sequential pipeline. Both must pass before merging — CI simply parallelises them. If you pass `make validate` locally, you will pass CI.
