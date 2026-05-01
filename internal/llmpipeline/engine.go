@@ -5,6 +5,8 @@ package llmpipeline
 
 import (
 	"crypto/sha256"
+	crypto_rand "crypto/rand"
+	"encoding/binary"
 	"encoding/csv"
 	"encoding/hex"
 	"encoding/json"
@@ -113,8 +115,17 @@ func NewEngine(logger *slog.Logger) *Engine {
 		results:   make(map[string]*ExportResult),
 		piiFields: defaultPIIFields(),
 		logger:    logger,
-		rng:       rand.New(rand.NewSource(time.Now().UnixNano())),
+		rng:       newCryptoSeededRand(),
 	}
+}
+
+// newCryptoSeededRand creates a math/rand.Rand seeded from crypto/rand.
+func newCryptoSeededRand() *rand.Rand {
+	var seed int64
+	if err := binary.Read(crypto_rand.Reader, binary.BigEndian, &seed); err != nil {
+		seed = time.Now().UnixNano()
+	}
+	return rand.New(rand.NewSource(seed))
 }
 
 // CreatePipeline registers a new export pipeline configuration.
