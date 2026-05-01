@@ -6,8 +6,11 @@ import (
 	"fmt"
 	"log/slog"
 	"sort"
+	"strings"
 	"sync"
 	"time"
+
+	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
 // Sandbox represents an isolated environment for safe experimentation.
@@ -76,15 +79,51 @@ type Engine struct {
 	mu        sync.RWMutex
 	sandboxes map[string]*Sandbox
 	logger    *slog.Logger
-	nextID    int64
+	stopCleanup chan struct{}
 }
 
 // NewEngine creates a new sandbox engine.
 func NewEngine(logger *slog.Logger) *Engine {
-	return &Engine{
-		sandboxes: make(map[string]*Sandbox),
-		logger:    logger,
+	e := &Engine{
+		sandboxes:   make(map[string]*Sandbox),
+		logger:      logger,
+		stopCleanup: make(chan struct{}),
 	}
+	go e.cleanupLoop()
+	return e
+}
+
+// cleanupLoop periodically removes destroyed/expired sandboxes older than 1 hour.
+func (e *Engine) cleanupLoop() {
+	ticker := time.NewTicker(10 * time.Minute)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			e.purgeStale()
+		case <-e.stopCleanup:
+			return
+		}
+	}
+}
+
+// purgeStale removes sandboxes that have been destroyed or expired for over 1 hour.
+func (e *Engine) purgeStale() {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	cutoff := time.Now().Add(-1 * time.Hour)
+	for id, sb := range e.sandboxes {
+		if (sb.Status == "destroyed" || sb.Status == "expired") && sb.ExpiresAt.Before(cutoff) {
+			delete(e.sandboxes, id)
+			e.logger.Debug("purged stale sandbox", "id", id, "status", sb.Status)
+		}
+	}
+}
+
+// Close stops the cleanup goroutine.
+func (e *Engine) Close() {
+	close(e.stopCleanup)
 }
 
 // Create creates a new sandbox environment.
@@ -113,8 +152,7 @@ func (e *Engine) Create(name, description, owner string, durationSec int64, quot
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
-	e.nextID++
-	id := fmt.Sprintf("sandbox_%d", e.nextID)
+	id := randid.New("sandbox")
 
 	sb := &Sandbox{
 		ID:          id,
@@ -159,7 +197,7 @@ func (e *Engine) Exec(sandboxID, tool string, args map[string]any, result any, e
 
 	op := SandboxOp{
 		Tool:      tool,
-		Args:      args,
+		Args:      redactSensitiveArgs(args),
 		Status:    status,
 		Result:    result,
 		Error:     errMsg,
@@ -304,4 +342,33 @@ func (e *Engine) CleanExpired() int {
 		}
 	}
 	return cleaned
+}
+
+// sensitiveKeyPatterns contains substrings that indicate a parameter key holds sensitive data.
+var sensitiveKeyPatterns = []string{"password", "secret", "token", "key", "credential", "api_key", "apikey", "sasl", "bearer", "jwt", "auth", "connection_string"}
+
+// redactSensitiveArgs returns a shallow copy of args with sensitive keys redacted.
+func redactSensitiveArgs(args map[string]any) map[string]any {
+	if args == nil {
+		return nil
+	}
+	redacted := make(map[string]any, len(args))
+	for k, v := range args {
+		lower := strings.ToLower(k)
+		isSensitive := false
+		for _, pat := range sensitiveKeyPatterns {
+			if strings.Contains(lower, pat) {
+				isSensitive = true
+				break
+			}
+		}
+		if isSensitive {
+			redacted[k] = "**REDACTED**"
+		} else if nested, ok := v.(map[string]any); ok {
+			redacted[k] = redactSensitiveArgs(nested)
+		} else {
+			redacted[k] = v
+		}
+	}
+	return redacted
 }
