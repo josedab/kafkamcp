@@ -1,6 +1,7 @@
 package dashboard
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -15,7 +16,7 @@ import (
 func newTestDashboard(t *testing.T) *Dashboard {
 	t.Helper()
 	rl := ratelimit.New(0)
-	al, err := audit.NewLogger(true, 100, "", slog.Default())
+	al, err := audit.NewLogger(context.Background(), true, 100, "", slog.Default())
 	if err != nil {
 		t.Fatalf("failed to create audit logger: %v", err)
 	}

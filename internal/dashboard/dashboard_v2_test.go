@@ -19,7 +19,7 @@ func testV2Logger() *slog.Logger {
 }
 
 func newTestDashboardV2(km kafka.KafkaManager) *DashboardV2 {
-	al, _ := audit.NewLogger(true, 1000, "", testV2Logger())
+	al, _ := audit.NewLogger(context.Background(), true, 1000, "", testV2Logger())
 	return NewDashboardV2(km, al, testV2Logger())
 }
 

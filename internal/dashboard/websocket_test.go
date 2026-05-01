@@ -22,7 +22,7 @@ func testDashboardLogger() *slog.Logger {
 func setupDashboard(t *testing.T) *Dashboard {
 	t.Helper()
 	logger := testDashboardLogger()
-	al, _ := audit.NewLogger(true, 100, "", logger)
+	al, _ := audit.NewLogger(context.Background(), true, 100, "", logger)
 	rl := ratelimit.New(0)
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {

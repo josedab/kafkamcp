@@ -1,6 +1,7 @@
 package audit
 
 import (
+	"context"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -9,7 +10,7 @@ import (
 
 func TestRecent(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))
-	al, err := NewLogger(true, 10, "", logger)
+	al, err := NewLogger(context.Background(), true, 10, "", logger)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -29,7 +30,7 @@ func TestRecent(t *testing.T) {
 
 func TestRecentZero(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))
-	al, _ := NewLogger(true, 10, "", logger)
+	al, _ := NewLogger(context.Background(), true, 10, "", logger)
 
 	entries := al.Recent(0)
 	if entries != nil {
@@ -41,7 +42,7 @@ func TestCloseWithFile(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))
 	tmpFile := filepath.Join(t.TempDir(), "audit.log")
 
-	al, err := NewLogger(true, 10, tmpFile, logger)
+	al, err := NewLogger(context.Background(), true, 10, tmpFile, logger)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -56,7 +57,7 @@ func TestCloseWithFile(t *testing.T) {
 
 func TestCloseWithoutFile(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))
-	al, _ := NewLogger(true, 10, "", logger)
+	al, _ := NewLogger(context.Background(), true, 10, "", logger)
 
 	err := al.Close()
 	if err != nil {
@@ -66,7 +67,7 @@ func TestCloseWithoutFile(t *testing.T) {
 
 func TestLogWithTimestamp(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))
-	al, _ := NewLogger(true, 10, "", logger)
+	al, _ := NewLogger(context.Background(), true, 10, "", logger)
 
 	al.Log(Entry{
 		Timestamp: "2024-01-01T00:00:00Z",
@@ -85,7 +86,7 @@ func TestLogToFile(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))
 	tmpFile := filepath.Join(t.TempDir(), "audit.log")
 
-	al, err := NewLogger(true, 10, tmpFile, logger)
+	al, err := NewLogger(context.Background(), true, 10, tmpFile, logger)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -104,7 +105,7 @@ func TestLogToFile(t *testing.T) {
 
 func TestNewLoggerInvalidFile(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))
-	_, err := NewLogger(true, 10, "/nonexistent/path/audit.log", logger)
+	_, err := NewLogger(context.Background(), true, 10, "/nonexistent/path/audit.log", logger)
 	if err == nil {
 		t.Fatal("expected error for invalid log file path")
 	}

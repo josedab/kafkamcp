@@ -1,6 +1,7 @@
 package audit
 
 import (
+	"context"
 	"log/slog"
 	"os"
 	"testing"
@@ -8,7 +9,7 @@ import (
 
 func TestAuditLoggerRingBuffer(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))
-	al, err := NewLogger(true, 5, "", logger)
+	al, err := NewLogger(context.Background(), true, 5, "", logger)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -44,7 +45,7 @@ func TestAuditLoggerRingBuffer(t *testing.T) {
 
 func TestAuditLoggerDisabled(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))
-	al, err := NewLogger(false, 10, "", logger)
+	al, err := NewLogger(context.Background(), false, 10, "", logger)
 	if err != nil {
 		t.Fatal(err)
 	}

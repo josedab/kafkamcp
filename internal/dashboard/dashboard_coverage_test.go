@@ -22,7 +22,7 @@ type flusherRecorder struct {
 func (f *flusherRecorder) Flush() { f.flushed++ }
 
 func TestHandleSSEInitialConnection(t *testing.T) {
-	al, _ := audit.NewLogger(true, 100, "", slog.Default())
+	al, _ := audit.NewLogger(context.Background(), true, 100, "", slog.Default())
 	rl := ratelimit.New(0)
 	d := New(nil, al, rl, slog.Default())
 
@@ -58,7 +58,7 @@ func TestHandleSSEInitialConnection(t *testing.T) {
 }
 
 func TestHandleSSEReceivesBroadcast(t *testing.T) {
-	al, _ := audit.NewLogger(true, 100, "", slog.Default())
+	al, _ := audit.NewLogger(context.Background(), true, 100, "", slog.Default())
 	rl := ratelimit.New(0)
 	d := New(nil, al, rl, slog.Default())
 
@@ -96,7 +96,7 @@ func TestHandleSSEReceivesBroadcast(t *testing.T) {
 }
 
 func TestHandleSSEHeaders(t *testing.T) {
-	al, _ := audit.NewLogger(true, 100, "", slog.Default())
+	al, _ := audit.NewLogger(context.Background(), true, 100, "", slog.Default())
 	rl := ratelimit.New(0)
 	d := New(nil, al, rl, slog.Default())
 
@@ -121,7 +121,7 @@ func TestHandleSSEHeaders(t *testing.T) {
 }
 
 func TestHandleHealthMethodNotAllowed(t *testing.T) {
-	al, _ := audit.NewLogger(true, 100, "", slog.Default())
+	al, _ := audit.NewLogger(context.Background(), true, 100, "", slog.Default())
 	rl := ratelimit.New(0)
 	d := New(nil, al, rl, slog.Default())
 	handler := d.Handler()
@@ -174,7 +174,7 @@ func TestWriteJSONString(t *testing.T) {
 }
 
 func TestHandleActivityResponseHasAllFields(t *testing.T) {
-	al, _ := audit.NewLogger(true, 100, "", slog.Default())
+	al, _ := audit.NewLogger(context.Background(), true, 100, "", slog.Default())
 	rl := ratelimit.New(0)
 	d := New(nil, al, rl, slog.Default())
 	d.SetAllowNoAuth(true)

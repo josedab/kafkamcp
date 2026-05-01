@@ -261,7 +261,7 @@ for _, cl := range cfg.Clusters {
 
 policyEngine := auth.NewPolicyEngine(cfg.Policies)
 
-auditLogger, err := audit.NewLogger(cfg.Audit.Enabled, cfg.Audit.MaxEntries, cfg.Audit.LogFile, logger)
+auditLogger, err := audit.NewLogger(context.Background(), cfg.Audit.Enabled, cfg.Audit.MaxEntries, cfg.Audit.LogFile, logger)
 if err != nil {
 return nil, fmt.Errorf("creating audit logger: %w", err)
 }

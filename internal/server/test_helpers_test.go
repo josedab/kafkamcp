@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"io"
 	"log/slog"
 	"testing"
@@ -64,7 +65,7 @@ func newTestServer(t *testing.T, opts ...func(*config.Config)) *Server {
 	}
 
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-	auditLogger, err := audit.NewLogger(false, 100, "", logger)
+	auditLogger, err := audit.NewLogger(context.Background(), false, 100, "", logger)
 	if err != nil {
 		t.Fatalf("creating audit logger: %v", err)
 	}

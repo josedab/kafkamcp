@@ -1,6 +1,7 @@
 package audit
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -46,7 +47,7 @@ type Logger struct {
 }
 
 // NewLogger creates a new audit logger.
-func NewLogger(enabled bool, maxEntries int, logFile string, logger *slog.Logger) (*Logger, error) {
+func NewLogger(ctx context.Context, enabled bool, maxEntries int, logFile string, logger *slog.Logger) (*Logger, error) {
 	l := &Logger{
 		enabled:    enabled,
 		maxEntries: maxEntries,
@@ -70,18 +71,39 @@ func NewLogger(enabled bool, maxEntries int, logFile string, logger *slog.Logger
 		l.fileWriter = f
 		l.writeCh = make(chan []byte, 256)
 		l.done = make(chan struct{})
-		go l.fileWriteLoop()
+		go l.fileWriteLoop(ctx)
 	}
 
 	return l, nil
 }
 
 // fileWriteLoop drains the write channel and writes to the file writer.
-func (l *Logger) fileWriteLoop() {
+func (l *Logger) fileWriteLoop(ctx context.Context) {
 	defer close(l.done)
-	for data := range l.writeCh {
-		if _, err := l.fileWriter.Write(data); err != nil {
-			l.slogger.Error("audit write failed", "error", err)
+	for {
+		select {
+		case data, ok := <-l.writeCh:
+			if !ok {
+				return
+			}
+			if _, err := l.fileWriter.Write(data); err != nil {
+				l.slogger.Error("audit write failed", "error", err)
+			}
+		case <-ctx.Done():
+			// Drain remaining items before exiting
+			for {
+				select {
+				case data, ok := <-l.writeCh:
+					if !ok {
+						return
+					}
+					if _, err := l.fileWriter.Write(data); err != nil {
+						l.slogger.Error("audit write failed", "error", err)
+					}
+				default:
+					return
+				}
+			}
 		}
 	}
 }

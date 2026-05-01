@@ -17,7 +17,7 @@ import (
 func newMockDashboard(t *testing.T, mock *kafka.MockKafkaManager) *Dashboard {
 	t.Helper()
 	rl := ratelimit.New(0)
-	al, err := audit.NewLogger(true, 100, "", slog.Default())
+	al, err := audit.NewLogger(context.Background(), true, 100, "", slog.Default())
 	if err != nil {
 		t.Fatalf("failed to create audit logger: %v", err)
 	}
