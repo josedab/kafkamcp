@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/kafkamcp/kafkamcp/internal/sandbox"
@@ -21,6 +20,9 @@ func (s *Server) handleConfigHistory(ctx context.Context, request mcp.CallToolRe
 	limit := 50
 	if v, ok := args["limit"].(float64); ok && v > 0 {
 		limit = int(v)
+	}
+	if limit > MaxDLQMessages {
+		limit = MaxDLQMessages
 	}
 
 	auditReport, _ := args["audit_report"].(bool)
@@ -127,10 +129,10 @@ func (s *Server) handleCostAllocate(ctx context.Context, request mcp.CallToolReq
 		if raw, ok := args["resources"]; ok {
 			data, err := json.Marshal(raw)
 			if err != nil {
-				return mcp.NewToolResultError(fmt.Sprintf("marshaling resources: %v", err)), nil
+				return s.toolError("failed to process resources", err), nil
 			}
 			if err := json.Unmarshal(data, &resources); err != nil {
-				return mcp.NewToolResultError(fmt.Sprintf("unmarshaling resources: %v", err)), nil
+				return s.toolError("failed to process resources", err), nil
 			}
 		}
 
@@ -180,10 +182,10 @@ func (s *Server) handleCostBudget(ctx context.Context, request mcp.CallToolReque
 		if raw, ok := args["resources"]; ok {
 			data, err := json.Marshal(raw)
 			if err != nil {
-				return mcp.NewToolResultError(fmt.Sprintf("marshaling resources: %v", err)), nil
+				return s.toolError("failed to process resources", err), nil
 			}
 			if err := json.Unmarshal(data, &resources); err != nil {
-				return mcp.NewToolResultError(fmt.Sprintf("unmarshaling resources: %v", err)), nil
+				return s.toolError("failed to process resources", err), nil
 			}
 		}
 
@@ -191,10 +193,10 @@ func (s *Server) handleCostBudget(ctx context.Context, request mcp.CallToolReque
 		if raw, ok := args["alert_thresholds"]; ok {
 			data, err := json.Marshal(raw)
 			if err != nil {
-				return mcp.NewToolResultError(fmt.Sprintf("marshaling alert_thresholds: %v", err)), nil
+				return s.toolError("failed to process alert thresholds", err), nil
 			}
 			if err := json.Unmarshal(data, &thresholds); err != nil {
-				return mcp.NewToolResultError(fmt.Sprintf("unmarshaling alert_thresholds: %v", err)), nil
+				return s.toolError("failed to process alert thresholds", err), nil
 			}
 		}
 
@@ -233,10 +235,10 @@ func (s *Server) handleSandboxCreate(ctx context.Context, request mcp.CallToolRe
 		quotas = &sandbox.ResourceQuotas{}
 		data, err := json.Marshal(raw)
 		if err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("marshaling quotas: %v", err)), nil
+			return s.toolError("failed to process quotas", err), nil
 		}
 		if err := json.Unmarshal(data, quotas); err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("unmarshaling quotas: %v", err)), nil
+			return s.toolError("failed to process quotas", err), nil
 		}
 	}
 

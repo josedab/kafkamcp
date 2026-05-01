@@ -98,6 +98,9 @@ func (s *Server) handleActionExport(ctx context.Context, request mcp.CallToolReq
 	if v, ok := args["limit"].(float64); ok && v > 0 {
 		filter.Limit = int(v)
 	}
+	if filter.Limit > MaxDLQMessages {
+		filter.Limit = MaxDLQMessages
+	}
 
 	lines, err := s.eventSourcingEngine.ExportJSONL(filter)
 	if err != nil {

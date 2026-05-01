@@ -62,6 +62,9 @@ func (s *Server) handleIncidentList(ctx context.Context, request mcp.CallToolReq
 	if l, ok := args["limit"].(float64); ok && l > 0 {
 		limit = int(l)
 	}
+	if limit > MaxDLQMessages {
+		limit = MaxDLQMessages
+	}
 
 	incidents := s.incidentCorrelator.GetIncidents(limit)
 	s.logAudit(agentID, "kafka_incident_list", args, "", "success", len(incidents), nil, start)

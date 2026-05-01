@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/kafkamcp/kafkamcp/internal/viewstore"
@@ -35,19 +34,19 @@ func (s *Server) handleViewCreate(ctx context.Context, request mcp.CallToolReque
 	if raw, ok := args["group_by_fields"]; ok {
 		data, err := json.Marshal(raw)
 		if err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("marshaling group_by_fields: %v", err)), nil
+			return s.toolError("failed to process group_by_fields", err), nil
 		}
 		if err := json.Unmarshal(data, &groupByFields); err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("unmarshaling group_by_fields: %v", err)), nil
+			return s.toolError("failed to process group_by_fields", err), nil
 		}
 	}
 	if raw, ok := args["value_fields"]; ok {
 		data, err := json.Marshal(raw)
 		if err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("marshaling value_fields: %v", err)), nil
+			return s.toolError("failed to process value_fields", err), nil
 		}
 		if err := json.Unmarshal(data, &valueFields); err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("unmarshaling value_fields: %v", err)), nil
+			return s.toolError("failed to process value_fields", err), nil
 		}
 	}
 

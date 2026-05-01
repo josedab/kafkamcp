@@ -138,7 +138,9 @@ func (s *Server) handleTopicRequestStatus(ctx context.Context, request mcp.CallT
 	if l, ok := args["limit"].(float64); ok && l > 0 {
 		limit = int(l)
 	}
-
+	if limit > MaxDLQMessages {
+		limit = MaxDLQMessages
+	}
 	requests := s.topicPortalEngine.ListRequests(status, limit)
 	s.logAudit(agentID, "kafka_topic_request_status", args, "", "success", len(requests), nil, start)
 	return marshalResult(map[string]any{

@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/kafkamcp/kafkamcp/internal/auth"
@@ -26,6 +25,12 @@ func (s *Server) handleFederationJoin(ctx context.Context, request mcp.CallToolR
 				return mcp.NewToolResultError("instance_id and endpoint are required"), nil
 			}
 			if deny := validateStringLength("instance_id", instanceID); deny != nil {
+				return deny, nil
+			}
+			if deny := validateStringLength("name", name); deny != nil {
+				return deny, nil
+			}
+			if deny := validateStringLength("endpoint", endpoint); deny != nil {
 				return deny, nil
 			}
 
@@ -56,7 +61,7 @@ func (s *Server) handleFederationJoin(ctx context.Context, request mcp.CallToolR
 			})
 			if err != nil {
 				s.logAudit(agentID, "kafka_federation_join", args, "", "error", 0, err, start)
-				return mcp.NewToolResultError(fmt.Sprintf("join failed: %s", err)), nil
+				return s.toolError("join failed", err), nil
 			}
 			s.logAudit(agentID, "kafka_federation_join", args, "", "success", 1, nil, start)
 			return marshalResult(inst)
@@ -67,7 +72,7 @@ func (s *Server) handleFederationJoin(ctx context.Context, request mcp.CallToolR
 				return mcp.NewToolResultError("instance_id is required"), nil
 			}
 			if err := s.federationCoord.Leave(instanceID); err != nil {
-				return mcp.NewToolResultError(fmt.Sprintf("leave failed: %s", err)), nil
+				return s.toolError("leave failed", err), nil
 			}
 			s.logAudit(agentID, "kafka_federation_join", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "deregistered", "instance_id": instanceID})
@@ -78,7 +83,7 @@ func (s *Server) handleFederationJoin(ctx context.Context, request mcp.CallToolR
 				return mcp.NewToolResultError("instance_id is required"), nil
 			}
 			if err := s.federationCoord.Heartbeat(instanceID); err != nil {
-				return mcp.NewToolResultError(fmt.Sprintf("heartbeat failed: %s", err)), nil
+				return s.toolError("heartbeat failed", err), nil
 			}
 			return marshalResult(map[string]any{"status": "ok", "instance_id": instanceID})
 
@@ -141,6 +146,9 @@ func (s *Server) handleFederationStatus(ctx context.Context, request mcp.CallToo
 			limit := 50
 			if l, ok := args["limit"].(float64); ok && l > 0 {
 				limit = int(l)
+			}
+			if limit > MaxDLQMessages {
+				limit = MaxDLQMessages
 			}
 			entries := s.federationCoord.GetAuditLog(limit)
 			return marshalResult(map[string]any{"audit_log": entries, "total": len(entries)})

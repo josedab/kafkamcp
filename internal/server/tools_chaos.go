@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/kafkamcp/kafkamcp/internal/auth"
@@ -55,6 +54,9 @@ func (s *Server) handleChaosInject(ctx context.Context, request mcp.CallToolRequ
 			if m, ok := args["max_duration_minutes"].(float64); ok && m > 0 {
 				maxDur = time.Duration(m) * time.Minute
 			}
+			if maxDur > 60*time.Minute {
+				maxDur = 60 * time.Minute
+			}
 
 			guard := chaos.DefaultSafetyGuard()
 			guard.MaxDuration = maxDur
@@ -62,7 +64,7 @@ func (s *Server) handleChaosInject(ctx context.Context, request mcp.CallToolRequ
 			exp, err := s.chaosEngine.Inject(chaos.ExperimentType(expType), cluster, topics, groups, params, &guard)
 			if err != nil {
 				s.logAudit(agentID, "kafka_chaos_inject", args, cluster, "error", 0, err, start)
-				return mcp.NewToolResultError(fmt.Sprintf("failed to inject chaos: %s", err)), nil
+				return s.toolError("failed to inject chaos", err), nil
 			}
 			s.logAudit(agentID, "kafka_chaos_inject", args, cluster, "success", 1, nil, start)
 			return marshalResult(exp)
@@ -75,7 +77,7 @@ func (s *Server) handleChaosInject(ctx context.Context, request mcp.CallToolRequ
 
 			sc, err := s.chaosEngine.GetScenario(scenarioName)
 			if err != nil {
-				return mcp.NewToolResultError(fmt.Sprintf("scenario not found: %s", err)), nil
+				return s.toolError("scenario not found", err), nil
 			}
 
 			var topics []string
@@ -90,7 +92,7 @@ func (s *Server) handleChaosInject(ctx context.Context, request mcp.CallToolRequ
 			exp, err := s.chaosEngine.Inject(sc.Type, cluster, topics, nil, sc.Parameters, &sc.SafetyGuard)
 			if err != nil {
 				s.logAudit(agentID, "kafka_chaos_inject", args, cluster, "error", 0, err, start)
-				return mcp.NewToolResultError(fmt.Sprintf("failed to run scenario: %s", err)), nil
+				return s.toolError("failed to run scenario", err), nil
 			}
 			s.logAudit(agentID, "kafka_chaos_inject", args, cluster, "success", 1, nil, start)
 			return marshalResult(map[string]any{"scenario": sc.Name, "experiment": exp})
@@ -116,7 +118,7 @@ func (s *Server) handleChaosStatus(ctx context.Context, request mcp.CallToolRequ
 		if expID != "" {
 			exp, err := s.chaosEngine.Status(expID)
 			if err != nil {
-				return mcp.NewToolResultError(fmt.Sprintf("experiment not found: %s", err)), nil
+				return s.toolError("experiment not found", err), nil
 			}
 			s.logAudit(agentID, "kafka_chaos_status", args, "", "success", 1, nil, start)
 			return marshalResult(exp)
@@ -144,7 +146,7 @@ func (s *Server) handleChaosStop(ctx context.Context, request mcp.CallToolReques
 		exp, err := s.chaosEngine.Stop(expID)
 		if err != nil {
 			s.logAudit(agentID, "kafka_chaos_stop", args, "", "error", 0, err, start)
-			return mcp.NewToolResultError(fmt.Sprintf("failed to stop experiment: %s", err)), nil
+			return s.toolError("failed to stop experiment", err), nil
 		}
 		s.logAudit(agentID, "kafka_chaos_stop", args, "", "success", 1, nil, start)
 		return marshalResult(exp)

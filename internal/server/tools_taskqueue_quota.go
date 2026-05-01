@@ -22,8 +22,11 @@ func (s *Server) handleTaskPublish(ctx context.Context, request mcp.CallToolRequ
 	}
 
 	maxRetries := 3
-	if v, ok := args["max_retries"].(float64); ok {
+	if v, ok := args["max_retries"].(float64); ok && v > 0 {
 		maxRetries = int(v)
+	}
+	if maxRetries > 100 {
+		maxRetries = 100
 	}
 
 	var deadlineSec int64

@@ -50,6 +50,9 @@ func (s *Server) handleThreatAlerts(ctx context.Context, request mcp.CallToolReq
 	if l, ok := args["limit"].(float64); ok && l > 0 {
 		limit = int(l)
 	}
+	if limit > MaxDLQMessages {
+		limit = MaxDLQMessages
+	}
 
 	alerts := s.threatDetector.GetAlerts(filterAgent, limit)
 	s.logAudit(agentID, "agent_threat_alerts", args, "", "success", len(alerts), nil, start)

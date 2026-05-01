@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/mark3labs/mcp-go/mcp"
@@ -22,10 +21,10 @@ func (s *Server) handleMemoryStore(ctx context.Context, request mcp.CallToolRequ
 	if raw, ok := args["tags"]; ok {
 		data, err := json.Marshal(raw)
 		if err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("marshaling tags: %v", err)), nil
+			return s.toolError("failed to process tags", err), nil
 		}
 		if err := json.Unmarshal(data, &tags); err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("unmarshaling tags: %v", err)), nil
+			return s.toolError("failed to process tags", err), nil
 		}
 	}
 
@@ -105,6 +104,9 @@ func (s *Server) handleMemorySearch(ctx context.Context, request mcp.CallToolReq
 	limit := 10
 	if v, ok := args["limit"].(float64); ok && v > 0 {
 		limit = int(v)
+	}
+	if limit > MaxDLQMessages {
+		limit = MaxDLQMessages
 	}
 
 	results := s.agentMemoryEngine.Search(agentID, query, category, limit)

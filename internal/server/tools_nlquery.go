@@ -28,6 +28,9 @@ func (s *Server) handleNLQuery(ctx context.Context, request mcp.CallToolRequest)
 			if l, ok := args["limit"].(float64); ok && l > 0 {
 				limit = int(l)
 			}
+			if limit > MaxDLQMessages {
+				limit = MaxDLQMessages
+			}
 			history := s.nlQueryEngine.GetHistory(limit)
 			s.logAudit(agentID, "kafka_nl_query", args, cluster, "success", len(history), nil, start)
 			return marshalResult(map[string]any{"history": history, "total": len(history)})

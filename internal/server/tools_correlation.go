@@ -93,6 +93,12 @@ func (s *Server) handleCorrelationEndpoints(ctx context.Context, request mcp.Cal
 			if source == "" || url == "" {
 				return mcp.NewToolResultError("source and url are required"), nil
 			}
+			if deny := validateStringLength("source", string(source)); deny != nil {
+				return deny, nil
+			}
+			if deny := validateStringLength("url", url); deny != nil {
+				return deny, nil
+			}
 
 			s.correlationEngine.RegisterEndpoint(correlation.ExternalEndpoint{
 				Source: source,

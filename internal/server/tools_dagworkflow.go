@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/kafkamcp/kafkamcp/internal/dagworkflow"
@@ -25,7 +24,7 @@ func (s *Server) handleDAGWorkflowCreate(ctx context.Context, request mcp.CallTo
 			return mcp.NewToolResultError("invalid steps format"), nil
 		}
 		if err := json.Unmarshal(stepsJSON, &steps); err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("invalid steps: %s", err)), nil
+			return s.toolError("invalid steps format", err), nil
 		}
 	}
 
@@ -36,7 +35,7 @@ func (s *Server) handleDAGWorkflowCreate(ctx context.Context, request mcp.CallTo
 			return mcp.NewToolResultError("invalid parameters format"), nil
 		}
 		if err := json.Unmarshal(paramsJSON, &params); err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("invalid parameters: %s", err)), nil
+			return s.toolError("invalid parameters format", err), nil
 		}
 	}
 
@@ -45,7 +44,7 @@ func (s *Server) handleDAGWorkflowCreate(ctx context.Context, request mcp.CallTo
 		tagsJSON, err := json.Marshal(tagsRaw)
 		if err == nil {
 			if err := json.Unmarshal(tagsJSON, &tags); err != nil {
-				return mcp.NewToolResultError(fmt.Sprintf("unmarshaling tags: %v", err)), nil
+				return s.toolError("failed to process tags", err), nil
 			}
 		}
 	}

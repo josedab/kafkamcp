@@ -101,6 +101,9 @@ func (s *Server) handleGitOpsHistory(ctx context.Context, request mcp.CallToolRe
 	if l, ok := args["limit"].(float64); ok && l > 0 {
 		limit = int(l)
 	}
+	if limit > MaxDLQMessages {
+		limit = MaxDLQMessages
+	}
 
 	results := s.gitopsReconciler.GetResults(limit)
 	s.logAudit(agentID, "gitops_reconcile_history", args, "", "success", len(results), nil, start)

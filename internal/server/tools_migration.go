@@ -100,7 +100,7 @@ func (s *Server) handleMigrationExecute(ctx context.Context, request mcp.CallToo
 		result, err := s.migrationPlanner.ExecutePlan(planID, dryRun)
 		if err != nil {
 			s.logAudit(agentID, "kafka_migrate_execute", args, "", "error", 0, err, start)
-			return mcp.NewToolResultError(fmt.Sprintf("migration execution failed: %s", err)), nil
+			return s.toolError("migration execution failed", err), nil
 		}
 
 		s.logAudit(agentID, "kafka_migrate_execute", args, "", "success", result.Executed, nil, start)
@@ -126,7 +126,7 @@ func (s *Server) handleMigrationStatus(ctx context.Context, request mcp.CallTool
 		case "progress":
 			progress, err := s.migrationPlanner.GetProgress(planID)
 			if err != nil {
-				return mcp.NewToolResultError(fmt.Sprintf("progress not found: %s", err)), nil
+				return s.toolError("progress not found", err), nil
 			}
 			s.logAudit(agentID, "kafka_migrate_status", args, "", "success", 1, nil, start)
 			return marshalResult(progress)
@@ -134,7 +134,7 @@ func (s *Server) handleMigrationStatus(ctx context.Context, request mcp.CallTool
 		case "report":
 			report, err := s.migrationPlanner.GetReport(planID)
 			if err != nil {
-				return mcp.NewToolResultError(fmt.Sprintf("report not found: %s", err)), nil
+				return s.toolError("report not found", err), nil
 			}
 			s.logAudit(agentID, "kafka_migrate_status", args, "", "success", 1, nil, start)
 			return marshalResult(report)
@@ -160,7 +160,7 @@ func (s *Server) handleMigrationRollback(ctx context.Context, request mcp.CallTo
 		record, err := s.migrationPlanner.Rollback(planID)
 		if err != nil {
 			s.logAudit(agentID, "kafka_migrate_rollback", args, "", "error", 0, err, start)
-			return mcp.NewToolResultError(fmt.Sprintf("rollback failed: %s", err)), nil
+			return s.toolError("rollback failed", err), nil
 		}
 
 		s.logAudit(agentID, "kafka_migrate_rollback", args, "", "success", 1, nil, start)

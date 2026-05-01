@@ -23,7 +23,7 @@ func (s *Server) handleSQLExecute(ctx context.Context, request mcp.CallToolReque
 	// Parse the SQL query
 	query, err := s.streamSQLEngine.Parse(sql, agentID)
 	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("SQL parse error: %s", err)), nil
+		return s.toolError("SQL parse error", err), nil
 	}
 
 	// Consume messages from the source topic
@@ -76,7 +76,7 @@ func (s *Server) handleSQLExecute(ctx context.Context, request mcp.CallToolReque
 	result, err := s.streamSQLEngine.Execute(query.ID, msgMaps)
 	if err != nil {
 		s.logAudit(agentID, "kafka_sql_execute", args, cluster, "error", 0, err, start)
-		return mcp.NewToolResultError(fmt.Sprintf("SQL execution error: %s", err)), nil
+		return s.toolError("SQL execution error", err), nil
 	}
 
 	s.logAudit(agentID, "kafka_sql_execute", args, cluster, "success", result.RowCount, nil, start)
@@ -91,7 +91,7 @@ func (s *Server) handleSQLExplain(ctx context.Context, request mcp.CallToolReque
 
 	query, err := s.streamSQLEngine.Parse(sql, agentID)
 	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("SQL parse error: %s", err)), nil
+		return s.toolError("SQL parse error", err), nil
 	}
 
 	plan, err := s.streamSQLEngine.Explain(query.ID)
@@ -157,10 +157,10 @@ func (s *Server) handleCatalogSearch(ctx context.Context, request mcp.CallToolRe
 	if raw, ok := args["tags"]; ok {
 		data, err := json.Marshal(raw)
 		if err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("marshaling tags: %v", err)), nil
+			return s.toolError("failed to process tags", err), nil
 		}
 		if err := json.Unmarshal(data, &opts.Tags); err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("unmarshaling tags: %v", err)), nil
+			return s.toolError("failed to process tags", err), nil
 		}
 	}
 
@@ -183,10 +183,10 @@ func (s *Server) handleCatalogTag(ctx context.Context, request mcp.CallToolReque
 		if raw, ok := args["tags"]; ok {
 			data, err := json.Marshal(raw)
 			if err != nil {
-				return mcp.NewToolResultError(fmt.Sprintf("marshaling tags: %v", err)), nil
+				return s.toolError("failed to process tags", err), nil
 			}
 			if err := json.Unmarshal(data, &tags); err != nil {
-				return mcp.NewToolResultError(fmt.Sprintf("unmarshaling tags: %v", err)), nil
+				return s.toolError("failed to process tags", err), nil
 			}
 		}
 		entry, err := s.catalogEngine.Tag(entryID, tags)
@@ -210,10 +210,10 @@ func (s *Server) handleCatalogTag(ctx context.Context, request mcp.CallToolReque
 		if raw, ok := args["tags"]; ok {
 			data, err := json.Marshal(raw)
 			if err != nil {
-				return mcp.NewToolResultError(fmt.Sprintf("marshaling tags: %v", err)), nil
+				return s.toolError("failed to process tags", err), nil
 			}
 			if err := json.Unmarshal(data, &tags); err != nil {
-				return mcp.NewToolResultError(fmt.Sprintf("unmarshaling tags: %v", err)), nil
+				return s.toolError("failed to process tags", err), nil
 			}
 		}
 
@@ -233,10 +233,10 @@ func (s *Server) handleCatalogTag(ctx context.Context, request mcp.CallToolReque
 		if raw, ok := args["lineage"]; ok {
 			data, err := json.Marshal(raw)
 			if err != nil {
-				return mcp.NewToolResultError(fmt.Sprintf("marshaling lineage: %v", err)), nil
+				return s.toolError("failed to process lineage data", err), nil
 			}
 			if err := json.Unmarshal(data, &lineage); err != nil {
-				return mcp.NewToolResultError(fmt.Sprintf("unmarshaling lineage: %v", err)), nil
+				return s.toolError("failed to process lineage data", err), nil
 			}
 		}
 		if err := s.catalogEngine.SetLineage(entryID, &lineage); err != nil {

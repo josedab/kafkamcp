@@ -123,7 +123,7 @@ func (s *Server) handleReplayDiff(ctx context.Context, request mcp.CallToolReque
 		diff, err := s.replayEngine.Diff(bmA, bmB)
 		if err != nil {
 			s.logAudit(agentID, "kafka_replay_diff", args, "", "error", 0, err, start)
-			return mcp.NewToolResultError(fmt.Sprintf("diff failed: %s", err)), nil
+			return s.toolError("diff failed", err), nil
 		}
 
 		s.logAudit(agentID, "kafka_replay_diff", args, "", "success", 1, nil, start)
@@ -156,7 +156,7 @@ func (s *Server) handleReplaySimulate(ctx context.Context, request mcp.CallToolR
 			if fromBookmark != "" {
 				bm, err := s.replayEngine.GetBookmark(fromBookmark)
 				if err != nil {
-					return mcp.NewToolResultError(fmt.Sprintf("bookmark not found: %s", err)), nil
+					return s.toolError("bookmark not found", err), nil
 				}
 				startOffsets = bm.Offsets
 			}
@@ -172,7 +172,7 @@ func (s *Server) handleReplaySimulate(ctx context.Context, request mcp.CallToolR
 			}
 			sim, err := s.replayEngine.RunSimulation(simID)
 			if err != nil {
-				return mcp.NewToolResultError(fmt.Sprintf("run failed: %s", err)), nil
+				return s.toolError("run failed", err), nil
 			}
 			s.logAudit(agentID, "kafka_replay_simulate", args, "", "success", 1, nil, start)
 			return marshalResult(sim)
