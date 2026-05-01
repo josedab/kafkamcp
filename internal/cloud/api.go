@@ -311,7 +311,11 @@ func (h *APIHandler) handleProvision(w http.ResponseWriter, r *http.Request) {
 		size = "small"
 	}
 
-	provisionID := generateID("prov")
+	provisionID, err := generateID("prov")
+	if err != nil {
+		writeCloudJSON(w, http.StatusInternalServerError, map[string]any{"error": "failed to generate provision ID"})
+		return
+	}
 	writeCloudJSON(w, http.StatusAccepted, map[string]any{
 		"provision_id":  provisionID,
 		"workspace_id":  req.WorkspaceID,

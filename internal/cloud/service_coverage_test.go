@@ -70,7 +70,10 @@ func TestUsagePct_Exceeds100(t *testing.T) {
 func TestGenerateID_Uniqueness(t *testing.T) {
 	seen := make(map[string]bool)
 	for i := 0; i < 100; i++ {
-		id := generateID("test")
+		id, err := generateID("test")
+		if err != nil {
+			t.Fatalf("generateID failed: %v", err)
+		}
 		if seen[id] {
 			t.Fatalf("duplicate ID generated: %s", id)
 		}
@@ -79,7 +82,10 @@ func TestGenerateID_Uniqueness(t *testing.T) {
 }
 
 func TestGenerateID_HasPrefix(t *testing.T) {
-	id := generateID("ws")
+	id, err := generateID("ws")
+	if err != nil {
+		t.Fatalf("generateID failed: %v", err)
+	}
 	if len(id) < 4 || id[:3] != "ws_" {
 		t.Errorf("expected ID starting with 'ws_', got %q", id)
 	}

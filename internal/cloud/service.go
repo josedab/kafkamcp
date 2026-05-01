@@ -137,8 +137,13 @@ func (cs *CloudService) CreateWorkspace(name, ownerEmail, plan string) (*Workspa
 		plan = "free"
 	}
 
+	wsID, err := generateID("ws")
+	if err != nil {
+		return nil, "", fmt.Errorf("generate workspace ID: %w", err)
+	}
+
 	ws := &Workspace{
-		ID:         generateID("ws"),
+		ID:         wsID,
 		Name:       name,
 		OwnerEmail: ownerEmail,
 		Plan:       plan,
@@ -149,7 +154,10 @@ func (cs *CloudService) CreateWorkspace(name, ownerEmail, plan string) (*Workspa
 	}
 
 	// Generate API key
-	apiKey := generateAPIKey()
+	apiKey, err := generateAPIKey()
+	if err != nil {
+		return nil, "", fmt.Errorf("generate API key: %w", err)
+	}
 	keyHash := hashKey(apiKey)
 	cs.apiKeys[keyHash] = ws.ID
 	cs.workspaces[ws.ID] = ws
@@ -183,7 +191,11 @@ func (cs *CloudService) AddCluster(workspaceID string, conn ClusterConnection) e
 		return fmt.Errorf("cluster limit reached for %s plan (max %d)", ws.Plan, limits.MaxClusters)
 	}
 
-	conn.ID = generateID("cl")
+	clID, err := generateID("cl")
+	if err != nil {
+		return fmt.Errorf("generate cluster ID: %w", err)
+	}
+	conn.ID = clID
 	conn.Status = "connected"
 	ws.Clusters = append(ws.Clusters, conn)
 	return nil
@@ -339,16 +351,20 @@ func usagePct(used, limit int64) float64 {
 	return float64(used) / float64(limit) * 100
 }
 
-func generateID(prefix string) string {
+func generateID(prefix string) (string, error) {
 	b := make([]byte, 8)
-	rand.Read(b)
-	return fmt.Sprintf("%s_%s", prefix, hex.EncodeToString(b))
+	if _, err := rand.Read(b); err != nil {
+		return "", fmt.Errorf("crypto/rand failed: %w", err)
+	}
+	return fmt.Sprintf("%s_%s", prefix, hex.EncodeToString(b)), nil
 }
 
-func generateAPIKey() string {
+func generateAPIKey() (string, error) {
 	b := make([]byte, 32)
-	rand.Read(b)
-	return fmt.Sprintf("kmcp_%s", hex.EncodeToString(b))
+	if _, err := rand.Read(b); err != nil {
+		return "", fmt.Errorf("crypto/rand failed: %w", err)
+	}
+	return fmt.Sprintf("kmcp_%s", hex.EncodeToString(b)), nil
 }
 
 func hashKey(key string) string {
