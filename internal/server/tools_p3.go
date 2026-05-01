@@ -50,7 +50,13 @@ func (s *Server) handleWatchSubscribe(ctx context.Context, request mcp.CallToolR
 	}
 
 	keyFilter := request.GetString("key_filter", "")
+	if deny := validateStringLength("key_filter", keyFilter); deny != nil {
+		return deny, nil
+	}
 	valueFilter := request.GetString("value_filter", "")
+	if deny := validateStringLength("value_filter", valueFilter); deny != nil {
+		return deny, nil
+	}
 	webhookURL := request.GetString("webhook_url", "")
 
 	sub, err := s.watchManager.Subscribe(agentID, topicPattern, keyFilter, valueFilter, webhookURL, nil)
