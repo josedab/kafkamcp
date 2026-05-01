@@ -20,6 +20,16 @@ func (s *Server) handleAgentConfigSearch(ctx context.Context, request mcp.CallTo
 		searchType := request.GetString("type", "all")
 		verifiedOnly := request.GetBool("verified_only", false)
 
+		if deny := validateStringLength("query", query); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("category", category); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("type", searchType); deny != nil {
+			return deny, nil
+		}
+
 		result := map[string]any{"query": query, "category": category}
 
 		if searchType == "all" || searchType == "configs" {
@@ -90,6 +100,15 @@ func (s *Server) handleAgentConfigPublish(ctx context.Context, request mcp.CallT
 			return mcp.NewToolResultError("name, version, and description are required"), nil
 		}
 		if deny := validateStringLength("name", name); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("version", version); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("description", description); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("category", category); deny != nil {
 			return deny, nil
 		}
 
