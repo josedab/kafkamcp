@@ -123,6 +123,7 @@ type Engine struct {
 	logger            *slog.Logger
 	mu                sync.RWMutex
 	experimentCounter atomic.Uint64
+	stopCleanup       chan struct{}
 }
 
 // NewEngine creates a new chaos engineering engine.
@@ -131,9 +132,43 @@ func NewEngine(logger *slog.Logger) *Engine {
 		experiments:       make(map[string]*Experiment),
 		experimentCancels: make(map[string]context.CancelFunc),
 		logger:            logger,
+		stopCleanup:       make(chan struct{}),
 	}
 	e.initScenarios()
+	go e.cleanupLoop()
 	return e
+}
+
+// cleanupLoop periodically removes stopped/completed/rolled-back experiments older than 1 hour.
+func (e *Engine) cleanupLoop() {
+	ticker := time.NewTicker(10 * time.Minute)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			e.purgeStaleExperiments()
+		case <-e.stopCleanup:
+			return
+		}
+	}
+}
+
+func (e *Engine) purgeStaleExperiments() {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	cutoff := time.Now().Add(-1 * time.Hour)
+	for id, exp := range e.experiments {
+		if exp.Status == StatusRunning || exp.Status == StatusPending {
+			continue
+		}
+		if exp.CompletedAt != "" {
+			if completed, err := time.Parse(time.RFC3339, exp.CompletedAt); err == nil && completed.Before(cutoff) {
+				delete(e.experiments, id)
+				e.logger.Debug("purged stale experiment", "id", id, "status", exp.Status)
+			}
+		}
+	}
 }
 
 func (e *Engine) initScenarios() {
@@ -326,6 +361,13 @@ func (e *Engine) Stop(experimentID string) (*Experiment, error) {
 
 // Close cancels all running experiments and clears engine state.
 func (e *Engine) Close() {
+	select {
+	case <-e.stopCleanup:
+		// already closed
+	default:
+		close(e.stopCleanup)
+	}
+
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
