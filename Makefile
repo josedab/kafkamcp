@@ -1,4 +1,4 @@
-.PHONY: build test lint lint-fix lint-all lint-changed fmt fmt-check docker clean clean-all validate validate-ci help run run-local dev dev-sse dev-http coverage test-coverage-map test-coverage-report setup-hooks docker-dev docker-dev-down setup test-one setup-vscode setup-goland integration-test test-integration-setup check doctor sdk-test quickstart benchmark docker-compose-full vet sdk-setup deps changelog test-coverage-check test-short test-race-short test-all new-tool check-deps install docs docs-serve test-func security ci deps-outdated pre-push profile generate
+.PHONY: build test lint lint-fix lint-all lint-changed fmt fmt-check fmt-imports docker clean clean-all validate validate-ci help run run-local dev dev-sse dev-http coverage test-coverage-map test-coverage-report setup-hooks docker-dev docker-dev-down setup test-one setup-vscode setup-goland integration-test test-integration-setup check doctor sdk-test quickstart benchmark docker-compose-full vet sdk-setup deps changelog test-coverage-check test-short test-race-short test-all new-tool check-deps install docs docs-serve test-func security ci deps-outdated pre-push profile generate test-pkg test-verbose check-gen check-codeowners
 
 # Build variables
 BINARY    := kafkamcp
@@ -164,15 +164,35 @@ fmt: ## Format code
 	gofmt -s -w .
 	goimports -w . 2>/dev/null || true
 
-fmt-check: ## Check code formatting (fails if unformatted, does not modify files)
+fmt-check: ## Check code formatting and import ordering (fails if unformatted)
 	@unformatted=$$(gofmt -s -l .); \
 	if [ -n "$$unformatted" ]; then \
 		echo "ERROR: The following files are not formatted:"; \
 		echo "$$unformatted"; \
 		echo "Run 'make fmt' to fix."; \
 		exit 1; \
+	fi
+	@if command -v goimports >/dev/null 2>&1; then \
+		bad_imports=$$(goimports -l .); \
+		if [ -n "$$bad_imports" ]; then \
+			echo "ERROR: The following files have incorrect import ordering:"; \
+			echo "$$bad_imports"; \
+			echo "Run 'make fmt' to fix."; \
+			exit 1; \
+		fi; \
+	fi
+	@echo "All files formatted correctly."
+
+fmt-imports: ## Check import ordering only (fails if goimports would change files)
+	@command -v goimports >/dev/null 2>&1 || { echo "ERROR: goimports not found. Run 'make setup' to install."; exit 1; }
+	@bad_imports=$$(goimports -l .); \
+	if [ -n "$$bad_imports" ]; then \
+		echo "ERROR: The following files have incorrect import ordering:"; \
+		echo "$$bad_imports"; \
+		echo "Run 'make fmt' to fix."; \
+		exit 1; \
 	fi; \
-	echo "All files formatted correctly."
+	echo "All imports ordered correctly."
 
 docker: ## Build Docker image
 	docker build -t $(DOCKER_IMAGE):$(DOCKER_TAG) .
@@ -222,6 +242,13 @@ test-func: ## Run a single test by name: make test-func FUNC=TestName
 	if [ -z "$$pkg" ]; then echo "ERROR: test function '$(FUNC)' not found in any *_test.go file"; exit 1; fi; \
 	echo "Found $(FUNC) in $$pkg"; \
 	go test -race -v -run $(FUNC) $$pkg
+
+test-pkg: ## Run tests for a single package: make test-pkg PKG=./internal/kafka
+	@if [ -z "$(PKG)" ]; then echo "Usage: make test-pkg PKG=./internal/kafka"; exit 1; fi
+	go test -race -v $(PKG)
+
+test-verbose: ## Run tests with verbose output for debugging failures
+	go test -race -v $(if $(PKG),$(PKG),./...)
 
 setup-vscode: ## Copy .vscode example configs (if not already present)
 	@mkdir -p .vscode
@@ -370,6 +397,16 @@ generate: ## Run all code generation (tool docs, go generate)
 	go generate ./...
 	@echo "All code generation complete."
 
+check-gen: ## Verify generated code is up to date (fails if stale)
+	@echo "=== Checking generated code ==="
+	$(MAKE) generate
+	@if ! git diff --exit-code docs/tool-reference.md >/dev/null 2>&1; then \
+		echo "ERROR: docs/tool-reference.md is out of date."; \
+		echo "Run 'make generate' and commit the updated file."; \
+		exit 1; \
+	fi
+	@echo "Generated code is up to date."
+
 sdk-setup: ## Install SDK test dependencies (Python, Node.js)
 	@echo "=== SDK Dependency Setup ==="
 	@echo "Prerequisites: Python 3.8+, pip, Node.js 18+, npm"
@@ -409,3 +446,21 @@ deps-outdated: ## Show Go modules with available updates
 	@go list -m -u all 2>/dev/null | grep '\[' || echo "All dependencies are up to date."
 
 pre-push: validate-ci ## Run all checks before pushing (alias for validate-ci)
+
+check-codeowners: ## Warn about internal/ packages missing from CODEOWNERS
+	@echo "=== CODEOWNERS Coverage Check ==="
+	@missing=0; \
+	for dir in internal/*/; do \
+		pkg=$$(basename "$$dir"); \
+		if ! grep -q "/internal/$$pkg/" .github/CODEOWNERS 2>/dev/null; then \
+			echo "WARNING: /internal/$$pkg/ is not listed in .github/CODEOWNERS"; \
+			missing=$$((missing + 1)); \
+		fi; \
+	done; \
+	if [ $$missing -gt 0 ]; then \
+		echo ""; \
+		echo "$$missing package(s) missing from CODEOWNERS."; \
+		echo "Add entries to .github/CODEOWNERS for the packages above."; \
+		exit 1; \
+	fi; \
+	echo "All internal/ packages are covered by CODEOWNERS."
