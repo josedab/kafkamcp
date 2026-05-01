@@ -31,10 +31,16 @@ func (s *Server) handleCreateTopic(ctx context.Context, request mcp.CallToolRequ
 		}
 
 		partitions := int32(request.GetInt("partitions", 1))
+		if partitions < 1 {
+			return mcp.NewToolResultError("partitions must be >= 1"), nil
+		}
 		if partitions > MaxPartitions {
 			return mcp.NewToolResultError("partitions must be <= 10000"), nil
 		}
 		replFactor := int16(request.GetInt("replication_factor", 1))
+		if replFactor < 1 {
+			return mcp.NewToolResultError("replication_factor must be >= 1"), nil
+		}
 		if replFactor > MaxReplicationFactor {
 			return mcp.NewToolResultError("replication_factor must be <= 10"), nil
 		}
@@ -346,13 +352,30 @@ func (s *Server) handleSubscribe(ctx context.Context, request mcp.CallToolReques
 			return deny, nil
 		}
 
+		maxMessages := request.GetInt("max_messages", 100)
+		if maxMessages > MaxConsumeLimit {
+			maxMessages = MaxConsumeLimit
+		}
+		timeoutMs := request.GetInt("timeout_ms", 10000)
+		if timeoutMs > MaxConsumeTimeout {
+			timeoutMs = MaxConsumeTimeout
+		}
+
+		deserializer := request.GetString("deserializer", "auto")
+		if deny := validateStringLength("deserializer", deserializer); deny != nil {
+			return deny, nil
+		}
+		if deny := validateEnum("deserializer", deserializer, validSerdes); deny != nil {
+			return deny, nil
+		}
+
 		result, err := s.kafkaManager.Subscribe(ctx, cluster, kafka.SubscribeRequest{
 			Topic:        topic,
 			GroupID:      groupID,
 			AutoCommit:   request.GetBool("auto_commit", true),
-			MaxMessages:  request.GetInt("max_messages", 100),
-			TimeoutMs:    request.GetInt("timeout_ms", 10000),
-			Deserializer: request.GetString("deserializer", "auto"),
+			MaxMessages:  maxMessages,
+			TimeoutMs:    timeoutMs,
+			Deserializer: deserializer,
 		})
 		if err != nil {
 			s.logAudit(agentID, "kafka_subscribe", args, cluster, "error", 0, err, start)
