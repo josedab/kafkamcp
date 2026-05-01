@@ -123,7 +123,10 @@ func TestGenerateIDESessionID_Uniqueness(t *testing.T) {
 	t.Parallel()
 	seen := make(map[string]bool)
 	for i := 0; i < 100; i++ {
-		id := generateIDESessionID()
+		id, err := generateIDESessionID()
+		if err != nil {
+			t.Fatalf("generateIDESessionID failed: %v", err)
+		}
 		if seen[id] {
 			t.Fatalf("duplicate session ID generated: %s", id)
 		}
@@ -133,7 +136,10 @@ func TestGenerateIDESessionID_Uniqueness(t *testing.T) {
 
 func TestGenerateIDESessionID_Prefix(t *testing.T) {
 	t.Parallel()
-	id := generateIDESessionID()
+	id, err := generateIDESessionID()
+	if err != nil {
+		t.Fatalf("generateIDESessionID failed: %v", err)
+	}
 	if !strings.HasPrefix(id, "ide_") {
 		t.Errorf("expected prefix 'ide_', got %q", id)
 	}

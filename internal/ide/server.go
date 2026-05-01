@@ -210,7 +210,12 @@ func (s *Server) handleConnect(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "maximum IDE session limit reached", http.StatusServiceUnavailable)
 		return
 	}
-	sessionID := generateIDESessionID()
+	sessionID, err := generateIDESessionID()
+	if err != nil {
+		s.mu.Unlock()
+		http.Error(w, "failed to generate session ID", http.StatusInternalServerError)
+		return
+	}
 	s.sessions[sessionID] = &IDESession{
 		ID:        sessionID,
 		IDE:       req.IDE,
@@ -464,12 +469,12 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func generateIDESessionID() string {
+func generateIDESessionID() (string, error) {
 	b := make([]byte, 16)
 	if _, err := rand.Read(b); err != nil {
-		return fmt.Sprintf("ide_%d", time.Now().UnixNano())
+		return "", fmt.Errorf("failed to generate session ID: %w", err)
 	}
-	return "ide_" + hex.EncodeToString(b)
+	return "ide_" + hex.EncodeToString(b), nil
 }
 
 func (s *Server) writeIDEJSON(w http.ResponseWriter, r *http.Request, status int, v any) {
