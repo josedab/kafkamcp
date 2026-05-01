@@ -42,9 +42,10 @@ func ValidateWebhookURL(rawURL string) error {
 			if isPrivateIP(ip) {
 				return fmt.Errorf("webhook URL must not target private/internal IP ranges")
 			}
+			return nil
 		}
-		// Allow URLs that can't be resolved at config time (may resolve later)
-		return nil
+		// Deny unresolvable hostnames to prevent DNS rebinding attacks
+		return fmt.Errorf("webhook URL hostname %q could not be resolved", hostname)
 	}
 
 	for _, ipStr := range ips {

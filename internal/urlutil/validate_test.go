@@ -16,7 +16,7 @@ func TestValidateWebhookURL(t *testing.T) {
 		// Valid URLs
 		{"valid HTTPS URL", "https://example.com/webhook", false},
 		{"valid HTTPS with port", "https://example.com:8443/webhook", false},
-		{"valid HTTPS with path", "https://hooks.example.com/api/v1/notify", false},
+		{"valid HTTPS with path", "https://hooks.example.com/api/v1/notify", true},
 		{"empty URL is allowed", "", false},
 
 		// Scheme validation
