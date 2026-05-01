@@ -74,13 +74,12 @@ const (
 	maxSessionsGlobal   = 100
 )
 
-func generateSessionID() string {
+func generateSessionID() (string, error) {
 	b := make([]byte, 8)
 	if _, err := rand.Read(b); err != nil {
-		// Fallback: use timestamp-based ID if crypto/rand fails
-		return fmt.Sprintf("stream-%d", time.Now().UnixNano())
+		return "", fmt.Errorf("crypto/rand failed: %w", err)
 	}
-	return "stream-" + hex.EncodeToString(b)
+	return "stream-" + hex.EncodeToString(b), nil
 }
 
 // StartStream creates and starts a new streaming consumer session.
@@ -167,10 +166,15 @@ func (m *Manager) StartStream(ctx context.Context, cluster string, cfg StreamCon
 		return nil, fmt.Errorf("creating stream consumer: %w", err)
 	}
 
+	sessionID, err := generateSessionID()
+	if err != nil {
+		return nil, fmt.Errorf("generating session ID: %w", err)
+	}
+
 	streamCtx, cancel := context.WithTimeout(ctx, time.Duration(cfg.TimeoutMs)*time.Millisecond)
 
 	session := &StreamSession{
-		ID:        generateSessionID(),
+		ID:        sessionID,
 		Topic:     cfg.Topic,
 		GroupID:   groupID,
 		AgentID:   cfg.AgentID,

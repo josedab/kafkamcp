@@ -143,7 +143,10 @@ func TestConcurrentGetStreamSession(t *testing.T) {
 
 func TestGenerateSessionID_HasPrefix(t *testing.T) {
 	t.Parallel()
-	id := generateSessionID()
+	id, err := generateSessionID()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if !strings.HasPrefix(id, "stream-") {
 		t.Errorf("expected stream- prefix, got %q", id)
 	}

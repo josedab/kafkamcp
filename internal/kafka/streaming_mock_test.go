@@ -121,7 +121,10 @@ func TestListStreams_EmptyStreamMgr(t *testing.T) {
 // --------------- generateSessionID ---------------
 
 func TestGenerateSessionID_Prefix(t *testing.T) {
-	id := generateSessionID()
+	id, err := generateSessionID()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if !strings.HasPrefix(id, "stream-") {
 		t.Errorf("expected 'stream-' prefix, got %q", id)
 	}
@@ -130,7 +133,10 @@ func TestGenerateSessionID_Prefix(t *testing.T) {
 func TestGenerateSessionID_Unique(t *testing.T) {
 	seen := make(map[string]bool)
 	for i := 0; i < 100; i++ {
-		id := generateSessionID()
+		id, err := generateSessionID()
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 		if seen[id] {
 			t.Fatalf("duplicate session ID generated: %q", id)
 		}

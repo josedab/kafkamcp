@@ -16,7 +16,10 @@ func TestNewStreamManager(t *testing.T) {
 }
 
 func TestGenerateSessionID(t *testing.T) {
-	id := generateSessionID()
+	id, err := generateSessionID()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if !strings.HasPrefix(id, "stream-") {
 		t.Errorf("expected prefix 'stream-', got %q", id)
 	}
@@ -25,7 +28,10 @@ func TestGenerateSessionID(t *testing.T) {
 	}
 
 	// Should be unique
-	id2 := generateSessionID()
+	id2, err := generateSessionID()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if id == id2 {
 		t.Error("expected unique session IDs")
 	}
