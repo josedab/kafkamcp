@@ -69,3 +69,21 @@ func validateStringLength(name, value string) *mcp.CallToolResult {
 	}
 	return nil
 }
+
+// Valid values for serializer/deserializer and acks parameters.
+var (
+	validSerdes = map[string]bool{"auto": true, "json": true, "avro": true, "protobuf": true, "string": true, "bytes": true}
+	validAcks   = map[string]bool{"all": true, "0": true, "1": true, "-1": true}
+)
+
+// validateEnum checks that a string parameter is one of the allowed values.
+func validateEnum(name, value string, allowed map[string]bool) *mcp.CallToolResult {
+	if !allowed[value] {
+		keys := make([]string, 0, len(allowed))
+		for k := range allowed {
+			keys = append(keys, k)
+		}
+		return mcp.NewToolResultError(fmt.Sprintf("%s must be one of: %s", name, strings.Join(keys, ", ")))
+	}
+	return nil
+}
