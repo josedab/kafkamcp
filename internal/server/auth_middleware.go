@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/kafkamcp/kafkamcp/internal/auth"
@@ -57,7 +56,7 @@ func (s *Server) validateAgentID(agentID string) *mcp.CallToolResult {
 		return nil
 	}
 	if agentID == "anonymous" || !s.policyEngine.AgentExists(agentID) {
-		return mcp.NewToolResultError("Authentication required: valid X-Agent-ID header must be provided")
+		return mcp.NewToolResultError((&AuthError{AgentID: agentID, Reason: "valid X-Agent-ID header must be provided"}).Error())
 	}
 	return nil
 }
@@ -68,7 +67,7 @@ func (s *Server) validateResourceAgentID(agentID string) error {
 		return nil
 	}
 	if agentID == "anonymous" || !s.policyEngine.AgentExists(agentID) {
-		return fmt.Errorf("authentication required: valid X-Agent-ID header must be provided")
+		return &AuthError{AgentID: agentID, Reason: "valid X-Agent-ID header must be provided"}
 	}
 	return nil
 }
@@ -138,7 +137,7 @@ func (s *Server) checkAuth(agentID, tool string, resource auth.ResourceType, res
 	if !s.policyEngine.Authorize(agentID, resource, resourceName, action) {
 		s.metrics.AuthzDenials.WithLabelValues(metrics.SanitizeAgentLabel(agentID), tool, string(action)).Inc()
 		s.logger.Warn("authorization denied", "agent", agentID, "tool", tool, "resource", resourceName, "action", action)
-		return mcp.NewToolResultError("Unauthorized: insufficient permission for this operation")
+		return mcp.NewToolResultError((&AuthzError{AgentID: agentID, Tool: tool, ResourceName: resourceName, Action: string(action)}).Error())
 	}
 	return nil
 }
@@ -148,7 +147,7 @@ func (s *Server) checkAuth(agentID, tool string, resource auth.ResourceType, res
 func (s *Server) checkRateLimit(agentID, tool string) *mcp.CallToolResult {
 	if !s.rateLimiter.Allow(agentID) {
 		s.metrics.RateLimitDenials.WithLabelValues(metrics.SanitizeAgentLabel(agentID), tool).Inc()
-		return mcp.NewToolResultError("Rate limit exceeded. Please retry later.")
+		return mcp.NewToolResultError((&RateLimitError{AgentID: agentID, Resource: tool}).Error())
 	}
 	return nil
 }
@@ -157,7 +156,7 @@ func (s *Server) checkRateLimit(agentID, tool string) *mcp.CallToolResult {
 func (s *Server) checkResourceRateLimit(agentID, resource string) error {
 	if !s.rateLimiter.Allow(agentID) {
 		s.metrics.RateLimitDenials.WithLabelValues(metrics.SanitizeAgentLabel(agentID), resource).Inc()
-		return fmt.Errorf("rate limit exceeded")
+		return &RateLimitError{AgentID: agentID, Resource: resource}
 	}
 	return nil
 }
