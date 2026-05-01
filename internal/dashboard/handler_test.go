@@ -107,6 +107,7 @@ func TestHandlerReturnsHTTPHandler(t *testing.T) {
 func TestHandleSchemas(t *testing.T) {
 	rl := ratelimit.New(0)
 	d := New(nil, nil, rl, slog.Default())
+	d.SetAllowNoAuth(true)
 	handler := d.Handler()
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/schemas", nil)
@@ -121,6 +122,7 @@ func TestHandleSchemas(t *testing.T) {
 func TestHandleRateLimits(t *testing.T) {
 	rl := ratelimit.New(0)
 	d := New(nil, nil, rl, slog.Default())
+	d.SetAllowNoAuth(true)
 	handler := d.Handler()
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/ratelimits", nil)
@@ -135,6 +137,7 @@ func TestHandleRateLimits(t *testing.T) {
 func TestHandleMethodNotAllowed(t *testing.T) {
 	rl := ratelimit.New(0)
 	d := New(nil, nil, rl, slog.Default())
+	d.SetAllowNoAuth(true)
 	handler := d.Handler()
 
 	endpoints := []string{"/api/v1/schemas", "/api/v1/ratelimits"}
@@ -233,6 +236,7 @@ func TestSetAPIKeyAndRequireAuth(t *testing.T) {
 func TestRequireAuthNoKey(t *testing.T) {
 	rl := ratelimit.New(0)
 	d := New(nil, nil, rl, slog.Default())
+	d.SetAllowNoAuth(true)
 	// No API key set — auth should pass through
 
 	handler := d.requireAuth(func(w http.ResponseWriter, r *http.Request) {
@@ -257,12 +261,23 @@ func TestSetAPIKeyEmpty(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	})
 
+	// Without allowNoAuth, empty API key rejects requests
 	req := httptest.NewRequest(http.MethodGet, "/test", nil)
 	w := httptest.NewRecorder()
 	handler(w, req)
 
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401 when API key is empty and allowNoAuth is false, got %d", w.Code)
+	}
+
+	// With allowNoAuth, empty API key allows requests
+	d.SetAllowNoAuth(true)
+	req = httptest.NewRequest(http.MethodGet, "/test", nil)
+	w = httptest.NewRecorder()
+	handler(w, req)
+
 	if w.Code != http.StatusOK {
-		t.Errorf("expected 200 when API key is empty string, got %d", w.Code)
+		t.Errorf("expected 200 when allowNoAuth is true, got %d", w.Code)
 	}
 }
 

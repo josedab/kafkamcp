@@ -19,7 +19,9 @@ func newTestDashboard(t *testing.T) *Dashboard {
 	if err != nil {
 		t.Fatalf("failed to create audit logger: %v", err)
 	}
-	return New(nil, al, rl, slog.Default())
+	d := New(nil, al, rl, slog.Default())
+	d.SetAllowNoAuth(true)
+	return d
 }
 
 // --- handleActivity tests ---

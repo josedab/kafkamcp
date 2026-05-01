@@ -35,7 +35,9 @@ func setupDashboard(t *testing.T) *Dashboard {
 		},
 		PingFn: func(ctx context.Context) error { return nil },
 	}
-	return New(mock, al, rl, logger)
+	d := New(mock, al, rl, logger)
+	d.SetAllowNoAuth(true)
+	return d
 }
 
 // --- WebSocketHub tests ---

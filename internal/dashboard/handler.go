@@ -30,6 +30,7 @@ type Dashboard struct {
 	rateLimiter  *ratelimit.Limiter
 	logger       *slog.Logger
 	apiKey       string
+	allowNoAuth  bool
 
 	mu         sync.RWMutex
 	sseClients map[string]chan []byte
@@ -53,12 +54,23 @@ func (d *Dashboard) SetAPIKey(key string) {
 	d.apiKey = key
 }
 
+// SetAllowNoAuth explicitly allows the dashboard to run without
+// authentication. Without calling this, requests are rejected when
+// no API key is configured.
+func (d *Dashboard) SetAllowNoAuth(allow bool) {
+	d.allowNoAuth = allow
+}
+
 // requireAuth is middleware that validates bearer token or API key before
 // allowing access to the wrapped handler.
 func (d *Dashboard) requireAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if d.apiKey == "" {
-			next(w, r)
+			if d.allowNoAuth {
+				next(w, r)
+				return
+			}
+			http.Error(w, "dashboard API key is not configured", http.StatusUnauthorized)
 			return
 		}
 

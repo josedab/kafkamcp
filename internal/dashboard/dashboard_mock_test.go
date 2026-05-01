@@ -21,7 +21,9 @@ func newMockDashboard(t *testing.T, mock *kafka.MockKafkaManager) *Dashboard {
 	if err != nil {
 		t.Fatalf("failed to create audit logger: %v", err)
 	}
-	return New(mock, al, rl, slog.Default())
+	d := New(mock, al, rl, slog.Default())
+	d.SetAllowNoAuth(true)
+	return d
 }
 
 // --- handleTopics tests ---

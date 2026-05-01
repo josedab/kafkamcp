@@ -177,6 +177,7 @@ func TestHandleActivityResponseHasAllFields(t *testing.T) {
 	al, _ := audit.NewLogger(true, 100, "", slog.Default())
 	rl := ratelimit.New(0)
 	d := New(nil, al, rl, slog.Default())
+	d.SetAllowNoAuth(true)
 	handler := d.Handler()
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/activity", nil)
