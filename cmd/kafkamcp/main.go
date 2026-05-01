@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -299,11 +300,13 @@ func runServer(cmd *cobra.Command, args []string) error {
 			w.WriteHeader(http.StatusOK)
 			_, _ = w.Write([]byte("ok"))
 		})
+		metricsLimiter := newSimpleRateLimiter(10, 20) // 10 req/s, burst of 20
 		metricsServer := &http.Server{
 			Addr:              metricsAddr,
-			Handler:           securityHeadersMiddleware(metricsMux),
+			Handler:           rateLimitMiddleware(securityHeadersMiddleware(metricsMux), metricsLimiter),
 			ReadHeaderTimeout: 10 * time.Second,
 			ReadTimeout:       30 * time.Second,
+			WriteTimeout:      60 * time.Second,
 			IdleTimeout:       120 * time.Second,
 		}
 		go func() {
@@ -345,6 +348,7 @@ func runServer(cmd *cobra.Command, args []string) error {
 			Handler:           secureHandler,
 			ReadHeaderTimeout: 10 * time.Second,
 			ReadTimeout:       30 * time.Second,
+			WriteTimeout:      60 * time.Second,
 			IdleTimeout:       120 * time.Second,
 		}
 
@@ -407,6 +411,51 @@ func securityHeadersMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Origin", "")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-Agent-ID, X-Client-ID")
+		next.ServeHTTP(w, r)
+	})
+}
+
+// simpleRateLimiter implements a token-bucket rate limiter for the metrics endpoint.
+type simpleRateLimiter struct {
+	mu       sync.Mutex
+	tokens   float64
+	max      float64
+	rate     float64 // tokens per second
+	lastTime time.Time
+}
+
+func newSimpleRateLimiter(ratePerSec, burst float64) *simpleRateLimiter {
+	return &simpleRateLimiter{
+		tokens:   burst,
+		max:      burst,
+		rate:     ratePerSec,
+		lastTime: time.Now(),
+	}
+}
+
+func (rl *simpleRateLimiter) Allow() bool {
+	rl.mu.Lock()
+	defer rl.mu.Unlock()
+	now := time.Now()
+	elapsed := now.Sub(rl.lastTime).Seconds()
+	rl.lastTime = now
+	rl.tokens += elapsed * rl.rate
+	if rl.tokens > rl.max {
+		rl.tokens = rl.max
+	}
+	if rl.tokens < 1 {
+		return false
+	}
+	rl.tokens--
+	return true
+}
+
+func rateLimitMiddleware(next http.Handler, limiter *simpleRateLimiter) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !limiter.Allow() {
+			http.Error(w, "rate limit exceeded", http.StatusTooManyRequests)
+			return
+		}
 		next.ServeHTTP(w, r)
 	})
 }
