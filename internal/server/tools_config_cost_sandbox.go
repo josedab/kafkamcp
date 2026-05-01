@@ -16,6 +16,12 @@ func (s *Server) handleConfigHistory(ctx context.Context, request mcp.CallToolRe
 	if resource == "" || resourceID == "" {
 		return mcp.NewToolResultError("resource and resource_id are required"), nil
 	}
+	if deny := validateStringLength("resource", resource); deny != nil {
+		return deny, nil
+	}
+	if deny := validateStringLength("resource_id", resourceID); deny != nil {
+		return deny, nil
+	}
 
 	limit := 50
 	if v, ok := args["limit"].(float64); ok && v > 0 {
@@ -49,6 +55,15 @@ func (s *Server) handleConfigRollback(ctx context.Context, request mcp.CallToolR
 	if resource == "" || resourceID == "" {
 		return mcp.NewToolResultError("resource and resource_id are required"), nil
 	}
+	if deny := validateStringLength("resource", resource); deny != nil {
+		return deny, nil
+	}
+	if deny := validateStringLength("resource_id", resourceID); deny != nil {
+		return deny, nil
+	}
+	if deny := validateStringLength("reason", reason); deny != nil {
+		return deny, nil
+	}
 
 	targetVersion := 0
 	if v, ok := args["target_version"].(float64); ok {
@@ -73,6 +88,12 @@ func (s *Server) handleConfigCompare(ctx context.Context, request mcp.CallToolRe
 
 	if resource == "" || resourceID == "" {
 		return mcp.NewToolResultError("resource and resource_id are required"), nil
+	}
+	if deny := validateStringLength("resource", resource); deny != nil {
+		return deny, nil
+	}
+	if deny := validateStringLength("resource_id", resourceID); deny != nil {
+		return deny, nil
 	}
 
 	var version1, version2 int
@@ -224,6 +245,12 @@ func (s *Server) handleSandboxCreate(ctx context.Context, request mcp.CallToolRe
 	if name == "" {
 		return mcp.NewToolResultError("name is required"), nil
 	}
+	if deny := validateStringLength("name", name); deny != nil {
+		return deny, nil
+	}
+	if deny := validateStringLength("description", description); deny != nil {
+		return deny, nil
+	}
 
 	var durationSec int64
 	if v, ok := args["duration_sec"].(float64); ok {
@@ -240,6 +267,7 @@ func (s *Server) handleSandboxCreate(ctx context.Context, request mcp.CallToolRe
 		if err := json.Unmarshal(data, quotas); err != nil {
 			return s.toolError("failed to process quotas", err), nil
 		}
+		clampSandboxQuotas(quotas)
 	}
 
 	sb, err := s.sandboxEngine.Create(name, description, agentID, durationSec, quotas)
@@ -257,6 +285,12 @@ func (s *Server) handleSandboxExec(ctx context.Context, request mcp.CallToolRequ
 
 	if sandboxID == "" || tool == "" {
 		return mcp.NewToolResultError("sandbox_id and tool are required"), nil
+	}
+	if deny := validateStringLength("sandbox_id", sandboxID); deny != nil {
+		return deny, nil
+	}
+	if deny := validateStringLength("tool", tool); deny != nil {
+		return deny, nil
 	}
 
 	toolArgs, _ := args["args"].(map[string]any)
@@ -276,6 +310,10 @@ func (s *Server) handleSandboxExec(ctx context.Context, request mcp.CallToolRequ
 func (s *Server) handleSandboxManage(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 	action, _ := args["action"].(string)
 	sandboxID, _ := args["sandbox_id"].(string)
+
+	if deny := validateStringLength("sandbox_id", sandboxID); deny != nil {
+		return deny, nil
+	}
 
 	switch action {
 	case "destroy":
@@ -317,5 +355,31 @@ func (s *Server) handleSandboxManage(ctx context.Context, request mcp.CallToolRe
 
 	default:
 		return mcp.NewToolResultError("action must be: destroy, list, get, or promotion_report"), nil
+	}
+}
+
+// clampSandboxQuotas enforces upper bounds on user-supplied quota values.
+func clampSandboxQuotas(q *sandbox.ResourceQuotas) {
+	const (
+		maxTopics       = 50
+		maxPartitions   = 12
+		maxMessages     = 100000
+		maxStorageBytes = 1 << 30 // 1 GB
+		maxDurationSec  = 86400   // 24 hours
+	)
+	if q.MaxTopics > maxTopics {
+		q.MaxTopics = maxTopics
+	}
+	if q.MaxPartitions > maxPartitions {
+		q.MaxPartitions = maxPartitions
+	}
+	if q.MaxMessages > int64(maxMessages) {
+		q.MaxMessages = int64(maxMessages)
+	}
+	if q.MaxStorageBytes > int64(maxStorageBytes) {
+		q.MaxStorageBytes = int64(maxStorageBytes)
+	}
+	if q.MaxDurationSec > int64(maxDurationSec) {
+		q.MaxDurationSec = int64(maxDurationSec)
 	}
 }
