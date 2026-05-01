@@ -131,7 +131,11 @@ func (m *Manager) CreateOrganization(name, plan string) (*Organization, error) {
 		return nil, fmt.Errorf("organization name is required")
 	}
 
-	id := fmt.Sprintf("org_%s", generateID(8))
+	randPart, err := generateID(8)
+	if err != nil {
+		return nil, fmt.Errorf("generate organization ID: %w", err)
+	}
+	id := fmt.Sprintf("org_%s", randPart)
 	org := &Organization{
 		ID:        id,
 		Name:      name,
@@ -180,9 +184,18 @@ func (m *Manager) CreateAPIKey(orgID, name string, scopes []string) (*APIKey, er
 		return nil, fmt.Errorf("organization %q not found", orgID)
 	}
 
+	keyIDPart, err := generateID(8)
+	if err != nil {
+		return nil, fmt.Errorf("generate API key ID: %w", err)
+	}
+	keyPart, err := generateID(32)
+	if err != nil {
+		return nil, fmt.Errorf("generate API key: %w", err)
+	}
+
 	key := &APIKey{
-		ID:        fmt.Sprintf("key_%s", generateID(8)),
-		Key:       fmt.Sprintf("kmcp_%s", generateID(32)),
+		ID:        fmt.Sprintf("key_%s", keyIDPart),
+		Key:       fmt.Sprintf("kmcp_%s", keyPart),
 		Name:      name,
 		Scopes:    scopes,
 		CreatedAt: time.Now(),
@@ -236,7 +249,11 @@ func (m *Manager) ProvisionInstance(orgID, name, tier, region string, cfg Instan
 		cfg.MaxToolsPerMin = 1000
 	}
 
-	id := fmt.Sprintf("inst_%s", generateID(8))
+	instIDPart, err := generateID(8)
+	if err != nil {
+		return nil, fmt.Errorf("generate instance ID: %w", err)
+	}
+	id := fmt.Sprintf("inst_%s", instIDPart)
 	inst := &Instance{
 		ID:        id,
 		OrgID:     orgID,
@@ -413,8 +430,10 @@ func (m *Manager) AddMember(orgID, userID, email, role string) error {
 	return nil
 }
 
-func generateID(length int) string {
+func generateID(length int) (string, error) {
 	b := make([]byte, length)
-	rand.Read(b)
-	return hex.EncodeToString(b)[:length]
+	if _, err := rand.Read(b); err != nil {
+		return "", fmt.Errorf("crypto/rand failed: %w", err)
+	}
+	return hex.EncodeToString(b)[:length], nil
 }
