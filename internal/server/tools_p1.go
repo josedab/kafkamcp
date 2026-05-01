@@ -382,7 +382,7 @@ func (s *Server) handleSubscribe(ctx context.Context, request mcp.CallToolReques
 			return s.toolError("Failed to subscribe", err), nil
 		}
 
-		s.metrics.MessagesConsumed.WithLabelValues(topic, metrics.SanitizeAgentLabel(agentID), s.resolveClusterName(cluster)).Add(float64(result.Count))
+		s.metrics.MessagesConsumed.WithLabelValues(metrics.SanitizeTopicLabel(topic), metrics.SanitizeAgentLabel(agentID), s.resolveClusterName(cluster)).Add(float64(result.Count))
 		s.logAudit(agentID, "kafka_subscribe", args, cluster, "success", result.Count, nil, start)
 		return marshalResult(result)
 	})(ctx, request)

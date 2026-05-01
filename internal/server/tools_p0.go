@@ -138,7 +138,7 @@ func (s *Server) handleConsume(ctx context.Context, request mcp.CallToolRequest)
 			return s.toolError("Failed to consume", err), nil
 		}
 
-		s.metrics.MessagesConsumed.WithLabelValues(topic, metrics.SanitizeAgentLabel(agentID), s.resolveClusterName(cluster)).Add(float64(len(messages)))
+		s.metrics.MessagesConsumed.WithLabelValues(metrics.SanitizeTopicLabel(topic), metrics.SanitizeAgentLabel(agentID), s.resolveClusterName(cluster)).Add(float64(len(messages)))
 		s.logAudit(agentID, "kafka_consume", args, cluster, "success", len(messages), nil, start)
 		return marshalResult(map[string]any{"messages": messages, "count": len(messages), "topic": topic, "deserialization": deserializer})
 	})(ctx, request)
@@ -227,7 +227,7 @@ func (s *Server) handleProduce(ctx context.Context, request mcp.CallToolRequest)
 			return s.toolError("Failed to produce", err), nil
 		}
 
-		s.metrics.MessagesProduced.WithLabelValues(topic, metrics.SanitizeAgentLabel(agentID), s.resolveClusterName(cluster)).Add(float64(len(deliveries)))
+		s.metrics.MessagesProduced.WithLabelValues(metrics.SanitizeTopicLabel(topic), metrics.SanitizeAgentLabel(agentID), s.resolveClusterName(cluster)).Add(float64(len(deliveries)))
 		s.logAudit(agentID, "kafka_produce", args, cluster, "success", len(deliveries), nil, start)
 		return marshalResult(map[string]any{"deliveries": deliveries, "count": len(deliveries), "topic": topic, "serialization": serializer, "acks": acks})
 	})(ctx, request)
