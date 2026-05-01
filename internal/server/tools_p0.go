@@ -126,6 +126,12 @@ func (s *Server) handleConsume(ctx context.Context, request mcp.CallToolRequest)
 		}
 
 		deserializer := request.GetString("deserializer", "auto")
+		if deny := validateStringLength("deserializer", deserializer); deny != nil {
+			return deny, nil
+		}
+		if deny := validateEnum("deserializer", deserializer, validSerdes); deny != nil {
+			return deny, nil
+		}
 		messages, err := s.kafkaManager.Consume(ctx, cluster, topic, partition, offset, limit, timeoutMs, deserializer)
 		if err != nil {
 			s.logAudit(agentID, "kafka_consume", args, cluster, "error", 0, err, start)
@@ -198,7 +204,19 @@ func (s *Server) handleProduce(ctx context.Context, request mcp.CallToolRequest)
 		}
 
 		serializer := request.GetString("serializer", "auto")
+		if deny := validateStringLength("serializer", serializer); deny != nil {
+			return deny, nil
+		}
+		if deny := validateEnum("serializer", serializer, validSerdes); deny != nil {
+			return deny, nil
+		}
 		acks := request.GetString("acks", "all")
+		if deny := validateStringLength("acks", acks); deny != nil {
+			return deny, nil
+		}
+		if deny := validateEnum("acks", acks, validAcks); deny != nil {
+			return deny, nil
+		}
 		schemaID := request.GetInt("schema_id", -1)
 
 		deliveries, err := s.kafkaManager.Produce(ctx, cluster, topic, messages, kafka.ProduceOptions{
