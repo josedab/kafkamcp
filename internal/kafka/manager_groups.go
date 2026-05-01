@@ -89,18 +89,15 @@ func (m *Manager) DescribeConsumerGroup(ctx context.Context, cluster, groupID st
 		ProtocolType: dg.ProtocolType,
 		Protocol:     dg.Protocol,
 		Coordinator: BrokerInfo{
-			ID:   int32(dg.Coordinator.NodeID),
-			Host: dg.Coordinator.Host,
-			Port: dg.Coordinator.Port,
+			ID: int32(dg.Coordinator.NodeID),
 		},
 	}
 
-	// Members
+	// Members (strip Host to avoid exposing client IPs)
 	for _, member := range dg.Members {
 		md := GroupMemberDetail{
 			MemberID: member.MemberID,
 			ClientID: member.ClientID,
-			Host:     member.ClientHost,
 		}
 		if consumerAssign, ok := member.Assigned.AsConsumer(); ok {
 			for _, ta := range consumerAssign.Topics {

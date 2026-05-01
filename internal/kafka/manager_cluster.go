@@ -20,9 +20,7 @@ func (m *Manager) GetClusterMetadata(ctx context.Context, cluster string) (*Clus
 	var brokers []BrokerInfo
 	for _, b := range meta.Brokers {
 		bi := BrokerInfo{
-			ID:   b.NodeID,
-			Host: b.Host,
-			Port: b.Port,
+			ID: b.NodeID,
 		}
 		if b.Rack != nil {
 			bi.Rack = *b.Rack
@@ -34,9 +32,7 @@ func (m *Manager) GetClusterMetadata(ctx context.Context, cluster string) (*Clus
 	for _, b := range meta.Brokers {
 		if b.NodeID == meta.Controller {
 			controller = BrokerInfo{
-				ID:   b.NodeID,
-				Host: b.Host,
-				Port: b.Port,
+				ID: b.NodeID,
 			}
 			if b.Rack != nil {
 				controller.Rack = *b.Rack

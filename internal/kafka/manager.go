@@ -51,7 +51,7 @@ func NewManager(cfg *config.Config, logger *slog.Logger) (*Manager, error) {
 		}
 		m.clients[cl.Name] = client
 		m.admins[cl.Name] = kadm.NewClient(client)
-		logger.Info("connected to kafka cluster", "cluster", cl.Name, "brokers", cl.BootstrapServers)
+		logger.Info("connected to kafka cluster", "cluster", cl.Name, "broker_count", len(strings.Split(cl.BootstrapServers, ",")))
 	}
 
 	return m, nil
