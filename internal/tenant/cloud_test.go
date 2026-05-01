@@ -437,17 +437,18 @@ func TestControlPlaneAPI_NoAuthRequired(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/regions", nil)
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
-	if w.Code != http.StatusOK {
-		t.Errorf("expected 200 without auth, got %d", w.Code)
+	if w.Code != http.StatusServiceUnavailable {
+		t.Errorf("expected 503 when API key is empty, got %d", w.Code)
 	}
 }
 
 func TestControlPlaneAPI_HandleTenants_GET(t *testing.T) {
 	cp, _ := setupControlPlane(t)
-	api := NewControlPlaneAPI(cp, "")
+	api := NewControlPlaneAPI(cp, "test-key")
 	handler := api.Handler()
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/tenants", nil)
+	req.Header.Set("Authorization", "Bearer test-key")
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
@@ -464,11 +465,12 @@ func TestControlPlaneAPI_HandleTenants_GET(t *testing.T) {
 func TestControlPlaneAPI_HandleTenants_POST(t *testing.T) {
 	mgr := NewManager()
 	cp := NewControlPlane(mgr)
-	api := NewControlPlaneAPI(cp, "")
+	api := NewControlPlaneAPI(cp, "test-key")
 	handler := api.Handler()
 
 	body := `{"name":"New Corp","email":"new@example.com","plan":"pro"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/tenants", strings.NewReader(body))
+	req.Header.Set("Authorization", "Bearer test-key")
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
@@ -479,10 +481,11 @@ func TestControlPlaneAPI_HandleTenants_POST(t *testing.T) {
 
 func TestControlPlaneAPI_HandleTenants_MethodNotAllowed(t *testing.T) {
 	cp, _ := setupControlPlane(t)
-	api := NewControlPlaneAPI(cp, "")
+	api := NewControlPlaneAPI(cp, "test-key")
 	handler := api.Handler()
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/v1/tenants", nil)
+	req.Header.Set("Authorization", "Bearer test-key")
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 	if w.Code != http.StatusMethodNotAllowed {
@@ -492,10 +495,11 @@ func TestControlPlaneAPI_HandleTenants_MethodNotAllowed(t *testing.T) {
 
 func TestControlPlaneAPI_HandleTenantByID(t *testing.T) {
 	cp, tenantID := setupControlPlane(t)
-	api := NewControlPlaneAPI(cp, "")
+	api := NewControlPlaneAPI(cp, "test-key")
 	handler := api.Handler()
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/tenants/"+tenantID, nil)
+	req.Header.Set("Authorization", "Bearer test-key")
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
@@ -506,10 +510,11 @@ func TestControlPlaneAPI_HandleTenantByID(t *testing.T) {
 
 func TestControlPlaneAPI_HandleTenantByID_NotFound(t *testing.T) {
 	cp, _ := setupControlPlane(t)
-	api := NewControlPlaneAPI(cp, "")
+	api := NewControlPlaneAPI(cp, "test-key")
 	handler := api.Handler()
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/tenants/nonexistent", nil)
+	req.Header.Set("Authorization", "Bearer test-key")
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 	if w.Code != http.StatusNotFound {
@@ -519,10 +524,11 @@ func TestControlPlaneAPI_HandleTenantByID_NotFound(t *testing.T) {
 
 func TestControlPlaneAPI_HandleRegions_MethodNotAllowed(t *testing.T) {
 	cp, _ := setupControlPlane(t)
-	api := NewControlPlaneAPI(cp, "")
+	api := NewControlPlaneAPI(cp, "test-key")
 	handler := api.Handler()
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/regions", nil)
+	req.Header.Set("Authorization", "Bearer test-key")
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 	if w.Code != http.StatusMethodNotAllowed {
@@ -533,10 +539,11 @@ func TestControlPlaneAPI_HandleRegions_MethodNotAllowed(t *testing.T) {
 func TestControlPlaneAPI_HandleBilling_GET(t *testing.T) {
 	cp, tenantID := setupControlPlane(t)
 	cp.SetupBilling(tenantID, BillingInfo{PlanID: "pro", Status: "active"})
-	api := NewControlPlaneAPI(cp, "")
+	api := NewControlPlaneAPI(cp, "test-key")
 	handler := api.Handler()
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/billing/"+tenantID, nil)
+	req.Header.Set("Authorization", "Bearer test-key")
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
@@ -547,11 +554,12 @@ func TestControlPlaneAPI_HandleBilling_GET(t *testing.T) {
 
 func TestControlPlaneAPI_HandleBilling_POST(t *testing.T) {
 	cp, tenantID := setupControlPlane(t)
-	api := NewControlPlaneAPI(cp, "")
+	api := NewControlPlaneAPI(cp, "test-key")
 	handler := api.Handler()
 
 	billing, _ := json.Marshal(BillingInfo{PlanID: "enterprise", Status: "active"})
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/billing/"+tenantID, bytes.NewReader(billing))
+	req.Header.Set("Authorization", "Bearer test-key")
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
@@ -562,10 +570,11 @@ func TestControlPlaneAPI_HandleBilling_POST(t *testing.T) {
 
 func TestControlPlaneAPI_HandleBilling_MethodNotAllowed(t *testing.T) {
 	cp, tenantID := setupControlPlane(t)
-	api := NewControlPlaneAPI(cp, "")
+	api := NewControlPlaneAPI(cp, "test-key")
 	handler := api.Handler()
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/v1/billing/"+tenantID, nil)
+	req.Header.Set("Authorization", "Bearer test-key")
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 	if w.Code != http.StatusMethodNotAllowed {
@@ -575,10 +584,11 @@ func TestControlPlaneAPI_HandleBilling_MethodNotAllowed(t *testing.T) {
 
 func TestControlPlaneAPI_HandleQuotas_GET(t *testing.T) {
 	cp, tenantID := setupControlPlane(t)
-	api := NewControlPlaneAPI(cp, "")
+	api := NewControlPlaneAPI(cp, "test-key")
 	handler := api.Handler()
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/quotas/"+tenantID, nil)
+	req.Header.Set("Authorization", "Bearer test-key")
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
@@ -589,11 +599,12 @@ func TestControlPlaneAPI_HandleQuotas_GET(t *testing.T) {
 
 func TestControlPlaneAPI_HandleQuotas_PUT(t *testing.T) {
 	cp, tenantID := setupControlPlane(t)
-	api := NewControlPlaneAPI(cp, "")
+	api := NewControlPlaneAPI(cp, "test-key")
 	handler := api.Handler()
 
 	quota, _ := json.Marshal(ResourceQuota{MaxCPUMillicores: 8000})
 	req := httptest.NewRequest(http.MethodPut, "/api/v1/quotas/"+tenantID, bytes.NewReader(quota))
+	req.Header.Set("Authorization", "Bearer test-key")
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
@@ -604,10 +615,11 @@ func TestControlPlaneAPI_HandleQuotas_PUT(t *testing.T) {
 
 func TestControlPlaneAPI_HandleQuotas_MethodNotAllowed(t *testing.T) {
 	cp, tenantID := setupControlPlane(t)
-	api := NewControlPlaneAPI(cp, "")
+	api := NewControlPlaneAPI(cp, "test-key")
 	handler := api.Handler()
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/v1/quotas/"+tenantID, nil)
+	req.Header.Set("Authorization", "Bearer test-key")
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 	if w.Code != http.StatusMethodNotAllowed {
@@ -617,10 +629,11 @@ func TestControlPlaneAPI_HandleQuotas_MethodNotAllowed(t *testing.T) {
 
 func TestControlPlaneAPI_HandleBilling_EmptyTenantID(t *testing.T) {
 	cp, _ := setupControlPlane(t)
-	api := NewControlPlaneAPI(cp, "")
+	api := NewControlPlaneAPI(cp, "test-key")
 	handler := api.Handler()
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/billing/", nil)
+	req.Header.Set("Authorization", "Bearer test-key")
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 	if w.Code != http.StatusBadRequest {
@@ -630,10 +643,11 @@ func TestControlPlaneAPI_HandleBilling_EmptyTenantID(t *testing.T) {
 
 func TestControlPlaneAPI_HandleQuotas_EmptyTenantID(t *testing.T) {
 	cp, _ := setupControlPlane(t)
-	api := NewControlPlaneAPI(cp, "")
+	api := NewControlPlaneAPI(cp, "test-key")
 	handler := api.Handler()
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/quotas/", nil)
+	req.Header.Set("Authorization", "Bearer test-key")
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 	if w.Code != http.StatusBadRequest {
