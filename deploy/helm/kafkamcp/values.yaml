@@ -30,7 +30,7 @@ config:
   clusters:
     - name: default
       bootstrap_servers: "kafka:9092"
-      security_protocol: "PLAINTEXT"
+      security_protocol: "SASL_SSL"  # Use PLAINTEXT only for local/dev clusters without TLS
   schema_cache:
     max_entries: 10000
     ttl_seconds: 300
