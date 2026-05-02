@@ -83,8 +83,8 @@ func TestSetAgentLimitZero(t *testing.T) {
 	l.SetAgentLimit("agent-1", 0) // should not create a bucket
 	l.SetAgentLimit("agent-2", 10)
 
-	// agent-2 has a limit, so agent-1 (without limit) should be denied
-	if l.Allow("agent-1") {
-		t.Fatal("expected deny for agent without configured limit")
+	// agent-1 has no bucket (limit=0), should be allowed (default-allow)
+	if !l.Allow("agent-1") {
+		t.Fatal("expected allow for agent without configured limit (default-allow)")
 	}
 }

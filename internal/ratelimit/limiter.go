@@ -80,13 +80,10 @@ func (l *Limiter) Allow(agentID string) bool {
 		return b.allow()
 	}
 
-	// Allow all requests when no limits are configured (fresh install)
-	if len(l.buckets) == 0 && l.global == nil {
-		return true
-	}
-
-	// Deny agents without configured rate limits
-	return false
+	// Default-allow requests from agents without configured rate limits.
+	// The policy engine handles authorization separately; rate limiting
+	// should not block agents that simply have no explicit quota.
+	return true
 }
 
 // AgentStatus describes the current rate limit state for an agent.
