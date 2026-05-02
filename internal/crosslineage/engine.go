@@ -261,3 +261,221 @@ func (e *Engine) RemoveEdge(edgeID string) error {
 	delete(e.edges, edgeID)
 	return nil
 }
+
+// ImpactAnalysis describes what would be affected if a node is changed or removed.
+type ImpactAnalysis struct {
+	NodeID             string   `json:"node_id"`
+	NodeName           string   `json:"node_name"`
+	DirectDownstream   []string `json:"direct_downstream"`
+	TransitiveImpact   []string `json:"transitive_impact"`
+	AffectedClusters   []string `json:"affected_clusters"`
+	TotalAffectedNodes int      `json:"total_affected_nodes"`
+	RiskLevel          string   `json:"risk_level"`
+}
+
+// PathResult represents a path between two nodes.
+type PathResult struct {
+	Source    string     `json:"source"`
+	Target    string     `json:"target"`
+	Paths     [][]string `json:"paths"`
+	ShortestLength int  `json:"shortest_length"`
+}
+
+// CrossClusterFlow represents data flow between clusters.
+type CrossClusterFlow struct {
+	SourceCluster string     `json:"source_cluster"`
+	TargetCluster string     `json:"target_cluster"`
+	Flows         []FlowPath `json:"flows"`
+	FlowCount     int        `json:"flow_count"`
+}
+
+// AnalyzeImpact performs impact analysis for a given node.
+func (e *Engine) AnalyzeImpact(nodeID string) (*ImpactAnalysis, error) {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+
+	node, ok := e.nodes[nodeID]
+	if !ok {
+		return nil, fmt.Errorf("node %q not found", nodeID)
+	}
+
+	analysis := &ImpactAnalysis{
+		NodeID:   nodeID,
+		NodeName: node.Name,
+	}
+
+	// Find direct downstream
+	directSet := make(map[string]bool)
+	for _, edge := range e.edges {
+		if edge.SourceID == nodeID {
+			if target, ok := e.nodes[edge.TargetID]; ok {
+				directSet[target.Name] = true
+			}
+		}
+	}
+	for name := range directSet {
+		analysis.DirectDownstream = append(analysis.DirectDownstream, name)
+	}
+
+	// Transitive impact via BFS
+	visited := make(map[string]bool)
+	visited[nodeID] = true
+	queue := []string{nodeID}
+	transitiveSet := make(map[string]bool)
+	clusterSet := make(map[string]bool)
+
+	for len(queue) > 0 {
+		current := queue[0]
+		queue = queue[1:]
+
+		for _, edge := range e.edges {
+			if edge.SourceID == current && !visited[edge.TargetID] {
+				visited[edge.TargetID] = true
+				queue = append(queue, edge.TargetID)
+				if target, ok := e.nodes[edge.TargetID]; ok {
+					transitiveSet[target.Name] = true
+					if target.Metadata != nil && target.Metadata["cluster"] != "" {
+						clusterSet[target.Metadata["cluster"]] = true
+					}
+				}
+			}
+		}
+	}
+
+	for name := range transitiveSet {
+		analysis.TransitiveImpact = append(analysis.TransitiveImpact, name)
+	}
+	for cluster := range clusterSet {
+		analysis.AffectedClusters = append(analysis.AffectedClusters, cluster)
+	}
+
+	analysis.TotalAffectedNodes = len(transitiveSet)
+
+	switch {
+	case analysis.TotalAffectedNodes > 10 || len(analysis.AffectedClusters) > 2:
+		analysis.RiskLevel = "critical"
+	case analysis.TotalAffectedNodes > 5 || len(analysis.AffectedClusters) > 1:
+		analysis.RiskLevel = "high"
+	case analysis.TotalAffectedNodes > 2:
+		analysis.RiskLevel = "medium"
+	default:
+		analysis.RiskLevel = "low"
+	}
+
+	return analysis, nil
+}
+
+// FindPaths finds all paths between two nodes up to a maximum depth.
+func (e *Engine) FindPaths(sourceID, targetID string, maxDepth int) (*PathResult, error) {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+
+	if _, ok := e.nodes[sourceID]; !ok {
+		return nil, fmt.Errorf("source node %q not found", sourceID)
+	}
+	if _, ok := e.nodes[targetID]; !ok {
+		return nil, fmt.Errorf("target node %q not found", targetID)
+	}
+	if maxDepth <= 0 {
+		maxDepth = 10
+	}
+
+	result := &PathResult{
+		Source: sourceID,
+		Target: targetID,
+	}
+
+	// DFS to find all paths
+	var dfs func(current string, path []string, depth int)
+	dfs = func(current string, path []string, depth int) {
+		if depth > maxDepth {
+			return
+		}
+		if current == targetID {
+			pathCopy := make([]string, len(path))
+			copy(pathCopy, path)
+			result.Paths = append(result.Paths, pathCopy)
+			return
+		}
+		for _, edge := range e.edges {
+			if edge.SourceID == current {
+				alreadyVisited := false
+				for _, p := range path {
+					if p == edge.TargetID {
+						alreadyVisited = true
+						break
+					}
+				}
+				if !alreadyVisited {
+					dfs(edge.TargetID, append(path, edge.TargetID), depth+1)
+				}
+			}
+		}
+	}
+
+	dfs(sourceID, []string{sourceID}, 0)
+
+	if len(result.Paths) > 0 {
+		result.ShortestLength = len(result.Paths[0])
+		for _, p := range result.Paths {
+			if len(p) < result.ShortestLength {
+				result.ShortestLength = len(p)
+			}
+		}
+	}
+
+	// Limit paths returned
+	if len(result.Paths) > 20 {
+		result.Paths = result.Paths[:20]
+	}
+
+	return result, nil
+}
+
+// GetCrossClusterFlows identifies data flows that cross cluster boundaries.
+func (e *Engine) GetCrossClusterFlows() []CrossClusterFlow {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+
+	flowMap := make(map[string]*CrossClusterFlow) // "srcCluster->dstCluster"
+	for _, edge := range e.edges {
+		source := e.nodes[edge.SourceID]
+		target := e.nodes[edge.TargetID]
+		if source == nil || target == nil {
+			continue
+		}
+
+		srcCluster := ""
+		dstCluster := ""
+		if source.Metadata != nil {
+			srcCluster = source.Metadata["cluster"]
+		}
+		if target.Metadata != nil {
+			dstCluster = target.Metadata["cluster"]
+		}
+
+		if srcCluster == "" || dstCluster == "" || srcCluster == dstCluster {
+			continue
+		}
+
+		key := srcCluster + "->" + dstCluster
+		if _, ok := flowMap[key]; !ok {
+			flowMap[key] = &CrossClusterFlow{
+				SourceCluster: srcCluster,
+				TargetCluster: dstCluster,
+			}
+		}
+		flowMap[key].Flows = append(flowMap[key].Flows, FlowPath{
+			From:     source.Name,
+			To:       target.Name,
+			FlowType: edge.Type,
+		})
+		flowMap[key].FlowCount++
+	}
+
+	var result []CrossClusterFlow
+	for _, f := range flowMap {
+		result = append(result, *f)
+	}
+	return result
+}

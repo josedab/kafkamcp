@@ -90,3 +90,59 @@ func (s *Server) handleCrossLineage(ctx context.Context, request mcp.CallToolReq
 		}
 	})(ctx, request)
 }
+
+func (s *Server) handleLineageImpact(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return s.withToolAuth(toolAuthConfig{
+		tool: "kafka_lineage_impact", resourceType: auth.ResourceCluster, action: auth.ActionRead,
+	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+		nodeID := request.GetString("node_id", "")
+		if nodeID == "" {
+			return mcp.NewToolResultError("node_id is required"), nil
+		}
+
+		analysis, err := s.crossLineageEngine.AnalyzeImpact(nodeID)
+		if err != nil {
+			s.logAudit(agentID, "kafka_lineage_impact", args, "", "error", 0, err, start)
+			return s.toolError("Failed to analyze impact", err), nil
+		}
+
+		s.logAudit(agentID, "kafka_lineage_impact", args, "", "success", 1, nil, start)
+		return marshalResult(analysis)
+	})(ctx, request)
+}
+
+func (s *Server) handleLineageFindPath(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return s.withToolAuth(toolAuthConfig{
+		tool: "kafka_lineage_find_path", resourceType: auth.ResourceCluster, action: auth.ActionRead,
+	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+		sourceID := request.GetString("source_id", "")
+		targetID := request.GetString("target_id", "")
+		if sourceID == "" || targetID == "" {
+			return mcp.NewToolResultError("source_id and target_id are required"), nil
+		}
+
+		maxDepth := 10
+		if d, ok := args["max_depth"].(float64); ok && d > 0 {
+			maxDepth = int(d)
+		}
+
+		result, err := s.crossLineageEngine.FindPaths(sourceID, targetID, maxDepth)
+		if err != nil {
+			s.logAudit(agentID, "kafka_lineage_find_path", args, "", "error", 0, err, start)
+			return s.toolError("Failed to find paths", err), nil
+		}
+
+		s.logAudit(agentID, "kafka_lineage_find_path", args, "", "success", len(result.Paths), nil, start)
+		return marshalResult(result)
+	})(ctx, request)
+}
+
+func (s *Server) handleLineageCrossCluster(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return s.withToolAuth(toolAuthConfig{
+		tool: "kafka_lineage_cross_cluster", resourceType: auth.ResourceCluster, action: auth.ActionRead,
+	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+		flows := s.crossLineageEngine.GetCrossClusterFlows()
+		s.logAudit(agentID, "kafka_lineage_cross_cluster", args, "", "success", len(flows), nil, start)
+		return marshalResult(map[string]any{"cross_cluster_flows": flows, "total": len(flows)})
+	})(ctx, request)
+}

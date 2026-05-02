@@ -16,4 +16,23 @@ func (s *Server) registerCrossLineageTools() {
 		mcp.WithString("id", mcp.Description("Node or edge ID (for remove_node, remove_edge)")),
 		mcp.WithNumber("max_depth", mcp.Description("Max lineage trace depth (for trace, default: 5)")),
 	), s.handleCrossLineage)
+
+	s.mcpServer.AddTool(mcp.NewTool("kafka_lineage_impact",
+		withCategory("analytics"),
+		mcp.WithDescription("Analyze impact of changing or removing a node in the lineage graph. Shows direct downstream, transitive impact, affected clusters, and risk level."),
+		mcp.WithString("node_id", mcp.Required(), mcp.Description("Node ID to analyze (e.g., 'topic:orders')")),
+	), s.handleLineageImpact)
+
+	s.mcpServer.AddTool(mcp.NewTool("kafka_lineage_find_path",
+		withCategory("analytics"),
+		mcp.WithDescription("Find all data flow paths between two nodes in the lineage graph."),
+		mcp.WithString("source_id", mcp.Required(), mcp.Description("Source node ID")),
+		mcp.WithString("target_id", mcp.Required(), mcp.Description("Target node ID")),
+		mcp.WithNumber("max_depth", mcp.Description("Max path depth. Default: 10")),
+	), s.handleLineageFindPath)
+
+	s.mcpServer.AddTool(mcp.NewTool("kafka_lineage_cross_cluster",
+		withCategory("analytics"),
+		mcp.WithDescription("Identify data flows that cross cluster boundaries. Shows which data moves between clusters and through what paths."),
+	), s.handleLineageCrossCluster)
 }
