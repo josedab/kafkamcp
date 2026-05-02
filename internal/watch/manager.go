@@ -301,6 +301,7 @@ func (m *Manager) deliverNotification(ctx context.Context, sub *Subscription, no
 					result.LastError = "context cancelled"
 					return result
 				}
+				timer.Stop()
 			}
 
 			err := m.sendWebhook(ctx, sub.WebhookURL, notif)
