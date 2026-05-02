@@ -104,6 +104,57 @@ func (s *Server) registerCollaborationTools() {
 		resourceType: "cluster",
 		action:       "read",
 	}, s.handleAgentList))
+
+	// Lease-based topic ownership tools
+	s.mcpServer.AddTool(mcp.NewTool("agent_topic_lease_acquire",
+		withCategory("ops"),
+		mcp.WithDescription("Acquire a lease on a Kafka topic for exclusive or shared ownership. Prevents concurrent conflicting operations by multiple agents."),
+		mcp.WithString("topic", mcp.Required(), mcp.Description("Topic name to lease")),
+		mcp.WithString("lease_type", mcp.Description("Lease type: exclusive (default) or shared")),
+		mcp.WithNumber("ttl_seconds", mcp.Description("Lease TTL in seconds. Default: 60, Max: 3600")),
+		mcp.WithNumber("max_renewals", mcp.Description("Max lease renewals. Default: 10")),
+		mcp.WithObject("permissions", mcp.Description("Permissions: read, write, admin")),
+	), s.withToolAuth(toolAuthConfig{
+		tool:         "agent_topic_lease_acquire",
+		resourceType: "topic",
+		action:       "write",
+		resourceName: func(r mcp.CallToolRequest) string {
+			if t, ok := r.GetArguments()["topic"].(string); ok {
+				return t
+			}
+			return "*"
+		},
+	}, s.handleTopicLeaseAcquire))
+
+	s.mcpServer.AddTool(mcp.NewTool("agent_topic_lease_release",
+		withCategory("ops"),
+		mcp.WithDescription("Release a previously acquired topic lease."),
+		mcp.WithString("topic", mcp.Required(), mcp.Description("Topic name to release lease on")),
+	), s.withToolAuth(toolAuthConfig{
+		tool:         "agent_topic_lease_release",
+		resourceType: "topic",
+		action:       "write",
+	}, s.handleTopicLeaseRelease))
+
+	s.mcpServer.AddTool(mcp.NewTool("agent_topic_lease_renew",
+		withCategory("ops"),
+		mcp.WithDescription("Renew an existing topic lease to extend its TTL."),
+		mcp.WithString("topic", mcp.Required(), mcp.Description("Topic name to renew lease for")),
+		mcp.WithNumber("ttl_seconds", mcp.Description("New TTL in seconds. Default: 60")),
+	), s.withToolAuth(toolAuthConfig{
+		tool:         "agent_topic_lease_renew",
+		resourceType: "topic",
+		action:       "write",
+	}, s.handleTopicLeaseRenew))
+
+	s.mcpServer.AddTool(mcp.NewTool("agent_topic_lease_list",
+		withCategory("ops"),
+		mcp.WithDescription("List all active topic leases showing owner, type, permissions, and expiration."),
+	), s.withToolAuth(toolAuthConfig{
+		tool:         "agent_topic_lease_list",
+		resourceType: "cluster",
+		action:       "read",
+	}, s.handleTopicLeaseList))
 }
 
 func (s *Server) handleLockAcquire(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
@@ -221,6 +272,79 @@ func (s *Server) handleAgentList(ctx context.Context, request mcp.CallToolReques
 	agents := s.collaborationCoord.ListAgents()
 	s.logAudit(agentID, "agent_coordinate_list", args, "", "success", len(agents), nil, start)
 	return marshalResult(map[string]any{"agents": agents, "total": len(agents)})
+}
+
+func (s *Server) handleTopicLeaseAcquire(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+	topic, _ := args["topic"].(string)
+	if topic == "" {
+		return mcp.NewToolResultError("topic is required"), nil
+	}
+
+	leaseType, _ := args["lease_type"].(string)
+	ttl := 60
+	if t, ok := args["ttl_seconds"].(float64); ok && t > 0 {
+		ttl = int(t)
+	}
+	maxRenewals := 10
+	if m, ok := args["max_renewals"].(float64); ok && m > 0 {
+		maxRenewals = int(m)
+	}
+
+	var permissions []string
+	if perms, ok := args["permissions"].([]any); ok {
+		for _, p := range perms {
+			if ps, ok := p.(string); ok {
+				permissions = append(permissions, ps)
+			}
+		}
+	}
+
+	result := s.collaborationCoord.AcquireTopicLease(agentID, topic, leaseType, ttl, maxRenewals, permissions, nil)
+	s.logAudit(agentID, "agent_topic_lease_acquire", args, "", boolStatus(result.Acquired), 1, nil, start)
+	return marshalResult(result)
+}
+
+func (s *Server) handleTopicLeaseRelease(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+	topic, _ := args["topic"].(string)
+	if topic == "" {
+		return mcp.NewToolResultError("topic is required"), nil
+	}
+
+	err := s.collaborationCoord.ReleaseTopicLease(agentID, topic)
+	if err != nil {
+		s.logAudit(agentID, "agent_topic_lease_release", args, "", "error", 0, err, start)
+		return s.toolError("failed to release topic lease", err), nil
+	}
+
+	s.logAudit(agentID, "agent_topic_lease_release", args, "", "success", 1, nil, start)
+	return marshalResult(map[string]string{"status": "released", "topic": topic})
+}
+
+func (s *Server) handleTopicLeaseRenew(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+	topic, _ := args["topic"].(string)
+	if topic == "" {
+		return mcp.NewToolResultError("topic is required"), nil
+	}
+
+	ttl := 60
+	if t, ok := args["ttl_seconds"].(float64); ok && t > 0 {
+		ttl = int(t)
+	}
+
+	lease, err := s.collaborationCoord.RenewTopicLease(agentID, topic, ttl)
+	if err != nil {
+		s.logAudit(agentID, "agent_topic_lease_renew", args, "", "error", 0, err, start)
+		return s.toolError("failed to renew topic lease", err), nil
+	}
+
+	s.logAudit(agentID, "agent_topic_lease_renew", args, "", "success", 1, nil, start)
+	return marshalResult(lease)
+}
+
+func (s *Server) handleTopicLeaseList(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+	leases := s.collaborationCoord.ListTopicLeases()
+	s.logAudit(agentID, "agent_topic_lease_list", args, "", "success", len(leases), nil, start)
+	return marshalResult(map[string]any{"leases": leases, "total": len(leases)})
 }
 
 func boolStatus(b bool) string {

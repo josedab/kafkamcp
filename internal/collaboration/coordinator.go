@@ -3,6 +3,8 @@ package collaboration
 import (
 	"fmt"
 	"log/slog"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -306,4 +308,239 @@ func (c *Coordinator) CleanExpiredLocks() int {
 		}
 	}
 	return cleaned
+}
+
+// TopicLease represents a lease-based ownership claim on a Kafka topic.
+type TopicLease struct {
+	Topic       string            `json:"topic"`
+	Owner       string            `json:"owner"`
+	LeaseType   string            `json:"lease_type"` // exclusive, shared
+	AcquiredAt  time.Time         `json:"acquired_at"`
+	ExpiresAt   time.Time         `json:"expires_at"`
+	RenewCount  int               `json:"renew_count"`
+	MaxRenewals int               `json:"max_renewals"`
+	Permissions []string          `json:"permissions"` // read, write, admin
+	Metadata    map[string]string `json:"metadata,omitempty"`
+}
+
+// LeaseResult is returned by lease operations.
+type LeaseResult struct {
+	Acquired bool         `json:"acquired"`
+	Lease    *TopicLease  `json:"lease,omitempty"`
+	Error    string       `json:"error,omitempty"`
+}
+
+// AcquireTopicLease acquires a lease on a topic for an agent.
+func (c *Coordinator) AcquireTopicLease(agentID, topic, leaseType string, ttlSec, maxRenewals int, permissions []string, metadata map[string]string) LeaseResult {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if ttlSec <= 0 {
+		ttlSec = 60
+	}
+	if ttlSec > 3600 {
+		ttlSec = 3600
+	}
+	if maxRenewals <= 0 {
+		maxRenewals = 10
+	}
+	if leaseType == "" {
+		leaseType = "exclusive"
+	}
+	if len(permissions) == 0 {
+		permissions = []string{"read", "write"}
+	}
+
+	now := time.Now()
+	exclusiveKey := "lease:" + topic
+
+	// Check for existing exclusive lease held by another agent
+	if existing, ok := c.locks[exclusiveKey]; ok && existing.ExpiresAt.After(now) && existing.Owner != agentID {
+		return LeaseResult{
+			Acquired: false,
+			Error:    fmt.Sprintf("topic %q exclusively leased by %s until %s", topic, existing.Owner, existing.ExpiresAt.Format(time.RFC3339)),
+		}
+	}
+
+	// For exclusive acquisition, check if any shared leases exist from other agents
+	if leaseType == "exclusive" {
+		for key, lock := range c.locks {
+			if strings.HasPrefix(key, exclusiveKey+":") && lock.ExpiresAt.After(now) && lock.Owner != agentID {
+				return LeaseResult{
+					Acquired: false,
+					Error:    fmt.Sprintf("topic %q has active shared lease by %s until %s", topic, lock.Owner, lock.ExpiresAt.Format(time.RFC3339)),
+				}
+			}
+		}
+	}
+
+	meta := map[string]string{
+		"lease_type":   leaseType,
+		"topic":        topic,
+		"permissions":  strings.Join(permissions, ","),
+		"max_renewals": strconv.Itoa(maxRenewals),
+		"renew_count":  "0",
+	}
+
+	if leaseType == "exclusive" {
+		c.locks[exclusiveKey] = &DistributedLock{
+			Resource:   exclusiveKey,
+			Owner:      agentID,
+			AcquiredAt: now,
+			ExpiresAt:  now.Add(time.Duration(ttlSec) * time.Second),
+			TTLSec:     ttlSec,
+			Metadata:   meta,
+		}
+	} else {
+		sharedKey := exclusiveKey + ":" + agentID
+		c.locks[sharedKey] = &DistributedLock{
+			Resource:   sharedKey,
+			Owner:      agentID,
+			AcquiredAt: now,
+			ExpiresAt:  now.Add(time.Duration(ttlSec) * time.Second),
+			TTLSec:     ttlSec,
+			Metadata:   meta,
+		}
+	}
+
+	lease := &TopicLease{
+		Topic:       topic,
+		Owner:       agentID,
+		LeaseType:   leaseType,
+		AcquiredAt:  now,
+		ExpiresAt:   now.Add(time.Duration(ttlSec) * time.Second),
+		RenewCount:  0,
+		MaxRenewals: maxRenewals,
+		Permissions: permissions,
+		Metadata:    metadata,
+	}
+
+	c.logger.Info("topic lease acquired", "agent", agentID, "topic", topic, "type", leaseType, "ttl", ttlSec)
+	return LeaseResult{Acquired: true, Lease: lease}
+}
+
+// ReleaseTopicLease releases a topic lease.
+func (c *Coordinator) ReleaseTopicLease(agentID, topic string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	exclusiveKey := "lease:" + topic
+	sharedKey := "lease:" + topic + ":" + agentID
+
+	if lock, ok := c.locks[exclusiveKey]; ok && lock.Owner == agentID {
+		delete(c.locks, exclusiveKey)
+		c.logger.Info("topic lease released", "agent", agentID, "topic", topic)
+		return nil
+	}
+	if lock, ok := c.locks[sharedKey]; ok && lock.Owner == agentID {
+		delete(c.locks, sharedKey)
+		c.logger.Info("topic lease released", "agent", agentID, "topic", topic)
+		return nil
+	}
+
+	return fmt.Errorf("no lease on topic %q for agent %s", topic, agentID)
+}
+
+// RenewTopicLease extends a topic lease TTL.
+func (c *Coordinator) RenewTopicLease(agentID, topic string, ttlSec int) (*TopicLease, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if ttlSec <= 0 {
+		ttlSec = 60
+	}
+
+	exclusiveKey := "lease:" + topic
+	sharedKey := "lease:" + topic + ":" + agentID
+
+	var lock *DistributedLock
+	if l, ok := c.locks[exclusiveKey]; ok && l.Owner == agentID {
+		lock = l
+	} else if l, ok := c.locks[sharedKey]; ok && l.Owner == agentID {
+		lock = l
+	}
+
+	if lock == nil {
+		return nil, fmt.Errorf("no lease on topic %q for agent %s", topic, agentID)
+	}
+
+	now := time.Now()
+	maxRenewals := 10
+	if lock.Metadata != nil {
+		if mr, ok := lock.Metadata["max_renewals"]; ok {
+			if v, err := strconv.Atoi(mr); err == nil {
+				maxRenewals = v
+			}
+		}
+	}
+
+	renewCount := 0
+	if lock.Metadata != nil {
+		if rc, ok := lock.Metadata["renew_count"]; ok {
+			if v, err := strconv.Atoi(rc); err == nil {
+				renewCount = v
+			}
+		}
+	}
+
+	if renewCount >= maxRenewals {
+		return nil, fmt.Errorf("max renewals (%d) reached for topic %q", maxRenewals, topic)
+	}
+
+	lock.ExpiresAt = now.Add(time.Duration(ttlSec) * time.Second)
+	renewCount++
+	if lock.Metadata == nil {
+		lock.Metadata = make(map[string]string)
+	}
+	lock.Metadata["renew_count"] = strconv.Itoa(renewCount)
+
+	lease := &TopicLease{
+		Topic:       topic,
+		Owner:       agentID,
+		LeaseType:   lock.Metadata["lease_type"],
+		AcquiredAt:  lock.AcquiredAt,
+		ExpiresAt:   lock.ExpiresAt,
+		RenewCount:  renewCount,
+		MaxRenewals: maxRenewals,
+		Permissions: strings.Split(lock.Metadata["permissions"], ","),
+		Metadata:    lock.Metadata,
+	}
+
+	c.logger.Info("topic lease renewed", "agent", agentID, "topic", topic, "renewals", renewCount)
+	return lease, nil
+}
+
+// ListTopicLeases returns all active topic leases.
+func (c *Coordinator) ListTopicLeases() []TopicLease {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	now := time.Now()
+	var result []TopicLease
+	for _, lock := range c.locks {
+		if lock.ExpiresAt.Before(now) || lock.Metadata == nil || lock.Metadata["topic"] == "" {
+			continue
+		}
+		result = append(result, TopicLease{
+			Topic:       lock.Metadata["topic"],
+			Owner:       lock.Owner,
+			LeaseType:   lock.Metadata["lease_type"],
+			AcquiredAt:  lock.AcquiredAt,
+			ExpiresAt:   lock.ExpiresAt,
+			Permissions: strings.Split(lock.Metadata["permissions"], ","),
+			Metadata:    lock.Metadata,
+		})
+	}
+	return result
+}
+
+func joinStrings(ss []string) string {
+	return strings.Join(ss, ",")
+}
+
+func splitPermissions(s string) []string {
+	if s == "" {
+		return nil
+	}
+	return strings.Split(s, ",")
 }
