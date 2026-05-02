@@ -23,6 +23,12 @@ cd kafkamcp
 make setup
 ```
 
+Copy `.env.example` to `.env` and fill in your credentials if connecting to a real Kafka cluster:
+
+```bash
+cp .env.example .env
+```
+
 This installs dev dependencies and a **git pre-commit hook** that runs `make fmt-check`, `make vet`, and `make lint` before each commit. You can also install the hook separately:
 
 ```bash
