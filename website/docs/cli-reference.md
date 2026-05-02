@@ -123,6 +123,11 @@ kafkamcp init --output kafkamcp.yaml
 | `--transport` | — | `stdio` | Transport type (`stdio`, `sse`, `streamable-http`). |
 | `--bootstrap-servers` | — | `localhost:9092` | Kafka bootstrap servers. |
 | `--schema-registry` | — | — | Schema Registry URL (optional). |
+| `--claude-desktop` | — | `false` | Output a `claude_desktop_config.json` snippet for Claude Desktop integration. |
+
+**How it differs from manual config creation:**
+
+`kafkamcp init` generates a valid, minimal YAML configuration with sensible defaults. It is the fastest way to get started — instead of writing YAML from scratch, run `kafkamcp init --output kafkamcp.yaml` and customize the result. Use `--claude-desktop` to also emit the JSON snippet needed to register KafkaMCP with Claude Desktop.
 
 ## Exit codes
 
