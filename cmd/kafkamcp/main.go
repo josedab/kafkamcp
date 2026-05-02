@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -107,6 +108,7 @@ and compose — with zero custom integration code.`,
 	initCmd.Flags().String("transport", "stdio", "Transport type (stdio, sse, streamable-http)")
 	initCmd.Flags().String("bootstrap-servers", "localhost:9092", "Kafka bootstrap servers")
 	initCmd.Flags().String("schema-registry", "", "Schema Registry URL (optional)")
+	initCmd.Flags().Bool("claude-desktop", false, "Output a claude_desktop_config.json snippet for Claude Desktop integration")
 	rootCmd.AddCommand(initCmd)
 
 	serveCmd := &cobra.Command{
@@ -167,6 +169,15 @@ func runConfigInit(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("reading flag: %w", err)
 	}
+	claudeDesktop, err := cmd.Flags().GetBool("claude-desktop")
+	if err != nil {
+		return fmt.Errorf("reading flag: %w", err)
+	}
+
+	// Handle --claude-desktop: output Claude Desktop config JSON
+	if claudeDesktop {
+		return runClaudeDesktopInit(cmd, bootstrap, output)
+	}
 
 	switch transport {
 	case "stdio", "sse", "streamable-http":
@@ -201,6 +212,42 @@ clusters:
 	}
 
 	fmt.Print(cfg)
+	return nil
+}
+
+func runClaudeDesktopInit(cmd *cobra.Command, bootstrap, output string) error {
+	// Find the kafkamcp binary path
+	binaryPath, err := os.Executable()
+	if err != nil {
+		binaryPath = "kafkamcp"
+	}
+
+	claudeConfig := map[string]any{
+		"mcpServers": map[string]any{
+			"kafkamcp": map[string]any{
+				"command": binaryPath,
+				"args":    []string{"--config", "kafkamcp.yaml"},
+				"env": map[string]string{
+					"KAFKA_BROKERS": bootstrap,
+				},
+			},
+		},
+	}
+
+	data, err := json.MarshalIndent(claudeConfig, "", "  ")
+	if err != nil {
+		return fmt.Errorf("marshaling config: %w", err)
+	}
+
+	if output != "" {
+		if err := os.WriteFile(output, data, 0o644); err != nil {
+			return fmt.Errorf("writing config to %s: %w", output, err)
+		}
+		fmt.Fprintf(os.Stderr, "Claude Desktop config written to %s\n", output)
+		return nil
+	}
+
+	fmt.Println(string(data))
 	return nil
 }
 
