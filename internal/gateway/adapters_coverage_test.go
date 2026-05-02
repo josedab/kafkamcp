@@ -1,3 +1,5 @@
+//go:build gateway_eventhubs && gateway_kinesis && gateway_nats && gateway_pulsar && gateway_rabbitmq
+
 package gateway
 
 import (

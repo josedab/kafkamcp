@@ -1,3 +1,5 @@
+//go:build gateway_pulsar && gateway_rabbitmq && gateway_nats
+
 package gateway
 
 import (

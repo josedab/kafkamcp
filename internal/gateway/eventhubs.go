@@ -1,3 +1,5 @@
+//go:build gateway_eventhubs
+
 package gateway
 
 import (
@@ -127,3 +129,9 @@ func (e *EventHubsAdapter) Healthy(ctx context.Context) error {
 }
 
 var _ StreamBackend = (*EventHubsAdapter)(nil)
+
+func init() {
+	RegisterAdapterFactory(ProtocolEventHubs, func(cfg BackendConfig, logger *slog.Logger) StreamBackend {
+		return NewEventHubsAdapter(cfg, logger)
+	})
+}

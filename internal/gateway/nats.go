@@ -1,3 +1,5 @@
+//go:build gateway_nats
+
 package gateway
 
 import (
@@ -119,3 +121,9 @@ func (n *NATSAdapter) Healthy(ctx context.Context) error {
 }
 
 var _ StreamBackend = (*NATSAdapter)(nil)
+
+func init() {
+	RegisterAdapterFactory(ProtocolNATS, func(cfg BackendConfig, logger *slog.Logger) StreamBackend {
+		return NewNATSAdapter(cfg, logger)
+	})
+}

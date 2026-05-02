@@ -1,3 +1,5 @@
+//go:build gateway_pulsar
+
 package gateway
 
 import (
@@ -131,3 +133,9 @@ func (p *PulsarAdapter) Healthy(ctx context.Context) error {
 
 // ensure PulsarAdapter satisfies StreamBackend
 var _ StreamBackend = (*PulsarAdapter)(nil)
+
+func init() {
+	RegisterAdapterFactory(ProtocolPulsar, func(cfg BackendConfig, logger *slog.Logger) StreamBackend {
+		return NewPulsarAdapter(cfg, logger)
+	})
+}

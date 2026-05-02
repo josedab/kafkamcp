@@ -1,3 +1,5 @@
+//go:build gateway_kinesis
+
 package gateway
 
 import (
@@ -128,3 +130,9 @@ func (k *KinesisAdapter) Healthy(ctx context.Context) error {
 }
 
 var _ StreamBackend = (*KinesisAdapter)(nil)
+
+func init() {
+	RegisterAdapterFactory(ProtocolKinesis, func(cfg BackendConfig, logger *slog.Logger) StreamBackend {
+		return NewKinesisAdapter(cfg, logger)
+	})
+}

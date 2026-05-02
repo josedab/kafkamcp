@@ -1,3 +1,5 @@
+//go:build gateway_nats && gateway_kinesis && gateway_pulsar
+
 package gateway
 
 import (

@@ -38,20 +38,11 @@ func (m *Manager) RegisterBackend(cfg BackendConfig) error {
 	}
 
 	var backend StreamBackend
-	switch cfg.Protocol {
-	case ProtocolPulsar:
-		backend = NewPulsarAdapter(cfg, m.logger)
-	case ProtocolRabbitMQ:
-		backend = NewRabbitMQAdapter(cfg, m.logger)
-	case ProtocolNATS:
-		backend = NewNATSAdapter(cfg, m.logger)
-	case ProtocolKinesis:
-		backend = NewKinesisAdapter(cfg, m.logger)
-	case ProtocolEventHubs:
-		backend = NewEventHubsAdapter(cfg, m.logger)
-	default:
-		return fmt.Errorf("unsupported protocol: %s", cfg.Protocol)
+	factory, ok := lookupAdapterFactory(cfg.Protocol)
+	if !ok {
+		return fmt.Errorf("unsupported or disabled protocol: %s (enable with build tag gateway_%s)", cfg.Protocol, cfg.Protocol)
 	}
+	backend = factory(cfg, m.logger)
 
 	m.backends[cfg.Name] = backend
 	m.configs[cfg.Name] = &cfg

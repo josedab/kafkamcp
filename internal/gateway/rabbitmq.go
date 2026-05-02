@@ -1,3 +1,5 @@
+//go:build gateway_rabbitmq
+
 package gateway
 
 import (
@@ -123,3 +125,9 @@ func (r *RabbitMQAdapter) Healthy(ctx context.Context) error {
 }
 
 var _ StreamBackend = (*RabbitMQAdapter)(nil)
+
+func init() {
+	RegisterAdapterFactory(ProtocolRabbitMQ, func(cfg BackendConfig, logger *slog.Logger) StreamBackend {
+		return NewRabbitMQAdapter(cfg, logger)
+	})
+}
