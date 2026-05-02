@@ -58,6 +58,9 @@ func (s *Server) handleWatchSubscribe(ctx context.Context, request mcp.CallToolR
 		return deny, nil
 	}
 	webhookURL := request.GetString("webhook_url", "")
+	if deny := validateStringLength("webhook_url", webhookURL); deny != nil {
+		return deny, nil
+	}
 
 	sub, err := s.watchManager.Subscribe(agentID, topicPattern, keyFilter, valueFilter, webhookURL, nil)
 	if err != nil {

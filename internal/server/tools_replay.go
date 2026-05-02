@@ -81,6 +81,9 @@ func (s *Server) handleReplayCreate(ctx context.Context, request mcp.CallToolReq
 			if bmID == "" {
 				return mcp.NewToolResultError("bookmark_id is required for get action"), nil
 			}
+			if deny := validateStringLength("bookmark_id", bmID); deny != nil {
+				return deny, nil
+			}
 			bm, err := s.replayEngine.GetBookmark(bmID)
 			if err != nil {
 				return s.toolError("bookmark not found", err), nil
@@ -91,6 +94,9 @@ func (s *Server) handleReplayCreate(ctx context.Context, request mcp.CallToolReq
 			bmID := request.GetString("bookmark_id", "")
 			if bmID == "" {
 				return mcp.NewToolResultError("bookmark_id is required for delete action"), nil
+			}
+			if deny := validateStringLength("bookmark_id", bmID); deny != nil {
+				return deny, nil
 			}
 			if err := s.replayEngine.DeleteBookmark(bmID); err != nil {
 				return s.toolError("failed to delete bookmark", err), nil
@@ -150,6 +156,21 @@ func (s *Server) handleReplaySimulate(ctx context.Context, request mcp.CallToolR
 			if groupID == "" {
 				return mcp.NewToolResultError("group_id is required"), nil
 			}
+			if deny := validateStringLength("topic", topic); deny != nil {
+				return deny, nil
+			}
+			if deny := validateStringLength("group_id", groupID); deny != nil {
+				return deny, nil
+			}
+			if deny := validateKafkaIdentifier("group_id", groupID); deny != nil {
+				return deny, nil
+			}
+			if deny := validateStringLength("from_bookmark", fromBookmark); deny != nil {
+				return deny, nil
+			}
+			if deny := validateStringLength("name", name); deny != nil {
+				return deny, nil
+			}
 
 			// Build start offsets
 			startOffsets := make(map[int32]int64)
@@ -169,6 +190,9 @@ func (s *Server) handleReplaySimulate(ctx context.Context, request mcp.CallToolR
 			simID := request.GetString("simulation_id", "")
 			if simID == "" {
 				return mcp.NewToolResultError("simulation_id is required"), nil
+			}
+			if deny := validateStringLength("simulation_id", simID); deny != nil {
+				return deny, nil
 			}
 			sim, err := s.replayEngine.RunSimulation(simID)
 			if err != nil {

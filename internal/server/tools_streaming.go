@@ -54,6 +54,9 @@ func (s *Server) handleStreamStart(ctx context.Context, request mcp.CallToolRequ
 	if deny := validateStringLength("group_id", groupID); deny != nil {
 		return deny, nil
 	}
+	if deny := validateKafkaIdentifier("group_id", groupID); deny != nil {
+		return deny, nil
+	}
 
 	cfg := kafka.StreamConfig{
 		Topic:        topic,

@@ -29,7 +29,9 @@ func (s *Server) handleCreateTopic(ctx context.Context, request mcp.CallToolRequ
 		if deny := validateStringLength("name", name); deny != nil {
 			return deny, nil
 		}
-
+		if deny := validateKafkaIdentifier("name", name); deny != nil {
+			return deny, nil
+		}
 		partitions := int32(request.GetInt("partitions", 1))
 		if partitions < 1 {
 			return mcp.NewToolResultError("partitions must be >= 1"), nil
@@ -245,6 +247,9 @@ func (s *Server) handleResetOffsets(ctx context.Context, request mcp.CallToolReq
 		if deny := validateStringLength("group_id", groupID); deny != nil {
 			return deny, nil
 		}
+		if deny := validateKafkaIdentifier("group_id", groupID); deny != nil {
+			return deny, nil
+		}
 		if deny := validateStringLength("topic", topic); deny != nil {
 			return deny, nil
 		}
@@ -349,6 +354,9 @@ func (s *Server) handleSubscribe(ctx context.Context, request mcp.CallToolReques
 
 		groupID := request.GetString("group_id", "")
 		if deny := validateStringLength("group_id", groupID); deny != nil {
+			return deny, nil
+		}
+		if deny := validateKafkaIdentifier("group_id", groupID); deny != nil {
 			return deny, nil
 		}
 

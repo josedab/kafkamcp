@@ -311,6 +311,9 @@ func (s *Server) handleDescribeConsumerGroup(ctx context.Context, request mcp.Ca
 		if deny := validateStringLength("group_id", groupID); deny != nil {
 			return deny, nil
 		}
+		if deny := validateKafkaIdentifier("group_id", groupID); deny != nil {
+			return deny, nil
+		}
 
 		detail, err := s.kafkaManager.DescribeConsumerGroup(ctx, cluster, groupID)
 		if err != nil {

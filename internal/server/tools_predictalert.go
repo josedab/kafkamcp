@@ -24,6 +24,12 @@ func (s *Server) handlePredictAlert(ctx context.Context, request mcp.CallToolReq
 			if groupID == "" {
 				return mcp.NewToolResultError("group_id is required"), nil
 			}
+			if deny := validateStringLength("group_id", groupID); deny != nil {
+				return deny, nil
+			}
+			if deny := validateKafkaIdentifier("group_id", groupID); deny != nil {
+				return deny, nil
+			}
 			totalLag := int64(request.GetFloat("total_lag", 0))
 			memberCount := request.GetInt("member_count", 0)
 
@@ -36,13 +42,25 @@ func (s *Server) handlePredictAlert(ctx context.Context, request mcp.CallToolReq
 			if groupID == "" {
 				return mcp.NewToolResultError("group_id is required"), nil
 			}
+			if deny := validateStringLength("group_id", groupID); deny != nil {
+				return deny, nil
+			}
+			if deny := validateKafkaIdentifier("group_id", groupID); deny != nil {
+				return deny, nil
+			}
 			analysis := s.predictAlertEngine.Analyze(groupID)
 			s.logAudit(agentID, "kafka_predict_alert", args, "", "success", 1, nil, start)
 			return marshalResult(analysis)
 
 		case "alerts":
 			groupID := request.GetString("group_id", "")
+			if deny := validateStringLength("group_id", groupID); deny != nil {
+				return deny, nil
+			}
 			limit := request.GetInt("limit", 50)
+			if limit > MaxDLQMessages {
+				limit = MaxDLQMessages
+			}
 			alerts := s.predictAlertEngine.ListAlerts(groupID, limit)
 			s.logAudit(agentID, "kafka_predict_alert", args, "", "success", len(alerts), nil, start)
 			return marshalResult(map[string]any{"alerts": alerts, "total": len(alerts)})
@@ -51,6 +69,9 @@ func (s *Server) handlePredictAlert(ctx context.Context, request mcp.CallToolReq
 			alertID := request.GetString("alert_id", "")
 			if alertID == "" {
 				return mcp.NewToolResultError("alert_id is required"), nil
+			}
+			if deny := validateStringLength("alert_id", alertID); deny != nil {
+				return deny, nil
 			}
 			if err := s.predictAlertEngine.AcknowledgeAlert(alertID); err != nil {
 				return s.toolError("Failed to acknowledge alert", err), nil

@@ -4,10 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"regexp"
 	"strings"
 
 	"github.com/mark3labs/mcp-go/mcp"
 )
+
+// kafkaIdentifierPattern matches valid Kafka topic names and consumer group IDs.
+var kafkaIdentifierPattern = regexp.MustCompile(`^[a-zA-Z0-9._-]+$`)
 
 // toolError logs the raw error server-side and returns a generic error message
 // to the client, preventing leakage of internal details like broker IPs,
@@ -75,6 +79,21 @@ var (
 	validSerdes = map[string]bool{"auto": true, "json": true, "avro": true, "protobuf": true, "string": true, "bytes": true}
 	validAcks   = map[string]bool{"all": true, "0": true, "1": true, "-1": true}
 )
+
+// validateKafkaIdentifier checks that a Kafka topic name or consumer group ID
+// contains only valid characters and does not use reserved prefixes.
+func validateKafkaIdentifier(name, value string) *mcp.CallToolResult {
+	if value == "" {
+		return nil
+	}
+	if !kafkaIdentifierPattern.MatchString(value) {
+		return mcp.NewToolResultError(fmt.Sprintf("%s contains invalid characters; only alphanumeric, '.', '_', and '-' are allowed", name))
+	}
+	if strings.HasPrefix(value, "__") {
+		return mcp.NewToolResultError(fmt.Sprintf("%s must not start with '__' (reserved prefix)", name))
+	}
+	return nil
+}
 
 // validateEnum checks that a string parameter is one of the allowed values.
 func validateEnum(name, value string, allowed map[string]bool) *mcp.CallToolResult {

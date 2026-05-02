@@ -25,6 +25,15 @@ func (s *Server) handleDashboardCreate(ctx context.Context, request mcp.CallTool
 		if deny := validateStringLength("name", name); deny != nil {
 			return deny, nil
 		}
+		if deny := validateStringLength("provider", provider); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("type", dashType); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("target", target); deny != nil {
+			return deny, nil
+		}
 
 		dash, err := s.observabilityMgr.CreateDashboard(name, provider, dashType, target, agentID)
 		if err != nil {
@@ -59,6 +68,18 @@ func (s *Server) handleAlertCreate(ctx context.Context, request mcp.CallToolRequ
 			return mcp.NewToolResultError("name and metric are required"), nil
 		}
 		if deny := validateStringLength("name", name); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("metric", metric); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("duration", duration); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("topic", topic); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("group_id", groupID); deny != nil {
 			return deny, nil
 		}
 		switch condition {
@@ -106,6 +127,9 @@ func (s *Server) handleAlertDelete(ctx context.Context, request mcp.CallToolRequ
 		alertID := request.GetString("alert_id", "")
 		if alertID == "" {
 			return mcp.NewToolResultError("alert_id is required"), nil
+		}
+		if deny := validateStringLength("alert_id", alertID); deny != nil {
+			return deny, nil
 		}
 
 		if err := s.observabilityMgr.DeleteAlertRule(alertID); err != nil {
