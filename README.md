@@ -10,8 +10,7 @@
 
 KafkaMCP is an MCP (Model Context Protocol) server that transforms Apache Kafka into a first-class, agent-accessible data layer. It exposes Kafka topics, consumer groups, schemas, and cluster metadata as MCP tools and resources — enabling any MCP-compatible AI agent to discover, read from, write to, and reason about Kafka data with zero custom integration code.
 
-<!-- To generate the demo GIF: install vhs (https://github.com/charmbracelet/vhs), then run: vhs demo.tape -->
-<!-- ![KafkaMCP Demo](demo.gif) -->
+<!-- To generate a demo GIF: install vhs (https://github.com/charmbracelet/vhs), then run: vhs demo.tape -->
 
 ## Table of Contents
 
@@ -173,6 +172,8 @@ Once connected, your AI agent can:
 > **Example response:** ✅ Message delivered to `test-events` partition 0 at offset 847 (timestamp: 2025-01-15T10:32:01Z)
 
 ## MCP Tools
+
+> **Full reference:** The auto-generated [Tool Reference](docs/tool-reference.md) lists all **154 tools** with complete parameter details.
 
 ### P0 — Core Tools
 | Tool | Description |
