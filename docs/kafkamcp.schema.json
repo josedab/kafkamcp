@@ -74,7 +74,7 @@
           },
           "sasl_mechanism": {
             "type": "string",
-            "enum": ["PLAIN", "SCRAM-SHA-256", "SCRAM-SHA-512", "OAUTHBEARER"],
+            "enum": ["PLAIN", "SCRAM-SHA-256", "SCRAM-SHA-512"],
             "description": "SASL authentication mechanism."
           },
           "sasl_username": {
