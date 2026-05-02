@@ -45,6 +45,7 @@ const config: Config = {
         },
         blog: {
           showReadingTime: true,
+          onInlineAuthors: 'ignore',
           feedOptions: {
             type: ['rss', 'atom'],
             xslt: true,
