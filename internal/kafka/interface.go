@@ -1,5 +1,7 @@
 package kafka
 
+//go:generate go run github.com/matryer/moq@latest -out mock_manager_gen.go -pkg kafka . KafkaManager
+
 import (
 	"context"
 
