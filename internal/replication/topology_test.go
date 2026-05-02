@@ -15,6 +15,7 @@ func testLogger() *slog.Logger {
 // --- TopologyDetector tests ---
 
 func TestTopologyDetector_DetectTopology_Single(t *testing.T) {
+	t.Parallel()
 	mon := NewMonitor(testLogger())
 	td := NewTopologyDetector(mon)
 
@@ -28,6 +29,7 @@ func TestTopologyDetector_DetectTopology_Single(t *testing.T) {
 }
 
 func TestTopologyDetector_DetectTopology_HubSpoke(t *testing.T) {
+	t.Parallel()
 	mon := NewMonitor(testLogger())
 	mon.RegisterLink("hub", "spoke1", "mirrormaker2")
 	mon.RegisterLink("hub", "spoke2", "mirrormaker2")
@@ -45,6 +47,7 @@ func TestTopologyDetector_DetectTopology_HubSpoke(t *testing.T) {
 }
 
 func TestTopologyDetector_DetectTopology_Mesh(t *testing.T) {
+	t.Parallel()
 	mon := NewMonitor(testLogger())
 	// A->B, B->A, A->C, C->A creates mesh (multiple bidirectional)
 	mon.RegisterLink("A", "B", "cluster_linking")
@@ -61,6 +64,7 @@ func TestTopologyDetector_DetectTopology_Mesh(t *testing.T) {
 }
 
 func TestTopologyDetector_DetectTopology_Chain(t *testing.T) {
+	t.Parallel()
 	mon := NewMonitor(testLogger())
 	// A->B, C->D = chain (multiple source-only, no bidirectional, single target each)
 	mon.RegisterLink("A", "B", "mirrormaker2")
@@ -75,6 +79,7 @@ func TestTopologyDetector_DetectTopology_Chain(t *testing.T) {
 }
 
 func TestTopologyDetector_DetectTopology_ClusterRoles(t *testing.T) {
+	t.Parallel()
 	mon := NewMonitor(testLogger())
 	mon.RegisterLink("source-only", "target-only", "mirrormaker2")
 
@@ -95,6 +100,7 @@ func TestTopologyDetector_DetectTopology_ClusterRoles(t *testing.T) {
 }
 
 func TestTopologyDetector_DetectTopology_BidirectionalRole(t *testing.T) {
+	t.Parallel()
 	mon := NewMonitor(testLogger())
 	mon.RegisterLink("A", "B", "mirrormaker2")
 	mon.RegisterLink("B", "A", "mirrormaker2")
@@ -110,6 +116,7 @@ func TestTopologyDetector_DetectTopology_BidirectionalRole(t *testing.T) {
 }
 
 func TestTopologyDetector_GetTopology_NilBeforeDetect(t *testing.T) {
+	t.Parallel()
 	mon := NewMonitor(testLogger())
 	td := NewTopologyDetector(mon)
 
@@ -119,6 +126,7 @@ func TestTopologyDetector_GetTopology_NilBeforeDetect(t *testing.T) {
 }
 
 func TestTopologyDetector_GetTopology_CachedAfterDetect(t *testing.T) {
+	t.Parallel()
 	mon := NewMonitor(testLogger())
 	mon.RegisterLink("A", "B", "mirrormaker2")
 	td := NewTopologyDetector(mon)
@@ -136,6 +144,7 @@ func TestTopologyDetector_GetTopology_CachedAfterDetect(t *testing.T) {
 // --- AlertManager tests ---
 
 func TestAlertManager_ProcessAlert(t *testing.T) {
+	t.Parallel()
 	am, _ := NewAlertManager(context.Background(), NotificationConfig{CooldownMins: 5})
 
 	alert := Alert{
@@ -161,6 +170,7 @@ func TestAlertManager_ProcessAlert(t *testing.T) {
 }
 
 func TestAlertManager_ProcessAlert_CooldownDedup(t *testing.T) {
+	t.Parallel()
 	am, _ := NewAlertManager(context.Background(), NotificationConfig{CooldownMins: 60})
 
 	alert := Alert{Source: "a", Target: "b", Topic: "t1", Partition: 0, Lag: 5000, Threshold: 1000, Severity: "warning"}
@@ -178,6 +188,7 @@ func TestAlertManager_ProcessAlert_CooldownDedup(t *testing.T) {
 }
 
 func TestAlertManager_ProcessAlert_DifferentKey(t *testing.T) {
+	t.Parallel()
 	am, _ := NewAlertManager(context.Background(), NotificationConfig{CooldownMins: 60})
 
 	alert1 := Alert{Source: "a", Target: "b", Topic: "t1", Partition: 0, Lag: 5000, Threshold: 1000, Severity: "warning"}
@@ -191,6 +202,7 @@ func TestAlertManager_ProcessAlert_DifferentKey(t *testing.T) {
 }
 
 func TestAlertManager_DefaultCooldown(t *testing.T) {
+	t.Parallel()
 	am, _ := NewAlertManager(context.Background(), NotificationConfig{CooldownMins: 0})
 	if am.config.CooldownMins != 5 {
 		t.Errorf("expected default cooldown 5, got %d", am.config.CooldownMins)
@@ -198,6 +210,7 @@ func TestAlertManager_DefaultCooldown(t *testing.T) {
 }
 
 func TestAlertManager_GetRecentNotifications(t *testing.T) {
+	t.Parallel()
 	am, _ := NewAlertManager(context.Background(), NotificationConfig{CooldownMins: 0})
 
 	for i := 0; i < 5; i++ {
@@ -223,6 +236,7 @@ func TestAlertManager_GetRecentNotifications(t *testing.T) {
 }
 
 func TestAlertManager_NotificationsCap1000(t *testing.T) {
+	t.Parallel()
 	am, _ := NewAlertManager(context.Background(), NotificationConfig{CooldownMins: 0})
 
 	for i := 0; i < 1005; i++ {
@@ -246,6 +260,7 @@ func TestAlertManager_NotificationsCap1000(t *testing.T) {
 // --- Monitor resource methods tests ---
 
 func TestMonitor_GetReplicationResource(t *testing.T) {
+	t.Parallel()
 	mon := NewMonitor(testLogger())
 	mon.RegisterLink("source", "target", "mirrormaker2")
 
@@ -259,6 +274,7 @@ func TestMonitor_GetReplicationResource(t *testing.T) {
 }
 
 func TestMonitor_GetReplicationResource_NotFound(t *testing.T) {
+	t.Parallel()
 	mon := NewMonitor(testLogger())
 	_, err := mon.GetReplicationResource("a", "b")
 	if err == nil {
@@ -267,6 +283,7 @@ func TestMonitor_GetReplicationResource_NotFound(t *testing.T) {
 }
 
 func TestMonitor_GetCrossClusterLinks(t *testing.T) {
+	t.Parallel()
 	mon := NewMonitor(testLogger())
 	mon.RegisterLink("a", "b", "mm2")
 	mon.RegisterLink("b", "c", "mm2")
@@ -278,6 +295,7 @@ func TestMonitor_GetCrossClusterLinks(t *testing.T) {
 }
 
 func TestMonitor_GetCrossClusterLinks_Empty(t *testing.T) {
+	t.Parallel()
 	mon := NewMonitor(testLogger())
 	links := mon.GetCrossClusterLinks()
 	if len(links) != 0 {

@@ -11,6 +11,7 @@ import (
 )
 
 func TestNewProviderDisabled(t *testing.T) {
+	t.Parallel()
 	provider, err := NewProvider(context.Background(), Config{Enabled: false}, slog.Default())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -26,6 +27,7 @@ func TestNewProviderDisabled(t *testing.T) {
 }
 
 func TestNewProviderDisabledDefaults(t *testing.T) {
+	t.Parallel()
 	provider, err := NewProvider(context.Background(), Config{}, slog.Default())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -36,6 +38,7 @@ func TestNewProviderDisabledDefaults(t *testing.T) {
 }
 
 func TestProviderTracerNoop(t *testing.T) {
+	t.Parallel()
 	provider, _ := NewProvider(context.Background(), Config{Enabled: false}, slog.Default())
 	tracer := provider.Tracer()
 
@@ -48,6 +51,7 @@ func TestProviderTracerNoop(t *testing.T) {
 }
 
 func TestProviderShutdownNilTP(t *testing.T) {
+	t.Parallel()
 	provider, _ := NewProvider(context.Background(), Config{Enabled: false}, slog.Default())
 	err := provider.Shutdown(context.Background())
 	if err != nil {
@@ -56,6 +60,7 @@ func TestProviderShutdownNilTP(t *testing.T) {
 }
 
 func TestProviderStartToolSpan(t *testing.T) {
+	t.Parallel()
 	provider, _ := NewProvider(context.Background(), Config{Enabled: false}, slog.Default())
 	ctx, span := provider.StartToolSpan(context.Background(), "kafka_list_topics", "agent-1", "default")
 	defer span.End()
@@ -66,6 +71,7 @@ func TestProviderStartToolSpan(t *testing.T) {
 }
 
 func TestProviderStartToolSpanMultipleTools(t *testing.T) {
+	t.Parallel()
 	provider, _ := NewProvider(context.Background(), Config{Enabled: false}, slog.Default())
 
 	tools := []string{"kafka_list_topics", "kafka_consume", "kafka_produce", "kafka_describe_topic"}
@@ -79,6 +85,7 @@ func TestProviderStartToolSpanMultipleTools(t *testing.T) {
 }
 
 func TestSetSpanResult(t *testing.T) {
+	t.Parallel()
 	tracer := noop.NewTracerProvider().Tracer("test")
 	_, span := tracer.Start(context.Background(), "test")
 	defer span.End()
@@ -87,6 +94,7 @@ func TestSetSpanResult(t *testing.T) {
 }
 
 func TestSetSpanResultWithError(t *testing.T) {
+	t.Parallel()
 	tracer := noop.NewTracerProvider().Tracer("test")
 	_, span := tracer.Start(context.Background(), "test")
 	defer span.End()
@@ -95,6 +103,7 @@ func TestSetSpanResultWithError(t *testing.T) {
 }
 
 func TestSetSpanResultVariousStatuses(t *testing.T) {
+	t.Parallel()
 	tracer := noop.NewTracerProvider().Tracer("test")
 
 	statuses := []struct {
@@ -117,6 +126,7 @@ func TestSetSpanResultVariousStatuses(t *testing.T) {
 }
 
 func TestConfigDefaults(t *testing.T) {
+	t.Parallel()
 	cfg := Config{}
 	if cfg.Enabled {
 		t.Error("expected Enabled=false by default")
@@ -133,6 +143,7 @@ func TestConfigDefaults(t *testing.T) {
 }
 
 func TestConfigValues(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		Enabled:     true,
 		Endpoint:    "localhost:4318",
@@ -152,12 +163,14 @@ func TestConfigValues(t *testing.T) {
 }
 
 func TestProviderTracerType(t *testing.T) {
+	t.Parallel()
 	provider, _ := NewProvider(context.Background(), Config{Enabled: false}, slog.Default())
 	tracer := provider.Tracer()
 	var _ trace.Tracer = tracer
 }
 
 func TestNewProviderEnabledInsecure(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		Enabled:     true,
 		Endpoint:    "localhost:14318",
@@ -194,6 +207,7 @@ func TestNewProviderEnabledInsecure(t *testing.T) {
 }
 
 func TestNewProviderDefaultServiceName(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		Enabled:  true,
 		Endpoint: "localhost:14318",
@@ -210,6 +224,7 @@ func TestNewProviderDefaultServiceName(t *testing.T) {
 }
 
 func TestNewProviderDefaultSampleRate(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		Enabled:    true,
 		Endpoint:   "localhost:14318",
@@ -227,6 +242,7 @@ func TestNewProviderDefaultSampleRate(t *testing.T) {
 }
 
 func TestNewProviderNegativeSampleRate(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		Enabled:    true,
 		Endpoint:   "localhost:14318",
@@ -241,6 +257,7 @@ func TestNewProviderNegativeSampleRate(t *testing.T) {
 }
 
 func TestProviderShutdownWithTP(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		Enabled:  true,
 		Endpoint: "localhost:14318",

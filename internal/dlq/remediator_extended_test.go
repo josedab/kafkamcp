@@ -6,6 +6,7 @@ import (
 )
 
 func TestDeriveOriginalTopicSuffixes(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		input string
 		want  string
@@ -29,6 +30,7 @@ func TestDeriveOriginalTopicSuffixes(t *testing.T) {
 }
 
 func TestDeriveOriginalTopicPrefixes(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		input string
 		want  string
@@ -51,6 +53,7 @@ func TestDeriveOriginalTopicPrefixes(t *testing.T) {
 }
 
 func TestDeriveOriginalTopicNoMatch(t *testing.T) {
+	t.Parallel()
 	got := deriveOriginalTopic("regular-topic")
 	if got != "regular-topic-retry" {
 		t.Errorf("deriveOriginalTopic('regular-topic') = %q, want 'regular-topic-retry'", got)
@@ -58,6 +61,7 @@ func TestDeriveOriginalTopicNoMatch(t *testing.T) {
 }
 
 func TestDeriveOriginalTopicCaseInsensitive(t *testing.T) {
+	t.Parallel()
 	got := deriveOriginalTopic("Orders-DLQ")
 	if got != "Orders" {
 		t.Errorf("deriveOriginalTopic('Orders-DLQ') = %q, want 'Orders'", got)
@@ -65,6 +69,7 @@ func TestDeriveOriginalTopicCaseInsensitive(t *testing.T) {
 }
 
 func TestNewRemediator(t *testing.T) {
+	t.Parallel()
 	logger := slog.Default()
 	r := NewRemediator(logger)
 	if r == nil {
@@ -80,6 +85,7 @@ func TestNewRemediator(t *testing.T) {
 }
 
 func TestAddPolicyDefaults(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(slog.Default())
 	r.AddPolicy(Policy{
 		TopicPattern: "*.dlq",
@@ -101,6 +107,7 @@ func TestAddPolicyDefaults(t *testing.T) {
 }
 
 func TestAddPolicyPreservesCustomValues(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(slog.Default())
 	r.AddPolicy(Policy{
 		TopicPattern: "*.dlq",
@@ -122,6 +129,7 @@ func TestAddPolicyPreservesCustomValues(t *testing.T) {
 }
 
 func TestAddMultiplePolicies(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(slog.Default())
 	r.AddPolicy(Policy{TopicPattern: "*.dlq", Action: "retry"})
 	r.AddPolicy(Policy{TopicPattern: "*.dead-letter", Action: "route", TargetTopic: "review"})
@@ -135,6 +143,7 @@ func TestAddMultiplePolicies(t *testing.T) {
 }
 
 func TestUpdateStats(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(slog.Default())
 	r.updateStats("test-dlq", &RemediationResult{
 		ProcessedCount: 10,
@@ -158,6 +167,7 @@ func TestUpdateStats(t *testing.T) {
 }
 
 func TestUpdateStatsAccumulates(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(slog.Default())
 	r.updateStats("topic-a", &RemediationResult{ProcessedCount: 5, SuccessCount: 5})
 	r.updateStats("topic-a", &RemediationResult{ProcessedCount: 3, SuccessCount: 2, FailureCount: 1})
@@ -172,6 +182,7 @@ func TestUpdateStatsAccumulates(t *testing.T) {
 }
 
 func TestRemediateInvalidAction(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(slog.Default())
 	_, err := r.Remediate(nil, nil, "", "topic", "invalid_action", "", 10)
 	if err == nil {
@@ -180,6 +191,7 @@ func TestRemediateInvalidAction(t *testing.T) {
 }
 
 func TestRemediateRouteRequiresTarget(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(slog.Default())
 	_, err := r.Remediate(nil, nil, "", "topic", "route", "", 10)
 	if err == nil {
@@ -188,6 +200,7 @@ func TestRemediateRouteRequiresTarget(t *testing.T) {
 }
 
 func TestRemediateDefaultLimit(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(slog.Default())
 	// Calling with invalid action but checking limit defaults
 	_, err := r.Remediate(nil, nil, "", "topic", "unknown", "", 0)

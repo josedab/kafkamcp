@@ -28,6 +28,7 @@ func newTestDashboard(t *testing.T) *Dashboard {
 // --- handleActivity tests ---
 
 func TestHandleActivityGET(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboard(t)
 	handler := d.Handler()
 
@@ -52,6 +53,7 @@ func TestHandleActivityGET(t *testing.T) {
 }
 
 func TestHandleActivityMethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboard(t)
 	handler := d.Handler()
 
@@ -69,6 +71,7 @@ func TestHandleActivityMethodNotAllowed(t *testing.T) {
 // --- handleAuditTrail tests ---
 
 func TestHandleAuditTrailGET(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboard(t)
 	handler := d.Handler()
 
@@ -93,6 +96,7 @@ func TestHandleAuditTrailGET(t *testing.T) {
 }
 
 func TestHandleAuditTrailMethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboard(t)
 	handler := d.Handler()
 
@@ -110,6 +114,7 @@ func TestHandleAuditTrailMethodNotAllowed(t *testing.T) {
 // --- handleTopics / handleTopology / handleHealth method-not-allowed tests ---
 
 func TestHandleTopicsMethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboard(t)
 	handler := d.Handler()
 
@@ -125,6 +130,7 @@ func TestHandleTopicsMethodNotAllowed(t *testing.T) {
 }
 
 func TestHandleTopologyMethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboard(t)
 	handler := d.Handler()
 
@@ -142,6 +148,7 @@ func TestHandleTopologyMethodNotAllowed(t *testing.T) {
 // --- handleSchemas method-not-allowed (extended methods) ---
 
 func TestHandleSchemasMethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboard(t)
 	handler := d.Handler()
 
@@ -159,6 +166,7 @@ func TestHandleSchemasMethodNotAllowed(t *testing.T) {
 // --- handleRateLimits method-not-allowed (extended methods) ---
 
 func TestHandleRateLimitsMethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboard(t)
 	handler := d.Handler()
 
@@ -187,6 +195,7 @@ func (w *nonFlusherWriter) Write(b []byte) (int, error)  { w.body = append(w.bod
 func (w *nonFlusherWriter) WriteHeader(code int)         { w.code = code }
 
 func TestHandleSSENoFlusher(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboard(t)
 
 	w := &nonFlusherWriter{headers: make(http.Header)}
@@ -201,6 +210,7 @@ func TestHandleSSENoFlusher(t *testing.T) {
 // --- Handler() routing tests ---
 
 func TestHandlerRoutesRespondToRequests(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboard(t)
 	handler := d.Handler()
 
@@ -228,6 +238,7 @@ func TestHandlerRoutesRespondToRequests(t *testing.T) {
 // --- All endpoints 405 for all non-GET methods (comprehensive) ---
 
 func TestAllEndpointsMethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboard(t)
 	handler := d.Handler()
 
@@ -257,6 +268,7 @@ func TestAllEndpointsMethodNotAllowed(t *testing.T) {
 // --- writeJSON edge cases ---
 
 func TestWriteJSONNilValue(t *testing.T) {
+	t.Parallel()
 	w := httptest.NewRecorder()
 	writeJSON(w, nil)
 
@@ -266,6 +278,7 @@ func TestWriteJSONNilValue(t *testing.T) {
 }
 
 func TestWriteJSONSlice(t *testing.T) {
+	t.Parallel()
 	w := httptest.NewRecorder()
 	writeJSON(w, []string{"a", "b", "c"})
 
@@ -279,6 +292,7 @@ func TestWriteJSONSlice(t *testing.T) {
 }
 
 func TestWriteJSONNestedMap(t *testing.T) {
+	t.Parallel()
 	w := httptest.NewRecorder()
 	writeJSON(w, map[string]any{
 		"outer": map[string]any{
@@ -302,6 +316,7 @@ func TestWriteJSONNestedMap(t *testing.T) {
 // --- BroadcastEvent edge cases ---
 
 func TestBroadcastEventUnmarshalableData(t *testing.T) {
+	t.Parallel()
 	rl := ratelimit.New(0)
 	d := New(nil, nil, rl, slog.Default())
 
@@ -322,6 +337,7 @@ func TestBroadcastEventUnmarshalableData(t *testing.T) {
 }
 
 func TestBroadcastEventMultipleClients(t *testing.T) {
+	t.Parallel()
 	rl := ratelimit.New(0)
 	d := New(nil, nil, rl, slog.Default())
 
@@ -357,6 +373,7 @@ func TestBroadcastEventMultipleClients(t *testing.T) {
 // --- Schemas response content ---
 
 func TestHandleSchemasResponseContent(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboard(t)
 	handler := d.Handler()
 
@@ -376,6 +393,7 @@ func TestHandleSchemasResponseContent(t *testing.T) {
 // --- RateLimits response content ---
 
 func TestHandleRateLimitsResponseContent(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboard(t)
 	handler := d.Handler()
 
@@ -395,6 +413,7 @@ func TestHandleRateLimitsResponseContent(t *testing.T) {
 // --- Activity response with empty audit log ---
 
 func TestHandleActivityEmptyAuditLog(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboard(t)
 	handler := d.Handler()
 
@@ -415,6 +434,7 @@ func TestHandleActivityEmptyAuditLog(t *testing.T) {
 // --- AuditTrail response with empty audit log ---
 
 func TestHandleAuditTrailEmptyAuditLog(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboard(t)
 	handler := d.Handler()
 

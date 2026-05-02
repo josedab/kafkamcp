@@ -19,6 +19,7 @@ func testWatchLogger() *slog.Logger {
 // --- FilterExpression tests ---
 
 func TestFilterExpression_Compile_Regex(t *testing.T) {
+	t.Parallel()
 	f := &FilterExpression{Field: "key", Operator: "regex", Value: `^order-\d+$`}
 	if err := f.Compile(); err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -29,6 +30,7 @@ func TestFilterExpression_Compile_Regex(t *testing.T) {
 }
 
 func TestFilterExpression_Compile_InvalidRegex(t *testing.T) {
+	t.Parallel()
 	f := &FilterExpression{Field: "key", Operator: "regex", Value: `[invalid`}
 	if err := f.Compile(); err == nil {
 		t.Error("expected error for invalid regex")
@@ -36,6 +38,7 @@ func TestFilterExpression_Compile_InvalidRegex(t *testing.T) {
 }
 
 func TestFilterExpression_Compile_NonRegex(t *testing.T) {
+	t.Parallel()
 	f := &FilterExpression{Field: "key", Operator: "contains", Value: "test"}
 	if err := f.Compile(); err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -46,6 +49,7 @@ func TestFilterExpression_Compile_NonRegex(t *testing.T) {
 }
 
 func TestFilterExpression_Match_KeyContains(t *testing.T) {
+	t.Parallel()
 	f := &FilterExpression{Field: "key", Operator: "contains", Value: "order"}
 	event := MessageEvent{Key: "my-order-123"}
 	if !f.Match(event) {
@@ -58,6 +62,7 @@ func TestFilterExpression_Match_KeyContains(t *testing.T) {
 }
 
 func TestFilterExpression_Match_KeyEquals(t *testing.T) {
+	t.Parallel()
 	f := &FilterExpression{Field: "key", Operator: "equals", Value: "exact-key"}
 	event := MessageEvent{Key: "exact-key"}
 	if !f.Match(event) {
@@ -70,6 +75,7 @@ func TestFilterExpression_Match_KeyEquals(t *testing.T) {
 }
 
 func TestFilterExpression_Match_KeyRegex(t *testing.T) {
+	t.Parallel()
 	f := &FilterExpression{Field: "key", Operator: "regex", Value: `^order-\d+$`}
 	f.Compile()
 
@@ -84,6 +90,7 @@ func TestFilterExpression_Match_KeyRegex(t *testing.T) {
 }
 
 func TestFilterExpression_Match_ValueContains(t *testing.T) {
+	t.Parallel()
 	f := &FilterExpression{Field: "value", Operator: "contains", Value: "error"}
 	event := MessageEvent{Value: "timeout error occurred"}
 	if !f.Match(event) {
@@ -92,6 +99,7 @@ func TestFilterExpression_Match_ValueContains(t *testing.T) {
 }
 
 func TestFilterExpression_Match_HeaderExists(t *testing.T) {
+	t.Parallel()
 	f := &FilterExpression{Field: "header.x-trace-id", Operator: "exists"}
 	event := MessageEvent{Headers: map[string]string{"x-trace-id": "abc"}}
 	if !f.Match(event) {
@@ -105,6 +113,7 @@ func TestFilterExpression_Match_HeaderExists(t *testing.T) {
 }
 
 func TestFilterExpression_Match_HeaderEquals(t *testing.T) {
+	t.Parallel()
 	f := &FilterExpression{Field: "header.source", Operator: "equals", Value: "svc-a"}
 	event := MessageEvent{Headers: map[string]string{"source": "svc-a"}}
 	if !f.Match(event) {
@@ -113,6 +122,7 @@ func TestFilterExpression_Match_HeaderEquals(t *testing.T) {
 }
 
 func TestFilterExpression_Match_UnknownField(t *testing.T) {
+	t.Parallel()
 	f := &FilterExpression{Field: "unknown_field", Operator: "contains", Value: "x"}
 	event := MessageEvent{Key: "test"}
 	if f.Match(event) {
@@ -121,6 +131,7 @@ func TestFilterExpression_Match_UnknownField(t *testing.T) {
 }
 
 func TestFilterExpression_Match_DefaultOperator(t *testing.T) {
+	t.Parallel()
 	f := &FilterExpression{Field: "key", Operator: "unsupported", Value: "test"}
 	event := MessageEvent{Key: "test value"}
 	if !f.Match(event) {
@@ -129,6 +140,7 @@ func TestFilterExpression_Match_DefaultOperator(t *testing.T) {
 }
 
 func TestFilterExpression_Match_RegexNotCompiled(t *testing.T) {
+	t.Parallel()
 	f := &FilterExpression{Field: "key", Operator: "regex", Value: "test"}
 	// Not compiled - should not match
 	event := MessageEvent{Key: "test"}
@@ -138,6 +150,7 @@ func TestFilterExpression_Match_RegexNotCompiled(t *testing.T) {
 }
 
 func TestFilterExpression_Match_ExistsOnNonHeader(t *testing.T) {
+	t.Parallel()
 	f := &FilterExpression{Field: "key", Operator: "exists"}
 	event := MessageEvent{Key: "something"}
 	if !f.Match(event) {
@@ -148,6 +161,7 @@ func TestFilterExpression_Match_ExistsOnNonHeader(t *testing.T) {
 // --- ConsumerPool tests ---
 
 func TestNewConsumerPool_DefaultMax(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
@@ -160,6 +174,7 @@ func TestNewConsumerPool_DefaultMax(t *testing.T) {
 }
 
 func TestConsumerPool_ActiveCount(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
@@ -172,6 +187,7 @@ func TestConsumerPool_ActiveCount(t *testing.T) {
 }
 
 func TestConsumerPool_Stop(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
@@ -188,6 +204,7 @@ func TestConsumerPool_Stop(t *testing.T) {
 }
 
 func TestConsumerPool_EnsureConsumer_PoolLimitReached(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
@@ -206,6 +223,7 @@ func TestConsumerPool_EnsureConsumer_PoolLimitReached(t *testing.T) {
 // --- DeliveryTracker tests ---
 
 func TestDeliveryTracker_RecordDelivered(t *testing.T) {
+	t.Parallel()
 	dt := NewDeliveryTracker()
 
 	dt.Record(DeliveryResult{SubscriptionID: "sub-1", Status: "delivered"})
@@ -221,6 +239,7 @@ func TestDeliveryTracker_RecordDelivered(t *testing.T) {
 }
 
 func TestDeliveryTracker_RecordFailed(t *testing.T) {
+	t.Parallel()
 	dt := NewDeliveryTracker()
 
 	dt.Record(DeliveryResult{SubscriptionID: "sub-1", Status: "failed", LastError: "timeout"})
@@ -237,6 +256,7 @@ func TestDeliveryTracker_RecordFailed(t *testing.T) {
 }
 
 func TestDeliveryTracker_RecordRetrying(t *testing.T) {
+	t.Parallel()
 	dt := NewDeliveryTracker()
 	dt.Record(DeliveryResult{SubscriptionID: "sub-1", Status: "retrying"})
 
@@ -247,6 +267,7 @@ func TestDeliveryTracker_RecordRetrying(t *testing.T) {
 }
 
 func TestDeliveryTracker_GetSubscriptionStats_Unknown(t *testing.T) {
+	t.Parallel()
 	dt := NewDeliveryTracker()
 	if dt.GetSubscriptionStats("unknown") != nil {
 		t.Error("expected nil for unknown subscription")
@@ -254,6 +275,7 @@ func TestDeliveryTracker_GetSubscriptionStats_Unknown(t *testing.T) {
 }
 
 func TestDeliveryTracker_MultipleSubscriptions(t *testing.T) {
+	t.Parallel()
 	dt := NewDeliveryTracker()
 	dt.Record(DeliveryResult{SubscriptionID: "sub-1", Status: "delivered"})
 	dt.Record(DeliveryResult{SubscriptionID: "sub-2", Status: "failed", LastError: "err"})
@@ -276,6 +298,7 @@ func TestDeliveryTracker_MultipleSubscriptions(t *testing.T) {
 }
 
 func TestDeliveryTracker_LastDeliveryTimestamp(t *testing.T) {
+	t.Parallel()
 	dt := NewDeliveryTracker()
 	dt.Record(DeliveryResult{SubscriptionID: "sub-1", Status: "delivered"})
 
@@ -291,6 +314,7 @@ func TestDeliveryTracker_LastDeliveryTimestamp(t *testing.T) {
 // --- runConsumer and hasSubscriptionsForTopic tests ---
 
 func TestHasSubscriptionsForTopic_Matching(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
@@ -306,6 +330,7 @@ func TestHasSubscriptionsForTopic_Matching(t *testing.T) {
 }
 
 func TestHasSubscriptionsForTopic_NoMatch(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
@@ -320,6 +345,7 @@ func TestHasSubscriptionsForTopic_NoMatch(t *testing.T) {
 }
 
 func TestHasSubscriptionsForTopic_NoSubscriptions(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
@@ -332,6 +358,7 @@ func TestHasSubscriptionsForTopic_NoSubscriptions(t *testing.T) {
 }
 
 func TestHasSubscriptionsForTopic_ExactMatch(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
@@ -346,6 +373,7 @@ func TestHasSubscriptionsForTopic_ExactMatch(t *testing.T) {
 }
 
 func TestRunConsumer_ExitsOnContextCancellation(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
@@ -372,6 +400,7 @@ func TestRunConsumer_ExitsOnContextCancellation(t *testing.T) {
 }
 
 func TestRunConsumer_SkipsNonMatchingTopics(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
@@ -402,6 +431,7 @@ func TestRunConsumer_SkipsNonMatchingTopics(t *testing.T) {
 }
 
 func TestRunConsumer_WithMockKafka(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
@@ -441,6 +471,7 @@ func TestRunConsumer_WithMockKafka(t *testing.T) {
 }
 
 func TestRunConsumer_HandlesConsumeError(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
@@ -478,6 +509,7 @@ func TestRunConsumer_HandlesConsumeError(t *testing.T) {
 }
 
 func TestConsumerPool_ConcurrentEnsureConsumer(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
@@ -497,6 +529,7 @@ func TestConsumerPool_ConcurrentEnsureConsumer(t *testing.T) {
 }
 
 func TestConsumerPool_EnsureConsumer_Idempotent(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 

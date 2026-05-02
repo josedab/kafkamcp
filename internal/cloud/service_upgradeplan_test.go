@@ -7,6 +7,7 @@ import (
 )
 
 func TestUpgradePlan_ValidUpgrade(t *testing.T) {
+	t.Parallel()
 	cs := NewCloudService(slog.Default())
 	ws, _, _ := cs.CreateWorkspace("Test", "test@test.com", "free")
 
@@ -22,6 +23,7 @@ func TestUpgradePlan_ValidUpgrade(t *testing.T) {
 }
 
 func TestUpgradePlan_AllValidPlans(t *testing.T) {
+	t.Parallel()
 	plans := []string{"free", "pro", "enterprise"}
 	for _, plan := range plans {
 		cs := NewCloudService(slog.Default())
@@ -39,6 +41,7 @@ func TestUpgradePlan_AllValidPlans(t *testing.T) {
 }
 
 func TestUpgradePlan_NonExistentWorkspace(t *testing.T) {
+	t.Parallel()
 	cs := NewCloudService(slog.Default())
 	err := cs.UpgradePlan("nonexistent", "pro")
 	if err == nil {
@@ -50,6 +53,7 @@ func TestUpgradePlan_NonExistentWorkspace(t *testing.T) {
 }
 
 func TestUpgradePlan_InvalidPlan(t *testing.T) {
+	t.Parallel()
 	cs := NewCloudService(slog.Default())
 	ws, _, _ := cs.CreateWorkspace("Test", "test@test.com", "free")
 
@@ -63,6 +67,7 @@ func TestUpgradePlan_InvalidPlan(t *testing.T) {
 }
 
 func TestUpgradePlan_EmptyPlan(t *testing.T) {
+	t.Parallel()
 	cs := NewCloudService(slog.Default())
 	ws, _, _ := cs.CreateWorkspace("Test", "test@test.com", "free")
 
@@ -73,6 +78,7 @@ func TestUpgradePlan_EmptyPlan(t *testing.T) {
 }
 
 func TestUpgradePlan_DowngradePath(t *testing.T) {
+	t.Parallel()
 	cs := NewCloudService(slog.Default())
 	ws, _, _ := cs.CreateWorkspace("Test", "test@test.com", "enterprise")
 
@@ -89,6 +95,7 @@ func TestUpgradePlan_DowngradePath(t *testing.T) {
 }
 
 func TestUpgradePlan_SamePlan(t *testing.T) {
+	t.Parallel()
 	cs := NewCloudService(slog.Default())
 	ws, _, _ := cs.CreateWorkspace("Test", "test@test.com", "pro")
 

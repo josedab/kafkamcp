@@ -9,6 +9,7 @@ import (
 
 // TestRemediateAnalyzeNilManager tests that the analyze action panics/fails with nil manager.
 func TestRemediateAnalyzeNilManager(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(slog.Default())
 	panicked := false
 	func() {
@@ -26,6 +27,7 @@ func TestRemediateAnalyzeNilManager(t *testing.T) {
 
 // TestRemediateRetryNilManager tests that the retry action panics/fails with nil manager.
 func TestRemediateRetryNilManager(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(slog.Default())
 	panicked := false
 	func() {
@@ -43,6 +45,7 @@ func TestRemediateRetryNilManager(t *testing.T) {
 
 // TestRemediateRouteNilManager tests that the route action panics/fails with nil manager.
 func TestRemediateRouteNilManager(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(slog.Default())
 	panicked := false
 	func() {
@@ -60,6 +63,7 @@ func TestRemediateRouteNilManager(t *testing.T) {
 
 // TestRemediateSuggestNilManager tests that the suggest action panics/fails with nil manager.
 func TestRemediateSuggestNilManager(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(slog.Default())
 	panicked := false
 	func() {
@@ -77,6 +81,7 @@ func TestRemediateSuggestNilManager(t *testing.T) {
 
 // TestRemediateValidActionsDispatch tests that valid actions dispatch correctly.
 func TestRemediateValidActionsDispatch(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(slog.Default())
 
 	// analyze dispatches to analyzeForRemediation which calls mgr.AnalyzeDLQ → nil panic
@@ -112,6 +117,7 @@ func TestRemediateValidActionsDispatch(t *testing.T) {
 
 // TestRemediateDefaultLimitApplied verifies that a zero/negative limit gets defaulted to 100.
 func TestRemediateDefaultLimitZero(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(slog.Default())
 
 	// For unknown action, limit is defaulted before the switch
@@ -122,6 +128,7 @@ func TestRemediateDefaultLimitZero(t *testing.T) {
 }
 
 func TestRemediateDefaultLimitNegative(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(slog.Default())
 
 	_, err := r.Remediate(context.Background(), nil, "", "topic", "unknown", "", -10)
@@ -132,6 +139,7 @@ func TestRemediateDefaultLimitNegative(t *testing.T) {
 
 // TestRemediationResultJSON tests JSON serialization of RemediationResult.
 func TestRemediationResultJSON(t *testing.T) {
+	t.Parallel()
 	r := RemediationResult{
 		Topic:          "orders-dlq",
 		Action:         "analyze",
@@ -174,6 +182,7 @@ func TestRemediationResultJSON(t *testing.T) {
 
 // TestRemediationStatsJSON tests JSON serialization of RemediationStats.
 func TestRemediationStatsJSON(t *testing.T) {
+	t.Parallel()
 	s := RemediationStats{
 		TotalProcessed: 100,
 		TotalSuccess:   90,
@@ -198,6 +207,7 @@ func TestRemediationStatsJSON(t *testing.T) {
 
 // TestPolicyJSON tests JSON serialization of Policy.
 func TestPolicyJSON(t *testing.T) {
+	t.Parallel()
 	p := Policy{
 		TopicPattern:  "*-dlq",
 		Action:        "retry",
@@ -224,6 +234,7 @@ func TestPolicyJSON(t *testing.T) {
 
 // TestConcurrentGetStats tests concurrent access to stats.
 func TestConcurrentGetStats(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(slog.Default())
 
 	done := make(chan struct{})
@@ -247,6 +258,7 @@ func TestConcurrentGetStats(t *testing.T) {
 
 // TestConcurrentAddPolicy tests concurrent policy additions.
 func TestConcurrentAddPolicy(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(slog.Default())
 
 	done := make(chan struct{})

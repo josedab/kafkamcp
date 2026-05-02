@@ -10,6 +10,7 @@ func newTestEngine() *Engine {
 }
 
 func TestCreateBridge(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	sink := SinkConfig{Type: SinkPostgres, Table: "users"}
@@ -26,6 +27,7 @@ func TestCreateBridge(t *testing.T) {
 }
 
 func TestCreateBridgeValidation(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	if _, err := e.CreateBridge("", "topic", "a", SinkConfig{Type: SinkPostgres}, nil); err == nil {
@@ -40,6 +42,7 @@ func TestCreateBridgeValidation(t *testing.T) {
 }
 
 func TestProcessEvent(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	sink := SinkConfig{Type: SinkElastic, Index: "events"}
@@ -86,6 +89,7 @@ func TestProcessEvent(t *testing.T) {
 }
 
 func TestProcessEventWithTransform(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	transform := &TransformSpec{
@@ -111,6 +115,7 @@ func TestProcessEventWithTransform(t *testing.T) {
 }
 
 func TestBridgeLifecycle(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	sink := SinkConfig{Type: SinkRedis}
@@ -146,6 +151,7 @@ func TestBridgeLifecycle(t *testing.T) {
 }
 
 func TestGetRecentEvents(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	sink := SinkConfig{Type: SinkS3, Bucket: "test"}
@@ -165,6 +171,7 @@ func TestGetRecentEvents(t *testing.T) {
 }
 
 func TestProcessEventBridgeNotActive(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	sink := SinkConfig{Type: SinkPostgres}
@@ -178,6 +185,7 @@ func TestProcessEventBridgeNotActive(t *testing.T) {
 }
 
 func TestFlattenMap(t *testing.T) {
+	t.Parallel()
 	input := map[string]any{
 		"a": 1,
 		"b": map[string]any{

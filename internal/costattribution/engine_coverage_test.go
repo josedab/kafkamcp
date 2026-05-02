@@ -7,6 +7,7 @@ import (
 // --- GetAllLiveCosts ---
 
 func TestGetAllLiveCostsEmpty(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	costs := e.GetAllLiveCosts()
 	if len(costs) != 0 {
@@ -15,6 +16,7 @@ func TestGetAllLiveCostsEmpty(t *testing.T) {
 }
 
 func TestGetAllLiveCostsMultiple(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.RecordMetrics("topic", "t1", 1024, 512, 100, 50, 1024*1024)
 	e.RecordMetrics("topic", "t2", 2048, 1024, 200, 100, 2048*1024)
@@ -30,6 +32,7 @@ func TestGetAllLiveCostsMultiple(t *testing.T) {
 }
 
 func TestGetAllLiveCostsAggregated(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.RecordMetrics("topic", "t1", 1024, 0, 10, 0, 1024)
 	e.RecordMetrics("topic", "t1", 1024, 0, 10, 0, 2048)
@@ -46,6 +49,7 @@ func TestGetAllLiveCostsAggregated(t *testing.T) {
 // --- GetAllocations ---
 
 func TestGetAllocationsEmpty(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	allocs := e.GetAllocations()
 	if len(allocs) != 0 {
@@ -54,6 +58,7 @@ func TestGetAllocationsEmpty(t *testing.T) {
 }
 
 func TestGetAllocationsMultiple(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.CreateAllocation("team-a", "owner-a", nil, nil)
 	e.CreateAllocation("team-b", "owner-b", nil, nil)
@@ -67,6 +72,7 @@ func TestGetAllocationsMultiple(t *testing.T) {
 // --- GetBudgets ---
 
 func TestGetBudgetsEmpty(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	budgets := e.GetBudgets()
 	if len(budgets) != 0 {
@@ -75,6 +81,7 @@ func TestGetBudgetsEmpty(t *testing.T) {
 }
 
 func TestGetBudgetsActiveListed(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.CreateBudget("b1", "owner", 100, nil, nil)
 	e.CreateBudget("b2", "owner", 200, nil, nil)
@@ -86,6 +93,7 @@ func TestGetBudgetsActiveListed(t *testing.T) {
 }
 
 func TestGetBudgetsWithStatus(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.RecordMetrics("topic", "expensive", 0, 0, 0, 0, 1024*1024*1024*100)
 
@@ -98,6 +106,7 @@ func TestGetBudgetsWithStatus(t *testing.T) {
 // --- SetPricing ---
 
 func TestSetPricingOverrideDefaults(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.SetPricing(PricingTier{
 		Provider:        "custom",
@@ -114,6 +123,7 @@ func TestSetPricingOverrideDefaults(t *testing.T) {
 }
 
 func TestSetPricingZeroPrices(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.SetPricing(PricingTier{})
 
@@ -127,6 +137,7 @@ func TestSetPricingZeroPrices(t *testing.T) {
 // --- checkBudgetAlerts ---
 
 func TestCheckBudgetAlerts80Percent(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.RecordMetrics("topic", "t1", 0, 0, 0, 0, 1024*1024*1024*10)
 
@@ -141,6 +152,7 @@ func TestCheckBudgetAlerts80Percent(t *testing.T) {
 }
 
 func TestCheckBudgetAlertsExceeded(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.RecordMetrics("topic", "t1", 0, 0, 0, 0, 1024*1024*1024*100)
 
@@ -151,6 +163,7 @@ func TestCheckBudgetAlertsExceeded(t *testing.T) {
 }
 
 func TestCheckBudgetAlertsFiredOnRecordMetrics(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	budget, _ := e.CreateBudget("b", "owner", 0.001, []string{"t1"}, nil)
 	if budget.Status != "ok" {
@@ -178,6 +191,7 @@ func TestCheckBudgetAlertsFiredOnRecordMetrics(t *testing.T) {
 // --- budgetStatus ---
 
 func TestBudgetStatusOk(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	budget := &Budget{MonthlyLimit: 100, CurrentSpend: 50}
 	if e.budgetStatus(budget) != "ok" {
@@ -186,6 +200,7 @@ func TestBudgetStatusOk(t *testing.T) {
 }
 
 func TestBudgetStatusWarning(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	budget := &Budget{MonthlyLimit: 100, CurrentSpend: 85}
 	if e.budgetStatus(budget) != "warning" {
@@ -194,6 +209,7 @@ func TestBudgetStatusWarning(t *testing.T) {
 }
 
 func TestBudgetStatusCritical(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	budget := &Budget{MonthlyLimit: 100, CurrentSpend: 95}
 	if e.budgetStatus(budget) != "critical" {
@@ -202,6 +218,7 @@ func TestBudgetStatusCritical(t *testing.T) {
 }
 
 func TestBudgetStatusExceeded(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	budget := &Budget{MonthlyLimit: 100, CurrentSpend: 150}
 	if e.budgetStatus(budget) != "exceeded" {
@@ -210,6 +227,7 @@ func TestBudgetStatusExceeded(t *testing.T) {
 }
 
 func TestBudgetStatusZeroLimit(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	budget := &Budget{MonthlyLimit: 0, CurrentSpend: 50}
 	if e.budgetStatus(budget) != "ok" {
@@ -218,6 +236,7 @@ func TestBudgetStatusZeroLimit(t *testing.T) {
 }
 
 func TestBudgetStatusNegativeLimit(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	budget := &Budget{MonthlyLimit: -10, CurrentSpend: 50}
 	if e.budgetStatus(budget) != "ok" {
@@ -228,6 +247,7 @@ func TestBudgetStatusNegativeLimit(t *testing.T) {
 // --- Edge cases ---
 
 func TestCreateAllocationEmptyName(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	_, err := e.CreateAllocation("", "owner", nil, nil)
 	if err == nil {
@@ -236,6 +256,7 @@ func TestCreateAllocationEmptyName(t *testing.T) {
 }
 
 func TestCreateBudgetInvalidLimit(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	_, err := e.CreateBudget("b", "owner", 0, nil, nil)
 	if err == nil {
@@ -244,6 +265,7 @@ func TestCreateBudgetInvalidLimit(t *testing.T) {
 }
 
 func TestCreateBudgetNegativeLimit(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	_, err := e.CreateBudget("b", "owner", -100, nil, nil)
 	if err == nil {
@@ -252,6 +274,7 @@ func TestCreateBudgetNegativeLimit(t *testing.T) {
 }
 
 func TestCreateBudgetDefaultThresholds(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	budget, _ := e.CreateBudget("b", "owner", 100, nil, nil)
 	if len(budget.AlertThresholds) != 4 {
@@ -260,6 +283,7 @@ func TestCreateBudgetDefaultThresholds(t *testing.T) {
 }
 
 func TestGetLiveCostNotFound(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	_, err := e.GetLiveCost("topic", "nonexistent")
 	if err == nil {
@@ -268,6 +292,7 @@ func TestGetLiveCostNotFound(t *testing.T) {
 }
 
 func TestCreateAllocationWithResources(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.RecordMetrics("topic", "orders", 1024, 512, 100, 50, 1024*1024*1024)
 	e.RecordMetrics("topic", "users", 512, 256, 50, 25, 512*1024*1024)

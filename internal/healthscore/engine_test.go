@@ -6,6 +6,7 @@ import (
 )
 
 func TestEvaluate_HealthyCluster(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	report := e.Evaluate("test-cluster", ClusterMetricsInput{
 		TotalBrokers:  3,
@@ -23,6 +24,7 @@ func TestEvaluate_HealthyCluster(t *testing.T) {
 }
 
 func TestEvaluate_DegradedCluster(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	report := e.Evaluate("test-cluster", ClusterMetricsInput{
 		TotalBrokers:              3,
@@ -43,6 +45,7 @@ func TestEvaluate_DegradedCluster(t *testing.T) {
 }
 
 func TestEvaluate_TrendTracking(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	e.Evaluate("test-cluster", ClusterMetricsInput{
 		TotalBrokers: 3, OnlineBrokers: 2, TotalPartitions: 100, ActiveControllerCount: 1,
@@ -57,6 +60,7 @@ func TestEvaluate_TrendTracking(t *testing.T) {
 }
 
 func TestGetHistory(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	for i := 0; i < 5; i++ {
 		e.Evaluate("test-cluster", ClusterMetricsInput{

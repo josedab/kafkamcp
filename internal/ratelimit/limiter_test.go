@@ -6,6 +6,7 @@ import (
 )
 
 func TestBucketAllow(t *testing.T) {
+	t.Parallel()
 	b := newBucket(60) // 60/min = 1/sec
 	for i := 0; i < 60; i++ {
 		if !b.allow() {
@@ -18,6 +19,7 @@ func TestBucketAllow(t *testing.T) {
 }
 
 func TestBucketRefill(t *testing.T) {
+	t.Parallel()
 	b := newBucket(60)
 	for i := 0; i < 60; i++ {
 		b.allow()
@@ -29,6 +31,7 @@ func TestBucketRefill(t *testing.T) {
 }
 
 func TestLimiterPerAgent(t *testing.T) {
+	t.Parallel()
 	l := New(0)
 	l.SetAgentLimit("agent-1", 2)
 
@@ -47,6 +50,7 @@ func TestLimiterPerAgent(t *testing.T) {
 }
 
 func TestLimiterGlobal(t *testing.T) {
+	t.Parallel()
 	l := New(2)
 	l.SetAgentLimit("any", 100) // configure agent so it's not default-denied
 	if !l.Allow("any") {

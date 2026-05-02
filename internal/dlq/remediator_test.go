@@ -3,6 +3,7 @@ package dlq
 import "testing"
 
 func TestDeriveOriginalTopic(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		dlqTopic string
 		expected string
@@ -24,6 +25,7 @@ func TestDeriveOriginalTopic(t *testing.T) {
 }
 
 func TestAddPolicy(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(nil)
 	r.AddPolicy(Policy{
 		TopicPattern: "*-dlq",
@@ -41,6 +43,7 @@ func TestAddPolicy(t *testing.T) {
 }
 
 func TestGetStats(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(nil)
 	stats := r.GetStats()
 	if stats.TotalProcessed != 0 {

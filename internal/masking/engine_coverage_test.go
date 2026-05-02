@@ -12,6 +12,7 @@ import (
 // Tests for ApplyAction, DetectPIIInValue, PolicyManager, and Luhn check.
 
 func TestApplyAction_Redact(t *testing.T) {
+	t.Parallel()
 	e := &Engine{enabled: true}
 	result := e.ApplyAction("redact", "secret", "")
 	if result != defaultReplacement {
@@ -20,6 +21,7 @@ func TestApplyAction_Redact(t *testing.T) {
 }
 
 func TestApplyAction_RedactCustom(t *testing.T) {
+	t.Parallel()
 	e := &Engine{enabled: true}
 	result := e.ApplyAction("redact", "secret", "[MASKED]")
 	if result != "[MASKED]" {
@@ -28,6 +30,7 @@ func TestApplyAction_RedactCustom(t *testing.T) {
 }
 
 func TestApplyAction_Hash(t *testing.T) {
+	t.Parallel()
 	e := &Engine{enabled: true}
 	result := e.ApplyAction("hash", "test@example.com", "")
 	if !strings.HasPrefix(result, "tok_") {
@@ -41,6 +44,7 @@ func TestApplyAction_Hash(t *testing.T) {
 }
 
 func TestApplyAction_MaskPartial(t *testing.T) {
+	t.Parallel()
 	e := &Engine{enabled: true}
 	result := e.ApplyAction("mask_partial", "4111111111111111", "")
 	if !strings.HasSuffix(result, "1111") {
@@ -52,6 +56,7 @@ func TestApplyAction_MaskPartial(t *testing.T) {
 }
 
 func TestApplyAction_Tokenize(t *testing.T) {
+	t.Parallel()
 	e := &Engine{enabled: true}
 	result := e.ApplyAction("tokenize", "value", "")
 	if !strings.HasPrefix(result, "tok_") {
@@ -60,6 +65,7 @@ func TestApplyAction_Tokenize(t *testing.T) {
 }
 
 func TestApplyAction_UnknownDefault(t *testing.T) {
+	t.Parallel()
 	e := &Engine{enabled: true}
 	result := e.ApplyAction("unknown", "value", "[REDACTED]")
 	if result != "[REDACTED]" {
@@ -68,6 +74,7 @@ func TestApplyAction_UnknownDefault(t *testing.T) {
 }
 
 func TestApplyAction_UnknownNoReplacement(t *testing.T) {
+	t.Parallel()
 	e := &Engine{enabled: true}
 	result := e.ApplyAction("unknown", "value", "")
 	if result != defaultReplacement {
@@ -76,6 +83,7 @@ func TestApplyAction_UnknownNoReplacement(t *testing.T) {
 }
 
 func TestDetectPIIInValue_String(t *testing.T) {
+	t.Parallel()
 	e := &Engine{enabled: true}
 	detections := e.DetectPIIInValue("contact me at test@example.com or 123-45-6789")
 	if len(detections) == 0 {
@@ -95,6 +103,7 @@ func TestDetectPIIInValue_String(t *testing.T) {
 }
 
 func TestDetectPIIInValue_Map(t *testing.T) {
+	t.Parallel()
 	e := &Engine{enabled: true}
 	data := map[string]any{
 		"name":  "John Doe",
@@ -116,6 +125,7 @@ func TestDetectPIIInValue_Map(t *testing.T) {
 }
 
 func TestDetectPIIInValue_NonStringNonMap(t *testing.T) {
+	t.Parallel()
 	e := &Engine{enabled: true}
 	detections := e.DetectPIIInValue(42)
 	if detections != nil {
@@ -124,6 +134,7 @@ func TestDetectPIIInValue_NonStringNonMap(t *testing.T) {
 }
 
 func TestDetectPIIInValue_NoMatches(t *testing.T) {
+	t.Parallel()
 	e := &Engine{enabled: true}
 	detections := e.DetectPIIInValue("just a normal string with no PII")
 	if len(detections) != 0 {
@@ -132,6 +143,7 @@ func TestDetectPIIInValue_NoMatches(t *testing.T) {
 }
 
 func TestPolicyManager_NotNil(t *testing.T) {
+	t.Parallel()
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))
 	e := NewEngine(config.MaskingConfig{Enabled: true}, logger)
 	pm := e.PolicyManager()
@@ -141,6 +153,7 @@ func TestPolicyManager_NotNil(t *testing.T) {
 }
 
 func TestLuhnCheck_ValidNumbers(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name   string
 		number string
@@ -166,6 +179,7 @@ func TestLuhnCheck_ValidNumbers(t *testing.T) {
 }
 
 func TestDetectPII_EmailViaEngine(t *testing.T) {
+	t.Parallel()
 	detections := DetectPII("contact: user@example.com")
 	found := false
 	for _, d := range detections {
@@ -179,6 +193,7 @@ func TestDetectPII_EmailViaEngine(t *testing.T) {
 }
 
 func TestDetectPII_CreditCardViaEngine(t *testing.T) {
+	t.Parallel()
 	detections := DetectPII("card: 4111111111111111")
 	found := false
 	for _, d := range detections {
@@ -192,6 +207,7 @@ func TestDetectPII_CreditCardViaEngine(t *testing.T) {
 }
 
 func TestDetectPII_PhoneViaEngine(t *testing.T) {
+	t.Parallel()
 	detections := DetectPII("call: (555) 123-4567")
 	found := false
 	for _, d := range detections {
@@ -205,6 +221,7 @@ func TestDetectPII_PhoneViaEngine(t *testing.T) {
 }
 
 func TestDetectPII_SSNViaEngine(t *testing.T) {
+	t.Parallel()
 	detections := DetectPII("ssn: 123-45-6789")
 	found := false
 	for _, d := range detections {
@@ -218,6 +235,7 @@ func TestDetectPII_SSNViaEngine(t *testing.T) {
 }
 
 func TestMaskPartial_Values(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		value   string
@@ -241,6 +259,7 @@ func TestMaskPartial_Values(t *testing.T) {
 }
 
 func TestHashValue_Deterministic(t *testing.T) {
+	t.Parallel()
 	v1 := HashValue("test-value")
 	v2 := HashValue("test-value")
 	if v1 != v2 {
@@ -254,6 +273,7 @@ func TestHashValue_Deterministic(t *testing.T) {
 }
 
 func TestMaskValue_NestedJSON(t *testing.T) {
+	t.Parallel()
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))
 	e := NewEngine(config.MaskingConfig{
 		Enabled: true,
@@ -284,6 +304,7 @@ func TestMaskValue_NestedJSON(t *testing.T) {
 }
 
 func TestMaskValue_DisabledEngine(t *testing.T) {
+	t.Parallel()
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))
 	e := NewEngine(config.MaskingConfig{Enabled: false}, logger)
 
@@ -294,6 +315,7 @@ func TestMaskValue_DisabledEngine(t *testing.T) {
 }
 
 func TestRuleCount(t *testing.T) {
+	t.Parallel()
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))
 	e := NewEngine(config.MaskingConfig{
 		Enabled: true,
@@ -309,6 +331,7 @@ func TestRuleCount(t *testing.T) {
 }
 
 func TestEnabled(t *testing.T) {
+	t.Parallel()
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))
 	e1 := NewEngine(config.MaskingConfig{Enabled: true}, logger)
 	if !e1.Enabled() {
@@ -322,6 +345,7 @@ func TestEnabled(t *testing.T) {
 }
 
 func TestMaskValue_AgentSpecificRules(t *testing.T) {
+	t.Parallel()
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))
 	e := NewEngine(config.MaskingConfig{
 		Enabled: true,

@@ -6,6 +6,7 @@ import (
 )
 
 func TestAnalyzeTopic(t *testing.T) {
+	t.Parallel()
 	a := NewAnalyzer(nil)
 
 	input := TopicCostInput{
@@ -34,6 +35,7 @@ func TestAnalyzeTopic(t *testing.T) {
 }
 
 func TestDetectWaste(t *testing.T) {
+	t.Parallel()
 	a := NewAnalyzer(nil)
 
 	topics := []TopicCostInput{
@@ -62,6 +64,7 @@ func TestDetectWaste(t *testing.T) {
 }
 
 func TestWhatIf(t *testing.T) {
+	t.Parallel()
 	a := NewAnalyzer(nil)
 
 	current := TopicCostInput{

@@ -6,6 +6,7 @@ import (
 )
 
 func TestNegotiateViewer(t *testing.T) {
+	t.Parallel()
 	n := NewNegotiator(slog.Default())
 
 	result := n.Negotiate("agent-1", RoleViewer, nil)
@@ -21,6 +22,7 @@ func TestNegotiateViewer(t *testing.T) {
 }
 
 func TestNegotiateAdmin(t *testing.T) {
+	t.Parallel()
 	n := NewNegotiator(slog.Default())
 
 	result := n.Negotiate("agent-1", RoleAdmin, nil)
@@ -34,6 +36,7 @@ func TestNegotiateAdmin(t *testing.T) {
 }
 
 func TestContextAwarePruning(t *testing.T) {
+	t.Parallel()
 	n := NewNegotiator(slog.Default())
 
 	// Viewer with lag context should get monitoring too
@@ -52,6 +55,7 @@ func TestContextAwarePruning(t *testing.T) {
 }
 
 func TestDiscoverTools(t *testing.T) {
+	t.Parallel()
 	n := NewNegotiator(slog.Default())
 
 	// Negotiate as viewer first
@@ -73,6 +77,7 @@ func TestDiscoverTools(t *testing.T) {
 }
 
 func TestIsToolAllowed(t *testing.T) {
+	t.Parallel()
 	n := NewNegotiator(slog.Default())
 
 	// No profile = allowed
@@ -88,6 +93,7 @@ func TestIsToolAllowed(t *testing.T) {
 }
 
 func TestListCategories(t *testing.T) {
+	t.Parallel()
 	n := NewNegotiator(slog.Default())
 	cats := n.ListCategories()
 	if len(cats) == 0 {

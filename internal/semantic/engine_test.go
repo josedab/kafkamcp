@@ -12,6 +12,7 @@ func newTestEngine() *Engine {
 }
 
 func TestIndexAndSearch(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	e.IndexMessage("orders", 0, 1, "key1", "customer placed an order for laptop", nil)
@@ -30,6 +31,7 @@ func TestIndexAndSearch(t *testing.T) {
 }
 
 func TestSearchWithTopicFilter(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	e.IndexMessage("orders", 0, 1, "", "order created", nil)
@@ -44,6 +46,7 @@ func TestSearchWithTopicFilter(t *testing.T) {
 }
 
 func TestRAGContext(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	e.IndexMessage("logs", 0, 1, "", "error occurred in authentication service", nil)
@@ -60,6 +63,7 @@ func TestRAGContext(t *testing.T) {
 }
 
 func TestStats(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	e.IndexMessage("topic1", 0, 1, "", "hello world", nil)
@@ -75,6 +79,7 @@ func TestStats(t *testing.T) {
 }
 
 func TestDeleteByTopic(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	e.IndexMessage("topic1", 0, 1, "", "hello", nil)
@@ -93,6 +98,7 @@ func TestDeleteByTopic(t *testing.T) {
 }
 
 func TestDeleteByTopicNonexistent(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	deleted := e.DeleteByTopic("nonexistent")
 	if deleted != 0 {
@@ -103,6 +109,7 @@ func TestDeleteByTopicNonexistent(t *testing.T) {
 // --- evictOldest tests ---
 
 func TestEvictOldest(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	e.maxDocs = 3
 
@@ -127,6 +134,7 @@ func TestEvictOldest(t *testing.T) {
 }
 
 func TestEvictOldestIndexIntegrity(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	e.maxDocs = 2
 
@@ -155,6 +163,7 @@ func TestEvictOldestIndexIntegrity(t *testing.T) {
 // --- generateHighlight tests ---
 
 func TestGenerateHighlightShortContent(t *testing.T) {
+	t.Parallel()
 	content := "short text"
 	result := generateHighlight(content, []string{"short"}, 200)
 	if result != content {
@@ -163,6 +172,7 @@ func TestGenerateHighlightShortContent(t *testing.T) {
 }
 
 func TestGenerateHighlightLongContent(t *testing.T) {
+	t.Parallel()
 	content := strings.Repeat("lorem ipsum dolor sit amet ", 50)
 	result := generateHighlight(content, []string{"dolor"}, 200)
 	if len(result) > 210 { // 200 + prefix/suffix "..."
@@ -171,6 +181,7 @@ func TestGenerateHighlightLongContent(t *testing.T) {
 }
 
 func TestGenerateHighlightOverlappingTerms(t *testing.T) {
+	t.Parallel()
 	content := strings.Repeat("the quick brown fox jumps over the lazy dog ", 20)
 	result := generateHighlight(content, []string{"quick", "fox", "lazy"}, 100)
 	if result == "" {
@@ -179,6 +190,7 @@ func TestGenerateHighlightOverlappingTerms(t *testing.T) {
 }
 
 func TestGenerateHighlightNoMatchTerms(t *testing.T) {
+	t.Parallel()
 	content := strings.Repeat("hello world ", 50)
 	result := generateHighlight(content, []string{"xyz123"}, 100)
 	if result == "" {
@@ -189,6 +201,7 @@ func TestGenerateHighlightNoMatchTerms(t *testing.T) {
 // --- BuildRAGContext edge cases ---
 
 func TestBuildRAGContextZeroMaxTokens(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	e.IndexMessage("logs", 0, 1, "", "error in authentication service", nil)
 
@@ -199,6 +212,7 @@ func TestBuildRAGContextZeroMaxTokens(t *testing.T) {
 }
 
 func TestBuildRAGContextNoResults(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	ctx := e.BuildRAGContext("nonexistent query", "", 1000)
 	if ctx.Context != "" {
@@ -207,6 +221,7 @@ func TestBuildRAGContextNoResults(t *testing.T) {
 }
 
 func TestBuildRAGContextTokenLimitTruncation(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	for i := 0; i < 10; i++ {
 		e.IndexMessage("logs", 0, int64(i), "", fmt.Sprintf("error log message number %d with some content about authentication and security issues", i), nil)
@@ -219,6 +234,7 @@ func TestBuildRAGContextTokenLimitTruncation(t *testing.T) {
 }
 
 func TestBuildRAGContextTopicFilter(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	e.IndexMessage("logs", 0, 1, "", "authentication error", nil)
 	e.IndexMessage("metrics", 0, 1, "", "authentication latency", nil)
@@ -234,6 +250,7 @@ func TestBuildRAGContextTopicFilter(t *testing.T) {
 // --- Search edge cases ---
 
 func TestSearchLimitCap(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	for i := 0; i < 5; i++ {
 		e.IndexMessage("t", 0, int64(i), "", fmt.Sprintf("test message %d", i), nil)
@@ -245,6 +262,7 @@ func TestSearchLimitCap(t *testing.T) {
 }
 
 func TestSearchDefaultLimit(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	e.IndexMessage("t", 0, 1, "", "some content", nil)
 	results := e.Search("content", "", 0)

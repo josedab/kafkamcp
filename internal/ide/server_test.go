@@ -30,6 +30,7 @@ func testPassthroughAuth() func(http.HandlerFunc) http.HandlerFunc {
 }
 
 func TestNewServer(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(nil, nil)
 	if s == nil {
 		t.Fatal("expected non-nil server")
@@ -40,6 +41,7 @@ func TestNewServer(t *testing.T) {
 }
 
 func TestRegisterRoutes(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	mux := http.NewServeMux()
 	s.RegisterRoutes(mux, testPassthroughAuth())
@@ -54,6 +56,7 @@ func TestRegisterRoutes(t *testing.T) {
 }
 
 func TestRegisterRoutes_NilMiddlewareDenies(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	mux := http.NewServeMux()
 	s.RegisterRoutes(mux, nil)
@@ -67,6 +70,7 @@ func TestRegisterRoutes_NilMiddlewareDenies(t *testing.T) {
 }
 
 func TestHandleConnect(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	mux := http.NewServeMux()
 	s.RegisterRoutes(mux, testPassthroughAuth())
@@ -94,6 +98,7 @@ func TestHandleConnect(t *testing.T) {
 }
 
 func TestHandleConnectMethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	mux := http.NewServeMux()
 	s.RegisterRoutes(mux, testPassthroughAuth())
@@ -108,6 +113,7 @@ func TestHandleConnectMethodNotAllowed(t *testing.T) {
 }
 
 func TestHandleConnectInvalidBody(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	mux := http.NewServeMux()
 	s.RegisterRoutes(mux, testPassthroughAuth())
@@ -122,6 +128,7 @@ func TestHandleConnectInvalidBody(t *testing.T) {
 }
 
 func TestHandleTopicBrowse(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return []kafka.TopicSummary{
@@ -152,6 +159,7 @@ func TestHandleTopicBrowse(t *testing.T) {
 }
 
 func TestHandleTopicBrowseInternalFilter(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			if !includeInternal {
@@ -174,6 +182,7 @@ func TestHandleTopicBrowseInternalFilter(t *testing.T) {
 }
 
 func TestHandleTopicBrowseError(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return nil, errors.New("kafka unavailable")
@@ -193,6 +202,7 @@ func TestHandleTopicBrowseError(t *testing.T) {
 }
 
 func TestHandleTopicBrowseMethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	mux := http.NewServeMux()
 	s.RegisterRoutes(mux, testPassthroughAuth())
@@ -207,6 +217,7 @@ func TestHandleTopicBrowseMethodNotAllowed(t *testing.T) {
 }
 
 func TestHandleTopicDetail(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		DescribeTopicFn: func(ctx context.Context, cluster, topicName string) (*kafka.TopicDetail, error) {
 			// Server passes (ctx, topicName, cluster) so cluster param receives the topic name
@@ -250,6 +261,7 @@ func TestHandleTopicDetail(t *testing.T) {
 }
 
 func TestHandleTopicDetailNotFound(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		DescribeTopicFn: func(ctx context.Context, cluster, topicName string) (*kafka.TopicDetail, error) {
 			return nil, errors.New("not found")
@@ -269,6 +281,7 @@ func TestHandleTopicDetailNotFound(t *testing.T) {
 }
 
 func TestHandleTopicDetailEmptyName(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	mux := http.NewServeMux()
 	s.RegisterRoutes(mux, testPassthroughAuth())
@@ -283,6 +296,7 @@ func TestHandleTopicDetailEmptyName(t *testing.T) {
 }
 
 func TestHandleTopicDetailUnicodeName(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		DescribeTopicFn: func(ctx context.Context, cluster, topicName string) (*kafka.TopicDetail, error) {
 			return &kafka.TopicDetail{Name: cluster}, nil
@@ -302,6 +316,7 @@ func TestHandleTopicDetailUnicodeName(t *testing.T) {
 }
 
 func TestHandleSchemas(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	mux := http.NewServeMux()
 	s.RegisterRoutes(mux, testPassthroughAuth())
@@ -324,6 +339,7 @@ func TestHandleSchemas(t *testing.T) {
 }
 
 func TestHandleSchemasWithClients(t *testing.T) {
+	t.Parallel()
 	clients := map[string]*schema.Client{"default": {}}
 	s := newTestServer(&kafka.MockKafkaManager{}, clients)
 	mux := http.NewServeMux()
@@ -343,6 +359,7 @@ func TestHandleSchemasWithClients(t *testing.T) {
 }
 
 func TestHandleSchemasMethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	mux := http.NewServeMux()
 	s.RegisterRoutes(mux, testPassthroughAuth())
@@ -357,6 +374,7 @@ func TestHandleSchemasMethodNotAllowed(t *testing.T) {
 }
 
 func TestHandleSchemaDetail(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	mux := http.NewServeMux()
 	s.RegisterRoutes(mux, testPassthroughAuth())
@@ -382,6 +400,7 @@ func TestHandleSchemaDetail(t *testing.T) {
 }
 
 func TestHandleSchemaDetailEmpty(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	mux := http.NewServeMux()
 	s.RegisterRoutes(mux, testPassthroughAuth())
@@ -396,6 +415,7 @@ func TestHandleSchemaDetailEmpty(t *testing.T) {
 }
 
 func TestHandleMessagePreview(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
 			return []kafka.Message{
@@ -425,6 +445,7 @@ func TestHandleMessagePreview(t *testing.T) {
 }
 
 func TestHandleMessagePreviewNoTopic(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	mux := http.NewServeMux()
 	s.RegisterRoutes(mux, testPassthroughAuth())
@@ -439,6 +460,7 @@ func TestHandleMessagePreviewNoTopic(t *testing.T) {
 }
 
 func TestHandleMessagePreviewError(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
 			return nil, errors.New("timeout")
@@ -458,6 +480,7 @@ func TestHandleMessagePreviewError(t *testing.T) {
 }
 
 func TestHandleMessagePreviewMethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	mux := http.NewServeMux()
 	s.RegisterRoutes(mux, testPassthroughAuth())
@@ -472,6 +495,7 @@ func TestHandleMessagePreviewMethodNotAllowed(t *testing.T) {
 }
 
 func TestHandleMessagePreviewLargeMessage(t *testing.T) {
+	t.Parallel()
 	largeValue := strings.Repeat("x", 5000)
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
@@ -494,6 +518,7 @@ func TestHandleMessagePreviewLargeMessage(t *testing.T) {
 }
 
 func TestHandleCompletions(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return []kafka.TopicSummary{
@@ -530,6 +555,7 @@ func TestHandleCompletions(t *testing.T) {
 }
 
 func TestHandleCompletionsWithPrefix(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return []kafka.TopicSummary{
@@ -559,6 +585,7 @@ func TestHandleCompletionsWithPrefix(t *testing.T) {
 }
 
 func TestHandleCompletionsMethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	mux := http.NewServeMux()
 	s.RegisterRoutes(mux, testPassthroughAuth())
@@ -573,6 +600,7 @@ func TestHandleCompletionsMethodNotAllowed(t *testing.T) {
 }
 
 func TestHandleHealth(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	mux := http.NewServeMux()
 	s.RegisterRoutes(mux, testPassthroughAuth())
@@ -598,6 +626,7 @@ func TestHandleHealth(t *testing.T) {
 }
 
 func TestHandleHealthWithSessions(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	s.sessions["s1"] = &IDESession{ID: "s1", IDE: "vscode"}
 
@@ -618,6 +647,7 @@ func TestHandleHealthWithSessions(t *testing.T) {
 }
 
 func TestWriteIDEJSON(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -639,6 +669,7 @@ func TestWriteIDEJSON(t *testing.T) {
 }
 
 func TestConcurrentConnect(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(&kafka.MockKafkaManager{}, nil)
 	mux := http.NewServeMux()
 	s.RegisterRoutes(mux, testPassthroughAuth())

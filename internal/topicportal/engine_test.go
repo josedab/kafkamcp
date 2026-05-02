@@ -5,6 +5,7 @@ import (
 )
 
 func TestNewEngine(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(DefaultApprovalChainConfig(), nil)
 	if e == nil {
 		t.Fatal("NewEngine returned nil")
@@ -12,6 +13,7 @@ func TestNewEngine(t *testing.T) {
 }
 
 func TestSubmitRequest(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(DefaultApprovalChainConfig(), nil)
 	req, err := e.SubmitRequest(TopicRequest{
 		TopicName:     "prod.orders",
@@ -31,6 +33,7 @@ func TestSubmitRequest(t *testing.T) {
 }
 
 func TestSubmitRequestAutoApprove(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(DefaultApprovalChainConfig(), nil)
 	req, err := e.SubmitRequest(TopicRequest{
 		TopicName:     "dev.test-topic",
@@ -46,6 +49,7 @@ func TestSubmitRequestAutoApprove(t *testing.T) {
 }
 
 func TestSubmitRequestValidation(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(DefaultApprovalChainConfig(), nil)
 	if _, err := e.SubmitRequest(TopicRequest{RequestedBy: "a", Justification: "j"}); err == nil {
 		t.Error("expected error for missing topic_name")
@@ -59,6 +63,7 @@ func TestSubmitRequestValidation(t *testing.T) {
 }
 
 func TestApprovalChain(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(DefaultApprovalChainConfig(), nil)
 	req, _ := e.SubmitRequest(TopicRequest{
 		TopicName:     "prod.orders",
@@ -93,6 +98,7 @@ func TestApprovalChain(t *testing.T) {
 }
 
 func TestReject(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(DefaultApprovalChainConfig(), nil)
 	req, _ := e.SubmitRequest(TopicRequest{
 		TopicName:     "prod.dangerous",
@@ -112,6 +118,7 @@ func TestReject(t *testing.T) {
 }
 
 func TestListRequests(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(DefaultApprovalChainConfig(), nil)
 	e.SubmitRequest(TopicRequest{TopicName: "prod.a", RequestedBy: "a", Justification: "j"})
 	e.SubmitRequest(TopicRequest{TopicName: "dev.b", RequestedBy: "a", Justification: "j"}) // auto-approved

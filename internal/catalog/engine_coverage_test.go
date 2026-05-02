@@ -8,6 +8,7 @@ import (
 // --- SetLineage ---
 
 func TestSetLineageExisting(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	entry, _ := e.Index("orders", "topic", "", "", nil, nil, nil)
 
@@ -32,6 +33,7 @@ func TestSetLineageExisting(t *testing.T) {
 }
 
 func TestSetLineageNonExistent(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	err := e.SetLineage("nonexistent", &LineageInfo{})
 	if err == nil {
@@ -42,6 +44,7 @@ func TestSetLineageNonExistent(t *testing.T) {
 // --- GetEntry ---
 
 func TestGetEntryExisting(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	entry, _ := e.Index("orders", "topic", "desc", "owner", []string{"tag"}, map[string]any{"key": "val"}, map[string]string{"env": "prod"})
 
@@ -61,6 +64,7 @@ func TestGetEntryExisting(t *testing.T) {
 }
 
 func TestGetEntryNonExistent(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	_, err := e.GetEntry("nonexistent")
 	if err == nil {
@@ -71,6 +75,7 @@ func TestGetEntryNonExistent(t *testing.T) {
 // --- DeleteEntry ---
 
 func TestDeleteEntryExisting(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	entry, _ := e.Index("orders", "topic", "", "", nil, nil, nil)
 
@@ -86,6 +91,7 @@ func TestDeleteEntryExisting(t *testing.T) {
 }
 
 func TestDeleteEntryNonExistent(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	err := e.DeleteEntry("nonexistent")
 	if err == nil {
@@ -94,6 +100,7 @@ func TestDeleteEntryNonExistent(t *testing.T) {
 }
 
 func TestDeleteEntryRemovedFromSearch(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	entry, _ := e.Index("orders", "topic", "", "", nil, nil, nil)
 	e.DeleteEntry(entry.ID)
@@ -107,6 +114,7 @@ func TestDeleteEntryRemovedFromSearch(t *testing.T) {
 // --- MarkCrawled ---
 
 func TestMarkCrawled(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.MarkCrawled()
 
@@ -119,30 +127,35 @@ func TestMarkCrawled(t *testing.T) {
 // --- hasAnyTag ---
 
 func TestHasAnyTagMatching(t *testing.T) {
+	t.Parallel()
 	if !hasAnyTag([]string{"prod", "pii"}, []string{"pii"}) {
 		t.Error("expected match")
 	}
 }
 
 func TestHasAnyTagNoMatch(t *testing.T) {
+	t.Parallel()
 	if hasAnyTag([]string{"prod"}, []string{"dev"}) {
 		t.Error("expected no match")
 	}
 }
 
 func TestHasAnyTagEmptyEntryTags(t *testing.T) {
+	t.Parallel()
 	if hasAnyTag([]string{}, []string{"prod"}) {
 		t.Error("expected false for empty entry tags")
 	}
 }
 
 func TestHasAnyTagEmptySearchTags(t *testing.T) {
+	t.Parallel()
 	if hasAnyTag([]string{"prod"}, []string{}) {
 		t.Error("expected false for empty search tags")
 	}
 }
 
 func TestHasAnyTagCaseInsensitive(t *testing.T) {
+	t.Parallel()
 	if !hasAnyTag([]string{"PROD"}, []string{"prod"}) {
 		t.Error("expected case-insensitive match")
 	}
@@ -151,6 +164,7 @@ func TestHasAnyTagCaseInsensitive(t *testing.T) {
 // --- calculateFreshness ---
 
 func TestCalculateFreshnessLive(t *testing.T) {
+	t.Parallel()
 	f := calculateFreshness(time.Now())
 	if f != "live" {
 		t.Errorf("expected live, got %s", f)
@@ -158,6 +172,7 @@ func TestCalculateFreshnessLive(t *testing.T) {
 }
 
 func TestCalculateFreshnessLiveUnder24h(t *testing.T) {
+	t.Parallel()
 	f := calculateFreshness(time.Now().Add(-12 * time.Hour))
 	if f != "live" {
 		t.Errorf("expected live for 12h old, got %s", f)
@@ -165,6 +180,7 @@ func TestCalculateFreshnessLiveUnder24h(t *testing.T) {
 }
 
 func TestCalculateFreshnessStale(t *testing.T) {
+	t.Parallel()
 	f := calculateFreshness(time.Now().Add(-3 * 24 * time.Hour))
 	if f != "stale" {
 		t.Errorf("expected stale, got %s", f)
@@ -172,6 +188,7 @@ func TestCalculateFreshnessStale(t *testing.T) {
 }
 
 func TestCalculateFreshnessInactive(t *testing.T) {
+	t.Parallel()
 	f := calculateFreshness(time.Now().Add(-30 * 24 * time.Hour))
 	if f != "inactive" {
 		t.Errorf("expected inactive, got %s", f)
@@ -181,6 +198,7 @@ func TestCalculateFreshnessInactive(t *testing.T) {
 // --- Index upsert behavior ---
 
 func TestIndexUpsert(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	entry1, _ := e.Index("orders", "topic", "desc1", "owner1", nil, nil, nil)
 	entry2, _ := e.Index("orders", "topic", "desc2", "owner2", nil, nil, nil)
@@ -194,6 +212,7 @@ func TestIndexUpsert(t *testing.T) {
 }
 
 func TestIndexEmptyName(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	_, err := e.Index("", "topic", "", "", nil, nil, nil)
 	if err == nil {
@@ -202,6 +221,7 @@ func TestIndexEmptyName(t *testing.T) {
 }
 
 func TestIndexInvalidType(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	_, err := e.Index("test", "invalid_type", "", "", nil, nil, nil)
 	if err == nil {
@@ -212,6 +232,7 @@ func TestIndexInvalidType(t *testing.T) {
 // --- Search ---
 
 func TestSearchByOwner(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.Index("t1", "topic", "", "team-a", nil, nil, nil)
 	e.Index("t2", "topic", "", "team-b", nil, nil, nil)
@@ -223,6 +244,7 @@ func TestSearchByOwner(t *testing.T) {
 }
 
 func TestSearchByMinQuality(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.Index("full", "topic", "desc", "owner", []string{"tag"}, map[string]any{"k": "v"}, map[string]string{"m": "v"})
 	e.Index("bare", "topic", "", "", nil, nil, nil)
@@ -234,6 +256,7 @@ func TestSearchByMinQuality(t *testing.T) {
 }
 
 func TestSearchByTags(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.Index("t1", "topic", "", "", []string{"prod"}, nil, nil)
 	e.Index("t2", "topic", "", "", []string{"dev"}, nil, nil)
@@ -245,6 +268,7 @@ func TestSearchByTags(t *testing.T) {
 }
 
 func TestSearchLimit(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	for i := 0; i < 5; i++ {
 		e.Index("t"+string(rune('a'+i)), "topic", "", "", nil, nil, nil)
@@ -259,6 +283,7 @@ func TestSearchLimit(t *testing.T) {
 // --- Tag deduplication ---
 
 func TestTagDeduplication(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	entry, _ := e.Index("t1", "topic", "", "", []string{"prod"}, nil, nil)
 
@@ -269,6 +294,7 @@ func TestTagDeduplication(t *testing.T) {
 }
 
 func TestTagNonExistent(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	_, err := e.Tag("nonexistent", []string{"tag"})
 	if err == nil {
@@ -279,6 +305,7 @@ func TestTagNonExistent(t *testing.T) {
 // --- calculateQuality ---
 
 func TestCalculateQualityFullScore(t *testing.T) {
+	t.Parallel()
 	entry := &CatalogEntry{
 		Description: "full",
 		Owner:       "owner",
@@ -295,6 +322,7 @@ func TestCalculateQualityFullScore(t *testing.T) {
 }
 
 func TestCalculateQualityBareMinimum(t *testing.T) {
+	t.Parallel()
 	entry := &CatalogEntry{}
 	score := calculateQuality(entry)
 	if score != 0 {

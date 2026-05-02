@@ -5,6 +5,7 @@ import (
 )
 
 func TestSanitizeAgentLabel_PackageLevel(t *testing.T) {
+	t.Parallel()
 	m := New() // initializes defaultMetrics
 	_ = m
 	result := SanitizeAgentLabel("test-agent")
@@ -14,6 +15,7 @@ func TestSanitizeAgentLabel_PackageLevel(t *testing.T) {
 }
 
 func TestResetAgents(t *testing.T) {
+	t.Parallel()
 	m := New()
 	m.SanitizeAgentLabel("agent-1")
 	m.SanitizeAgentLabel("agent-2")
@@ -30,6 +32,7 @@ func TestResetAgents(t *testing.T) {
 }
 
 func TestSanitizeAgentLabelOverflow(t *testing.T) {
+	t.Parallel()
 	m := New()
 	// Fill up to maxUniqueAgents
 	agents := make(map[string]struct{})

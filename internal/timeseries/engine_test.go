@@ -7,6 +7,7 @@ import (
 )
 
 func TestRecordAndQuery(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 
 	now := time.Now()
@@ -32,6 +33,7 @@ func TestRecordAndQuery(t *testing.T) {
 }
 
 func TestCompare(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 
 	now := time.Now()
@@ -59,6 +61,7 @@ func TestCompare(t *testing.T) {
 }
 
 func TestBaseline(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 
 	now := time.Now()
@@ -95,6 +98,7 @@ func TestBaseline(t *testing.T) {
 }
 
 func TestListSeries(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	e.Record(DataPoint{Timestamp: time.Now(), Value: 1, Metric: MetricThroughputIn, Source: "t1"})
 	e.Record(DataPoint{Timestamp: time.Now(), Value: 2, Metric: MetricConsumerLag, Source: "g1"})
@@ -106,6 +110,7 @@ func TestListSeries(t *testing.T) {
 }
 
 func TestInvalidWindow(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	_, err := e.Query(MetricThroughputIn, "test", "99h")
 	if err == nil {
@@ -114,6 +119,7 @@ func TestInvalidWindow(t *testing.T) {
 }
 
 func TestComputeTrend(t *testing.T) {
+	t.Parallel()
 	points := []DataPoint{
 		{Timestamp: time.Now().Add(-10 * time.Minute), Value: 10},
 		{Timestamp: time.Now().Add(-5 * time.Minute), Value: 20},

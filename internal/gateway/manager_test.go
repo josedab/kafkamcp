@@ -10,6 +10,7 @@ import (
 )
 
 func TestRegisterBackend(t *testing.T) {
+	t.Parallel()
 	m := NewManager(slog.Default())
 
 	err := m.RegisterBackend(BackendConfig{
@@ -33,6 +34,7 @@ func TestRegisterBackend(t *testing.T) {
 }
 
 func TestListBackends(t *testing.T) {
+	t.Parallel()
 	m := NewManager(slog.Default())
 
 	m.RegisterBackend(BackendConfig{
@@ -51,6 +53,7 @@ func TestListBackends(t *testing.T) {
 }
 
 func TestPulsarAdapter(t *testing.T) {
+	t.Parallel()
 	adapter := NewPulsarAdapter(BackendConfig{
 		Endpoints: []string{"localhost:6650"},
 	}, slog.Default())
@@ -83,6 +86,7 @@ func TestPulsarAdapter(t *testing.T) {
 }
 
 func TestRabbitMQAdapter(t *testing.T) {
+	t.Parallel()
 	adapter := NewRabbitMQAdapter(BackendConfig{
 		Endpoints: []string{"localhost:5672"},
 	}, slog.Default())
@@ -102,6 +106,7 @@ func TestRabbitMQAdapter(t *testing.T) {
 }
 
 func TestNATSAdapter(t *testing.T) {
+	t.Parallel()
 	adapter := NewNATSAdapter(BackendConfig{
 		Endpoints: []string{"localhost:4222"},
 	}, slog.Default())
@@ -152,6 +157,7 @@ func (m *mockBackend) CreateTopic(ctx context.Context, name string, partitions i
 }
 
 func TestConnect(t *testing.T) {
+	t.Parallel()
 	m := NewManager(slog.Default())
 	// Inject mock backend directly
 	m.backends["test"] = &mockBackend{protocol: ProtocolNATS}
@@ -164,6 +170,7 @@ func TestConnect(t *testing.T) {
 }
 
 func TestConnectError(t *testing.T) {
+	t.Parallel()
 	m := NewManager(slog.Default())
 	m.backends["test"] = &mockBackend{protocol: ProtocolNATS, connectErr: fmt.Errorf("refused")}
 	m.configs["test"] = &BackendConfig{Name: "test"}
@@ -175,6 +182,7 @@ func TestConnectError(t *testing.T) {
 }
 
 func TestGetBackendSuccess(t *testing.T) {
+	t.Parallel()
 	m := NewManager(slog.Default())
 	mb := &mockBackend{protocol: ProtocolPulsar}
 	m.backends["my-pulsar"] = mb
@@ -189,6 +197,7 @@ func TestGetBackendSuccess(t *testing.T) {
 }
 
 func TestGetBackendNotFound(t *testing.T) {
+	t.Parallel()
 	m := NewManager(slog.Default())
 	_, err := m.GetBackend("nonexistent")
 	if err == nil {
@@ -197,6 +206,7 @@ func TestGetBackendNotFound(t *testing.T) {
 }
 
 func TestProduceSuccess(t *testing.T) {
+	t.Parallel()
 	m := NewManager(slog.Default())
 	m.backends["test"] = &mockBackend{
 		protocol:   ProtocolNATS,
@@ -213,6 +223,7 @@ func TestProduceSuccess(t *testing.T) {
 }
 
 func TestProduceBackendNotFound(t *testing.T) {
+	t.Parallel()
 	m := NewManager(slog.Default())
 	_, err := m.Produce(context.Background(), "missing", ProduceRequest{})
 	if err == nil {
@@ -221,6 +232,7 @@ func TestProduceBackendNotFound(t *testing.T) {
 }
 
 func TestProduceBackendError(t *testing.T) {
+	t.Parallel()
 	m := NewManager(slog.Default())
 	m.backends["test"] = &mockBackend{protocol: ProtocolNATS, produceErr: fmt.Errorf("disconnected")}
 
@@ -231,6 +243,7 @@ func TestProduceBackendError(t *testing.T) {
 }
 
 func TestConsumeSuccess(t *testing.T) {
+	t.Parallel()
 	m := NewManager(slog.Default())
 	m.backends["test"] = &mockBackend{
 		protocol: ProtocolNATS,
@@ -249,6 +262,7 @@ func TestConsumeSuccess(t *testing.T) {
 }
 
 func TestConsumeBackendNotFound(t *testing.T) {
+	t.Parallel()
 	m := NewManager(slog.Default())
 	_, err := m.Consume(context.Background(), "missing", ConsumeOptions{})
 	if err == nil {
@@ -257,6 +271,7 @@ func TestConsumeBackendNotFound(t *testing.T) {
 }
 
 func TestListTopicsSuccess(t *testing.T) {
+	t.Parallel()
 	m := NewManager(slog.Default())
 	m.backends["test"] = &mockBackend{
 		protocol: ProtocolNATS,
@@ -276,6 +291,7 @@ func TestListTopicsSuccess(t *testing.T) {
 }
 
 func TestListTopicsBackendNotFound(t *testing.T) {
+	t.Parallel()
 	m := NewManager(slog.Default())
 	_, err := m.ListTopics(context.Background(), "missing")
 	if err == nil {
@@ -284,6 +300,7 @@ func TestListTopicsBackendNotFound(t *testing.T) {
 }
 
 func TestCreateTopicSuccess(t *testing.T) {
+	t.Parallel()
 	m := NewManager(slog.Default())
 	m.backends["test"] = &mockBackend{protocol: ProtocolNATS}
 
@@ -294,6 +311,7 @@ func TestCreateTopicSuccess(t *testing.T) {
 }
 
 func TestCreateTopicBackendNotFound(t *testing.T) {
+	t.Parallel()
 	m := NewManager(slog.Default())
 	err := m.CreateTopic(context.Background(), "missing", "topic", 1, nil)
 	if err == nil {
@@ -302,6 +320,7 @@ func TestCreateTopicBackendNotFound(t *testing.T) {
 }
 
 func TestCloseSuccess(t *testing.T) {
+	t.Parallel()
 	m := NewManager(slog.Default())
 	m.backends["b1"] = &mockBackend{protocol: ProtocolNATS}
 	m.backends["b2"] = &mockBackend{protocol: ProtocolPulsar}
@@ -313,6 +332,7 @@ func TestCloseSuccess(t *testing.T) {
 }
 
 func TestClosePartialFailure(t *testing.T) {
+	t.Parallel()
 	m := NewManager(slog.Default())
 	m.backends["b1"] = &mockBackend{protocol: ProtocolNATS, closeErr: fmt.Errorf("close failed")}
 	m.backends["b2"] = &mockBackend{protocol: ProtocolPulsar}
@@ -324,6 +344,7 @@ func TestClosePartialFailure(t *testing.T) {
 }
 
 func TestCloseEmpty(t *testing.T) {
+	t.Parallel()
 	m := NewManager(slog.Default())
 	err := m.Close()
 	if err != nil {
@@ -332,6 +353,7 @@ func TestCloseEmpty(t *testing.T) {
 }
 
 func TestRegisterBackendEmptyName(t *testing.T) {
+	t.Parallel()
 	m := NewManager(slog.Default())
 	err := m.RegisterBackend(BackendConfig{Protocol: ProtocolNATS})
 	if err == nil {
@@ -340,6 +362,7 @@ func TestRegisterBackendEmptyName(t *testing.T) {
 }
 
 func TestRegisterBackendUnsupportedProtocol(t *testing.T) {
+	t.Parallel()
 	m := NewManager(slog.Default())
 	err := m.RegisterBackend(BackendConfig{Name: "test", Protocol: "redis"})
 	if err == nil {

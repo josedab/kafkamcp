@@ -10,6 +10,7 @@ func newTestCoordinator() *Coordinator {
 }
 
 func TestAcquireLock(t *testing.T) {
+	t.Parallel()
 	c := newTestCoordinator()
 
 	result := c.AcquireLock("agent-1", "topic:orders", 30, nil)
@@ -34,6 +35,7 @@ func TestAcquireLock(t *testing.T) {
 }
 
 func TestReleaseLock(t *testing.T) {
+	t.Parallel()
 	c := newTestCoordinator()
 
 	c.AcquireLock("agent-1", "topic:orders", 30, nil)
@@ -58,6 +60,7 @@ func TestReleaseLock(t *testing.T) {
 }
 
 func TestVectorClock(t *testing.T) {
+	t.Parallel()
 	c := newTestCoordinator()
 
 	vc := c.IncrementClock("agent-1", "topic:orders")
@@ -79,6 +82,7 @@ func TestVectorClock(t *testing.T) {
 }
 
 func TestAgentMessaging(t *testing.T) {
+	t.Parallel()
 	c := newTestCoordinator()
 
 	msg, err := c.SendMessage("agent-1", "agent-2", "request", "help needed", "can you handle topic X?")
@@ -102,6 +106,7 @@ func TestAgentMessaging(t *testing.T) {
 }
 
 func TestAgentRegistration(t *testing.T) {
+	t.Parallel()
 	c := newTestCoordinator()
 
 	state := c.RegisterAgent("agent-1", "active", []string{"monitor", "alert"}, nil)

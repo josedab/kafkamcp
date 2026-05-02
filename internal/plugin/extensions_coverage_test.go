@@ -24,6 +24,7 @@ func (p *mockFailInitPlugin) Init(_ context.Context, _ map[string]any) error   {
 func (p *mockFailInitPlugin) Close() error                                     { return nil }
 
 func TestExtendedRegistry_RegisterWithManifest_InitFailureRevokesCapabilities(t *testing.T) {
+	t.Parallel()
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))
 	reg := NewRegistry(logger)
 	er := NewExtendedRegistry(reg)
@@ -55,6 +56,7 @@ func TestExtendedRegistry_RegisterWithManifest_InitFailureRevokesCapabilities(t 
 }
 
 func TestExtendedRegistry_RegisterWithManifest_LifecycleHookError(t *testing.T) {
+	t.Parallel()
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))
 	reg := NewRegistry(logger)
 	er := NewExtendedRegistry(reg)
@@ -91,6 +93,7 @@ func TestExtendedRegistry_RegisterWithManifest_LifecycleHookError(t *testing.T) 
 }
 
 func TestExtendedRegistry_RegisterWithManifest_NonLifecyclePlugin(t *testing.T) {
+	t.Parallel()
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))
 	reg := NewRegistry(logger)
 	er := NewExtendedRegistry(reg)
@@ -123,6 +126,7 @@ func (p *successInitPlugin) Init(_ context.Context, _ map[string]any) error   { 
 func (p *successInitPlugin) Close() error                                     { return nil }
 
 func TestExtendedRegistry_ConcurrentRegistration(t *testing.T) {
+	t.Parallel()
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))
 	reg := NewRegistry(logger)
 	er := NewExtendedRegistry(reg)
@@ -168,6 +172,7 @@ func TestExtendedRegistry_ConcurrentRegistration(t *testing.T) {
 }
 
 func TestExtendedRegistry_UnregisterWithLifecycle_ShutdownHookCalled(t *testing.T) {
+	t.Parallel()
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))
 	reg := NewRegistry(logger)
 	er := NewExtendedRegistry(reg)
@@ -212,6 +217,7 @@ func TestExtendedRegistry_UnregisterWithLifecycle_ShutdownHookCalled(t *testing.
 }
 
 func TestSidecarManager_ConcurrentRegisterAndList(t *testing.T) {
+	t.Parallel()
 	sm := NewSidecarManager(&mockLogger{})
 
 	var wg sync.WaitGroup

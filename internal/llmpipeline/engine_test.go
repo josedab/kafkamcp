@@ -5,6 +5,7 @@ import (
 )
 
 func TestNewEngine(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	if e == nil {
 		t.Fatal("NewEngine returned nil")
@@ -12,6 +13,7 @@ func TestNewEngine(t *testing.T) {
 }
 
 func TestCreatePipeline(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	cfg, err := e.CreatePipeline(PipelineConfig{
 		Topics: []string{"orders"},
@@ -29,6 +31,7 @@ func TestCreatePipeline(t *testing.T) {
 }
 
 func TestCreatePipelineValidation(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	_, err := e.CreatePipeline(PipelineConfig{})
 	if err == nil {
@@ -37,6 +40,7 @@ func TestCreatePipelineValidation(t *testing.T) {
 }
 
 func TestExport(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	cfg, _ := e.CreatePipeline(PipelineConfig{
 		Topics:       []string{"orders"},
@@ -67,6 +71,7 @@ func TestExport(t *testing.T) {
 }
 
 func TestExportCSV(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	cfg, _ := e.CreatePipeline(PipelineConfig{
 		Topics: []string{"orders"},
@@ -88,6 +93,7 @@ func TestExportCSV(t *testing.T) {
 }
 
 func TestExportNotFound(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	_, err := e.Export("nonexistent", nil)
 	if err == nil {
@@ -96,6 +102,7 @@ func TestExportNotFound(t *testing.T) {
 }
 
 func TestSamplingRandom(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	cfg, _ := e.CreatePipeline(PipelineConfig{
 		Topics: []string{"orders"},
@@ -118,6 +125,7 @@ func TestSamplingRandom(t *testing.T) {
 }
 
 func TestFilterFields(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	cfg, _ := e.CreatePipeline(PipelineConfig{
 		Topics: []string{"orders"},
@@ -135,6 +143,7 @@ func TestFilterFields(t *testing.T) {
 }
 
 func TestListPipelines(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	e.CreatePipeline(PipelineConfig{Topics: []string{"a"}})
 	e.CreatePipeline(PipelineConfig{Topics: []string{"b"}})
@@ -146,6 +155,7 @@ func TestListPipelines(t *testing.T) {
 }
 
 func TestStratifiedSampling(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	cfg, _ := e.CreatePipeline(PipelineConfig{
 		Topics: []string{"orders"},

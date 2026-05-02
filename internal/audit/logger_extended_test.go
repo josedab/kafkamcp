@@ -9,6 +9,7 @@ import (
 )
 
 func TestRecent(t *testing.T) {
+	t.Parallel()
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))
 	al, err := NewLogger(context.Background(), true, 10, "", logger)
 	if err != nil {
@@ -29,6 +30,7 @@ func TestRecent(t *testing.T) {
 }
 
 func TestRecentZero(t *testing.T) {
+	t.Parallel()
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))
 	al, _ := NewLogger(context.Background(), true, 10, "", logger)
 
@@ -39,6 +41,7 @@ func TestRecentZero(t *testing.T) {
 }
 
 func TestCloseWithFile(t *testing.T) {
+	t.Parallel()
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))
 	tmpFile := filepath.Join(t.TempDir(), "audit.log")
 
@@ -56,6 +59,7 @@ func TestCloseWithFile(t *testing.T) {
 }
 
 func TestCloseWithoutFile(t *testing.T) {
+	t.Parallel()
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))
 	al, _ := NewLogger(context.Background(), true, 10, "", logger)
 
@@ -66,6 +70,7 @@ func TestCloseWithoutFile(t *testing.T) {
 }
 
 func TestLogWithTimestamp(t *testing.T) {
+	t.Parallel()
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))
 	al, _ := NewLogger(context.Background(), true, 10, "", logger)
 
@@ -83,6 +88,7 @@ func TestLogWithTimestamp(t *testing.T) {
 }
 
 func TestLogToFile(t *testing.T) {
+	t.Parallel()
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))
 	tmpFile := filepath.Join(t.TempDir(), "audit.log")
 
@@ -104,6 +110,7 @@ func TestLogToFile(t *testing.T) {
 }
 
 func TestNewLoggerInvalidFile(t *testing.T) {
+	t.Parallel()
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))
 	_, err := NewLogger(context.Background(), true, 10, "/nonexistent/path/audit.log", logger)
 	if err == nil {

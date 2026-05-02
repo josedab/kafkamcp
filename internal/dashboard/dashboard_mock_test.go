@@ -29,6 +29,7 @@ func newMockDashboard(t *testing.T, mock *kafka.MockKafkaManager) *Dashboard {
 // --- handleTopics tests ---
 
 func TestHandleTopics_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return []kafka.TopicSummary{
@@ -66,6 +67,7 @@ func TestHandleTopics_Success(t *testing.T) {
 }
 
 func TestHandleTopics_KafkaError(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return nil, errors.New("broker unavailable")
@@ -84,6 +86,7 @@ func TestHandleTopics_KafkaError(t *testing.T) {
 }
 
 func TestHandleTopics_MethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	d := newMockDashboard(t, mock)
 	handler := d.Handler()
@@ -100,6 +103,7 @@ func TestHandleTopics_MethodNotAllowed(t *testing.T) {
 // --- handleTopology tests ---
 
 func TestHandleTopology_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		GetTopicGraphFn: func(ctx context.Context, cluster string) (*kafka.TopicGraph, error) {
 			return &kafka.TopicGraph{
@@ -147,6 +151,7 @@ func TestHandleTopology_Success(t *testing.T) {
 }
 
 func TestHandleTopology_KafkaError(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		GetTopicGraphFn: func(ctx context.Context, cluster string) (*kafka.TopicGraph, error) {
 			return nil, errors.New("metadata fetch failed")
@@ -165,6 +170,7 @@ func TestHandleTopology_KafkaError(t *testing.T) {
 }
 
 func TestHandleTopology_MethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	d := newMockDashboard(t, mock)
 	handler := d.Handler()
@@ -181,6 +187,7 @@ func TestHandleTopology_MethodNotAllowed(t *testing.T) {
 // --- handleHealth tests ---
 
 func TestHandleHealth_Healthy(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		PingFn: func(ctx context.Context) error {
 			return nil
@@ -210,6 +217,7 @@ func TestHandleHealth_Healthy(t *testing.T) {
 }
 
 func TestHandleHealth_Unhealthy(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		PingFn: func(ctx context.Context) error {
 			return errors.New("connection refused")
@@ -241,6 +249,7 @@ func TestHandleHealth_Unhealthy(t *testing.T) {
 // --- writeJSON tests ---
 
 func TestWriteJSON_ContentType(t *testing.T) {
+	t.Parallel()
 	w := httptest.NewRecorder()
 	writeJSON(w, map[string]string{"msg": "hello"})
 
@@ -251,6 +260,7 @@ func TestWriteJSON_ContentType(t *testing.T) {
 }
 
 func TestWriteJSON_EncodesCorrectly(t *testing.T) {
+	t.Parallel()
 	w := httptest.NewRecorder()
 	writeJSON(w, map[string]any{
 		"topics": []string{"orders", "users"},
@@ -273,6 +283,7 @@ func TestWriteJSON_EncodesCorrectly(t *testing.T) {
 // --- Mock call verification ---
 
 func TestHandleTopics_CallsListTopics(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return []kafka.TopicSummary{}, nil
@@ -291,6 +302,7 @@ func TestHandleTopics_CallsListTopics(t *testing.T) {
 }
 
 func TestHandleHealth_CallsPing(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		PingFn: func(ctx context.Context) error { return nil },
 	}
@@ -307,6 +319,7 @@ func TestHandleHealth_CallsPing(t *testing.T) {
 }
 
 func TestHandleTopology_CallsGetTopicGraph(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		GetTopicGraphFn: func(ctx context.Context, cluster string) (*kafka.TopicGraph, error) {
 			return &kafka.TopicGraph{}, nil

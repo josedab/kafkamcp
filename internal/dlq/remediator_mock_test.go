@@ -18,6 +18,7 @@ func discardLogger() *slog.Logger {
 // --- analyzeForRemediation tests ---
 
 func TestAnalyzeForRemediation_SerializationError(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		AnalyzeDLQFn: func(ctx context.Context, cluster, topic string, limit int) (*kafka.AnalyzeDLQResult, error) {
 			return &kafka.AnalyzeDLQResult{
@@ -51,6 +52,7 @@ func TestAnalyzeForRemediation_SerializationError(t *testing.T) {
 }
 
 func TestAnalyzeForRemediation_TimeoutError(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		AnalyzeDLQFn: func(ctx context.Context, cluster, topic string, limit int) (*kafka.AnalyzeDLQResult, error) {
 			return &kafka.AnalyzeDLQResult{
@@ -72,6 +74,7 @@ func TestAnalyzeForRemediation_TimeoutError(t *testing.T) {
 }
 
 func TestAnalyzeForRemediation_ValidationError(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		AnalyzeDLQFn: func(ctx context.Context, cluster, topic string, limit int) (*kafka.AnalyzeDLQResult, error) {
 			return &kafka.AnalyzeDLQResult{
@@ -93,6 +96,7 @@ func TestAnalyzeForRemediation_ValidationError(t *testing.T) {
 }
 
 func TestAnalyzeForRemediation_UnknownError(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		AnalyzeDLQFn: func(ctx context.Context, cluster, topic string, limit int) (*kafka.AnalyzeDLQResult, error) {
 			return &kafka.AnalyzeDLQResult{
@@ -114,6 +118,7 @@ func TestAnalyzeForRemediation_UnknownError(t *testing.T) {
 }
 
 func TestAnalyzeForRemediation_AnalyzeDLQError(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		AnalyzeDLQFn: func(ctx context.Context, cluster, topic string, limit int) (*kafka.AnalyzeDLQResult, error) {
 			return nil, errors.New("connection refused")
@@ -133,6 +138,7 @@ func TestAnalyzeForRemediation_AnalyzeDLQError(t *testing.T) {
 // --- retryMessages tests ---
 
 func TestRetryMessages_Success(t *testing.T) {
+	t.Parallel()
 	var producedTopic string
 	var producedMsgs []kafka.ProduceMessage
 
@@ -198,6 +204,7 @@ func TestRetryMessages_Success(t *testing.T) {
 }
 
 func TestRetryMessages_ProduceFailure(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
 			return []kafka.Message{
@@ -229,6 +236,7 @@ func TestRetryMessages_ProduceFailure(t *testing.T) {
 }
 
 func TestRetryMessages_ConsumeFailure(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
 			return nil, errors.New("consume error")
@@ -248,6 +256,7 @@ func TestRetryMessages_ConsumeFailure(t *testing.T) {
 // --- routeMessages tests ---
 
 func TestRouteMessages_Success(t *testing.T) {
+	t.Parallel()
 	var producedTopic string
 	var producedMsgs []kafka.ProduceMessage
 
@@ -299,6 +308,7 @@ func TestRouteMessages_Success(t *testing.T) {
 }
 
 func TestRouteMessages_ProduceFailure(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
 			return []kafka.Message{
@@ -324,6 +334,7 @@ func TestRouteMessages_ProduceFailure(t *testing.T) {
 }
 
 func TestRouteMessages_MissingTargetTopic(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	r := NewRemediator(discardLogger())
 	_, err := r.Remediate(context.Background(), mock, "cluster", "orders-dlq", "route", "", 10)
@@ -338,6 +349,7 @@ func TestRouteMessages_MissingTargetTopic(t *testing.T) {
 // --- suggestFixes tests ---
 
 func TestSuggestFixes_SchemaError(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		AnalyzeDLQFn: func(ctx context.Context, cluster, topic string, limit int) (*kafka.AnalyzeDLQResult, error) {
 			return &kafka.AnalyzeDLQResult{
@@ -369,6 +381,7 @@ func TestSuggestFixes_SchemaError(t *testing.T) {
 }
 
 func TestSuggestFixes_SerializationError(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		AnalyzeDLQFn: func(ctx context.Context, cluster, topic string, limit int) (*kafka.AnalyzeDLQResult, error) {
 			return &kafka.AnalyzeDLQResult{
@@ -397,6 +410,7 @@ func TestSuggestFixes_SerializationError(t *testing.T) {
 }
 
 func TestSuggestFixes_TimeoutError(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		AnalyzeDLQFn: func(ctx context.Context, cluster, topic string, limit int) (*kafka.AnalyzeDLQResult, error) {
 			return &kafka.AnalyzeDLQResult{
@@ -425,6 +439,7 @@ func TestSuggestFixes_TimeoutError(t *testing.T) {
 }
 
 func TestSuggestFixes_ValidationError(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		AnalyzeDLQFn: func(ctx context.Context, cluster, topic string, limit int) (*kafka.AnalyzeDLQResult, error) {
 			return &kafka.AnalyzeDLQResult{
@@ -453,6 +468,7 @@ func TestSuggestFixes_ValidationError(t *testing.T) {
 }
 
 func TestSuggestFixes_AuthPermissionError(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		AnalyzeDLQFn: func(ctx context.Context, cluster, topic string, limit int) (*kafka.AnalyzeDLQResult, error) {
 			return &kafka.AnalyzeDLQResult{
@@ -481,6 +497,7 @@ func TestSuggestFixes_AuthPermissionError(t *testing.T) {
 }
 
 func TestSuggestFixes_IncludesOriginalTopic(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		AnalyzeDLQFn: func(ctx context.Context, cluster, topic string, limit int) (*kafka.AnalyzeDLQResult, error) {
 			return &kafka.AnalyzeDLQResult{
@@ -511,6 +528,7 @@ func TestSuggestFixes_IncludesOriginalTopic(t *testing.T) {
 // --- Remediate dispatch tests ---
 
 func TestRemediate_UnknownAction(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	r := NewRemediator(discardLogger())
 	_, err := r.Remediate(context.Background(), mock, "cluster", "orders-dlq", "invalid", "", 10)
@@ -523,6 +541,7 @@ func TestRemediate_UnknownAction(t *testing.T) {
 }
 
 func TestRemediate_DefaultLimit(t *testing.T) {
+	t.Parallel()
 	var capturedLimit int
 	mock := &kafka.MockKafkaManager{
 		AnalyzeDLQFn: func(ctx context.Context, cluster, topic string, limit int) (*kafka.AnalyzeDLQResult, error) {

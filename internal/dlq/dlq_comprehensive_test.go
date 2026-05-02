@@ -10,6 +10,7 @@ import (
 // --- deriveOriginalTopic additional edge cases ---
 
 func TestDeriveOriginalTopicDeadLetterPrefix(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		input string
 		want  string
@@ -28,6 +29,7 @@ func TestDeriveOriginalTopicDeadLetterPrefix(t *testing.T) {
 }
 
 func TestDeriveOriginalTopicDeadLetterSuffix(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		input string
 		want  string
@@ -47,6 +49,7 @@ func TestDeriveOriginalTopicDeadLetterSuffix(t *testing.T) {
 }
 
 func TestDeriveOriginalTopicEmptyString(t *testing.T) {
+	t.Parallel()
 	got := deriveOriginalTopic("")
 	if got != "-retry" {
 		t.Errorf("deriveOriginalTopic('') = %q, want '-retry'", got)
@@ -54,6 +57,7 @@ func TestDeriveOriginalTopicEmptyString(t *testing.T) {
 }
 
 func TestDeriveOriginalTopicOnlySuffix(t *testing.T) {
+	t.Parallel()
 	got := deriveOriginalTopic("-dlq")
 	if got != "" {
 		t.Errorf("deriveOriginalTopic('-dlq') = %q, want ''", got)
@@ -61,6 +65,7 @@ func TestDeriveOriginalTopicOnlySuffix(t *testing.T) {
 }
 
 func TestDeriveOriginalTopicMixedCase(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		input string
 		want  string
@@ -82,6 +87,7 @@ func TestDeriveOriginalTopicMixedCase(t *testing.T) {
 }
 
 func TestDeriveOriginalTopicWithDotsInName(t *testing.T) {
+	t.Parallel()
 	got := deriveOriginalTopic("my.service.orders-dlq")
 	if got != "my.service.orders" {
 		t.Errorf("deriveOriginalTopic('my.service.orders-dlq') = %q, want 'my.service.orders'", got)
@@ -89,6 +95,7 @@ func TestDeriveOriginalTopicWithDotsInName(t *testing.T) {
 }
 
 func TestDeriveOriginalTopicWithHyphensInName(t *testing.T) {
+	t.Parallel()
 	got := deriveOriginalTopic("my-service-orders.dlq")
 	if got != "my-service-orders" {
 		t.Errorf("deriveOriginalTopic('my-service-orders.dlq') = %q, want 'my-service-orders'", got)
@@ -98,6 +105,7 @@ func TestDeriveOriginalTopicWithHyphensInName(t *testing.T) {
 // --- Remediate dispatch tests ---
 
 func TestRemediateUnknownActions(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(slog.Default())
 	actions := []string{"", "delete", "purge", "RETRY", "Analyze"}
 
@@ -115,6 +123,7 @@ func TestRemediateUnknownActions(t *testing.T) {
 }
 
 func TestRemediateRouteWithoutTarget(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(slog.Default())
 	_, err := r.Remediate(context.Background(), nil, "cluster", "orders-dlq", "route", "", 50)
 	if err == nil {
@@ -126,6 +135,7 @@ func TestRemediateRouteWithoutTarget(t *testing.T) {
 }
 
 func TestRemediateDefaultLimitIsApplied(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(slog.Default())
 
 	// With limit=0, should default to 100 internally but still fail on unknown action
@@ -144,6 +154,7 @@ func TestRemediateDefaultLimitIsApplied(t *testing.T) {
 // --- AddPolicy tests ---
 
 func TestAddPolicyZeroMaxRetries(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(slog.Default())
 	r.AddPolicy(Policy{
 		TopicPattern: "*-dlq",
@@ -164,6 +175,7 @@ func TestAddPolicyZeroMaxRetries(t *testing.T) {
 }
 
 func TestAddPolicyNegativeMaxRetries(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(slog.Default())
 	r.AddPolicy(Policy{
 		TopicPattern: "*-dlq",
@@ -184,6 +196,7 @@ func TestAddPolicyNegativeMaxRetries(t *testing.T) {
 }
 
 func TestAddPolicyWithEscalation(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(slog.Default())
 	r.AddPolicy(Policy{
 		TopicPattern:  "*-dlq",
@@ -202,6 +215,7 @@ func TestAddPolicyWithEscalation(t *testing.T) {
 }
 
 func TestAddPolicyWithTargetTopic(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(slog.Default())
 	r.AddPolicy(Policy{
 		TopicPattern: "*.dlq",
@@ -223,6 +237,7 @@ func TestAddPolicyWithTargetTopic(t *testing.T) {
 }
 
 func TestAddManyPolicies(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(slog.Default())
 	for i := 0; i < 10; i++ {
 		r.AddPolicy(Policy{TopicPattern: "*-dlq", Action: "retry"})
@@ -239,6 +254,7 @@ func TestAddManyPolicies(t *testing.T) {
 // --- updateStats tests ---
 
 func TestUpdateStatsMultipleTopics(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(slog.Default())
 	r.updateStats("orders-dlq", &RemediationResult{ProcessedCount: 5, SuccessCount: 4, FailureCount: 1})
 	r.updateStats("payments-dlq", &RemediationResult{ProcessedCount: 3, SuccessCount: 3, FailureCount: 0})
@@ -263,6 +279,7 @@ func TestUpdateStatsMultipleTopics(t *testing.T) {
 }
 
 func TestUpdateStatsZeroCounts(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(slog.Default())
 	r.updateStats("empty-dlq", &RemediationResult{ProcessedCount: 0, SuccessCount: 0, FailureCount: 0})
 
@@ -278,6 +295,7 @@ func TestUpdateStatsZeroCounts(t *testing.T) {
 // --- GetStats tests ---
 
 func TestGetStatsAfterMultipleUpdates(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(slog.Default())
 	topics := []string{"topic-a-dlq", "topic-b-dlq", "topic-c-dlq"}
 	for i, topic := range topics {
@@ -307,6 +325,7 @@ func TestGetStatsAfterMultipleUpdates(t *testing.T) {
 }
 
 func TestGetStatsReturnsSnapshot(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(slog.Default())
 	r.updateStats("test-dlq", &RemediationResult{ProcessedCount: 5})
 
@@ -326,6 +345,7 @@ func TestGetStatsReturnsSnapshot(t *testing.T) {
 // --- Policy struct tests ---
 
 func TestPolicyStructDefaults(t *testing.T) {
+	t.Parallel()
 	p := Policy{}
 	if p.TopicPattern != "" {
 		t.Error("expected empty TopicPattern")
@@ -348,6 +368,7 @@ func TestPolicyStructDefaults(t *testing.T) {
 }
 
 func TestPolicyStructFields(t *testing.T) {
+	t.Parallel()
 	p := Policy{
 		TopicPattern:  "orders-*",
 		Action:        "route",
@@ -379,6 +400,7 @@ func TestPolicyStructFields(t *testing.T) {
 // --- RemediationResult struct tests ---
 
 func TestRemediationResultStruct(t *testing.T) {
+	t.Parallel()
 	r := RemediationResult{
 		Topic:          "orders-dlq",
 		Action:         "retry",
@@ -410,6 +432,7 @@ func TestRemediationResultStruct(t *testing.T) {
 }
 
 func TestRemediationResultWithDetails(t *testing.T) {
+	t.Parallel()
 	r := RemediationResult{
 		Topic:  "orders-dlq",
 		Action: "retry",
@@ -433,6 +456,7 @@ func TestRemediationResultWithDetails(t *testing.T) {
 // --- RemediationItem struct tests ---
 
 func TestRemediationItemStruct(t *testing.T) {
+	t.Parallel()
 	item := RemediationItem{
 		Partition: 3,
 		Offset:    42,
@@ -455,6 +479,7 @@ func TestRemediationItemStruct(t *testing.T) {
 }
 
 func TestRemediationItemWithError(t *testing.T) {
+	t.Parallel()
 	item := RemediationItem{
 		Partition: 0,
 		Offset:    0,
@@ -473,6 +498,7 @@ func TestRemediationItemWithError(t *testing.T) {
 // --- RemediationStats struct tests ---
 
 func TestRemediationStatsStruct(t *testing.T) {
+	t.Parallel()
 	s := RemediationStats{
 		TotalProcessed: 100,
 		TotalSuccess:   90,
@@ -491,6 +517,7 @@ func TestRemediationStatsStruct(t *testing.T) {
 // --- NewRemediator with nil logger ---
 
 func TestNewRemediatorNilLogger(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(nil)
 	if r == nil {
 		t.Fatal("expected non-nil remediator with nil logger")
@@ -503,6 +530,7 @@ func TestNewRemediatorNilLogger(t *testing.T) {
 // --- Remediate context handling ---
 
 func TestRemediateWithCancelledContext(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(slog.Default())
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()

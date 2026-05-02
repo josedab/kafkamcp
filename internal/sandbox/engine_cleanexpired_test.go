@@ -6,6 +6,7 @@ import (
 )
 
 func TestCleanExpired_NoSandboxes(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	cleaned := e.CleanExpired()
 	if cleaned != 0 {
@@ -14,6 +15,7 @@ func TestCleanExpired_NoSandboxes(t *testing.T) {
 }
 
 func TestCleanExpired_AllActiveNonExpired(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.Create("sb1", "", "agent-1", 3600, nil)
 	e.Create("sb2", "", "agent-2", 3600, nil)
@@ -33,6 +35,7 @@ func TestCleanExpired_AllActiveNonExpired(t *testing.T) {
 }
 
 func TestCleanExpired_OneExpiredActive(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	sb, _ := e.Create("expired-sb", "", "agent-1", 1, nil)
 
@@ -53,6 +56,7 @@ func TestCleanExpired_OneExpiredActive(t *testing.T) {
 }
 
 func TestCleanExpired_MixedStatuses(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	// Active, not expired
@@ -78,6 +82,7 @@ func TestCleanExpired_MixedStatuses(t *testing.T) {
 }
 
 func TestCleanExpired_AlreadyExpiredNotDoubleCounted(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	sb, _ := e.Create("expired-sb", "", "agent-1", 1, nil)
 

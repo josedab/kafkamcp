@@ -11,6 +11,7 @@ func newTestEngine() *Engine {
 }
 
 func TestCreateBridge(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	vdb := VectorDBConfig{Type: DBPinecone, Collection: "docs"}
@@ -29,6 +30,7 @@ func TestCreateBridge(t *testing.T) {
 }
 
 func TestCreateBridgeValidation(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	vdb := VectorDBConfig{Type: DBWeaviate, Collection: "docs"}
 	emb := EmbeddingConfig{}
@@ -45,6 +47,7 @@ func TestCreateBridgeValidation(t *testing.T) {
 }
 
 func TestProcessMessage(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	vdb := VectorDBConfig{Type: DBChroma, Collection: "test"}
 	emb := EmbeddingConfig{Model: ModelSimpleHash, Dimension: 64}
@@ -73,6 +76,7 @@ func TestProcessMessage(t *testing.T) {
 }
 
 func TestSearchSimilar(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	vdb := VectorDBConfig{Type: DBPinecone, Collection: "search"}
 	emb := EmbeddingConfig{Model: ModelSimpleHash, Dimension: 64}
@@ -104,6 +108,7 @@ func TestSearchSimilar(t *testing.T) {
 }
 
 func TestBridgeLifecycle(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	vdb := VectorDBConfig{Type: DBMilvus, Collection: "test"}
 	emb := EmbeddingConfig{Dimension: 32}
@@ -132,6 +137,7 @@ func TestBridgeLifecycle(t *testing.T) {
 }
 
 func TestCosineSimilarity(t *testing.T) {
+	t.Parallel()
 	a := []float64{1, 0, 0}
 	b := []float64{1, 0, 0}
 	if s := cosineSimilarity(a, b); s < 0.99 {
@@ -145,6 +151,7 @@ func TestCosineSimilarity(t *testing.T) {
 }
 
 func TestListBridges(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	vdb := VectorDBConfig{Type: DBPinecone, Collection: "c1"}
 	emb := EmbeddingConfig{Dimension: 32}
@@ -158,6 +165,7 @@ func TestListBridges(t *testing.T) {
 }
 
 func TestExtractFieldValue(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		json     string

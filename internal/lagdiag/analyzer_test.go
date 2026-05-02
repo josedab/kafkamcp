@@ -6,6 +6,7 @@ import (
 )
 
 func TestNewAnalyzer(t *testing.T) {
+	t.Parallel()
 	a := NewAnalyzer()
 	if a == nil {
 		t.Fatal("NewAnalyzer returned nil")
@@ -16,6 +17,7 @@ func TestNewAnalyzer(t *testing.T) {
 }
 
 func TestRecordSnapshot(t *testing.T) {
+	t.Parallel()
 	a := NewAnalyzer()
 	snap := LagSnapshot{GroupID: "g1", Topic: "t1", Partition: 0, Lag: 100, Timestamp: "t0"}
 	a.RecordSnapshot(snap)
@@ -31,6 +33,7 @@ func TestRecordSnapshot(t *testing.T) {
 }
 
 func TestRecordSnapshotRingBuffer(t *testing.T) {
+	t.Parallel()
 	a := NewAnalyzer()
 	for i := 0; i < 150; i++ {
 		a.RecordSnapshot(LagSnapshot{
@@ -54,6 +57,7 @@ func TestRecordSnapshotRingBuffer(t *testing.T) {
 }
 
 func TestDiagnoseGrowingLag(t *testing.T) {
+	t.Parallel()
 	a := NewAnalyzer()
 	// Record snapshots with growing lag.
 	for i := 0; i < 10; i++ {
@@ -96,6 +100,7 @@ func TestDiagnoseGrowingLag(t *testing.T) {
 }
 
 func TestDiagnosePartitionImbalance(t *testing.T) {
+	t.Parallel()
 	a := NewAnalyzer()
 	partitionLags := []LagSnapshot{
 		{GroupID: "g1", Topic: "t1", Partition: 0, Lag: 10},
@@ -116,6 +121,7 @@ func TestDiagnosePartitionImbalance(t *testing.T) {
 }
 
 func TestDiagnoseNoHistory(t *testing.T) {
+	t.Parallel()
 	a := NewAnalyzer()
 	partitionLags := []LagSnapshot{
 		{GroupID: "g1", Topic: "t1", Partition: 0, Lag: 50},
@@ -132,6 +138,7 @@ func TestDiagnoseNoHistory(t *testing.T) {
 }
 
 func TestDiagnoseEmptyPartitions(t *testing.T) {
+	t.Parallel()
 	a := NewAnalyzer()
 	diag := a.Diagnose("g1", 0, nil)
 	if diag == nil {
@@ -143,6 +150,7 @@ func TestDiagnoseEmptyPartitions(t *testing.T) {
 }
 
 func TestDiagnoseLagTrendShrinking(t *testing.T) {
+	t.Parallel()
 	// Shrinking lag should produce a low-score factor.
 	var snapshots []LagSnapshot
 	for i := 0; i < 10; i++ {
@@ -162,6 +170,7 @@ func TestDiagnoseLagTrendShrinking(t *testing.T) {
 }
 
 func TestDiagnoseLagTrendInsufficient(t *testing.T) {
+	t.Parallel()
 	factor := diagnoseLagTrend(nil)
 	if factor.Score != 0 {
 		t.Fatal("expected zero score for nil snapshots")
@@ -174,6 +183,7 @@ func TestDiagnoseLagTrendInsufficient(t *testing.T) {
 }
 
 func TestDiagnosePartitionImbalanceSinglePartition(t *testing.T) {
+	t.Parallel()
 	factor := diagnosePartitionImbalance([]LagSnapshot{
 		{Partition: 0, Lag: 100},
 	})
@@ -183,6 +193,7 @@ func TestDiagnosePartitionImbalanceSinglePartition(t *testing.T) {
 }
 
 func TestDiagnosePartitionImbalanceZeroLag(t *testing.T) {
+	t.Parallel()
 	factor := diagnosePartitionImbalance([]LagSnapshot{
 		{Partition: 0, Lag: 0},
 		{Partition: 1, Lag: 0},
@@ -193,6 +204,7 @@ func TestDiagnosePartitionImbalanceZeroLag(t *testing.T) {
 }
 
 func TestDetermineRootCauseEmpty(t *testing.T) {
+	t.Parallel()
 	cause, conf := determineRootCause(nil)
 	if cause != "unknown" || conf != 0.0 {
 		t.Fatalf("expected unknown/0.0, got %s/%.2f", cause, conf)
@@ -200,6 +212,7 @@ func TestDetermineRootCauseEmpty(t *testing.T) {
 }
 
 func TestDetermineRootCausePicksHighest(t *testing.T) {
+	t.Parallel()
 	factors := []DiagFactor{
 		{Category: "slow_consumer", Score: 0.3},
 		{Category: "partition_imbalance", Score: 0.8},
@@ -215,6 +228,7 @@ func TestDetermineRootCausePicksHighest(t *testing.T) {
 }
 
 func TestGenerateRecommendations(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		rootCause string
 		wantMin   int
@@ -235,6 +249,7 @@ func TestGenerateRecommendations(t *testing.T) {
 }
 
 func TestGenerateRecommendationsUrgent(t *testing.T) {
+	t.Parallel()
 	factors := []DiagFactor{
 		{Name: "growing_lag", Category: "slow_consumer", Score: 0.9},
 	}

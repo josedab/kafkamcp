@@ -10,6 +10,7 @@ func newTestEngine() *PolicyEngine {
 }
 
 func TestDefaultPolicies(t *testing.T) {
+	t.Parallel()
 	pe := newTestEngine()
 
 	policies := pe.ListPolicies()
@@ -19,6 +20,7 @@ func TestDefaultPolicies(t *testing.T) {
 }
 
 func TestEvaluateReadAllowed(t *testing.T) {
+	t.Parallel()
 	pe := newTestEngine()
 
 	d := pe.Evaluate(PolicyInput{
@@ -33,6 +35,7 @@ func TestEvaluateReadAllowed(t *testing.T) {
 }
 
 func TestEvaluateDeleteDenied(t *testing.T) {
+	t.Parallel()
 	pe := newTestEngine()
 
 	d := pe.Evaluate(PolicyInput{
@@ -47,6 +50,7 @@ func TestEvaluateDeleteDenied(t *testing.T) {
 }
 
 func TestEvaluateAnonymousWriteDenied(t *testing.T) {
+	t.Parallel()
 	pe := newTestEngine()
 
 	d := pe.Evaluate(PolicyInput{
@@ -61,6 +65,7 @@ func TestEvaluateAnonymousWriteDenied(t *testing.T) {
 }
 
 func TestRegisterPolicy(t *testing.T) {
+	t.Parallel()
 	pe := newTestEngine()
 
 	err := pe.RegisterPolicy(Policy{
@@ -88,6 +93,7 @@ allow {
 }
 
 func TestSimulate(t *testing.T) {
+	t.Parallel()
 	pe := newTestEngine()
 
 	result := pe.Simulate(PolicyInput{
@@ -102,6 +108,7 @@ func TestSimulate(t *testing.T) {
 }
 
 func TestDeletePolicy(t *testing.T) {
+	t.Parallel()
 	pe := newTestEngine()
 
 	err := pe.DeletePolicy("default-allow-read")

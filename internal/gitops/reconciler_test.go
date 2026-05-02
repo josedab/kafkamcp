@@ -9,6 +9,7 @@ import (
 )
 
 func TestNewReconciler(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(nil)
 	r := NewReconciler(DefaultReconcilerConfig(), mgr, nil)
 	if r == nil {
@@ -17,6 +18,7 @@ func TestNewReconciler(t *testing.T) {
 }
 
 func TestSetDesiredState(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(nil)
 	r := NewReconciler(DefaultReconcilerConfig(), mgr, nil)
 
@@ -32,6 +34,7 @@ func TestSetDesiredState(t *testing.T) {
 }
 
 func TestSetDesiredStateInvalid(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(nil)
 	r := NewReconciler(DefaultReconcilerConfig(), mgr, nil)
 
@@ -42,6 +45,7 @@ func TestSetDesiredStateInvalid(t *testing.T) {
 }
 
 func TestReconcileDryRun(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(nil)
 	r := NewReconciler(DefaultReconcilerConfig(), mgr, nil)
 	_ = r.SetDesiredState(DesiredState{
@@ -64,6 +68,7 @@ func TestReconcileDryRun(t *testing.T) {
 }
 
 func TestReconcileApply(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(nil)
 	cfg := DefaultReconcilerConfig()
 	cfg.AutoApprove = true
@@ -88,6 +93,7 @@ func TestReconcileApply(t *testing.T) {
 }
 
 func TestReconcileNoDesiredState(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(nil)
 	r := NewReconciler(DefaultReconcilerConfig(), mgr, nil)
 
@@ -98,6 +104,7 @@ func TestReconcileNoDesiredState(t *testing.T) {
 }
 
 func TestGetResults(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(nil)
 	r := NewReconciler(DefaultReconcilerConfig(), mgr, nil)
 	results := r.GetResults(10)
@@ -107,6 +114,7 @@ func TestGetResults(t *testing.T) {
 }
 
 func TestHandleWebhook_PushEventTriggersReconcile(t *testing.T) {
+	t.Parallel()
 	cfg := DefaultReconcilerConfig()
 	cfg.GitBranch = "main"
 	mgr := NewManager(nil)
@@ -128,6 +136,7 @@ func TestHandleWebhook_PushEventTriggersReconcile(t *testing.T) {
 }
 
 func TestHandleWebhook_PullRequestDryRun(t *testing.T) {
+	t.Parallel()
 	cfg := DefaultReconcilerConfig()
 	mgr := NewManager(nil)
 	r := NewReconciler(cfg, mgr, nil)
@@ -151,6 +160,7 @@ func TestHandleWebhook_PullRequestDryRun(t *testing.T) {
 }
 
 func TestHandleWebhook_PullRequestClosedSkipped(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(nil)
 	r := NewReconciler(DefaultReconcilerConfig(), mgr, nil)
 
@@ -165,6 +175,7 @@ func TestHandleWebhook_PullRequestClosedSkipped(t *testing.T) {
 }
 
 func TestHandleWebhook_UnknownEventReturnsNil(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(nil)
 	r := NewReconciler(DefaultReconcilerConfig(), mgr, nil)
 
@@ -179,6 +190,7 @@ func TestHandleWebhook_UnknownEventReturnsNil(t *testing.T) {
 }
 
 func TestHandleWebhook_PushWrongBranch(t *testing.T) {
+	t.Parallel()
 	cfg := DefaultReconcilerConfig()
 	cfg.GitBranch = "main"
 	mgr := NewManager(nil)
@@ -195,6 +207,7 @@ func TestHandleWebhook_PushWrongBranch(t *testing.T) {
 }
 
 func TestStart_LaunchesGoroutine(t *testing.T) {
+	t.Parallel()
 	cfg := DefaultReconcilerConfig()
 	cfg.Interval = 50 * time.Millisecond
 	mgr := NewManager(nil)
@@ -212,6 +225,7 @@ func TestStart_LaunchesGoroutine(t *testing.T) {
 }
 
 func TestStart_IdempotentDoubleStart(t *testing.T) {
+	t.Parallel()
 	cfg := DefaultReconcilerConfig()
 	cfg.Interval = 50 * time.Millisecond
 	mgr := NewManager(nil)
@@ -231,6 +245,7 @@ func TestStart_IdempotentDoubleStart(t *testing.T) {
 }
 
 func TestStop_CancelsContextAndLoop(t *testing.T) {
+	t.Parallel()
 	cfg := DefaultReconcilerConfig()
 	cfg.Interval = 50 * time.Millisecond
 	mgr := NewManager(nil)
@@ -248,6 +263,7 @@ func TestStop_CancelsContextAndLoop(t *testing.T) {
 }
 
 func TestLoop_PeriodicReconcile(t *testing.T) {
+	t.Parallel()
 	cfg := DefaultReconcilerConfig()
 	cfg.Interval = 50 * time.Millisecond
 	cfg.DryRunDefault = true
@@ -270,6 +286,7 @@ func TestLoop_PeriodicReconcile(t *testing.T) {
 }
 
 func TestLoop_NilDesiredStateSkips(t *testing.T) {
+	t.Parallel()
 	cfg := DefaultReconcilerConfig()
 	cfg.Interval = 50 * time.Millisecond
 	mgr := NewManager(nil)
@@ -286,6 +303,7 @@ func TestLoop_NilDesiredStateSkips(t *testing.T) {
 }
 
 func TestConcurrent_StartStop(t *testing.T) {
+	t.Parallel()
 	cfg := DefaultReconcilerConfig()
 	cfg.Interval = 10 * time.Millisecond
 	mgr := NewManager(nil)
@@ -305,6 +323,7 @@ func TestConcurrent_StartStop(t *testing.T) {
 }
 
 func TestRecordResult_MaxHistoryEnforced(t *testing.T) {
+	t.Parallel()
 	cfg := DefaultReconcilerConfig()
 	cfg.MaxHistory = 3
 	mgr := NewManager(nil)
@@ -321,6 +340,7 @@ func TestRecordResult_MaxHistoryEnforced(t *testing.T) {
 }
 
 func TestGetResults_LimitBehavior(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(nil)
 	r := NewReconciler(DefaultReconcilerConfig(), mgr, nil)
 

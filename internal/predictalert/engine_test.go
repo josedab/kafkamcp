@@ -6,6 +6,7 @@ import (
 )
 
 func TestRecordAndAnalyze_Empty(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	analysis := e.Analyze("test-group")
 	if analysis.LagTrend != "unknown" {
@@ -14,6 +15,7 @@ func TestRecordAndAnalyze_Empty(t *testing.T) {
 }
 
 func TestRecordAndAnalyze_Stable(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	for i := 0; i < 10; i++ {
 		e.RecordSample("test-group", 1000, 3)
@@ -28,6 +30,7 @@ func TestRecordAndAnalyze_Stable(t *testing.T) {
 }
 
 func TestRecordAndAnalyze_RebalanceRisk(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	for i := 0; i < 10; i++ {
 		members := 3
@@ -43,6 +46,7 @@ func TestRecordAndAnalyze_RebalanceRisk(t *testing.T) {
 }
 
 func TestListAlerts(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	for i := 0; i < 20; i++ {
 		lag := int64(1000 * (i + 1))
@@ -56,6 +60,7 @@ func TestListAlerts(t *testing.T) {
 }
 
 func TestAcknowledgeAlert(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	err := e.AcknowledgeAlert("nonexistent")
 	if err == nil {

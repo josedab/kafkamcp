@@ -6,6 +6,7 @@ import (
 )
 
 func TestNewEngine(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	if e == nil {
 		t.Fatal("NewEngine returned nil")
@@ -13,6 +14,7 @@ func TestNewEngine(t *testing.T) {
 }
 
 func TestEvaluate(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	metrics := TopicMetrics{
 		Topic:              "orders",
@@ -42,6 +44,7 @@ func TestEvaluate(t *testing.T) {
 }
 
 func TestEvaluatePoorQuality(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	metrics := TopicMetrics{
 		Topic:           "stale-topic",
@@ -59,6 +62,7 @@ func TestEvaluatePoorQuality(t *testing.T) {
 }
 
 func TestSetAndGetSLA(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	err := e.SetSLA(SLAConfig{
 		Topic:           "orders",
@@ -77,6 +81,7 @@ func TestSetAndGetSLA(t *testing.T) {
 }
 
 func TestSLABreach(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	_ = e.SetSLA(SLAConfig{
 		Topic:           "orders",
@@ -106,6 +111,7 @@ func TestSLABreach(t *testing.T) {
 }
 
 func TestGetReport(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	e.Evaluate(TopicMetrics{Topic: "test", SampleSize: 50, LastMessageTime: time.Now()})
 
@@ -119,6 +125,7 @@ func TestGetReport(t *testing.T) {
 }
 
 func TestGetReportNotFound(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	_, err := e.GetReport("nonexistent")
 	if err == nil {
@@ -127,6 +134,7 @@ func TestGetReportNotFound(t *testing.T) {
 }
 
 func TestSetSLAEmptyTopic(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	err := e.SetSLA(SLAConfig{})
 	if err == nil {
@@ -135,6 +143,7 @@ func TestSetSLAEmptyTopic(t *testing.T) {
 }
 
 func TestGrade(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		score float64
 		want  string

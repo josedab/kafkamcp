@@ -11,6 +11,7 @@ import (
 )
 
 func TestWriteJSON(t *testing.T) {
+	t.Parallel()
 	w := httptest.NewRecorder()
 	writeJSON(w, map[string]any{"key": "value"})
 
@@ -28,6 +29,7 @@ func TestWriteJSON(t *testing.T) {
 }
 
 func TestWriteJSONComplex(t *testing.T) {
+	t.Parallel()
 	w := httptest.NewRecorder()
 	writeJSON(w, map[string]any{
 		"topics": []string{"a", "b"},
@@ -44,6 +46,7 @@ func TestWriteJSONComplex(t *testing.T) {
 }
 
 func TestNewDashboard(t *testing.T) {
+	t.Parallel()
 	rl := ratelimit.New(0)
 	d := New(nil, nil, rl, slog.Default())
 	if d == nil {
@@ -52,6 +55,7 @@ func TestNewDashboard(t *testing.T) {
 }
 
 func TestConnectedClientsInitial(t *testing.T) {
+	t.Parallel()
 	rl := ratelimit.New(0)
 	d := New(nil, nil, rl, slog.Default())
 	if d.ConnectedClients() != 0 {
@@ -60,6 +64,7 @@ func TestConnectedClientsInitial(t *testing.T) {
 }
 
 func TestBroadcastEventNoClients(t *testing.T) {
+	t.Parallel()
 	rl := ratelimit.New(0)
 	d := New(nil, nil, rl, slog.Default())
 	// Should not panic
@@ -67,6 +72,7 @@ func TestBroadcastEventNoClients(t *testing.T) {
 }
 
 func TestBroadcastEventWithClients(t *testing.T) {
+	t.Parallel()
 	rl := ratelimit.New(0)
 	d := New(nil, nil, rl, slog.Default())
 
@@ -96,6 +102,7 @@ func TestBroadcastEventWithClients(t *testing.T) {
 }
 
 func TestHandlerReturnsHTTPHandler(t *testing.T) {
+	t.Parallel()
 	rl := ratelimit.New(0)
 	d := New(nil, nil, rl, slog.Default())
 	handler := d.Handler()
@@ -105,6 +112,7 @@ func TestHandlerReturnsHTTPHandler(t *testing.T) {
 }
 
 func TestHandleSchemas(t *testing.T) {
+	t.Parallel()
 	rl := ratelimit.New(0)
 	d := New(nil, nil, rl, slog.Default())
 	d.SetAllowNoAuth(true)
@@ -120,6 +128,7 @@ func TestHandleSchemas(t *testing.T) {
 }
 
 func TestHandleRateLimits(t *testing.T) {
+	t.Parallel()
 	rl := ratelimit.New(0)
 	d := New(nil, nil, rl, slog.Default())
 	d.SetAllowNoAuth(true)
@@ -135,6 +144,7 @@ func TestHandleRateLimits(t *testing.T) {
 }
 
 func TestHandleMethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	rl := ratelimit.New(0)
 	d := New(nil, nil, rl, slog.Default())
 	d.SetAllowNoAuth(true)
@@ -153,6 +163,7 @@ func TestHandleMethodNotAllowed(t *testing.T) {
 }
 
 func TestBroadcastEventFullChannel(t *testing.T) {
+	t.Parallel()
 	rl := ratelimit.New(0)
 	d := New(nil, nil, rl, slog.Default())
 
@@ -169,6 +180,7 @@ func TestBroadcastEventFullChannel(t *testing.T) {
 // --- SetAPIKey and requireAuth tests ---
 
 func TestSetAPIKeyAndRequireAuth(t *testing.T) {
+	t.Parallel()
 	rl := ratelimit.New(0)
 	d := New(nil, nil, rl, slog.Default())
 	d.SetAPIKey("my-secret-key")
@@ -234,6 +246,7 @@ func TestSetAPIKeyAndRequireAuth(t *testing.T) {
 }
 
 func TestRequireAuthNoKey(t *testing.T) {
+	t.Parallel()
 	rl := ratelimit.New(0)
 	d := New(nil, nil, rl, slog.Default())
 	d.SetAllowNoAuth(true)
@@ -253,6 +266,7 @@ func TestRequireAuthNoKey(t *testing.T) {
 }
 
 func TestSetAPIKeyEmpty(t *testing.T) {
+	t.Parallel()
 	rl := ratelimit.New(0)
 	d := New(nil, nil, rl, slog.Default())
 	d.SetAPIKey("")
@@ -282,6 +296,7 @@ func TestSetAPIKeyEmpty(t *testing.T) {
 }
 
 func TestRequireAuthPartialBearerPrefix(t *testing.T) {
+	t.Parallel()
 	rl := ratelimit.New(0)
 	d := New(nil, nil, rl, slog.Default())
 	d.SetAPIKey("test-key")
@@ -301,6 +316,7 @@ func TestRequireAuthPartialBearerPrefix(t *testing.T) {
 }
 
 func TestAuthProtectsEndpoints(t *testing.T) {
+	t.Parallel()
 	rl := ratelimit.New(0)
 	d := New(nil, nil, rl, slog.Default())
 	d.SetAPIKey("secret")

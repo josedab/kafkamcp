@@ -10,6 +10,7 @@ func newTestEngine() *Engine {
 }
 
 func TestCreatePipeline(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	steps := []Step{
@@ -30,6 +31,7 @@ func TestCreatePipeline(t *testing.T) {
 }
 
 func TestExecuteFilter(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	steps := []Step{
@@ -59,6 +61,7 @@ func TestExecuteFilter(t *testing.T) {
 }
 
 func TestExecuteMap(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	steps := []Step{
@@ -83,6 +86,7 @@ func TestExecuteMap(t *testing.T) {
 }
 
 func TestExecuteEnrich(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	steps := []Step{
@@ -107,6 +111,7 @@ func TestExecuteEnrich(t *testing.T) {
 }
 
 func TestInvalidStepType(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	steps := []Step{
@@ -120,6 +125,7 @@ func TestInvalidStepType(t *testing.T) {
 }
 
 func TestListAndDelete(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	steps := []Step{{Type: "filter", Name: "f", Config: map[string]string{"field": "value", "operator": "exists"}}}

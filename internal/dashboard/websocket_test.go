@@ -43,6 +43,7 @@ func setupDashboard(t *testing.T) *Dashboard {
 // --- WebSocketHub tests ---
 
 func TestNewWebSocketHub(t *testing.T) {
+	t.Parallel()
 	hub := NewWebSocketHub()
 	if hub == nil {
 		t.Fatal("expected non-nil hub")
@@ -53,6 +54,7 @@ func TestNewWebSocketHub(t *testing.T) {
 }
 
 func TestWebSocketHub_Broadcast(t *testing.T) {
+	t.Parallel()
 	hub := NewWebSocketHub()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -77,6 +79,7 @@ func TestWebSocketHub_Broadcast(t *testing.T) {
 }
 
 func TestWebSocketHub_ClientCount(t *testing.T) {
+	t.Parallel()
 	hub := NewWebSocketHub()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -99,6 +102,7 @@ func TestWebSocketHub_ClientCount(t *testing.T) {
 }
 
 func TestWebSocketHub_RunContextCancel(t *testing.T) {
+	t.Parallel()
 	hub := NewWebSocketHub()
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan struct{})
@@ -117,6 +121,7 @@ func TestWebSocketHub_RunContextCancel(t *testing.T) {
 // --- DashboardMetrics tests ---
 
 func TestDashboardMetrics_RecordToolCall(t *testing.T) {
+	t.Parallel()
 	dm := NewDashboardMetrics()
 	dm.RecordToolCall("agent-1", "list_topics", 50, false)
 	dm.RecordToolCall("agent-1", "list_topics", 30, false)
@@ -137,6 +142,7 @@ func TestDashboardMetrics_RecordToolCall(t *testing.T) {
 }
 
 func TestDashboardMetrics_RecordToolCall_ConcurrentSafety(t *testing.T) {
+	t.Parallel()
 	dm := NewDashboardMetrics()
 	var wg sync.WaitGroup
 	for i := 0; i < 100; i++ {
@@ -158,6 +164,7 @@ func TestDashboardMetrics_RecordToolCall_ConcurrentSafety(t *testing.T) {
 }
 
 func TestDashboardMetrics_GetAgentActivity_Sorting(t *testing.T) {
+	t.Parallel()
 	dm := NewDashboardMetrics()
 	dm.RecordToolCall("agent-low", "tool", 10, false)
 	dm.RecordToolCall("agent-high", "tool", 10, false)
@@ -174,6 +181,7 @@ func TestDashboardMetrics_GetAgentActivity_Sorting(t *testing.T) {
 }
 
 func TestDashboardMetrics_GetAgentActivity_TopTools(t *testing.T) {
+	t.Parallel()
 	dm := NewDashboardMetrics()
 	for i := 0; i < 10; i++ {
 		dm.RecordToolCall("a1", "list_topics", 50, false)
@@ -193,6 +201,7 @@ func TestDashboardMetrics_GetAgentActivity_TopTools(t *testing.T) {
 }
 
 func TestDashboardMetrics_GetAgentActivity_TopToolsMaxFive(t *testing.T) {
+	t.Parallel()
 	dm := NewDashboardMetrics()
 	for i := 0; i < 7; i++ {
 		tool := "tool_" + string(rune('a'+i))
@@ -208,6 +217,7 @@ func TestDashboardMetrics_GetAgentActivity_TopToolsMaxFive(t *testing.T) {
 }
 
 func TestDashboardMetrics_GetAgentActivity_AvgLatency(t *testing.T) {
+	t.Parallel()
 	dm := NewDashboardMetrics()
 	dm.RecordToolCall("a1", "tool", 100, false)
 	dm.RecordToolCall("a1", "tool", 200, false)
@@ -221,6 +231,7 @@ func TestDashboardMetrics_GetAgentActivity_AvgLatency(t *testing.T) {
 }
 
 func TestDashboardMetrics_GetAgentActivity_Empty(t *testing.T) {
+	t.Parallel()
 	dm := NewDashboardMetrics()
 	entries := dm.GetAgentActivity()
 	if len(entries) != 0 {
@@ -231,6 +242,7 @@ func TestDashboardMetrics_GetAgentActivity_Empty(t *testing.T) {
 // --- HTTP handler tests ---
 
 func TestHandleConsumerLag(t *testing.T) {
+	t.Parallel()
 	d := setupDashboard(t)
 	mux := http.NewServeMux()
 	d.RegisterDashboardRoutes(mux)
@@ -245,6 +257,7 @@ func TestHandleConsumerLag(t *testing.T) {
 }
 
 func TestHandleConsumerLag_MethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	d := setupDashboard(t)
 	mux := http.NewServeMux()
 	d.RegisterDashboardRoutes(mux)
@@ -259,6 +272,7 @@ func TestHandleConsumerLag_MethodNotAllowed(t *testing.T) {
 }
 
 func TestHandleAgentActivity(t *testing.T) {
+	t.Parallel()
 	d := setupDashboard(t)
 	mux := http.NewServeMux()
 	d.RegisterDashboardRoutes(mux)
@@ -273,6 +287,7 @@ func TestHandleAgentActivity(t *testing.T) {
 }
 
 func TestHandleFlowRates(t *testing.T) {
+	t.Parallel()
 	d := setupDashboard(t)
 	mux := http.NewServeMux()
 	d.RegisterDashboardRoutes(mux)
@@ -287,6 +302,7 @@ func TestHandleFlowRates(t *testing.T) {
 }
 
 func TestHandleDashboardSummary(t *testing.T) {
+	t.Parallel()
 	d := setupDashboard(t)
 	mux := http.NewServeMux()
 	d.RegisterDashboardRoutes(mux)
@@ -301,6 +317,7 @@ func TestHandleDashboardSummary(t *testing.T) {
 }
 
 func TestHandleDashboardSummary_MethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	d := setupDashboard(t)
 	mux := http.NewServeMux()
 	d.RegisterDashboardRoutes(mux)
@@ -315,6 +332,7 @@ func TestHandleDashboardSummary_MethodNotAllowed(t *testing.T) {
 }
 
 func TestHandleConsumerLag_EmbedMode(t *testing.T) {
+	t.Parallel()
 	d := setupDashboard(t)
 	mux := http.NewServeMux()
 	d.RegisterDashboardRoutes(mux)
@@ -332,6 +350,7 @@ func TestHandleConsumerLag_EmbedMode(t *testing.T) {
 }
 
 func TestWebSocketHub_Stop_NoClients(t *testing.T) {
+	t.Parallel()
 	hub := NewWebSocketHub()
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan struct{})
@@ -347,6 +366,7 @@ func TestWebSocketHub_Stop_NoClients(t *testing.T) {
 }
 
 func TestWebSocketHub_Stop_WithActiveClients(t *testing.T) {
+	t.Parallel()
 	hub := NewWebSocketHub()
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan struct{})
@@ -376,6 +396,7 @@ func TestWebSocketHub_Stop_WithActiveClients(t *testing.T) {
 }
 
 func TestHandleAgentActivity_MethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	d := setupDashboard(t)
 	mux := http.NewServeMux()
 	d.RegisterDashboardRoutes(mux)
@@ -390,6 +411,7 @@ func TestHandleAgentActivity_MethodNotAllowed(t *testing.T) {
 }
 
 func TestHandleAgentActivity_NoRecordedCalls(t *testing.T) {
+	t.Parallel()
 	d := setupDashboard(t)
 	mux := http.NewServeMux()
 	d.RegisterDashboardRoutes(mux)
@@ -409,6 +431,7 @@ func TestHandleAgentActivity_NoRecordedCalls(t *testing.T) {
 }
 
 func TestHandleFlowRates_MethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	d := setupDashboard(t)
 	mux := http.NewServeMux()
 	d.RegisterDashboardRoutes(mux)
@@ -423,6 +446,7 @@ func TestHandleFlowRates_MethodNotAllowed(t *testing.T) {
 }
 
 func TestWebSocketHub_BroadcastDropsSlow(t *testing.T) {
+	t.Parallel()
 	hub := NewWebSocketHub()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -446,6 +470,7 @@ func TestWebSocketHub_BroadcastDropsSlow(t *testing.T) {
 }
 
 func TestWebSocketHub_LargeClientCount(t *testing.T) {
+	t.Parallel()
 	hub := NewWebSocketHub()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

@@ -5,6 +5,7 @@ import (
 )
 
 func TestAgentConfigStoreSearchConfigs(t *testing.T) {
+	t.Parallel()
 	store := NewAgentConfigStore()
 
 	tests := []struct {
@@ -32,6 +33,7 @@ func TestAgentConfigStoreSearchConfigs(t *testing.T) {
 }
 
 func TestAgentConfigStorePublishAndGet(t *testing.T) {
+	t.Parallel()
 	store := NewAgentConfigStore()
 
 	cfg := AgentConfig{
@@ -61,6 +63,7 @@ func TestAgentConfigStorePublishAndGet(t *testing.T) {
 }
 
 func TestAgentConfigStorePublishValidation(t *testing.T) {
+	t.Parallel()
 	store := NewAgentConfigStore()
 
 	if err := store.PublishConfig(AgentConfig{}); err == nil {
@@ -72,6 +75,7 @@ func TestAgentConfigStorePublishValidation(t *testing.T) {
 }
 
 func TestToolBundleSearchAndPublish(t *testing.T) {
+	t.Parallel()
 	store := NewAgentConfigStore()
 
 	results := store.SearchBundles("", "")
@@ -112,6 +116,7 @@ func TestToolBundleSearchAndPublish(t *testing.T) {
 }
 
 func TestToolBundleGetNotFound(t *testing.T) {
+	t.Parallel()
 	store := NewAgentConfigStore()
 	_, err := store.GetBundle("nonexistent")
 	if err == nil {

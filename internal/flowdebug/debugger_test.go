@@ -6,6 +6,7 @@ import (
 )
 
 func TestUpdateGraph(t *testing.T) {
+	t.Parallel()
 	d := NewDebugger(nil)
 
 	graph := &FlowGraph{
@@ -28,6 +29,7 @@ func TestUpdateGraph(t *testing.T) {
 }
 
 func TestBottleneckDetection(t *testing.T) {
+	t.Parallel()
 	d := NewDebugger(nil)
 
 	graph := &FlowGraph{
@@ -56,6 +58,7 @@ func TestBottleneckDetection(t *testing.T) {
 }
 
 func TestSubscribe(t *testing.T) {
+	t.Parallel()
 	d := NewDebugger(nil)
 
 	ch := d.Subscribe("client1")
@@ -78,6 +81,7 @@ func TestSubscribe(t *testing.T) {
 }
 
 func TestSnapshots(t *testing.T) {
+	t.Parallel()
 	d := NewDebugger(nil)
 
 	for i := 0; i < 5; i++ {
@@ -99,6 +103,7 @@ func TestSnapshots(t *testing.T) {
 }
 
 func TestSerializeUpdate(t *testing.T) {
+	t.Parallel()
 	msg := WebSocketMessage{Type: "test", Payload: map[string]string{"key": "value"}}
 	data, err := SerializeUpdate(msg)
 	if err != nil {
@@ -110,6 +115,7 @@ func TestSerializeUpdate(t *testing.T) {
 }
 
 func TestSetGetBottleneckConfig_Roundtrip(t *testing.T) {
+	t.Parallel()
 	d := NewDebugger(nil)
 
 	cfg := BottleneckConfig{
@@ -142,6 +148,7 @@ func TestSetGetBottleneckConfig_Roundtrip(t *testing.T) {
 }
 
 func TestGetBottleneckConfig_Default(t *testing.T) {
+	t.Parallel()
 	d := NewDebugger(nil)
 	cfg := d.GetBottleneckConfig()
 
@@ -155,6 +162,7 @@ func TestGetBottleneckConfig_Default(t *testing.T) {
 }
 
 func TestGetBottlenecks_NoData(t *testing.T) {
+	t.Parallel()
 	d := NewDebugger(nil)
 	bottlenecks := d.GetBottlenecks()
 	if len(bottlenecks) != 0 {
@@ -163,6 +171,7 @@ func TestGetBottlenecks_NoData(t *testing.T) {
 }
 
 func TestGetBottlenecks_HealthyGraph(t *testing.T) {
+	t.Parallel()
 	d := NewDebugger(nil)
 	d.UpdateGraph(&FlowGraph{
 		Nodes: []FlowNode{
@@ -180,6 +189,7 @@ func TestGetBottlenecks_HealthyGraph(t *testing.T) {
 }
 
 func TestGetBottlenecks_DetectedBottlenecks(t *testing.T) {
+	t.Parallel()
 	d := NewDebugger(nil)
 	d.UpdateGraph(&FlowGraph{
 		Nodes: []FlowNode{
@@ -203,6 +213,7 @@ func TestGetBottlenecks_DetectedBottlenecks(t *testing.T) {
 }
 
 func TestSetBottleneckConfig_ZeroThresholds(t *testing.T) {
+	t.Parallel()
 	d := NewDebugger(nil)
 	cfg := BottleneckConfig{} // all zeros
 	d.SetBottleneckConfig(cfg)
@@ -231,6 +242,7 @@ func TestSetBottleneckConfig_ZeroThresholds(t *testing.T) {
 }
 
 func TestSetBottleneckConfig_NegativeValues(t *testing.T) {
+	t.Parallel()
 	d := NewDebugger(nil)
 	cfg := BottleneckConfig{
 		LagWarning:        -100,
@@ -247,6 +259,7 @@ func TestSetBottleneckConfig_NegativeValues(t *testing.T) {
 }
 
 func TestSerializeUpdate_StructureAndFields(t *testing.T) {
+	t.Parallel()
 	msg := WebSocketMessage{
 		Type:    "bottleneck_alert",
 		Payload: []Bottleneck{{NodeID: "n1", Type: "high_lag", Severity: "critical"}},
@@ -266,6 +279,7 @@ func TestSerializeUpdate_StructureAndFields(t *testing.T) {
 }
 
 func TestSerializeUpdate_NilPayload(t *testing.T) {
+	t.Parallel()
 	msg := WebSocketMessage{Type: "flow_update", Payload: nil}
 	data, err := SerializeUpdate(msg)
 	if err != nil {

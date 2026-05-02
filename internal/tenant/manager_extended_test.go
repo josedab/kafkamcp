@@ -5,6 +5,7 @@ import (
 )
 
 func TestAuthenticateByKey(t *testing.T) {
+	t.Parallel()
 	m := NewManager()
 	tenant, _, _ := m.CreateTenant("Auth Test", "auth@test.com", "pro")
 
@@ -26,6 +27,7 @@ func TestAuthenticateByKey(t *testing.T) {
 }
 
 func TestAuthenticateByKeySuspendedTenant(t *testing.T) {
+	t.Parallel()
 	m := NewManager()
 	tenant, _, _ := m.CreateTenant("Suspended", "suspended@test.com", "free")
 	prefix := tenant.APIKeys[0].Prefix
@@ -42,6 +44,7 @@ func TestAuthenticateByKeySuspendedTenant(t *testing.T) {
 }
 
 func TestListTenants(t *testing.T) {
+	t.Parallel()
 	m := NewManager()
 
 	// Empty list
@@ -61,6 +64,7 @@ func TestListTenants(t *testing.T) {
 }
 
 func TestPlanLimitsDefault(t *testing.T) {
+	t.Parallel()
 	// Unknown plan should default to free
 	limits := PlanLimits("unknown_plan")
 	freeLimits := PlanLimits("free")
@@ -73,6 +77,7 @@ func TestPlanLimitsDefault(t *testing.T) {
 }
 
 func TestCreateTenantEmptyEmail(t *testing.T) {
+	t.Parallel()
 	m := NewManager()
 	_, _, err := m.CreateTenant("Name", "", "free")
 	if err == nil {
@@ -81,6 +86,7 @@ func TestCreateTenantEmptyEmail(t *testing.T) {
 }
 
 func TestCreateTenantDefaultPlan(t *testing.T) {
+	t.Parallel()
 	m := NewManager()
 	tenant, _, err := m.CreateTenant("Default Plan", "default@test.com", "")
 	if err != nil {
@@ -92,6 +98,7 @@ func TestCreateTenantDefaultPlan(t *testing.T) {
 }
 
 func TestGetTenantNotFound(t *testing.T) {
+	t.Parallel()
 	m := NewManager()
 	_, err := m.GetTenant("nonexistent")
 	if err == nil {
@@ -100,6 +107,7 @@ func TestGetTenantNotFound(t *testing.T) {
 }
 
 func TestRecordUsageNotFound(t *testing.T) {
+	t.Parallel()
 	m := NewManager()
 	err := m.RecordUsage("nonexistent", 1, 0, 0, 0)
 	if err == nil {
@@ -108,6 +116,7 @@ func TestRecordUsageNotFound(t *testing.T) {
 }
 
 func TestCheckLimitsNotFound(t *testing.T) {
+	t.Parallel()
 	m := NewManager()
 	err := m.CheckLimits("nonexistent")
 	if err == nil {
@@ -116,6 +125,7 @@ func TestCheckLimitsNotFound(t *testing.T) {
 }
 
 func TestCheckLimitsEnterprise(t *testing.T) {
+	t.Parallel()
 	m := NewManager()
 	tenant, _, _ := m.CreateTenant("Enterprise", "ent@test.com", "enterprise")
 
@@ -130,6 +140,7 @@ func TestCheckLimitsEnterprise(t *testing.T) {
 }
 
 func TestAddClusterNotFound(t *testing.T) {
+	t.Parallel()
 	m := NewManager()
 	err := m.AddCluster("nonexistent", TenantCluster{Name: "prod"})
 	if err == nil {
@@ -138,6 +149,7 @@ func TestAddClusterNotFound(t *testing.T) {
 }
 
 func TestAddClusterEnterprise(t *testing.T) {
+	t.Parallel()
 	m := NewManager()
 	tenant, _, _ := m.CreateTenant("Enterprise", "ent@test.com", "enterprise")
 

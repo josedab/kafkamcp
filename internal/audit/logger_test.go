@@ -8,6 +8,7 @@ import (
 )
 
 func TestAuditLoggerRingBuffer(t *testing.T) {
+	t.Parallel()
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))
 	al, err := NewLogger(context.Background(), true, 5, "", logger)
 	if err != nil {
@@ -44,6 +45,7 @@ func TestAuditLoggerRingBuffer(t *testing.T) {
 }
 
 func TestAuditLoggerDisabled(t *testing.T) {
+	t.Parallel()
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))
 	al, err := NewLogger(context.Background(), false, 10, "", logger)
 	if err != nil {

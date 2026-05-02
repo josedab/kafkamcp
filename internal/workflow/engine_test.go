@@ -5,6 +5,7 @@ import (
 )
 
 func TestListTemplates(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	all := e.ListTemplates("")
 	if len(all) < 10 {
@@ -23,6 +24,7 @@ func TestListTemplates(t *testing.T) {
 }
 
 func TestGetTemplate(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	tmpl, err := e.GetTemplate("dlq-investigation")
 	if err != nil {
@@ -39,6 +41,7 @@ func TestGetTemplate(t *testing.T) {
 }
 
 func TestStartExecution(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 
 	// Missing required parameter
@@ -61,6 +64,7 @@ func TestStartExecution(t *testing.T) {
 }
 
 func TestResolveStepArgs(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	step := Step{Args: map[string]string{"topic": "${topic}", "limit": "${limit}"}}
 	params := map[string]any{"topic": "my-topic", "limit": 50}
@@ -72,6 +76,7 @@ func TestResolveStepArgs(t *testing.T) {
 }
 
 func TestInterpolate(t *testing.T) {
+	t.Parallel()
 	result := interpolate("${name} has ${count} items", map[string]any{"name": "test", "count": 42})
 	if result != "test has 42 items" {
 		t.Errorf("unexpected: %s", result)

@@ -12,6 +12,7 @@ func testLogger() *slog.Logger {
 }
 
 func TestStoreAndRecall(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	entry, err := e.Store("agent-1", "topic-pref", "orders-topic", "preference", []string{"kafka"}, 0, nil)
@@ -32,6 +33,7 @@ func TestStoreAndRecall(t *testing.T) {
 }
 
 func TestSearch(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	e.Store("agent-1", "schema-orders", "avro schema for orders", "schema", []string{"avro", "orders"}, 0, nil)
@@ -45,6 +47,7 @@ func TestSearch(t *testing.T) {
 }
 
 func TestTTLExpiration(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	// Store with 0 TTL (expired immediately won't work; use 1 and check)
@@ -58,6 +61,7 @@ func TestTTLExpiration(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	e.Store("agent-1", "del-key", "value", "", nil, 0, nil)
@@ -73,6 +77,7 @@ func TestDelete(t *testing.T) {
 }
 
 func TestStats(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	e.Store("agent-1", "k1", "v1", "preference", nil, 0, nil)
@@ -90,6 +95,7 @@ func TestStats(t *testing.T) {
 // --- ListEntries tests ---
 
 func TestListEntriesAll(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.Store("agent-1", "k1", "v1", "pref", nil, 0, nil)
 	e.Store("agent-1", "k2", "v2", "schema", nil, 0, nil)
@@ -102,6 +108,7 @@ func TestListEntriesAll(t *testing.T) {
 }
 
 func TestListEntriesByCategory(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.Store("agent-1", "k1", "v1", "pref", nil, 0, nil)
 	e.Store("agent-1", "k2", "v2", "schema", nil, 0, nil)
@@ -114,6 +121,7 @@ func TestListEntriesByCategory(t *testing.T) {
 }
 
 func TestListEntriesCategoryNoMatch(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.Store("agent-1", "k1", "v1", "pref", nil, 0, nil)
 
@@ -124,6 +132,7 @@ func TestListEntriesCategoryNoMatch(t *testing.T) {
 }
 
 func TestListEntriesNonexistentAgent(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	entries := e.ListEntries("nonexistent", "")
 	if entries != nil {
@@ -132,6 +141,7 @@ func TestListEntriesNonexistentAgent(t *testing.T) {
 }
 
 func TestListEntriesFiltersExpired(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.Store("agent-1", "k1", "v1", "pref", nil, 0, nil)
 
@@ -150,6 +160,7 @@ func TestListEntriesFiltersExpired(t *testing.T) {
 // --- CleanExpired tests ---
 
 func TestCleanExpiredNone(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.Store("agent-1", "k1", "v1", "", nil, 0, nil)
 	e.Store("agent-1", "k2", "v2", "", nil, 0, nil)
@@ -161,6 +172,7 @@ func TestCleanExpiredNone(t *testing.T) {
 }
 
 func TestCleanExpiredMixed(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.Store("agent-1", "valid", "v1", "", nil, 0, nil)
 	e.Store("agent-1", "expired1", "v2", "", nil, 1, nil)
@@ -186,6 +198,7 @@ func TestCleanExpiredMixed(t *testing.T) {
 }
 
 func TestCleanExpiredTTLBoundary(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.Store("agent-1", "k1", "v1", "", nil, 3600, nil)
 
@@ -208,6 +221,7 @@ func TestCleanExpiredTTLBoundary(t *testing.T) {
 }
 
 func TestCleanExpiredEmptyStore(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	cleaned := e.CleanExpired()
 	if cleaned != 0 {
@@ -216,6 +230,7 @@ func TestCleanExpiredEmptyStore(t *testing.T) {
 }
 
 func TestStoreUpdateExisting(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.Store("agent-1", "k1", "v1", "pref", nil, 0, nil)
 	e.Store("agent-1", "k1", "v2", "schema", nil, 0, nil)

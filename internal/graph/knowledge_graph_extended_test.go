@@ -7,6 +7,7 @@ import (
 )
 
 func TestQueryPath(t *testing.T) {
+	t.Parallel()
 	kg := NewKnowledgeGraph(slog.Default())
 	kg.AddNode(Node{ID: "topic:orders", Type: NodeTopic, Name: "orders"})
 	kg.AddNode(Node{ID: "group:processor", Type: NodeConsumerGroup, Name: "processor"})
@@ -25,6 +26,7 @@ func TestQueryPath(t *testing.T) {
 }
 
 func TestQueryPathNoPath(t *testing.T) {
+	t.Parallel()
 	kg := NewKnowledgeGraph(slog.Default())
 	kg.AddNode(Node{ID: "topic:a", Type: NodeTopic, Name: "a"})
 	kg.AddNode(Node{ID: "topic:b", Type: NodeTopic, Name: "b"})
@@ -39,6 +41,7 @@ func TestQueryPathNoPath(t *testing.T) {
 }
 
 func TestGetStats(t *testing.T) {
+	t.Parallel()
 	kg := NewKnowledgeGraph(slog.Default())
 	kg.AddNode(Node{ID: "topic:a", Type: NodeTopic, Name: "a"})
 	kg.AddNode(Node{ID: "topic:b", Type: NodeTopic, Name: "b"})
@@ -62,6 +65,7 @@ func TestGetStats(t *testing.T) {
 }
 
 func TestGetStatsEmpty(t *testing.T) {
+	t.Parallel()
 	kg := NewKnowledgeGraph(slog.Default())
 	stats := kg.GetStats()
 	if stats["total_nodes"].(int) != 0 {
@@ -70,6 +74,7 @@ func TestGetStatsEmpty(t *testing.T) {
 }
 
 func TestEvictStale(t *testing.T) {
+	t.Parallel()
 	kg := NewKnowledgeGraph(slog.Default())
 	kg.ttl = 1 * time.Millisecond
 
@@ -84,6 +89,7 @@ func TestEvictStale(t *testing.T) {
 }
 
 func TestEvictStaleEmpty(t *testing.T) {
+	t.Parallel()
 	kg := NewKnowledgeGraph(slog.Default())
 	evicted := kg.EvictStale()
 	if evicted != 0 {
@@ -92,6 +98,7 @@ func TestEvictStaleEmpty(t *testing.T) {
 }
 
 func TestQueryInvalidFormat(t *testing.T) {
+	t.Parallel()
 	kg := NewKnowledgeGraph(slog.Default())
 	result, err := kg.Query("")
 	// Empty query may return empty result or error depending on implementation
@@ -104,6 +111,7 @@ func TestQueryInvalidFormat(t *testing.T) {
 }
 
 func TestQueryUnknownCommand(t *testing.T) {
+	t.Parallel()
 	kg := NewKnowledgeGraph(slog.Default())
 	_, err := kg.Query("invalid_command something")
 	// Should either return an error or fall through to search
@@ -114,6 +122,7 @@ func TestQueryUnknownCommand(t *testing.T) {
 }
 
 func TestAddNodeOverwrite(t *testing.T) {
+	t.Parallel()
 	kg := NewKnowledgeGraph(slog.Default())
 	kg.AddNode(Node{ID: "topic:a", Type: NodeTopic, Name: "a-old"})
 	kg.AddNode(Node{ID: "topic:a", Type: NodeTopic, Name: "a-new"})
@@ -125,6 +134,7 @@ func TestAddNodeOverwrite(t *testing.T) {
 }
 
 func TestSearchByNamePartial(t *testing.T) {
+	t.Parallel()
 	kg := NewKnowledgeGraph(slog.Default())
 	kg.AddNode(Node{ID: "topic:user-events", Type: NodeTopic, Name: "user-events"})
 	kg.AddNode(Node{ID: "topic:order-events", Type: NodeTopic, Name: "order-events"})
@@ -140,6 +150,7 @@ func TestSearchByNamePartial(t *testing.T) {
 }
 
 func TestFindByTypeConsumerGroup(t *testing.T) {
+	t.Parallel()
 	kg := NewKnowledgeGraph(slog.Default())
 	kg.AddNode(Node{ID: "topic:a", Type: NodeTopic, Name: "a"})
 	kg.AddNode(Node{ID: "group:g1", Type: NodeConsumerGroup, Name: "g1"})
@@ -155,6 +166,7 @@ func TestFindByTypeConsumerGroup(t *testing.T) {
 }
 
 func TestEdgeTypes(t *testing.T) {
+	t.Parallel()
 	if EdgeProducesTo != "produces_to" {
 		t.Errorf("unexpected EdgeProducesTo value: %s", EdgeProducesTo)
 	}
@@ -167,6 +179,7 @@ func TestEdgeTypes(t *testing.T) {
 }
 
 func TestNodeTypes(t *testing.T) {
+	t.Parallel()
 	if NodeTopic != "topic" {
 		t.Errorf("unexpected NodeTopic value: %s", NodeTopic)
 	}

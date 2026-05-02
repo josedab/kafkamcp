@@ -13,6 +13,7 @@ func testLogger() *slog.Logger {
 }
 
 func TestSubscribeUnsubscribe(t *testing.T) {
+	t.Parallel()
 	m := NewManager(testLogger())
 	defer m.Close()
 
@@ -40,6 +41,7 @@ func TestSubscribeUnsubscribe(t *testing.T) {
 }
 
 func TestSubscribeValidation(t *testing.T) {
+	t.Parallel()
 	m := NewManager(testLogger())
 	defer m.Close()
 
@@ -50,6 +52,7 @@ func TestSubscribeValidation(t *testing.T) {
 }
 
 func TestUnsubscribeWrongAgent(t *testing.T) {
+	t.Parallel()
 	m := NewManager(testLogger())
 	defer m.Close()
 
@@ -61,6 +64,7 @@ func TestUnsubscribeWrongAgent(t *testing.T) {
 }
 
 func TestProcessMessageMatching(t *testing.T) {
+	t.Parallel()
 	m := NewManager(testLogger())
 	defer m.Close()
 
@@ -89,6 +93,7 @@ func TestProcessMessageMatching(t *testing.T) {
 }
 
 func TestProcessMessageNoMatch(t *testing.T) {
+	t.Parallel()
 	m := NewManager(testLogger())
 	defer m.Close()
 
@@ -114,6 +119,7 @@ func TestProcessMessageNoMatch(t *testing.T) {
 }
 
 func TestListSubscriptions(t *testing.T) {
+	t.Parallel()
 	m := NewManager(testLogger())
 	defer m.Close()
 
@@ -133,6 +139,7 @@ func TestListSubscriptions(t *testing.T) {
 }
 
 func TestHeaderMatching(t *testing.T) {
+	t.Parallel()
 	m := NewManager(testLogger())
 	defer m.Close()
 

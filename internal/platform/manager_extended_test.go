@@ -8,6 +8,7 @@ import (
 )
 
 func TestGetBackend(t *testing.T) {
+	t.Parallel()
 	m := NewManager(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError})))
 	m.RegisterBackend("prod", NewKafkaBackend(PlatformConfig{Type: PlatformKafka}))
 
@@ -26,6 +27,7 @@ func TestGetBackend(t *testing.T) {
 }
 
 func TestCreateBackend(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		cfg      PlatformConfig
@@ -48,6 +50,7 @@ func TestCreateBackend(t *testing.T) {
 }
 
 func TestConfluentCloudBackendInfo(t *testing.T) {
+	t.Parallel()
 	b := NewConfluentCloudBackend(PlatformConfig{
 		Type:    PlatformConfluentCloud,
 		RESTURL: "https://api.confluent.cloud",
@@ -79,6 +82,7 @@ func TestConfluentCloudBackendInfo(t *testing.T) {
 }
 
 func TestKafkaBackendHasCapabilityFalse(t *testing.T) {
+	t.Parallel()
 	b := NewKafkaBackend(PlatformConfig{Type: PlatformKafka})
 	if b.HasCapability(CapTieredStorage) {
 		t.Error("kafka should not support tiered storage")
@@ -86,6 +90,7 @@ func TestKafkaBackendHasCapabilityFalse(t *testing.T) {
 }
 
 func TestRedpandaBackendHasCapabilityFalse(t *testing.T) {
+	t.Parallel()
 	b := NewRedpandaBackend(PlatformConfig{Type: PlatformRedpanda})
 	if b.HasCapability(CapTieredStorage) {
 		t.Error("redpanda should not support tiered storage")
@@ -93,6 +98,7 @@ func TestRedpandaBackendHasCapabilityFalse(t *testing.T) {
 }
 
 func TestConfluentCloudHasCapabilityFalse(t *testing.T) {
+	t.Parallel()
 	b := NewConfluentCloudBackend(PlatformConfig{Type: PlatformConfluentCloud})
 	if b.HasCapability(CapACLs) {
 		t.Error("confluent cloud should not support ACLs")
@@ -103,6 +109,7 @@ func TestConfluentCloudHasCapabilityFalse(t *testing.T) {
 }
 
 func TestRedpandaBackendInfoAdminURL(t *testing.T) {
+	t.Parallel()
 	// With admin URL
 	b := NewRedpandaBackend(PlatformConfig{Type: PlatformRedpanda, AdminURL: "http://localhost:9644"})
 	info, _ := b.Info(context.Background())

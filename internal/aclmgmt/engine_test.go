@@ -6,6 +6,7 @@ import (
 )
 
 func TestSetAndGetDesiredState(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	rules := []ACLRule{
 		{ResourceType: "topic", ResourceName: "orders", Operation: "read"},
@@ -26,6 +27,7 @@ func TestSetAndGetDesiredState(t *testing.T) {
 }
 
 func TestComputeDiff(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	desired := []ACLRule{
 		{Principal: "User:app1", Host: "*", ResourceType: "topic", ResourceName: "orders", PatternType: "literal", Operation: "read", Permission: "allow"},
@@ -49,6 +51,7 @@ func TestComputeDiff(t *testing.T) {
 }
 
 func TestAudit(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	acls := []ACLRule{
 		{Principal: "User:admin", ResourceType: "cluster", ResourceName: "*", Operation: "all", Permission: "allow"},
@@ -71,6 +74,7 @@ func TestAudit(t *testing.T) {
 }
 
 func TestDryRun(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	desired := []ACLRule{
 		{Principal: "User:app1", Host: "*", ResourceType: "topic", ResourceName: "orders", PatternType: "literal", Operation: "read", Permission: "allow"},

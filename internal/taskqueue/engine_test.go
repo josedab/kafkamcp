@@ -11,6 +11,7 @@ func testLogger() *slog.Logger {
 }
 
 func TestPublishAndClaim(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	task, err := e.Publish("build-queue", "compile", "agent-1", PriorityHigh, 3, map[string]any{"repo": "test"}, 0)
@@ -31,6 +32,7 @@ func TestPublishAndClaim(t *testing.T) {
 }
 
 func TestPriorityOrdering(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	e.Publish("q", "low-task", "a1", PriorityLow, 0, nil, 0)
@@ -43,6 +45,7 @@ func TestPriorityOrdering(t *testing.T) {
 }
 
 func TestCompleteAndRetry(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	e.Publish("q", "task1", "a1", PriorityMedium, 2, nil, 0)
@@ -63,6 +66,7 @@ func TestCompleteAndRetry(t *testing.T) {
 }
 
 func TestStats(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	e.Publish("build", "t1", "a1", PriorityMedium, 3, nil, 0)

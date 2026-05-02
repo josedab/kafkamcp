@@ -23,6 +23,7 @@ func seedSnapshot(e *Engine) *ClusterSnapshot {
 }
 
 func TestCaptureAndCreateTwin(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	snap := seedSnapshot(e)
 
@@ -36,6 +37,7 @@ func TestCaptureAndCreateTwin(t *testing.T) {
 }
 
 func TestSimulateCreateTopic(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	snap := seedSnapshot(e)
 	twin, _ := e.CreateTwin(snap.ID)
@@ -58,6 +60,7 @@ func TestSimulateCreateTopic(t *testing.T) {
 }
 
 func TestSimulateDeleteTopic(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	snap := seedSnapshot(e)
 	twin, _ := e.CreateTwin(snap.ID)
@@ -77,6 +80,7 @@ func TestSimulateDeleteTopic(t *testing.T) {
 }
 
 func TestSimulateAlterPartitions(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	snap := seedSnapshot(e)
 	twin, _ := e.CreateTwin(snap.ID)
@@ -101,6 +105,7 @@ func TestSimulateAlterPartitions(t *testing.T) {
 }
 
 func TestDiffAndMigration(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	snap := seedSnapshot(e)
 	twin, _ := e.CreateTwin(snap.ID)
@@ -134,6 +139,7 @@ func TestDiffAndMigration(t *testing.T) {
 }
 
 func TestRebalance(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	snap := seedSnapshot(e)
 	twin, _ := e.CreateTwin(snap.ID)

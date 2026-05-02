@@ -6,6 +6,7 @@ import (
 )
 
 func TestCreateWorkspace(t *testing.T) {
+	t.Parallel()
 	cs := NewCloudService(nil)
 
 	ws, apiKey, err := cs.CreateWorkspace("My Team", "user@example.com", "free")
@@ -27,6 +28,7 @@ func TestCreateWorkspace(t *testing.T) {
 }
 
 func TestAuthenticateAPIKey(t *testing.T) {
+	t.Parallel()
 	cs := NewCloudService(nil)
 
 	ws, apiKey, _ := cs.CreateWorkspace("Test", "test@test.com", "free")
@@ -46,6 +48,7 @@ func TestAuthenticateAPIKey(t *testing.T) {
 }
 
 func TestClusterLimits(t *testing.T) {
+	t.Parallel()
 	cs := NewCloudService(nil)
 
 	ws, _, _ := cs.CreateWorkspace("Test", "test@test.com", "free")
@@ -65,6 +68,7 @@ func TestClusterLimits(t *testing.T) {
 }
 
 func TestRecordUsage(t *testing.T) {
+	t.Parallel()
 	cs := NewCloudService(nil)
 	ws, _, _ := cs.CreateWorkspace("Test", "test@test.com", "free")
 
@@ -80,6 +84,7 @@ func TestRecordUsage(t *testing.T) {
 }
 
 func TestGetDashboardData(t *testing.T) {
+	t.Parallel()
 	cs := NewCloudService(nil)
 	ws, _, _ := cs.CreateWorkspace("Test", "test@test.com", "pro")
 
@@ -93,6 +98,7 @@ func TestGetDashboardData(t *testing.T) {
 }
 
 func TestPlanLimits(t *testing.T) {
+	t.Parallel()
 	free := GetPlanLimits("free")
 	if free.MaxClusters != 3 {
 		t.Errorf("free plan should allow 3 clusters, got %d", free.MaxClusters)

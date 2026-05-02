@@ -5,6 +5,7 @@ import (
 )
 
 func TestGetLagDetails(t *testing.T) {
+	t.Parallel()
 	t.Run("link found with topics", func(t *testing.T) {
 		m := NewMonitor(nil)
 		m.RegisterLink("src", "dst", "mirrormaker2")
@@ -56,6 +57,7 @@ func TestGetLagDetails(t *testing.T) {
 }
 
 func TestEvaluateFailoverReadiness(t *testing.T) {
+	t.Parallel()
 	t.Run("ready - all synced", func(t *testing.T) {
 		m := NewMonitor(nil)
 		m.RegisterLink("src", "dst", "mirrormaker2")
@@ -145,6 +147,7 @@ func TestEvaluateFailoverReadiness(t *testing.T) {
 }
 
 func TestGetRecentAlerts(t *testing.T) {
+	t.Parallel()
 	t.Run("filtered by source and target", func(t *testing.T) {
 		m := NewMonitor(nil)
 		m.SetThresholds(100, 500)

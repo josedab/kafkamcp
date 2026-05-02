@@ -6,6 +6,7 @@ import (
 )
 
 func TestRegisterAndGetStatus(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor(nil)
 	m.RegisterLink("cluster-a", "cluster-b", "mirrormaker2")
 
@@ -19,6 +20,7 @@ func TestRegisterAndGetStatus(t *testing.T) {
 }
 
 func TestUpdateTopicLag(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor(nil)
 	m.RegisterLink("source", "target", "mirrormaker2")
 
@@ -38,6 +40,7 @@ func TestUpdateTopicLag(t *testing.T) {
 }
 
 func TestLagAlerts(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor(nil)
 	m.SetThresholds(100, 500)
 	m.RegisterLink("source", "target", "mirrormaker2")

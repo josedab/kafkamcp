@@ -6,6 +6,7 @@ import (
 )
 
 func TestListRunbooks_Builtins(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	runbooks := e.ListRunbooks("")
 	if len(runbooks) < 3 {
@@ -14,6 +15,7 @@ func TestListRunbooks_Builtins(t *testing.T) {
 }
 
 func TestListRunbooks_ByCategory(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	ops := e.ListRunbooks("operations")
 	if len(ops) != 1 {
@@ -22,6 +24,7 @@ func TestListRunbooks_ByCategory(t *testing.T) {
 }
 
 func TestCreateRunbook(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	rb, err := e.CreateRunbook(`{
 		"name": "Custom Runbook",
@@ -37,6 +40,7 @@ func TestCreateRunbook(t *testing.T) {
 }
 
 func TestCreateRunbook_Invalid(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	_, err := e.CreateRunbook(`{"name": ""}`, "test")
 	if err == nil {
@@ -49,6 +53,7 @@ func TestCreateRunbook_Invalid(t *testing.T) {
 }
 
 func TestExecute_Success(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	exec, err := e.Execute("rb_rolling_restart_check", "test-agent", nil)
 	if err != nil {
@@ -63,6 +68,7 @@ func TestExecute_Success(t *testing.T) {
 }
 
 func TestExecute_NotFound(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	_, err := e.Execute("nonexistent", "test", nil)
 	if err == nil {
@@ -71,6 +77,7 @@ func TestExecute_NotFound(t *testing.T) {
 }
 
 func TestCompleteStep(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	exec, _ := e.Execute("rb_rolling_restart_check", "test-agent", nil)
 
@@ -91,6 +98,7 @@ func TestCompleteStep(t *testing.T) {
 }
 
 func TestGetRunbook_Exists(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	rb, err := e.GetRunbook("rb_partition_reassign")
 	if err != nil {
@@ -102,6 +110,7 @@ func TestGetRunbook_Exists(t *testing.T) {
 }
 
 func TestGetRunbook_NotFound(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	_, err := e.GetRunbook("nonexistent")
 	if err == nil {
@@ -110,6 +119,7 @@ func TestGetRunbook_NotFound(t *testing.T) {
 }
 
 func TestListExecutions_FilterByRunbook(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	e.Execute("rb_rolling_restart_check", "agent1", nil)
 	e.Execute("rb_partition_reassign", "agent1", nil)
@@ -127,6 +137,7 @@ func TestListExecutions_FilterByRunbook(t *testing.T) {
 }
 
 func TestListExecutions_DefaultLimit(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	e.Execute("rb_rolling_restart_check", "agent1", nil)
 
@@ -138,6 +149,7 @@ func TestListExecutions_DefaultLimit(t *testing.T) {
 }
 
 func TestListExecutions_WithLimit(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	for i := 0; i < 5; i++ {
 		e.Execute("rb_rolling_restart_check", "agent1", nil)
@@ -150,6 +162,7 @@ func TestListExecutions_WithLimit(t *testing.T) {
 }
 
 func TestListExecutions_Empty(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	results := e.ListExecutions("", 0)
 	if len(results) != 0 {
@@ -158,6 +171,7 @@ func TestListExecutions_Empty(t *testing.T) {
 }
 
 func TestListExecutions_SortedByTime(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	e.Execute("rb_rolling_restart_check", "agent1", nil)
 	e.Execute("rb_partition_reassign", "agent1", nil)
@@ -172,6 +186,7 @@ func TestListExecutions_SortedByTime(t *testing.T) {
 }
 
 func TestDeleteRunbook_Success(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	err := e.DeleteRunbook("rb_partition_reassign")
 	if err != nil {
@@ -184,6 +199,7 @@ func TestDeleteRunbook_Success(t *testing.T) {
 }
 
 func TestDeleteRunbook_NotFound(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	err := e.DeleteRunbook("nonexistent")
 	if err == nil {
@@ -192,6 +208,7 @@ func TestDeleteRunbook_NotFound(t *testing.T) {
 }
 
 func TestDeleteRunbook_Isolation(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	e.DeleteRunbook("rb_partition_reassign")
 
@@ -203,6 +220,7 @@ func TestDeleteRunbook_Isolation(t *testing.T) {
 }
 
 func TestEnableRunbook_Toggle(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 
 	err := e.EnableRunbook("rb_rolling_restart_check", false)
@@ -225,6 +243,7 @@ func TestEnableRunbook_Toggle(t *testing.T) {
 }
 
 func TestEnableRunbook_NotFound(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	err := e.EnableRunbook("nonexistent", true)
 	if err == nil {
@@ -233,6 +252,7 @@ func TestEnableRunbook_NotFound(t *testing.T) {
 }
 
 func TestEnableRunbook_Idempotent(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	e.EnableRunbook("rb_rolling_restart_check", true)
 	err := e.EnableRunbook("rb_rolling_restart_check", true)
@@ -246,6 +266,7 @@ func TestEnableRunbook_Idempotent(t *testing.T) {
 }
 
 func TestExecute_DisabledRunbook(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	e.EnableRunbook("rb_rolling_restart_check", false)
 
@@ -256,6 +277,7 @@ func TestExecute_DisabledRunbook(t *testing.T) {
 }
 
 func TestLifecycle_CreateExecuteListDelete(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 
 	// Create

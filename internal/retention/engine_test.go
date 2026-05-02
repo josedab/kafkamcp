@@ -6,6 +6,7 @@ import (
 )
 
 func TestNewEngine(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	if e == nil {
 		t.Fatal("NewEngine returned nil")
@@ -13,6 +14,7 @@ func TestNewEngine(t *testing.T) {
 }
 
 func TestSetPolicy(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	err := e.SetPolicy(RetentionPolicy{
 		Topic:              "orders",
@@ -33,6 +35,7 @@ func TestSetPolicy(t *testing.T) {
 }
 
 func TestSetPolicyEmptyTopic(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	err := e.SetPolicy(RetentionPolicy{})
 	if err == nil {
@@ -41,6 +44,7 @@ func TestSetPolicyEmptyTopic(t *testing.T) {
 }
 
 func TestSetPolicyComplianceViolation(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	err := e.SetPolicy(RetentionPolicy{
 		Topic:              "medical-records",
@@ -53,6 +57,7 @@ func TestSetPolicyComplianceViolation(t *testing.T) {
 }
 
 func TestAnalyze(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	_ = e.SetPolicy(RetentionPolicy{
 		Topic:              "stale-topic",
@@ -80,6 +85,7 @@ func TestAnalyze(t *testing.T) {
 }
 
 func TestRequestChange(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	_ = e.SetPolicy(RetentionPolicy{
 		Topic:              "orders",
@@ -97,6 +103,7 @@ func TestRequestChange(t *testing.T) {
 }
 
 func TestApproveChange(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	_ = e.SetPolicy(RetentionPolicy{
 		Topic:              "orders",
@@ -117,6 +124,7 @@ func TestApproveChange(t *testing.T) {
 }
 
 func TestRequestChangeComplianceViolation(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	_ = e.SetPolicy(RetentionPolicy{
 		Topic:              "audit-logs",

@@ -5,6 +5,7 @@ import "testing"
 // Additional tests for edge cases in computeHealthScore.
 
 func TestComputeHealthScore_AllPenaltiesApplied(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	// lag > 1M (-50), commitRate=0 (-30), rebalances>10 (-25), members=0 (-40)
 	// total: 100 - 50 - 30 - 25 - 40 = -45 → clamped to 0
@@ -18,6 +19,7 @@ func TestComputeHealthScore_AllPenaltiesApplied(t *testing.T) {
 }
 
 func TestComputeHealthScore_ModerateLag(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	// lag=150_000 (-30), commitRate=2.0 (0), rebalances=3 (-5), members=2 (0)
 	// 100 - 30 - 5 = 65
@@ -31,6 +33,7 @@ func TestComputeHealthScore_ModerateLag(t *testing.T) {
 }
 
 func TestComputeHealthScore_LowCommitRate(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	// lag=0 (0), commitRate=0.5 (-15), rebalances=0 (0), members=1 (0)
 	// 100 - 15 = 85
@@ -44,6 +47,7 @@ func TestComputeHealthScore_LowCommitRate(t *testing.T) {
 }
 
 func TestComputeHealthScore_SmallLag(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	// lag=15_000 (-15), commitRate=5.0 (0), rebalances=6 (-15), members=3 (0)
 	// 100 - 15 - 15 = 70
@@ -57,6 +61,7 @@ func TestComputeHealthScore_SmallLag(t *testing.T) {
 }
 
 func TestEvaluateHealth_DeadStatus(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	// score < 25 → dead
 	h := m.EvaluateHealth("dead-group", 2_000_000, 0, 0, 20)
@@ -66,6 +71,7 @@ func TestEvaluateHealth_DeadStatus(t *testing.T) {
 }
 
 func TestLagTrend_Growing(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	m.EvaluateHealth("trend-test", 1000, 1, 1.0, 0)
 	h := m.EvaluateHealth("trend-test", 2000, 1, 1.0, 0)
@@ -75,6 +81,7 @@ func TestLagTrend_Growing(t *testing.T) {
 }
 
 func TestLagTrend_Shrinking(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	m.EvaluateHealth("trend-test2", 5000, 1, 1.0, 0)
 	h := m.EvaluateHealth("trend-test2", 1000, 1, 1.0, 0)
@@ -84,6 +91,7 @@ func TestLagTrend_Shrinking(t *testing.T) {
 }
 
 func TestLagTrend_Stable(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	m.EvaluateHealth("trend-test3", 1000, 1, 1.0, 0)
 	h := m.EvaluateHealth("trend-test3", 1000, 1, 1.0, 0)
@@ -93,6 +101,7 @@ func TestLagTrend_Stable(t *testing.T) {
 }
 
 func TestDetectIssues_NoIssuesWhenHealthy(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	h := m.EvaluateHealth("healthy-group", 100, 3, 5.0, 0)
 	if len(h.Issues) != 0 {
@@ -101,6 +110,7 @@ func TestDetectIssues_NoIssuesWhenHealthy(t *testing.T) {
 }
 
 func TestDetectIssues_WarningRebalance(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	h := m.EvaluateHealth("rebalance-warn", 0, 3, 5.0, 7)
 	found := false

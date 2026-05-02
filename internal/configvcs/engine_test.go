@@ -12,6 +12,7 @@ func testLogger() *slog.Logger {
 }
 
 func TestRecordAndHistory(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	change, err := e.RecordChange("topic", "orders", "create", "agent-1", "Initial config",
@@ -34,6 +35,7 @@ func TestRecordAndHistory(t *testing.T) {
 }
 
 func TestCompare(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	e.RecordChange("topic", "orders", "create", "a1", "",
@@ -52,6 +54,7 @@ func TestCompare(t *testing.T) {
 }
 
 func TestRollback(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	e.RecordChange("topic", "orders", "create", "a1", "",
@@ -69,6 +72,7 @@ func TestRollback(t *testing.T) {
 }
 
 func TestAuditReport(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	e.RecordChange("topic", "orders", "create", "agent-1", "v1", nil, map[string]any{"p": 6}, nil)

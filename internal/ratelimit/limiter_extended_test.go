@@ -5,6 +5,7 @@ import (
 )
 
 func TestStatus(t *testing.T) {
+	t.Parallel()
 	l := New(0)
 	l.SetAgentLimit("agent-1", 60)
 	l.SetAgentLimit("agent-2", 120)
@@ -33,6 +34,7 @@ func TestStatus(t *testing.T) {
 }
 
 func TestStatusEmpty(t *testing.T) {
+	t.Parallel()
 	l := New(0)
 	statuses := l.Status()
 	if len(statuses) != 0 {
@@ -41,6 +43,7 @@ func TestStatusEmpty(t *testing.T) {
 }
 
 func TestStatusAfterExhaustion(t *testing.T) {
+	t.Parallel()
 	l := New(0)
 	l.SetAgentLimit("agent-1", 2)
 
@@ -59,6 +62,7 @@ func TestStatusAfterExhaustion(t *testing.T) {
 }
 
 func TestAllowNoLimits(t *testing.T) {
+	t.Parallel()
 	l := New(0)
 	// No global, no per-agent limits => allow all
 	if !l.Allow("any-agent") {
@@ -67,6 +71,7 @@ func TestAllowNoLimits(t *testing.T) {
 }
 
 func TestAllowGlobalDenyBeforeAgent(t *testing.T) {
+	t.Parallel()
 	l := New(1) // 1 request per minute global
 	l.SetAgentLimit("agent-1", 100)
 
@@ -79,6 +84,7 @@ func TestAllowGlobalDenyBeforeAgent(t *testing.T) {
 }
 
 func TestSetAgentLimitZero(t *testing.T) {
+	t.Parallel()
 	l := New(0)
 	l.SetAgentLimit("agent-1", 0) // should not create a bucket
 	l.SetAgentLimit("agent-2", 10)

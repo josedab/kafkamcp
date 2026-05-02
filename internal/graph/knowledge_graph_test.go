@@ -5,6 +5,7 @@ import (
 )
 
 func TestAddNodeAndEdge(t *testing.T) {
+	t.Parallel()
 	kg := NewKnowledgeGraph(nil)
 	kg.AddNode(Node{ID: "orders", Type: NodeTopic, Name: "orders"})
 	kg.AddNode(Node{ID: "group:payment-svc", Type: NodeConsumerGroup, Name: "payment-svc"})
@@ -20,6 +21,7 @@ func TestAddNodeAndEdge(t *testing.T) {
 }
 
 func TestDiscoverFromTopology(t *testing.T) {
+	t.Parallel()
 	kg := NewKnowledgeGraph(nil)
 
 	topics := []TopicInfo{
@@ -42,6 +44,7 @@ func TestDiscoverFromTopology(t *testing.T) {
 }
 
 func TestQueryDependsOn(t *testing.T) {
+	t.Parallel()
 	kg := setupTestGraph()
 	result, err := kg.Query("depends_on orders")
 	if err != nil {
@@ -53,6 +56,7 @@ func TestQueryDependsOn(t *testing.T) {
 }
 
 func TestQueryImpact(t *testing.T) {
+	t.Parallel()
 	kg := setupTestGraph()
 	result, err := kg.Query("impacts orders")
 	if err != nil {
@@ -64,6 +68,7 @@ func TestQueryImpact(t *testing.T) {
 }
 
 func TestQueryNeighbors(t *testing.T) {
+	t.Parallel()
 	kg := setupTestGraph()
 	result, err := kg.Query("neighbors orders")
 	if err != nil {
@@ -75,6 +80,7 @@ func TestQueryNeighbors(t *testing.T) {
 }
 
 func TestQueryAll(t *testing.T) {
+	t.Parallel()
 	kg := setupTestGraph()
 	result, err := kg.Query("all")
 	if err != nil {
@@ -86,6 +92,7 @@ func TestQueryAll(t *testing.T) {
 }
 
 func TestQueryByType(t *testing.T) {
+	t.Parallel()
 	kg := setupTestGraph()
 	result, err := kg.Query("type topic")
 	if err != nil {
@@ -99,6 +106,7 @@ func TestQueryByType(t *testing.T) {
 }
 
 func TestSearchByName(t *testing.T) {
+	t.Parallel()
 	kg := setupTestGraph()
 	result, err := kg.Query("order")
 	if err != nil {

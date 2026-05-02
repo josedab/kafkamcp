@@ -6,6 +6,7 @@ import (
 )
 
 func TestNewEngine(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	if e == nil {
 		t.Fatal("NewEngine returned nil")
@@ -17,6 +18,7 @@ func TestNewEngine(t *testing.T) {
 }
 
 func TestRecord(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	err := e.Record(ActionEvent{
 		AgentID:    "agent-1",
@@ -36,6 +38,7 @@ func TestRecord(t *testing.T) {
 }
 
 func TestRecordValidation(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	if err := e.Record(ActionEvent{Tool: "test"}); err == nil {
 		t.Error("expected error for missing agent_id")
@@ -46,6 +49,7 @@ func TestRecordValidation(t *testing.T) {
 }
 
 func TestGetSession(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	_ = e.Record(ActionEvent{AgentID: "a", SessionID: "s1", Tool: "kafka_consume", Result: ActionResult{Status: "success"}})
 	_ = e.Record(ActionEvent{AgentID: "a", SessionID: "s1", Tool: "kafka_produce", Result: ActionResult{Status: "success"}})
@@ -67,6 +71,7 @@ func TestGetSession(t *testing.T) {
 }
 
 func TestGetToolUsage(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	_ = e.Record(ActionEvent{AgentID: "a", Tool: "kafka_consume", DurationMs: 100, Result: ActionResult{Status: "success"}})
 	_ = e.Record(ActionEvent{AgentID: "b", Tool: "kafka_consume", DurationMs: 200, Result: ActionResult{Status: "success"}})
@@ -79,6 +84,7 @@ func TestGetToolUsage(t *testing.T) {
 }
 
 func TestExportJSONL(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	for i := 0; i < 5; i++ {
 		_ = e.Record(ActionEvent{
@@ -98,6 +104,7 @@ func TestExportJSONL(t *testing.T) {
 }
 
 func TestExportJSONLFilter(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(nil)
 	_ = e.Record(ActionEvent{AgentID: "a", Tool: "kafka_consume", Result: ActionResult{Status: "success"}})
 	_ = e.Record(ActionEvent{AgentID: "b", Tool: "kafka_produce", Result: ActionResult{Status: "error"}})

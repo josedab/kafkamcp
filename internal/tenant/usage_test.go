@@ -9,6 +9,7 @@ import (
 )
 
 func TestUsageTrackerRecord(t *testing.T) {
+	t.Parallel()
 	ut := NewUsageTracker()
 
 	rec := UsageRecord{
@@ -36,6 +37,7 @@ func TestUsageTrackerRecord(t *testing.T) {
 }
 
 func TestUsageTrackerRecord_ExplicitTimestamp(t *testing.T) {
+	t.Parallel()
 	ut := NewUsageTracker()
 	ts := time.Date(2024, 6, 15, 12, 0, 0, 0, time.UTC)
 	ut.Record(UsageRecord{TenantID: "t1", ToolName: "consume", Timestamp: ts})
@@ -48,6 +50,7 @@ func TestUsageTrackerRecord_ExplicitTimestamp(t *testing.T) {
 }
 
 func TestUsageTrackerRecord_MaxRecordsCap(t *testing.T) {
+	t.Parallel()
 	ut := NewUsageTracker()
 	ut.maxRecords = 10
 	for i := 0; i < 15; i++ {
@@ -65,6 +68,7 @@ func TestUsageTrackerRecord_MaxRecordsCap(t *testing.T) {
 }
 
 func TestGenerateRollup(t *testing.T) {
+	t.Parallel()
 	ut := NewUsageTracker()
 	start := time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2024, 6, 30, 23, 59, 59, 0, time.UTC)
@@ -99,6 +103,7 @@ func TestGenerateRollup(t *testing.T) {
 }
 
 func TestGenerateRollup_Empty(t *testing.T) {
+	t.Parallel()
 	ut := NewUsageTracker()
 	start := time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2024, 6, 30, 23, 59, 59, 0, time.UTC)
@@ -120,6 +125,7 @@ func TestGenerateRollup_Empty(t *testing.T) {
 }
 
 func TestGenerateRollup_ByToolAndByAgent(t *testing.T) {
+	t.Parallel()
 	ut := NewUsageTracker()
 	start := time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2024, 6, 30, 23, 59, 59, 0, time.UTC)
@@ -146,6 +152,7 @@ func TestGenerateRollup_ByToolAndByAgent(t *testing.T) {
 }
 
 func TestGenerateRollup_OutOfRange(t *testing.T) {
+	t.Parallel()
 	ut := NewUsageTracker()
 	start := time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2024, 6, 30, 23, 59, 59, 0, time.UTC)
@@ -162,6 +169,7 @@ func TestGenerateRollup_OutOfRange(t *testing.T) {
 }
 
 func TestGenerateChargebackReport_ProPlan(t *testing.T) {
+	t.Parallel()
 	ut := NewUsageTracker()
 	start := time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2024, 6, 30, 23, 59, 59, 0, time.UTC)
@@ -214,6 +222,7 @@ func TestGenerateChargebackReport_ProPlan(t *testing.T) {
 }
 
 func TestGenerateChargebackReport_FreePlan(t *testing.T) {
+	t.Parallel()
 	ut := NewUsageTracker()
 	start := time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2024, 6, 30, 23, 59, 59, 0, time.UTC)
@@ -249,6 +258,7 @@ func TestGenerateChargebackReport_FreePlan(t *testing.T) {
 }
 
 func TestGenerateChargebackReport_UnknownPlan(t *testing.T) {
+	t.Parallel()
 	ut := NewUsageTracker()
 	start := time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2024, 6, 30, 23, 59, 59, 0, time.UTC)
@@ -263,6 +273,7 @@ func TestGenerateChargebackReport_UnknownPlan(t *testing.T) {
 }
 
 func TestExportCSV(t *testing.T) {
+	t.Parallel()
 	ut := NewUsageTracker()
 	start := time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2024, 6, 30, 23, 59, 59, 0, time.UTC)
@@ -311,6 +322,7 @@ func TestExportCSV(t *testing.T) {
 }
 
 func TestExportCSV_Empty(t *testing.T) {
+	t.Parallel()
 	ut := NewUsageTracker()
 	start := time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2024, 6, 30, 23, 59, 59, 0, time.UTC)
@@ -331,6 +343,7 @@ func TestExportCSV_Empty(t *testing.T) {
 }
 
 func TestExportJSON(t *testing.T) {
+	t.Parallel()
 	ut := NewUsageTracker()
 	start := time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2024, 6, 30, 23, 59, 59, 0, time.UTC)
@@ -369,6 +382,7 @@ func TestExportJSON(t *testing.T) {
 }
 
 func TestExportJSON_Empty(t *testing.T) {
+	t.Parallel()
 	ut := NewUsageTracker()
 	start := time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2024, 6, 30, 23, 59, 59, 0, time.UTC)

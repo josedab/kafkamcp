@@ -6,6 +6,7 @@ import (
 )
 
 func TestCreateInstance(t *testing.T) {
+	t.Parallel()
 	c := NewController(slog.Default())
 
 	inst, err := c.CreateInstance("test-kafkamcp", "default", KafkaMCPSpec{
@@ -29,6 +30,7 @@ func TestCreateInstance(t *testing.T) {
 }
 
 func TestListInstances(t *testing.T) {
+	t.Parallel()
 	c := NewController(slog.Default())
 
 	c.CreateInstance("inst1", "ns1", KafkaMCPSpec{})
@@ -46,6 +48,7 @@ func TestListInstances(t *testing.T) {
 }
 
 func TestScaleInstance(t *testing.T) {
+	t.Parallel()
 	c := NewController(slog.Default())
 
 	c.CreateInstance("test", "default", KafkaMCPSpec{Replicas: 1})
@@ -60,6 +63,7 @@ func TestScaleInstance(t *testing.T) {
 }
 
 func TestDeleteInstance(t *testing.T) {
+	t.Parallel()
 	c := NewController(slog.Default())
 
 	c.CreateInstance("test", "default", KafkaMCPSpec{})
@@ -76,6 +80,7 @@ func TestDeleteInstance(t *testing.T) {
 }
 
 func TestGenerateCRD(t *testing.T) {
+	t.Parallel()
 	crd := GenerateCRD()
 	if crd == "" {
 		t.Fatal("expected non-empty CRD")
@@ -86,6 +91,7 @@ func TestGenerateCRD(t *testing.T) {
 }
 
 func TestGenerateManifest(t *testing.T) {
+	t.Parallel()
 	c := NewController(slog.Default())
 	inst, _ := c.CreateInstance("test", "default", KafkaMCPSpec{Replicas: 2})
 
@@ -96,6 +102,7 @@ func TestGenerateManifest(t *testing.T) {
 }
 
 func TestDefaultValues(t *testing.T) {
+	t.Parallel()
 	c := NewController(slog.Default())
 
 	inst, _ := c.CreateInstance("test", "default", KafkaMCPSpec{})

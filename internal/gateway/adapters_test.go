@@ -9,6 +9,7 @@ import (
 )
 
 func TestNATSAdapter_ConnectNoEndpoints(t *testing.T) {
+	t.Parallel()
 	adapter := NewNATSAdapter(BackendConfig{}, slog.Default())
 	err := adapter.Connect(context.Background())
 	if err == nil {
@@ -17,6 +18,7 @@ func TestNATSAdapter_ConnectNoEndpoints(t *testing.T) {
 }
 
 func TestNATSAdapter_OperationsWhenDisconnected(t *testing.T) {
+	t.Parallel()
 	adapter := NewNATSAdapter(BackendConfig{
 		Endpoints: []string{"localhost:4222"},
 	}, slog.Default())
@@ -43,6 +45,7 @@ func TestNATSAdapter_OperationsWhenDisconnected(t *testing.T) {
 }
 
 func TestNATSAdapter_Protocol(t *testing.T) {
+	t.Parallel()
 	adapter := NewNATSAdapter(BackendConfig{}, slog.Default())
 	if adapter.Protocol() != ProtocolNATS {
 		t.Errorf("expected NATS, got %s", adapter.Protocol())
@@ -50,6 +53,7 @@ func TestNATSAdapter_Protocol(t *testing.T) {
 }
 
 func TestNATSAdapter_FullLifecycle(t *testing.T) {
+	t.Parallel()
 	adapter := NewNATSAdapter(BackendConfig{
 		Endpoints: []string{"localhost:4222"},
 	}, slog.Default())
@@ -114,6 +118,7 @@ func TestNATSAdapter_FullLifecycle(t *testing.T) {
 }
 
 func TestPulsarAdapter_ConnectNoEndpoints(t *testing.T) {
+	t.Parallel()
 	adapter := NewPulsarAdapter(BackendConfig{}, slog.Default())
 	err := adapter.Connect(context.Background())
 	if err == nil {
@@ -122,6 +127,7 @@ func TestPulsarAdapter_ConnectNoEndpoints(t *testing.T) {
 }
 
 func TestPulsarAdapter_OperationsWhenDisconnected(t *testing.T) {
+	t.Parallel()
 	adapter := NewPulsarAdapter(BackendConfig{
 		Endpoints: []string{"localhost:6650"},
 	}, slog.Default())
@@ -148,6 +154,7 @@ func TestPulsarAdapter_OperationsWhenDisconnected(t *testing.T) {
 }
 
 func TestPulsarAdapter_Protocol(t *testing.T) {
+	t.Parallel()
 	adapter := NewPulsarAdapter(BackendConfig{}, slog.Default())
 	if adapter.Protocol() != ProtocolPulsar {
 		t.Errorf("expected Pulsar, got %s", adapter.Protocol())
@@ -155,6 +162,7 @@ func TestPulsarAdapter_Protocol(t *testing.T) {
 }
 
 func TestPulsarAdapter_FullLifecycle(t *testing.T) {
+	t.Parallel()
 	adapter := NewPulsarAdapter(BackendConfig{
 		Endpoints: []string{"localhost:6650"},
 	}, slog.Default())
@@ -204,6 +212,7 @@ func TestPulsarAdapter_FullLifecycle(t *testing.T) {
 }
 
 func TestRabbitMQAdapter_ConnectNoEndpoints(t *testing.T) {
+	t.Parallel()
 	adapter := NewRabbitMQAdapter(BackendConfig{}, slog.Default())
 	err := adapter.Connect(context.Background())
 	if err == nil {
@@ -212,6 +221,7 @@ func TestRabbitMQAdapter_ConnectNoEndpoints(t *testing.T) {
 }
 
 func TestRabbitMQAdapter_OperationsWhenDisconnected(t *testing.T) {
+	t.Parallel()
 	adapter := NewRabbitMQAdapter(BackendConfig{
 		Endpoints: []string{"localhost:5672"},
 	}, slog.Default())
@@ -238,6 +248,7 @@ func TestRabbitMQAdapter_OperationsWhenDisconnected(t *testing.T) {
 }
 
 func TestRabbitMQAdapter_Protocol(t *testing.T) {
+	t.Parallel()
 	adapter := NewRabbitMQAdapter(BackendConfig{}, slog.Default())
 	if adapter.Protocol() != ProtocolRabbitMQ {
 		t.Errorf("expected RabbitMQ, got %s", adapter.Protocol())
@@ -245,6 +256,7 @@ func TestRabbitMQAdapter_Protocol(t *testing.T) {
 }
 
 func TestRabbitMQAdapter_FullLifecycle(t *testing.T) {
+	t.Parallel()
 	adapter := NewRabbitMQAdapter(BackendConfig{
 		Endpoints: []string{"localhost:5672"},
 	}, slog.Default())

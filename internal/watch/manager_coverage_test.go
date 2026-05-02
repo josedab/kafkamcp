@@ -10,6 +10,7 @@ import (
 )
 
 func TestSubscription_ExpiredMatchSkipped(t *testing.T) {
+	t.Parallel()
 	m := NewManager(testLogger())
 	defer m.Close()
 
@@ -32,6 +33,7 @@ func TestSubscription_ExpiredMatchSkipped(t *testing.T) {
 }
 
 func TestSubscription_PausedMatchSkipped(t *testing.T) {
+	t.Parallel()
 	m := NewManager(testLogger())
 	defer m.Close()
 
@@ -49,6 +51,7 @@ func TestSubscription_PausedMatchSkipped(t *testing.T) {
 }
 
 func TestGetSubscription_Found(t *testing.T) {
+	t.Parallel()
 	m := NewManager(testLogger())
 	defer m.Close()
 
@@ -63,6 +66,7 @@ func TestGetSubscription_Found(t *testing.T) {
 }
 
 func TestGetSubscription_NotFound(t *testing.T) {
+	t.Parallel()
 	m := NewManager(testLogger())
 	defer m.Close()
 
@@ -73,6 +77,7 @@ func TestGetSubscription_NotFound(t *testing.T) {
 }
 
 func TestDeliveryCount_Increments(t *testing.T) {
+	t.Parallel()
 	m := NewManager(testLogger())
 	defer m.Close()
 
@@ -96,6 +101,7 @@ func TestDeliveryCount_Increments(t *testing.T) {
 }
 
 func TestConcurrentSubscriptions(t *testing.T) {
+	t.Parallel()
 	m := NewManager(testLogger())
 	defer m.Close()
 
@@ -115,6 +121,7 @@ func TestConcurrentSubscriptions(t *testing.T) {
 }
 
 func TestWebhookDelivery_RetryOnFailureThenSuccess(t *testing.T) {
+	t.Parallel()
 	attempts := 0
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		attempts++
@@ -156,6 +163,7 @@ func TestWebhookDelivery_RetryOnFailureThenSuccess(t *testing.T) {
 }
 
 func TestFilterExpression_ContainsMatch(t *testing.T) {
+	t.Parallel()
 	f := FilterExpression{
 		Field:    "value",
 		Operator: "contains",
@@ -180,6 +188,7 @@ func TestFilterExpression_ContainsMatch(t *testing.T) {
 }
 
 func TestFilterExpression_EqualsMatch(t *testing.T) {
+	t.Parallel()
 	f := FilterExpression{
 		Field:    "key",
 		Operator: "equals",
@@ -198,6 +207,7 @@ func TestFilterExpression_EqualsMatch(t *testing.T) {
 }
 
 func TestFilterExpression_ExistsMatch(t *testing.T) {
+	t.Parallel()
 	f := FilterExpression{
 		Field:    "header.trace-id",
 		Operator: "exists",

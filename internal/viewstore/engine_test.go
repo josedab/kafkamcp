@@ -11,6 +11,7 @@ func testLogger() *slog.Logger {
 }
 
 func TestCreateAndQueryView(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	view, err := e.CreateView("test-view", "orders", "_key", "count", "", 0, 0, nil, nil, "", "desc", "agent-1")
@@ -34,6 +35,7 @@ func TestCreateAndQueryView(t *testing.T) {
 }
 
 func TestViewPointLookup(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	view, _ := e.CreateView("lookup-test", "topic1", "_key", "", "", 0, 0, nil, nil, "", "", "agent-1")
 
@@ -47,6 +49,7 @@ func TestViewPointLookup(t *testing.T) {
 }
 
 func TestViewStats(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	view, _ := e.CreateView("stats-test", "topic1", "_key", "", "", 0, 0, nil, nil, "", "", "agent-1")
 
@@ -63,6 +66,7 @@ func TestViewStats(t *testing.T) {
 }
 
 func TestViewDelete(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	view, _ := e.CreateView("del-test", "topic1", "_key", "", "", 0, 0, nil, nil, "", "", "agent-1")
 

@@ -6,6 +6,7 @@ import (
 )
 
 func TestGetDevEnvironment(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	env := e.GetDevEnvironment()
 
@@ -21,6 +22,7 @@ func TestGetDevEnvironment(t *testing.T) {
 }
 
 func TestGenerateSampleData(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 
 	tests := []struct {
@@ -46,6 +48,7 @@ func TestGenerateSampleData(t *testing.T) {
 }
 
 func TestGenerateMaxLimit(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	msgs := e.GenerateSampleData("ecommerce-orders", 200)
 	if len(msgs) > 100 {
@@ -54,6 +57,7 @@ func TestGenerateMaxLimit(t *testing.T) {
 }
 
 func TestTutorials(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 
 	all := e.ListTutorials("")

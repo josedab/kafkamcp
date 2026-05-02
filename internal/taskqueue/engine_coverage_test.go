@@ -8,6 +8,7 @@ import (
 // --- Heartbeat ---
 
 func TestHeartbeatValid(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.Publish("q", "task1", "a1", PriorityMedium, 3, nil, 0)
 	task, _ := e.Claim("worker", "q")
@@ -24,6 +25,7 @@ func TestHeartbeatValid(t *testing.T) {
 }
 
 func TestHeartbeatNonExistent(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	err := e.Heartbeat("worker", "nonexistent")
 	if err == nil {
@@ -32,6 +34,7 @@ func TestHeartbeatNonExistent(t *testing.T) {
 }
 
 func TestHeartbeatNotClaimedByAgent(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.Publish("q", "task1", "a1", PriorityMedium, 3, nil, 0)
 	task, _ := e.Claim("worker1", "q")
@@ -45,6 +48,7 @@ func TestHeartbeatNotClaimedByAgent(t *testing.T) {
 // --- ReassignStale ---
 
 func TestReassignStaleTask(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.heartbeatTTL = 1 * time.Millisecond
 
@@ -69,6 +73,7 @@ func TestReassignStaleTask(t *testing.T) {
 }
 
 func TestReassignStaleNone(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.Publish("q", "task1", "a1", PriorityMedium, 3, nil, 0)
 
@@ -79,6 +84,7 @@ func TestReassignStaleNone(t *testing.T) {
 }
 
 func TestReassignStaleRunningTask(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.heartbeatTTL = 1 * time.Millisecond
 
@@ -97,6 +103,7 @@ func TestReassignStaleRunningTask(t *testing.T) {
 // --- GetTask ---
 
 func TestGetTaskExisting(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	task, _ := e.Publish("q", "task1", "a1", PriorityMedium, 3, nil, 0)
 
@@ -110,6 +117,7 @@ func TestGetTaskExisting(t *testing.T) {
 }
 
 func TestGetTaskNonExistent(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	_, err := e.GetTask("nonexistent")
 	if err == nil {
@@ -120,6 +128,7 @@ func TestGetTaskNonExistent(t *testing.T) {
 // --- ListTasks ---
 
 func TestListTasksByStatus(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.Publish("q", "t1", "a1", PriorityMedium, 3, nil, 0)
 	e.Publish("q", "t2", "a1", PriorityMedium, 3, nil, 0)
@@ -132,6 +141,7 @@ func TestListTasksByStatus(t *testing.T) {
 }
 
 func TestListTasksByQueue(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.Publish("q1", "t1", "a1", PriorityMedium, 3, nil, 0)
 	e.Publish("q2", "t2", "a1", PriorityMedium, 3, nil, 0)
@@ -143,6 +153,7 @@ func TestListTasksByQueue(t *testing.T) {
 }
 
 func TestListTasksEmpty(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	tasks := e.ListTasks("", "", 50)
 	if len(tasks) != 0 {
@@ -151,6 +162,7 @@ func TestListTasksEmpty(t *testing.T) {
 }
 
 func TestListTasksLimit(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	for i := 0; i < 5; i++ {
 		e.Publish("q", "t", "a1", PriorityMedium, 3, nil, 0)
@@ -163,6 +175,7 @@ func TestListTasksLimit(t *testing.T) {
 }
 
 func TestListTasksDefaultLimit(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.Publish("q", "t", "a1", PriorityMedium, 3, nil, 0)
 
@@ -175,6 +188,7 @@ func TestListTasksDefaultLimit(t *testing.T) {
 // --- Stats edge cases ---
 
 func TestStatsAllPending(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.Publish("q", "t1", "a1", PriorityMedium, 3, nil, 0)
 	e.Publish("q", "t2", "a1", PriorityMedium, 3, nil, 0)
@@ -193,6 +207,7 @@ func TestStatsAllPending(t *testing.T) {
 }
 
 func TestStatsCompleted(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.Publish("q", "t1", "a1", PriorityMedium, 3, nil, 0)
 	task, _ := e.Claim("worker", "q")
@@ -205,6 +220,7 @@ func TestStatsCompleted(t *testing.T) {
 }
 
 func TestStatsEmpty(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	stats := e.Stats("")
 	if len(stats) != 0 {
@@ -213,6 +229,7 @@ func TestStatsEmpty(t *testing.T) {
 }
 
 func TestStatsAllQueues(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.Publish("q1", "t1", "a1", PriorityMedium, 3, nil, 0)
 	e.Publish("q2", "t2", "a1", PriorityMedium, 3, nil, 0)
@@ -226,6 +243,7 @@ func TestStatsAllQueues(t *testing.T) {
 // --- Complete edge cases ---
 
 func TestCompleteFailedRetryThenDeadLetter(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.Publish("q", "t1", "a1", PriorityMedium, 1, nil, 0) // maxRetries=1
 
@@ -237,6 +255,7 @@ func TestCompleteFailedRetryThenDeadLetter(t *testing.T) {
 }
 
 func TestCompleteInvalidStatus(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.Publish("q", "t1", "a1", PriorityMedium, 3, nil, 0)
 	task, _ := e.Claim("worker", "q")
@@ -248,6 +267,7 @@ func TestCompleteInvalidStatus(t *testing.T) {
 }
 
 func TestCompleteWrongAgent(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.Publish("q", "t1", "a1", PriorityMedium, 3, nil, 0)
 	task, _ := e.Claim("worker1", "q")
@@ -259,6 +279,7 @@ func TestCompleteWrongAgent(t *testing.T) {
 }
 
 func TestCompleteEmptyTaskID(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	_, err := e.Complete("worker", "", "completed", nil, "")
 	if err == nil {
@@ -267,6 +288,7 @@ func TestCompleteEmptyTaskID(t *testing.T) {
 }
 
 func TestCompleteNonExistent(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	_, err := e.Complete("worker", "nonexistent", "completed", nil, "")
 	if err == nil {
@@ -277,6 +299,7 @@ func TestCompleteNonExistent(t *testing.T) {
 // --- Publish edge cases ---
 
 func TestPublishEmptyQueue(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	_, err := e.Publish("", "task", "agent", PriorityMedium, 3, nil, 0)
 	if err == nil {
@@ -285,6 +308,7 @@ func TestPublishEmptyQueue(t *testing.T) {
 }
 
 func TestPublishWithDeadline(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	task, err := e.Publish("q", "task", "agent", PriorityMedium, 3, nil, 60)
 	if err != nil {
@@ -296,6 +320,7 @@ func TestPublishWithDeadline(t *testing.T) {
 }
 
 func TestPublishInvalidPriority(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	task, err := e.Publish("q", "task", "agent", -1, 3, nil, 0)
 	if err != nil {
@@ -307,6 +332,7 @@ func TestPublishInvalidPriority(t *testing.T) {
 }
 
 func TestPublishNegativeRetries(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	task, err := e.Publish("q", "task", "agent", PriorityMedium, -5, nil, 0)
 	if err != nil {
@@ -320,6 +346,7 @@ func TestPublishNegativeRetries(t *testing.T) {
 // --- Claim edge cases ---
 
 func TestClaimEmptyQueue(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	_, err := e.Claim("worker", "nonexistent")
 	if err == nil {
@@ -328,6 +355,7 @@ func TestClaimEmptyQueue(t *testing.T) {
 }
 
 func TestClaimNoPendingTasks(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.Publish("q", "t1", "a1", PriorityMedium, 3, nil, 0)
 	e.Claim("worker", "q")
@@ -339,6 +367,7 @@ func TestClaimNoPendingTasks(t *testing.T) {
 }
 
 func TestClaimMissingAgentID(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	_, err := e.Claim("", "q")
 	if err == nil {

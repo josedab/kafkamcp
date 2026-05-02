@@ -14,6 +14,7 @@ import (
 // ===================== NewProvider: disabled config returns noop =====================
 
 func TestNewProvider_DisabledReturnsNoop(t *testing.T) {
+	t.Parallel()
 	p, err := NewProvider(context.Background(), Config{Enabled: false}, slog.Default())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -29,6 +30,7 @@ func TestNewProvider_DisabledReturnsNoop(t *testing.T) {
 // ===================== NewProvider: sample rate variants =====================
 
 func TestNewProvider_SampleRateZero(t *testing.T) {
+	t.Parallel()
 	cfg := Config{Enabled: true, Endpoint: "localhost:14318", Insecure: true, SampleRate: 0}
 	p, err := NewProvider(context.Background(), cfg, slog.Default())
 	if err != nil {
@@ -41,6 +43,7 @@ func TestNewProvider_SampleRateZero(t *testing.T) {
 }
 
 func TestNewProvider_SampleRateHalf(t *testing.T) {
+	t.Parallel()
 	cfg := Config{Enabled: true, Endpoint: "localhost:14318", Insecure: true, SampleRate: 0.5}
 	p, err := NewProvider(context.Background(), cfg, slog.Default())
 	if err != nil {
@@ -53,6 +56,7 @@ func TestNewProvider_SampleRateHalf(t *testing.T) {
 }
 
 func TestNewProvider_SampleRateFull(t *testing.T) {
+	t.Parallel()
 	cfg := Config{Enabled: true, Endpoint: "localhost:14318", Insecure: true, SampleRate: 1.0}
 	p, err := NewProvider(context.Background(), cfg, slog.Default())
 	if err != nil {
@@ -67,6 +71,7 @@ func TestNewProvider_SampleRateFull(t *testing.T) {
 // ===================== Shutdown: nil TracerProvider =====================
 
 func TestShutdown_NilTP(t *testing.T) {
+	t.Parallel()
 	p := &Provider{
 		tracer: noop.NewTracerProvider().Tracer("test"),
 		logger: slog.Default(),
@@ -80,6 +85,7 @@ func TestShutdown_NilTP(t *testing.T) {
 // ===================== Shutdown: with TracerProvider =====================
 
 func TestShutdown_WithTP(t *testing.T) {
+	t.Parallel()
 	exporter := tracetest.NewInMemoryExporter()
 	tp := sdktrace.NewTracerProvider(sdktrace.WithSyncer(exporter))
 	p := &Provider{
@@ -96,6 +102,7 @@ func TestShutdown_WithTP(t *testing.T) {
 // ===================== StartToolSpan: attributes =====================
 
 func TestStartToolSpan_Attributes(t *testing.T) {
+	t.Parallel()
 	exporter := tracetest.NewInMemoryExporter()
 	tp := sdktrace.NewTracerProvider(sdktrace.WithSyncer(exporter))
 	p := &Provider{
@@ -138,6 +145,7 @@ func TestStartToolSpan_Attributes(t *testing.T) {
 // ===================== SetSpanResult =====================
 
 func TestSetSpanResult_Success(t *testing.T) {
+	t.Parallel()
 	exporter := tracetest.NewInMemoryExporter()
 	tp := sdktrace.NewTracerProvider(sdktrace.WithSyncer(exporter))
 	defer tp.Shutdown(context.Background())
@@ -163,6 +171,7 @@ func TestSetSpanResult_Success(t *testing.T) {
 }
 
 func TestSetSpanResult_WithError(t *testing.T) {
+	t.Parallel()
 	exporter := tracetest.NewInMemoryExporter()
 	tp := sdktrace.NewTracerProvider(sdktrace.WithSyncer(exporter))
 	defer tp.Shutdown(context.Background())
@@ -184,6 +193,7 @@ func TestSetSpanResult_WithError(t *testing.T) {
 // ===================== Provider.Tracer() =====================
 
 func TestProvider_Tracer_NotNil(t *testing.T) {
+	t.Parallel()
 	p, _ := NewProvider(context.Background(), Config{Enabled: false}, slog.Default())
 	if p.Tracer() == nil {
 		t.Error("expected non-nil tracer")

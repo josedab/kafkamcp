@@ -6,6 +6,7 @@ import (
 )
 
 func TestClassifyAndPlan(t *testing.T) {
+	t.Parallel()
 	r := NewRouter(slog.Default())
 
 	tests := []struct {
@@ -35,6 +36,7 @@ func TestClassifyAndPlan(t *testing.T) {
 }
 
 func TestGetNextSteps(t *testing.T) {
+	t.Parallel()
 	r := NewRouter(slog.Default())
 
 	plan, err := r.ClassifyAndPlan("why are orders delayed?")
@@ -68,6 +70,7 @@ func TestGetNextSteps(t *testing.T) {
 }
 
 func TestNoMatch(t *testing.T) {
+	t.Parallel()
 	r := NewRouter(slog.Default())
 	_, err := r.ClassifyAndPlan("")
 	if err == nil {
@@ -76,6 +79,7 @@ func TestNoMatch(t *testing.T) {
 }
 
 func TestRecordStepResultCompletion(t *testing.T) {
+	t.Parallel()
 	r := NewRouter(slog.Default())
 
 	plan, _ := r.ClassifyAndPlan("explore cluster topics")

@@ -7,6 +7,7 @@ import (
 )
 
 func TestMeanStddev(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		values   []float64
@@ -32,6 +33,7 @@ func TestMeanStddev(t *testing.T) {
 }
 
 func TestRingBuffer(t *testing.T) {
+	t.Parallel()
 	rb := newRingBuffer(5)
 	now := time.Now()
 
@@ -52,6 +54,7 @@ func TestRingBuffer(t *testing.T) {
 }
 
 func TestDetectAnomaly(t *testing.T) {
+	t.Parallel()
 	d := NewDetector(DefaultConfig(), nil)
 
 	// Build a baseline of stable values around 100
@@ -83,6 +86,7 @@ func TestDetectAnomaly(t *testing.T) {
 }
 
 func TestGetAlerts(t *testing.T) {
+	t.Parallel()
 	d := NewDetector(DefaultConfig(), nil)
 
 	now := time.Now()
@@ -110,6 +114,7 @@ func TestGetAlerts(t *testing.T) {
 }
 
 func TestDetectorStatus(t *testing.T) {
+	t.Parallel()
 	d := NewDetector(DefaultConfig(), nil)
 	status := d.GetStatus()
 	if status["active_metrics"].(int) != 0 {
@@ -118,6 +123,7 @@ func TestDetectorStatus(t *testing.T) {
 }
 
 func TestPercentile(t *testing.T) {
+	t.Parallel()
 	data := []float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 	p50 := percentile(data, 50)
 	if math.Abs(p50-5.5) > 0.01 {

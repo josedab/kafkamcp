@@ -7,6 +7,7 @@ import (
 )
 
 func TestCreateDashboard(t *testing.T) {
+	t.Parallel()
 	m := NewManager()
 
 	// Cluster dashboard (default type)
@@ -62,6 +63,7 @@ func TestCreateDashboard(t *testing.T) {
 }
 
 func TestListDashboards(t *testing.T) {
+	t.Parallel()
 	m := NewManager()
 
 	// Empty list
@@ -86,6 +88,7 @@ func TestListDashboards(t *testing.T) {
 }
 
 func TestAlertRuleCRUD(t *testing.T) {
+	t.Parallel()
 	m := NewManager()
 
 	// Create
@@ -152,6 +155,7 @@ func TestAlertRuleCRUD(t *testing.T) {
 }
 
 func TestCreateIncident(t *testing.T) {
+	t.Parallel()
 	m := NewManager()
 
 	// Create and list

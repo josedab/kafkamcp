@@ -6,6 +6,7 @@ import (
 )
 
 func TestRegisterNode(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	n := e.RegisterNode("orders", NodeTopic, map[string]string{"partitions": "6"})
 	if n.ID != "topic:orders" {
@@ -14,6 +15,7 @@ func TestRegisterNode(t *testing.T) {
 }
 
 func TestAddEdge(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	e.RegisterNode("raw-events", NodeTopic, nil)
 	e.RegisterNode("enriched-events", NodeTopic, nil)
@@ -27,6 +29,7 @@ func TestAddEdge(t *testing.T) {
 }
 
 func TestAddEdge_MissingNode(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	_, err := e.AddEdge("topic:missing", "topic:also-missing", "", "produces", nil)
 	if err == nil {
@@ -35,6 +38,7 @@ func TestAddEdge_MissingNode(t *testing.T) {
 }
 
 func TestGetGraph(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	e.RegisterNode("topic-a", NodeTopic, nil)
 	e.RegisterNode("topic-b", NodeTopic, nil)
@@ -50,6 +54,7 @@ func TestGetGraph(t *testing.T) {
 }
 
 func TestTraceLineage(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	e.RegisterNode("source", NodeTopic, nil)
 	e.RegisterNode("processor", NodeStream, nil)
@@ -65,6 +70,7 @@ func TestTraceLineage(t *testing.T) {
 }
 
 func TestRemoveNode(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	e.RegisterNode("to-remove", NodeTopic, nil)
 	e.RegisterNode("other", NodeTopic, nil)

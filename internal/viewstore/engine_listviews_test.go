@@ -5,6 +5,7 @@ import (
 )
 
 func TestListViews_EmptyEngine(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	views := e.ListViews()
 	if len(views) != 0 {
@@ -13,6 +14,7 @@ func TestListViews_EmptyEngine(t *testing.T) {
 }
 
 func TestListViews_MultipleViews(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.CreateView("view-a", "topic-a", "_key", "", "", 0, 0, nil, nil, "", "", "agent-1")
 	e.CreateView("view-b", "topic-b", "_key", "count", "", 0, 0, nil, nil, "", "", "agent-2")
@@ -35,6 +37,7 @@ func TestListViews_MultipleViews(t *testing.T) {
 }
 
 func TestListViews_Immutability(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.CreateView("immutable-test", "topic-a", "_key", "", "", 0, 0, nil, nil, "", "", "agent-1")
 
@@ -52,6 +55,7 @@ func TestListViews_Immutability(t *testing.T) {
 }
 
 func TestApplyAggregation_Count(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	existing := map[string]any{"_count": float64(2)}
 	incoming := map[string]any{"x": 1}
@@ -63,6 +67,7 @@ func TestApplyAggregation_Count(t *testing.T) {
 }
 
 func TestApplyAggregation_Sum(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	existing := map[string]any{"amount": float64(10)}
 	incoming := map[string]any{"amount": float64(5)}
@@ -74,6 +79,7 @@ func TestApplyAggregation_Sum(t *testing.T) {
 }
 
 func TestApplyAggregation_Avg(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	existing := map[string]any{"_count": float64(1), "_sum_price": float64(10), "price": float64(10)}
 	incoming := map[string]any{"price": float64(30)}
@@ -88,6 +94,7 @@ func TestApplyAggregation_Avg(t *testing.T) {
 }
 
 func TestApplyAggregation_Min(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	existing := map[string]any{"latency": float64(5)}
 	incoming := map[string]any{"latency": float64(3)}
@@ -105,6 +112,7 @@ func TestApplyAggregation_Min(t *testing.T) {
 }
 
 func TestApplyAggregation_Max(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	existing := map[string]any{"latency": float64(5)}
 	incoming := map[string]any{"latency": float64(8)}
@@ -122,6 +130,7 @@ func TestApplyAggregation_Max(t *testing.T) {
 }
 
 func TestApplyAggregation_Default(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	existing := map[string]any{"name": "old"}
 	incoming := map[string]any{"name": "new", "extra": "field"}
@@ -136,6 +145,7 @@ func TestApplyAggregation_Default(t *testing.T) {
 }
 
 func TestApplyAggregation_NonNumericValues(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	existing := map[string]any{"name": "alice"}
 	incoming := map[string]any{"name": "bob"}

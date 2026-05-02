@@ -6,6 +6,7 @@ import (
 )
 
 func TestKafkaBackend(t *testing.T) {
+	t.Parallel()
 	b := NewKafkaBackend(PlatformConfig{Type: PlatformKafka})
 	if b.Type() != PlatformKafka {
 		t.Errorf("expected kafka, got %s", b.Type())
@@ -23,6 +24,7 @@ func TestKafkaBackend(t *testing.T) {
 }
 
 func TestRedpandaBackend(t *testing.T) {
+	t.Parallel()
 	b := NewRedpandaBackend(PlatformConfig{Type: PlatformRedpanda, AdminURL: "http://localhost:9644"})
 	if b.Type() != PlatformRedpanda {
 		t.Errorf("expected redpanda, got %s", b.Type())
@@ -36,6 +38,7 @@ func TestRedpandaBackend(t *testing.T) {
 }
 
 func TestConfluentCloudBackend(t *testing.T) {
+	t.Parallel()
 	b := NewConfluentCloudBackend(PlatformConfig{Type: PlatformConfluentCloud, RESTURL: "https://api.confluent.cloud"})
 	if b.Type() != PlatformConfluentCloud {
 		t.Errorf("expected confluent_cloud, got %s", b.Type())
@@ -46,6 +49,7 @@ func TestConfluentCloudBackend(t *testing.T) {
 }
 
 func TestDetectPlatform(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name       string
 		props      map[string]string
@@ -68,6 +72,7 @@ func TestDetectPlatform(t *testing.T) {
 }
 
 func TestPlatformManager(t *testing.T) {
+	t.Parallel()
 	m := NewManager(nil)
 	m.RegisterBackend("prod", NewKafkaBackend(PlatformConfig{Type: PlatformKafka}))
 	m.RegisterBackend("rp-dev", NewRedpandaBackend(PlatformConfig{Type: PlatformRedpanda}))

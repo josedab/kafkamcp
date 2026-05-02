@@ -7,6 +7,7 @@ import (
 // --- GetWorkflow ---
 
 func TestGetWorkflowFound(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	steps := []DAGStep{{ID: "s1", Name: "S1", Tool: "t1"}}
 	wf, _ := e.CreateWorkflow("test", "", "agent", nil, steps, nil)
@@ -21,6 +22,7 @@ func TestGetWorkflowFound(t *testing.T) {
 }
 
 func TestGetWorkflowNotFound(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	_, err := e.GetWorkflow("nonexistent")
 	if err == nil {
@@ -31,6 +33,7 @@ func TestGetWorkflowNotFound(t *testing.T) {
 // --- ListWorkflows ---
 
 func TestListWorkflowsLatestVersion(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	steps := []DAGStep{{ID: "s1", Name: "S1", Tool: "t1"}}
 	e.CreateWorkflow("wf-a", "", "agent", nil, steps, nil)
@@ -49,6 +52,7 @@ func TestListWorkflowsLatestVersion(t *testing.T) {
 }
 
 func TestListWorkflowsEmpty(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	list := e.ListWorkflows()
 	if len(list) != 0 {
@@ -59,6 +63,7 @@ func TestListWorkflowsEmpty(t *testing.T) {
 // --- GetVersions ---
 
 func TestGetVersions(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	steps := []DAGStep{{ID: "s1", Name: "S1", Tool: "t1"}}
 	e.CreateWorkflow("wf", "", "agent", nil, steps, nil)
@@ -75,6 +80,7 @@ func TestGetVersions(t *testing.T) {
 }
 
 func TestGetVersionsNotFound(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	_, err := e.GetVersions("nonexistent")
 	if err == nil {
@@ -85,6 +91,7 @@ func TestGetVersionsNotFound(t *testing.T) {
 // --- ResolveStepArgs ---
 
 func TestResolveStepArgsInterpolation(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	step := DAGStep{
 		Args: map[string]string{
@@ -111,6 +118,7 @@ func TestResolveStepArgsInterpolation(t *testing.T) {
 }
 
 func TestResolveStepArgsMissingParam(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	step := DAGStep{Args: map[string]string{"topic": "${missing}"}}
 	resolved := e.ResolveStepArgs(step, map[string]any{})
@@ -120,6 +128,7 @@ func TestResolveStepArgsMissingParam(t *testing.T) {
 }
 
 func TestResolveStepArgsEmptyParams(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	step := DAGStep{Args: map[string]string{"key": "value"}}
 	resolved := e.ResolveStepArgs(step, nil)
@@ -131,6 +140,7 @@ func TestResolveStepArgsEmptyParams(t *testing.T) {
 // --- interpolate ---
 
 func TestInterpolateSubstitution(t *testing.T) {
+	t.Parallel()
 	result := interpolate("Hello ${name}!", map[string]any{"name": "World"})
 	if result != "Hello World!" {
 		t.Errorf("expected 'Hello World!', got '%s'", result)
@@ -138,6 +148,7 @@ func TestInterpolateSubstitution(t *testing.T) {
 }
 
 func TestInterpolateMultipleParams(t *testing.T) {
+	t.Parallel()
 	result := interpolate("${a}-${b}", map[string]any{"a": "x", "b": "y"})
 	if result != "x-y" {
 		t.Errorf("expected x-y, got %s", result)
@@ -145,6 +156,7 @@ func TestInterpolateMultipleParams(t *testing.T) {
 }
 
 func TestInterpolateUndefinedParam(t *testing.T) {
+	t.Parallel()
 	result := interpolate("${undef}", map[string]any{})
 	if result != "${undef}" {
 		t.Errorf("expected ${undef}, got %s", result)
@@ -152,6 +164,7 @@ func TestInterpolateUndefinedParam(t *testing.T) {
 }
 
 func TestInterpolateEmptyParams(t *testing.T) {
+	t.Parallel()
 	result := interpolate("no params here", nil)
 	if result != "no params here" {
 		t.Errorf("expected 'no params here', got '%s'", result)
@@ -159,6 +172,7 @@ func TestInterpolateEmptyParams(t *testing.T) {
 }
 
 func TestInterpolateNumericParam(t *testing.T) {
+	t.Parallel()
 	result := interpolate("count=${n}", map[string]any{"n": 42})
 	if result != "count=42" {
 		t.Errorf("expected count=42, got %s", result)
@@ -168,6 +182,7 @@ func TestInterpolateNumericParam(t *testing.T) {
 // --- ListRuns ---
 
 func TestListRunsFilterByTemplate(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	steps := []DAGStep{{ID: "s1", Name: "S1", Tool: "t1"}}
 	wf1, _ := e.CreateWorkflow("wf1", "", "agent", nil, steps, nil)
@@ -182,6 +197,7 @@ func TestListRunsFilterByTemplate(t *testing.T) {
 }
 
 func TestListRunsAll(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	steps := []DAGStep{{ID: "s1", Name: "S1", Tool: "t1"}}
 	wf, _ := e.CreateWorkflow("wf", "", "agent", nil, steps, nil)
@@ -195,6 +211,7 @@ func TestListRunsAll(t *testing.T) {
 }
 
 func TestListRunsLimit(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	steps := []DAGStep{{ID: "s1", Name: "S1", Tool: "t1"}}
 	wf, _ := e.CreateWorkflow("wf", "", "agent", nil, steps, nil)
@@ -209,6 +226,7 @@ func TestListRunsLimit(t *testing.T) {
 }
 
 func TestListRunsEmpty(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	runs := e.ListRuns("", 50)
 	if len(runs) != 0 {
@@ -219,6 +237,7 @@ func TestListRunsEmpty(t *testing.T) {
 // --- CompleteStep ---
 
 func TestCompleteStepTriggersWorkflowCompletion(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	steps := []DAGStep{{ID: "s1", Name: "S1", Tool: "t1"}}
 	wf, _ := e.CreateWorkflow("wf", "", "agent", nil, steps, nil)
@@ -236,6 +255,7 @@ func TestCompleteStepTriggersWorkflowCompletion(t *testing.T) {
 }
 
 func TestCompleteStepFailed(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	steps := []DAGStep{{ID: "s1", Name: "S1", Tool: "t1"}}
 	wf, _ := e.CreateWorkflow("wf", "", "agent", nil, steps, nil)
@@ -250,6 +270,7 @@ func TestCompleteStepFailed(t *testing.T) {
 }
 
 func TestCompleteStepNonExistentRun(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	err := e.CompleteStep("nonexistent", "s1", "completed", nil, "")
 	if err == nil {
@@ -258,6 +279,7 @@ func TestCompleteStepNonExistentRun(t *testing.T) {
 }
 
 func TestCompleteStepNonExistentStep(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	steps := []DAGStep{{ID: "s1", Name: "S1", Tool: "t1"}}
 	wf, _ := e.CreateWorkflow("wf", "", "agent", nil, steps, nil)
@@ -272,6 +294,7 @@ func TestCompleteStepNonExistentStep(t *testing.T) {
 // --- GetReadySteps ---
 
 func TestGetReadyStepsAllDepsComplete(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	steps := []DAGStep{
 		{ID: "s1", Name: "S1", Tool: "t1"},
@@ -289,6 +312,7 @@ func TestGetReadyStepsAllDepsComplete(t *testing.T) {
 }
 
 func TestGetReadyStepsPartialDeps(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	steps := []DAGStep{
 		{ID: "s1", Name: "S1", Tool: "t1"},
@@ -309,6 +333,7 @@ func TestGetReadyStepsPartialDeps(t *testing.T) {
 }
 
 func TestGetReadyStepsSkippedDepsCount(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	steps := []DAGStep{
 		{ID: "s1", Name: "S1", Tool: "t1"},
@@ -326,6 +351,7 @@ func TestGetReadyStepsSkippedDepsCount(t *testing.T) {
 }
 
 func TestGetReadyStepsNonExistentRun(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	_, err := e.GetReadySteps("nonexistent")
 	if err == nil {
@@ -336,6 +362,7 @@ func TestGetReadyStepsNonExistentRun(t *testing.T) {
 // --- GetRun ---
 
 func TestGetRunFound(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	steps := []DAGStep{{ID: "s1", Name: "S1", Tool: "t1"}}
 	wf, _ := e.CreateWorkflow("wf", "", "agent", nil, steps, nil)
@@ -351,6 +378,7 @@ func TestGetRunFound(t *testing.T) {
 }
 
 func TestGetRunNotFound(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	_, err := e.GetRun("nonexistent")
 	if err == nil {
@@ -361,6 +389,7 @@ func TestGetRunNotFound(t *testing.T) {
 // --- Edge cases ---
 
 func TestCreateWorkflowNoSteps(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	_, err := e.CreateWorkflow("empty", "", "agent", nil, []DAGStep{}, nil)
 	if err == nil {
@@ -369,6 +398,7 @@ func TestCreateWorkflowNoSteps(t *testing.T) {
 }
 
 func TestCreateWorkflowEmptyName(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	_, err := e.CreateWorkflow("", "", "agent", nil, []DAGStep{{ID: "s1", Tool: "t1"}}, nil)
 	if err == nil {
@@ -377,6 +407,7 @@ func TestCreateWorkflowEmptyName(t *testing.T) {
 }
 
 func TestStartRunWithRequiredParams(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	steps := []DAGStep{{ID: "s1", Name: "S1", Tool: "t1"}}
 	params := []Parameter{{Name: "topic", Required: true}}
@@ -389,6 +420,7 @@ func TestStartRunWithRequiredParams(t *testing.T) {
 }
 
 func TestStartRunWithDefaultParams(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	steps := []DAGStep{{ID: "s1", Name: "S1", Tool: "t1"}}
 	params := []Parameter{{Name: "topic", Required: true, Default: "orders"}}
@@ -404,6 +436,7 @@ func TestStartRunWithDefaultParams(t *testing.T) {
 }
 
 func TestCancelAlreadyCancelled(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	steps := []DAGStep{{ID: "s1", Name: "S1", Tool: "t1"}}
 	wf, _ := e.CreateWorkflow("wf", "", "agent", nil, steps, nil)

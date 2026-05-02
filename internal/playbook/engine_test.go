@@ -10,6 +10,7 @@ func newTestEngine() *Engine {
 }
 
 func TestBuiltinPlaybooks(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	playbooks := e.ListPlaybooks()
 	if len(playbooks) < 3 {
@@ -18,6 +19,7 @@ func TestBuiltinPlaybooks(t *testing.T) {
 }
 
 func TestCreatePlaybook(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	steps := []RemediationStep{
@@ -39,6 +41,7 @@ func TestCreatePlaybook(t *testing.T) {
 }
 
 func TestCreatePlaybookValidation(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	if _, err := e.CreatePlaybook("", "", "", TriggerConfig{}, nil); err == nil {
@@ -50,6 +53,7 @@ func TestCreatePlaybookValidation(t *testing.T) {
 }
 
 func TestExecutePlaybook(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	exec, err := e.Execute("pb_high_lag", "agent-1", map[string]any{"lag": 15000, "group": "my-group"})
@@ -75,6 +79,7 @@ func TestExecutePlaybook(t *testing.T) {
 }
 
 func TestExecuteDisabledPlaybook(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	e.EnablePlaybook("pb_high_lag", false)
 
@@ -85,6 +90,7 @@ func TestExecuteDisabledPlaybook(t *testing.T) {
 }
 
 func TestMatchTrigger(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	matches := e.MatchTrigger(TriggerHighLag, 15000)
@@ -104,6 +110,7 @@ func TestMatchTrigger(t *testing.T) {
 }
 
 func TestPlaybookCooldown(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	// First execution should succeed
@@ -120,6 +127,7 @@ func TestPlaybookCooldown(t *testing.T) {
 }
 
 func TestEnableDisablePlaybook(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	if err := e.EnablePlaybook("pb_high_lag", false); err != nil {
@@ -136,6 +144,7 @@ func TestEnableDisablePlaybook(t *testing.T) {
 }
 
 func TestDeletePlaybook(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	if err := e.DeletePlaybook("pb_high_lag"); err != nil {
@@ -147,6 +156,7 @@ func TestDeletePlaybook(t *testing.T) {
 }
 
 func TestListExecutions(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	e.Execute("pb_under_replicated", "a1", nil)

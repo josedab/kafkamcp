@@ -22,6 +22,7 @@ type flusherRecorder struct {
 func (f *flusherRecorder) Flush() { f.flushed++ }
 
 func TestHandleSSEInitialConnection(t *testing.T) {
+	t.Parallel()
 	al, _ := audit.NewLogger(context.Background(), true, 100, "", slog.Default())
 	rl := ratelimit.New(0)
 	d := New(nil, al, rl, slog.Default())
@@ -58,6 +59,7 @@ func TestHandleSSEInitialConnection(t *testing.T) {
 }
 
 func TestHandleSSEReceivesBroadcast(t *testing.T) {
+	t.Parallel()
 	al, _ := audit.NewLogger(context.Background(), true, 100, "", slog.Default())
 	rl := ratelimit.New(0)
 	d := New(nil, al, rl, slog.Default())
@@ -96,6 +98,7 @@ func TestHandleSSEReceivesBroadcast(t *testing.T) {
 }
 
 func TestHandleSSEHeaders(t *testing.T) {
+	t.Parallel()
 	al, _ := audit.NewLogger(context.Background(), true, 100, "", slog.Default())
 	rl := ratelimit.New(0)
 	d := New(nil, al, rl, slog.Default())
@@ -121,6 +124,7 @@ func TestHandleSSEHeaders(t *testing.T) {
 }
 
 func TestHandleHealthMethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	al, _ := audit.NewLogger(context.Background(), true, 100, "", slog.Default())
 	rl := ratelimit.New(0)
 	d := New(nil, al, rl, slog.Default())
@@ -140,6 +144,7 @@ func TestHandleHealthMethodNotAllowed(t *testing.T) {
 }
 
 func TestWriteJSONEmptyMap(t *testing.T) {
+	t.Parallel()
 	w := httptest.NewRecorder()
 	writeJSON(w, map[string]any{})
 
@@ -156,6 +161,7 @@ func TestWriteJSONEmptyMap(t *testing.T) {
 }
 
 func TestWriteJSONNumber(t *testing.T) {
+	t.Parallel()
 	w := httptest.NewRecorder()
 	writeJSON(w, 42)
 
@@ -165,6 +171,7 @@ func TestWriteJSONNumber(t *testing.T) {
 }
 
 func TestWriteJSONString(t *testing.T) {
+	t.Parallel()
 	w := httptest.NewRecorder()
 	writeJSON(w, "hello")
 
@@ -174,6 +181,7 @@ func TestWriteJSONString(t *testing.T) {
 }
 
 func TestHandleActivityResponseHasAllFields(t *testing.T) {
+	t.Parallel()
 	al, _ := audit.NewLogger(context.Background(), true, 100, "", slog.Default())
 	rl := ratelimit.New(0)
 	d := New(nil, al, rl, slog.Default())
@@ -203,6 +211,7 @@ func TestHandleActivityResponseHasAllFields(t *testing.T) {
 }
 
 func TestConnectedClientsAfterAddRemove(t *testing.T) {
+	t.Parallel()
 	rl := ratelimit.New(0)
 	d := New(nil, nil, rl, slog.Default())
 

@@ -5,6 +5,7 @@ import (
 )
 
 func TestNewMonitor(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	if m == nil {
 		t.Fatal("expected non-nil monitor")
@@ -15,6 +16,7 @@ func TestNewMonitor(t *testing.T) {
 }
 
 func TestAddPolicy(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	m.AddPolicy(Policy{GroupPattern: "test-*", MaxLag: 1000, AutoRemediate: true, Actions: []string{"restart_consumer"}})
 	policies := m.ListPolicies()
@@ -27,6 +29,7 @@ func TestAddPolicy(t *testing.T) {
 }
 
 func TestEvaluateHealth_Healthy(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	gh := m.EvaluateHealth("group-a", 100, 3, 10.0, 0)
 	if gh.Status != "healthy" {
@@ -44,6 +47,7 @@ func TestEvaluateHealth_Healthy(t *testing.T) {
 }
 
 func TestEvaluateHealth_Critical(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	gh := m.EvaluateHealth("group-b", 2_000_000, 0, 0, 15)
 	if gh.Status != "dead" {
@@ -55,6 +59,7 @@ func TestEvaluateHealth_Critical(t *testing.T) {
 }
 
 func TestEvaluateHealth_Degraded(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	gh := m.EvaluateHealth("group-c", 50_000, 2, 5.0, 6)
 	if gh.Status != "degraded" {
@@ -63,6 +68,7 @@ func TestEvaluateHealth_Degraded(t *testing.T) {
 }
 
 func TestDetectIssues_HighLag(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	gh := m.EvaluateHealth("lag-group", 500_000, 2, 5.0, 0)
 	found := false
@@ -80,6 +86,7 @@ func TestDetectIssues_HighLag(t *testing.T) {
 }
 
 func TestDetectIssues_CriticalHighLag(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	gh := m.EvaluateHealth("lag-group2", 2_000_000, 2, 5.0, 0)
 	for _, issue := range gh.Issues {
@@ -94,6 +101,7 @@ func TestDetectIssues_CriticalHighLag(t *testing.T) {
 }
 
 func TestDetectIssues_NoCommits(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	gh := m.EvaluateHealth("nc-group", 5000, 2, 0, 0)
 	found := false
@@ -108,6 +116,7 @@ func TestDetectIssues_NoCommits(t *testing.T) {
 }
 
 func TestDetectIssues_RebalanceStorm(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	gh := m.EvaluateHealth("rb-group", 100, 3, 10.0, 12)
 	found := false
@@ -122,6 +131,7 @@ func TestDetectIssues_RebalanceStorm(t *testing.T) {
 }
 
 func TestDetectIssues_ZombieConsumer(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	gh := m.EvaluateHealth("zombie-group", 100, 0, 0, 0)
 	found := false
@@ -136,6 +146,7 @@ func TestDetectIssues_ZombieConsumer(t *testing.T) {
 }
 
 func TestDetectIssues_StuckPartition(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	gh := m.EvaluateHealth("stuck-group", 20_000, 2, 0.3, 0)
 	found := false
@@ -150,6 +161,7 @@ func TestDetectIssues_StuckPartition(t *testing.T) {
 }
 
 func TestRemediation_RebalanceStorm(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	gh := m.EvaluateHealth("rem-rb", 100, 3, 10.0, 12)
 	if gh.Remediation == nil {
@@ -161,6 +173,7 @@ func TestRemediation_RebalanceStorm(t *testing.T) {
 }
 
 func TestRemediation_Zombie(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	gh := m.EvaluateHealth("rem-zombie", 100, 0, 5.0, 0)
 	if gh.Remediation == nil {
@@ -172,6 +185,7 @@ func TestRemediation_Zombie(t *testing.T) {
 }
 
 func TestRemediation_NoCommitsCritical(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	gh := m.EvaluateHealth("rem-nc", 500_000, 2, 0, 0)
 	if gh.Remediation == nil {
@@ -183,6 +197,7 @@ func TestRemediation_NoCommitsCritical(t *testing.T) {
 }
 
 func TestRemediation_AlertOnly(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	gh := m.EvaluateHealth("rem-alert", 500_000, 3, 10.0, 0)
 	if gh.Remediation == nil {
@@ -194,6 +209,7 @@ func TestRemediation_AlertOnly(t *testing.T) {
 }
 
 func TestRemediation_Nil_WhenHealthy(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	gh := m.EvaluateHealth("healthy-group", 100, 3, 10.0, 0)
 	if gh.Remediation != nil {
@@ -202,6 +218,7 @@ func TestRemediation_Nil_WhenHealthy(t *testing.T) {
 }
 
 func TestGetHealthHistory(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	m.EvaluateHealth("hist-group", 100, 3, 10.0, 0)
 	m.EvaluateHealth("hist-group", 200, 3, 10.0, 0)
@@ -213,6 +230,7 @@ func TestGetHealthHistory(t *testing.T) {
 }
 
 func TestGetHealthHistory_Empty(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	history := m.GetHealthHistory("unknown")
 	if len(history) != 0 {
@@ -221,6 +239,7 @@ func TestGetHealthHistory_Empty(t *testing.T) {
 }
 
 func TestHealthHistory_MaxEntries(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	for i := 0; i < 60; i++ {
 		m.EvaluateHealth("capped-group", int64(i*100), 3, 10.0, 0)
@@ -232,6 +251,7 @@ func TestHealthHistory_MaxEntries(t *testing.T) {
 }
 
 func TestLagTrend(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 
 	gh1 := m.EvaluateHealth("trend-group", 1000, 3, 10.0, 0)
@@ -256,6 +276,7 @@ func TestLagTrend(t *testing.T) {
 }
 
 func TestListPolicies_IsCopy(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	m.AddPolicy(Policy{GroupPattern: "a"})
 	policies := m.ListPolicies()
@@ -266,6 +287,7 @@ func TestListPolicies_IsCopy(t *testing.T) {
 }
 
 func TestComputeHealthScore_Bounds(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	score := m.computeHealthScore(10_000_000, 0, 20, 0)
 	if score < 0 || score > 100 {

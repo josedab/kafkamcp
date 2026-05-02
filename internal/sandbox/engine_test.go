@@ -12,6 +12,7 @@ func testLogger() *slog.Logger {
 }
 
 func TestCreateAndDestroy(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	sb, err := e.Create("test-sandbox", "Testing", "agent-1", 3600, nil)
@@ -34,6 +35,7 @@ func TestCreateAndDestroy(t *testing.T) {
 }
 
 func TestExecTracking(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	sb, _ := e.Create("exec-test", "", "agent-1", 3600, nil)
@@ -53,6 +55,7 @@ func TestExecTracking(t *testing.T) {
 }
 
 func TestQuotaEnforcement(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	sb, _ := e.Create("quota-test", "", "agent-1", 3600, &ResourceQuotas{
@@ -72,6 +75,7 @@ func TestQuotaEnforcement(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	e.Create("sb1", "", "agent-1", 3600, nil)
@@ -89,6 +93,7 @@ func TestList(t *testing.T) {
 }
 
 func TestPromotionReport(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	sb, _ := e.Create("promo-test", "", "agent-1", 3600, nil)

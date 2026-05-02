@@ -6,6 +6,7 @@ import (
 )
 
 func TestListWorkspaces(t *testing.T) {
+	t.Parallel()
 	cs := NewCloudService(slog.Default())
 
 	// Empty initially
@@ -30,6 +31,7 @@ func TestListWorkspaces(t *testing.T) {
 }
 
 func TestListWorkspacesMultiple(t *testing.T) {
+	t.Parallel()
 	cs := NewCloudService(slog.Default())
 
 	cs.CreateWorkspace("org1", "a@test.com", "free")
@@ -42,6 +44,7 @@ func TestListWorkspacesMultiple(t *testing.T) {
 }
 
 func TestUsagePct(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		used, limit int64
 		want        float64
@@ -61,6 +64,7 @@ func TestUsagePct(t *testing.T) {
 }
 
 func TestUsagePct_Exceeds100(t *testing.T) {
+	t.Parallel()
 	got := usagePct(200, 100)
 	if got != 200.0 {
 		t.Errorf("expected 200.0 when usage exceeds limit, got %f", got)
@@ -68,6 +72,7 @@ func TestUsagePct_Exceeds100(t *testing.T) {
 }
 
 func TestGenerateID_Uniqueness(t *testing.T) {
+	t.Parallel()
 	seen := make(map[string]bool)
 	for i := 0; i < 100; i++ {
 		id, err := generateID("test")
@@ -82,6 +87,7 @@ func TestGenerateID_Uniqueness(t *testing.T) {
 }
 
 func TestGenerateID_HasPrefix(t *testing.T) {
+	t.Parallel()
 	id, err := generateID("ws")
 	if err != nil {
 		t.Fatalf("generateID failed: %v", err)
@@ -92,6 +98,7 @@ func TestGenerateID_HasPrefix(t *testing.T) {
 }
 
 func TestHashKey_Consistency(t *testing.T) {
+	t.Parallel()
 	key := "test-api-key-12345"
 	h1 := hashKey(key)
 	h2 := hashKey(key)
@@ -101,6 +108,7 @@ func TestHashKey_Consistency(t *testing.T) {
 }
 
 func TestHashKey_NonReversible(t *testing.T) {
+	t.Parallel()
 	key := "secret-key"
 	h := hashKey(key)
 	if h == key {
@@ -112,6 +120,7 @@ func TestHashKey_NonReversible(t *testing.T) {
 }
 
 func TestHashKey_DifferentInputs(t *testing.T) {
+	t.Parallel()
 	h1 := hashKey("key-a")
 	h2 := hashKey("key-b")
 	if h1 == h2 {
@@ -120,6 +129,7 @@ func TestHashKey_DifferentInputs(t *testing.T) {
 }
 
 func TestGetDashboardData_NoWorkspace(t *testing.T) {
+	t.Parallel()
 	cs := NewCloudService(slog.Default())
 	_, err := cs.GetDashboardData("nonexistent")
 	if err == nil {
@@ -128,6 +138,7 @@ func TestGetDashboardData_NoWorkspace(t *testing.T) {
 }
 
 func TestGetDashboardData_WithClustersAndMembers(t *testing.T) {
+	t.Parallel()
 	cs := NewCloudService(slog.Default())
 	ws, _, _ := cs.CreateWorkspace("Team", "admin@test.com", "pro")
 	cs.AddCluster(ws.ID, ClusterConnection{Name: "prod"})
@@ -151,6 +162,7 @@ func TestGetDashboardData_WithClustersAndMembers(t *testing.T) {
 }
 
 func TestGetDashboardData_DeletedWorkspace(t *testing.T) {
+	t.Parallel()
 	cs := NewCloudService(slog.Default())
 	ws, _, _ := cs.CreateWorkspace("Team", "admin@test.com", "free")
 	cs.DeleteWorkspace(ws.ID)
@@ -167,6 +179,7 @@ func TestGetDashboardData_DeletedWorkspace(t *testing.T) {
 }
 
 func TestGetDashboardData_UsagePercentage(t *testing.T) {
+	t.Parallel()
 	cs := NewCloudService(slog.Default())
 	ws, _, _ := cs.CreateWorkspace("Team", "admin@test.com", "free")
 	cs.RecordUsage(ws.ID, 25000, 0, 0)

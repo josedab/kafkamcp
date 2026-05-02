@@ -7,6 +7,7 @@ import (
 )
 
 func TestNewRequiresBootstrap(t *testing.T) {
+	t.Parallel()
 	_, err := New(Config{})
 	if err == nil {
 		t.Fatal("expected error for empty bootstrap_servers")
@@ -14,6 +15,7 @@ func TestNewRequiresBootstrap(t *testing.T) {
 }
 
 func TestDefaultClusterName(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		BootstrapServers: "localhost:9092",
 	}
@@ -26,6 +28,7 @@ func TestDefaultClusterName(t *testing.T) {
 }
 
 func TestToolTierConstants(t *testing.T) {
+	t.Parallel()
 	if TierCore != 0 {
 		t.Error("TierCore should be 0")
 	}
@@ -35,6 +38,7 @@ func TestToolTierConstants(t *testing.T) {
 }
 
 func TestMCPServer_ReturnsNonNilFromStruct(t *testing.T) {
+	t.Parallel()
 	// Test using a manually constructed Sidecar (bypassing Kafka)
 	s := &Sidecar{running: true}
 	// MCPServer returns the server field, which is nil on empty struct
@@ -45,6 +49,7 @@ func TestMCPServer_ReturnsNonNilFromStruct(t *testing.T) {
 }
 
 func TestCallTool_ErrorWhenNotRunning(t *testing.T) {
+	t.Parallel()
 	s := &Sidecar{running: false}
 	_, err := s.CallTool(context.Background(), "kafka_list_topics", nil)
 	if err == nil {
@@ -53,6 +58,7 @@ func TestCallTool_ErrorWhenNotRunning(t *testing.T) {
 }
 
 func TestCallTool_ReturnsResponseWhenRunning(t *testing.T) {
+	t.Parallel()
 	s := &Sidecar{running: true}
 	result, err := s.CallTool(context.Background(), "kafka_list_topics", nil)
 	if err != nil {
@@ -64,6 +70,7 @@ func TestCallTool_ReturnsResponseWhenRunning(t *testing.T) {
 }
 
 func TestClose_ReleasesResources(t *testing.T) {
+	t.Parallel()
 	// When running=false, Close is a no-op (idempotent)
 	s := &Sidecar{running: false}
 	err := s.Close()
@@ -76,6 +83,7 @@ func TestClose_ReleasesResources(t *testing.T) {
 }
 
 func TestClose_IdempotentDoubleClose(t *testing.T) {
+	t.Parallel()
 	s := &Sidecar{running: false}
 	err1 := s.Close()
 	err2 := s.Close()
@@ -85,6 +93,7 @@ func TestClose_IdempotentDoubleClose(t *testing.T) {
 }
 
 func TestClose_ConcurrentRaceSafety(t *testing.T) {
+	t.Parallel()
 	s := &Sidecar{running: false}
 	var wg sync.WaitGroup
 	for i := 0; i < 10; i++ {
@@ -98,6 +107,7 @@ func TestClose_ConcurrentRaceSafety(t *testing.T) {
 }
 
 func TestServeStdio_ErrorWhenClosed(t *testing.T) {
+	t.Parallel()
 	s := &Sidecar{running: false}
 	err := s.ServeStdio(context.Background(), nil, nil)
 	if err == nil {
@@ -106,6 +116,7 @@ func TestServeStdio_ErrorWhenClosed(t *testing.T) {
 }
 
 func TestCallTool_ConcurrentAccess(t *testing.T) {
+	t.Parallel()
 	s := &Sidecar{running: true}
 	var wg sync.WaitGroup
 	for i := 0; i < 10; i++ {

@@ -45,6 +45,7 @@ func (l *mockLogger) Warn(msg string, args ...any) {}
 // --- SecuritySandbox tests ---
 
 func TestNewSecuritySandbox(t *testing.T) {
+	t.Parallel()
 	sb := NewSecuritySandbox()
 	if sb == nil {
 		t.Fatal("expected non-nil sandbox")
@@ -55,6 +56,7 @@ func TestNewSecuritySandbox(t *testing.T) {
 }
 
 func TestSecuritySandbox_GrantAndCheckToolAccess(t *testing.T) {
+	t.Parallel()
 	sb := NewSecuritySandbox()
 
 	// Before grant: denied
@@ -76,6 +78,7 @@ func TestSecuritySandbox_GrantAndCheckToolAccess(t *testing.T) {
 }
 
 func TestSecuritySandbox_WildcardToolAccess(t *testing.T) {
+	t.Parallel()
 	sb := NewSecuritySandbox()
 	sb.Grant("plugin1", PluginCapabilities{Tools: []string{"*"}})
 
@@ -85,6 +88,7 @@ func TestSecuritySandbox_WildcardToolAccess(t *testing.T) {
 }
 
 func TestSecuritySandbox_Revoke(t *testing.T) {
+	t.Parallel()
 	sb := NewSecuritySandbox()
 	sb.Grant("plugin1", PluginCapabilities{Tools: []string{"tool_a"}, Network: true})
 
@@ -103,6 +107,7 @@ func TestSecuritySandbox_Revoke(t *testing.T) {
 }
 
 func TestSecuritySandbox_CheckNetworkAccess(t *testing.T) {
+	t.Parallel()
 	sb := NewSecuritySandbox()
 	sb.Grant("net-plugin", PluginCapabilities{Network: true})
 	sb.Grant("no-net", PluginCapabilities{Network: false})
@@ -119,6 +124,7 @@ func TestSecuritySandbox_CheckNetworkAccess(t *testing.T) {
 }
 
 func TestSecuritySandbox_CheckFileSystemAccess(t *testing.T) {
+	t.Parallel()
 	sb := NewSecuritySandbox()
 	sb.Grant("fs-plugin", PluginCapabilities{FileSystem: true})
 	sb.Grant("no-fs", PluginCapabilities{FileSystem: false})
@@ -135,6 +141,7 @@ func TestSecuritySandbox_CheckFileSystemAccess(t *testing.T) {
 }
 
 func TestSecuritySandbox_DenyByDefaultFalse(t *testing.T) {
+	t.Parallel()
 	sb := &SecuritySandbox{
 		allowed:       make(map[string]*PluginCapabilities),
 		denyByDefault: false,
@@ -152,6 +159,7 @@ func TestSecuritySandbox_DenyByDefaultFalse(t *testing.T) {
 }
 
 func TestSecuritySandbox_ConcurrentAccess(t *testing.T) {
+	t.Parallel()
 	sb := NewSecuritySandbox()
 	var wg sync.WaitGroup
 	for i := 0; i < 50; i++ {
@@ -172,6 +180,7 @@ func TestSecuritySandbox_ConcurrentAccess(t *testing.T) {
 // --- SidecarManager tests ---
 
 func TestSidecarManager_RegisterAndList(t *testing.T) {
+	t.Parallel()
 	sm := NewSidecarManager(&mockLogger{})
 	s := sm.RegisterSidecar("py-plugin", "localhost:50051")
 	if s.Name != "py-plugin" || s.Address != "localhost:50051" || s.Status != "connected" {
@@ -185,6 +194,7 @@ func TestSidecarManager_RegisterAndList(t *testing.T) {
 }
 
 func TestSidecarManager_GetSidecar(t *testing.T) {
+	t.Parallel()
 	sm := NewSidecarManager(&mockLogger{})
 	sm.RegisterSidecar("s1", "localhost:50051")
 
@@ -200,6 +210,7 @@ func TestSidecarManager_GetSidecar(t *testing.T) {
 }
 
 func TestSidecarManager_Unregister(t *testing.T) {
+	t.Parallel()
 	sm := NewSidecarManager(&mockLogger{})
 	sm.RegisterSidecar("s1", "localhost:50051")
 
@@ -216,6 +227,7 @@ func TestSidecarManager_Unregister(t *testing.T) {
 }
 
 func TestSidecarManager_NilLogger(t *testing.T) {
+	t.Parallel()
 	sm := NewSidecarManager(nil)
 	s := sm.RegisterSidecar("s1", "localhost:50051")
 	if s == nil {
@@ -226,6 +238,7 @@ func TestSidecarManager_NilLogger(t *testing.T) {
 // --- Manifest validation tests ---
 
 func TestValidateManifest_Valid(t *testing.T) {
+	t.Parallel()
 	m := &Manifest{Name: "my-plugin", Version: "1.0.0", Type: "native"}
 	if err := validateManifest(m); err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -236,6 +249,7 @@ func TestValidateManifest_Valid(t *testing.T) {
 }
 
 func TestValidateManifest_MissingName(t *testing.T) {
+	t.Parallel()
 	m := &Manifest{Version: "1.0.0"}
 	if err := validateManifest(m); err == nil {
 		t.Error("expected error for missing name")
@@ -243,6 +257,7 @@ func TestValidateManifest_MissingName(t *testing.T) {
 }
 
 func TestValidateManifest_MissingVersion(t *testing.T) {
+	t.Parallel()
 	m := &Manifest{Name: "test"}
 	if err := validateManifest(m); err == nil {
 		t.Error("expected error for missing version")
@@ -250,6 +265,7 @@ func TestValidateManifest_MissingVersion(t *testing.T) {
 }
 
 func TestValidateManifest_InvalidType(t *testing.T) {
+	t.Parallel()
 	m := &Manifest{Name: "test", Version: "1.0.0", Type: "invalid"}
 	if err := validateManifest(m); err == nil {
 		t.Error("expected error for invalid type")
@@ -257,6 +273,7 @@ func TestValidateManifest_InvalidType(t *testing.T) {
 }
 
 func TestValidateManifest_NameWithSpaces(t *testing.T) {
+	t.Parallel()
 	m := &Manifest{Name: "bad name", Version: "1.0.0"}
 	if err := validateManifest(m); err == nil {
 		t.Error("expected error for name with spaces")
@@ -264,6 +281,7 @@ func TestValidateManifest_NameWithSpaces(t *testing.T) {
 }
 
 func TestValidateManifest_NameWithSlashes(t *testing.T) {
+	t.Parallel()
 	m := &Manifest{Name: "bad/name", Version: "1.0.0"}
 	if err := validateManifest(m); err == nil {
 		t.Error("expected error for name with slashes")
@@ -271,6 +289,7 @@ func TestValidateManifest_NameWithSlashes(t *testing.T) {
 }
 
 func TestValidateManifest_DefaultType(t *testing.T) {
+	t.Parallel()
 	m := &Manifest{Name: "test", Version: "1.0.0"}
 	if err := validateManifest(m); err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -281,6 +300,7 @@ func TestValidateManifest_DefaultType(t *testing.T) {
 }
 
 func TestValidateManifest_AllValidTypes(t *testing.T) {
+	t.Parallel()
 	for _, tp := range []string{"native", "grpc", "wasm"} {
 		m := &Manifest{Name: "test", Version: "1.0.0", Type: tp}
 		if err := validateManifest(m); err != nil {
@@ -292,6 +312,7 @@ func TestValidateManifest_AllValidTypes(t *testing.T) {
 // --- LoadManifest tests ---
 
 func TestLoadManifest_ValidFile(t *testing.T) {
+	t.Parallel()
 	manifest := Manifest{
 		APIVersion: "v1",
 		Name:       "test-plugin",
@@ -312,6 +333,7 @@ func TestLoadManifest_ValidFile(t *testing.T) {
 }
 
 func TestLoadManifest_FileNotFound(t *testing.T) {
+	t.Parallel()
 	_, err := LoadManifest("/nonexistent/path.json")
 	if err == nil {
 		t.Error("expected error for missing file")
@@ -319,6 +341,7 @@ func TestLoadManifest_FileNotFound(t *testing.T) {
 }
 
 func TestLoadManifest_InvalidJSON(t *testing.T) {
+	t.Parallel()
 	path := filepath.Join(t.TempDir(), "bad.json")
 	os.WriteFile(path, []byte("not json"), 0644)
 
@@ -329,6 +352,7 @@ func TestLoadManifest_InvalidJSON(t *testing.T) {
 }
 
 func TestLoadManifest_FailsValidation(t *testing.T) {
+	t.Parallel()
 	data, _ := json.Marshal(map[string]string{"version": "1.0.0"})
 	path := filepath.Join(t.TempDir(), "incomplete.json")
 	os.WriteFile(path, data, 0644)
@@ -342,6 +366,7 @@ func TestLoadManifest_FailsValidation(t *testing.T) {
 // --- ExtendedRegistry tests ---
 
 func TestExtendedRegistry_RegisterWithManifest(t *testing.T) {
+	t.Parallel()
 	reg := NewRegistry(testSlogLogger())
 	er := NewExtendedRegistry(reg)
 
@@ -388,6 +413,7 @@ func TestExtendedRegistry_RegisterWithManifest(t *testing.T) {
 }
 
 func TestExtendedRegistry_RegisterWithManifest_MissingRequiredConfig(t *testing.T) {
+	t.Parallel()
 	reg := NewRegistry(testSlogLogger())
 	er := NewExtendedRegistry(reg)
 
@@ -407,6 +433,7 @@ func TestExtendedRegistry_RegisterWithManifest_MissingRequiredConfig(t *testing.
 }
 
 func TestExtendedRegistry_RegisterWithManifest_RequiredConfigWithDefault(t *testing.T) {
+	t.Parallel()
 	reg := NewRegistry(testSlogLogger())
 	er := NewExtendedRegistry(reg)
 
@@ -430,6 +457,7 @@ func TestExtendedRegistry_RegisterWithManifest_RequiredConfigWithDefault(t *test
 }
 
 func TestExtendedRegistry_UnregisterWithLifecycle(t *testing.T) {
+	t.Parallel()
 	reg := NewRegistry(testSlogLogger())
 	er := NewExtendedRegistry(reg)
 
@@ -474,6 +502,7 @@ func TestExtendedRegistry_UnregisterWithLifecycle(t *testing.T) {
 }
 
 func TestExtendedRegistry_UnregisterNonexistent(t *testing.T) {
+	t.Parallel()
 	reg := NewRegistry(testSlogLogger())
 	er := NewExtendedRegistry(reg)
 
@@ -484,6 +513,7 @@ func TestExtendedRegistry_UnregisterNonexistent(t *testing.T) {
 }
 
 func TestExtendedRegistry_Sidecars(t *testing.T) {
+	t.Parallel()
 	reg := NewRegistry(testSlogLogger())
 	er := NewExtendedRegistry(reg)
 
@@ -498,6 +528,7 @@ func TestExtendedRegistry_Sidecars(t *testing.T) {
 }
 
 func TestExtendedRegistry_GetManifestMissing(t *testing.T) {
+	t.Parallel()
 	reg := NewRegistry(testSlogLogger())
 	er := NewExtendedRegistry(reg)
 	if m := er.GetManifest("missing"); m != nil {

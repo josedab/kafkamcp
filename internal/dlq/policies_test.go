@@ -21,6 +21,7 @@ func testDLQLogger() *slog.Logger {
 // --- PolicyManager tests ---
 
 func TestPolicyManager_AddPolicy_Defaults(t *testing.T) {
+	t.Parallel()
 	pm := NewPolicyManager(testDLQLogger())
 
 	pm.AddPolicy(RemediationPolicy{TopicPattern: "dlq.*"})
@@ -41,6 +42,7 @@ func TestPolicyManager_AddPolicy_Defaults(t *testing.T) {
 }
 
 func TestPolicyManager_AddPolicy_ReplaceExisting(t *testing.T) {
+	t.Parallel()
 	pm := NewPolicyManager(testDLQLogger())
 
 	pm.AddPolicy(RemediationPolicy{TopicPattern: "dlq.*", Action: "retry"})
@@ -56,6 +58,7 @@ func TestPolicyManager_AddPolicy_ReplaceExisting(t *testing.T) {
 }
 
 func TestPolicyManager_RemovePolicy(t *testing.T) {
+	t.Parallel()
 	pm := NewPolicyManager(testDLQLogger())
 	pm.AddPolicy(RemediationPolicy{TopicPattern: "dlq.*"})
 
@@ -71,6 +74,7 @@ func TestPolicyManager_RemovePolicy(t *testing.T) {
 }
 
 func TestPolicyManager_FindPolicy(t *testing.T) {
+	t.Parallel()
 	pm := NewPolicyManager(testDLQLogger())
 	pm.AddPolicy(RemediationPolicy{TopicPattern: "dlq.*", Action: "retry", Priority: 1})
 	pm.AddPolicy(RemediationPolicy{TopicPattern: "dlq.orders*", Action: "route", Priority: 10})
@@ -95,6 +99,7 @@ func TestPolicyManager_FindPolicy(t *testing.T) {
 }
 
 func TestPolicyManager_FindPolicy_WildcardAll(t *testing.T) {
+	t.Parallel()
 	pm := NewPolicyManager(testDLQLogger())
 	pm.AddPolicy(RemediationPolicy{TopicPattern: "*", Action: "retry"})
 
@@ -107,6 +112,7 @@ func TestPolicyManager_FindPolicy_WildcardAll(t *testing.T) {
 // --- matchTopicPattern tests ---
 
 func TestMatchTopicPattern(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		pattern string
 		topic   string
@@ -132,6 +138,7 @@ func TestMatchTopicPattern(t *testing.T) {
 // --- CalculateBackoff tests ---
 
 func TestCalculateBackoff(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		attempt int
 		baseMs  int64
@@ -157,6 +164,7 @@ func TestCalculateBackoff(t *testing.T) {
 // --- DryRun tests ---
 
 func TestDryRun_ClassifiesErrors(t *testing.T) {
+	t.Parallel()
 	logger := testDLQLogger()
 	r := NewRemediator(logger)
 	r.AddPolicy(Policy{TopicPattern: "dlq.*", Action: "retry"})
@@ -197,6 +205,7 @@ func TestDryRun_ClassifiesErrors(t *testing.T) {
 }
 
 func TestDryRun_DefaultLimit(t *testing.T) {
+	t.Parallel()
 	logger := testDLQLogger()
 	r := NewRemediator(logger)
 
@@ -213,6 +222,7 @@ func TestDryRun_DefaultLimit(t *testing.T) {
 }
 
 func TestDryRun_EstimatedSuccess(t *testing.T) {
+	t.Parallel()
 	logger := testDLQLogger()
 	r := NewRemediator(logger)
 
@@ -234,6 +244,7 @@ func TestDryRun_EstimatedSuccess(t *testing.T) {
 // --- Escalate tests ---
 
 func TestEscalate_NoWebhook(t *testing.T) {
+	t.Parallel()
 	logger := testDLQLogger()
 	r := NewRemediator(logger)
 
@@ -244,6 +255,7 @@ func TestEscalate_NoWebhook(t *testing.T) {
 }
 
 func TestEscalate_WebhookSuccess(t *testing.T) {
+	t.Parallel()
 	logger := testDLQLogger()
 	r := NewRemediator(logger)
 
@@ -259,6 +271,7 @@ func TestEscalate_WebhookSuccess(t *testing.T) {
 }
 
 func TestEscalate_WebhookError(t *testing.T) {
+	t.Parallel()
 	logger := testDLQLogger()
 	r := NewRemediator(logger)
 
@@ -274,6 +287,7 @@ func TestEscalate_WebhookError(t *testing.T) {
 }
 
 func TestEscalate_InvalidURL(t *testing.T) {
+	t.Parallel()
 	logger := testDLQLogger()
 	r := NewRemediator(logger)
 
@@ -286,6 +300,7 @@ func TestEscalate_InvalidURL(t *testing.T) {
 // --- EscalationEvent struct test ---
 
 func TestEscalationEvent_Fields(t *testing.T) {
+	t.Parallel()
 	e := EscalationEvent{
 		Topic:        "dlq.orders",
 		ErrorType:    "timeout",
@@ -301,6 +316,7 @@ func TestEscalationEvent_Fields(t *testing.T) {
 // --- SuggestSchemaFixes tests ---
 
 func TestSuggestSchemaFixes_EmptyMessages(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(testDLQLogger())
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
@@ -318,6 +334,7 @@ func TestSuggestSchemaFixes_EmptyMessages(t *testing.T) {
 }
 
 func TestSuggestSchemaFixes_ConsumeError(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(testDLQLogger())
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
@@ -335,6 +352,7 @@ func TestSuggestSchemaFixes_ConsumeError(t *testing.T) {
 }
 
 func TestSuggestSchemaFixes_DefaultLimit(t *testing.T) {
+	t.Parallel()
 	var capturedLimit int
 	r := NewRemediator(testDLQLogger())
 	mock := &kafka.MockKafkaManager{
@@ -351,6 +369,7 @@ func TestSuggestSchemaFixes_DefaultLimit(t *testing.T) {
 }
 
 func TestSuggestSchemaFixes_NullFields(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(testDLQLogger())
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
@@ -385,6 +404,7 @@ func TestSuggestSchemaFixes_NullFields(t *testing.T) {
 }
 
 func TestSuggestSchemaFixes_EmptyStringFields(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(testDLQLogger())
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
@@ -415,6 +435,7 @@ func TestSuggestSchemaFixes_EmptyStringFields(t *testing.T) {
 }
 
 func TestSuggestSchemaFixes_NonJSONValue(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(testDLQLogger())
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
@@ -441,6 +462,7 @@ func TestSuggestSchemaFixes_NonJSONValue(t *testing.T) {
 }
 
 func TestSuggestSchemaFixes_SchemaErrorHeader(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(testDLQLogger())
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
@@ -473,6 +495,7 @@ func TestSuggestSchemaFixes_SchemaErrorHeader(t *testing.T) {
 }
 
 func TestSuggestSchemaFixes_MixedIssues(t *testing.T) {
+	t.Parallel()
 	r := NewRemediator(testDLQLogger())
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
@@ -497,6 +520,7 @@ func TestSuggestSchemaFixes_MixedIssues(t *testing.T) {
 }
 
 func TestSuggestSchemaFixes_CustomLimit(t *testing.T) {
+	t.Parallel()
 	var capturedLimit int
 	r := NewRemediator(testDLQLogger())
 	mock := &kafka.MockKafkaManager{

@@ -23,6 +23,7 @@ func setupAPI() (*APIHandler, *CloudService) {
 // --- handleWorkspaces ---
 
 func TestHandleWorkspacesGET(t *testing.T) {
+	t.Parallel()
 	h, svc := setupAPI()
 	svc.CreateWorkspace("ws1", "a@b.com", "free")
 
@@ -43,6 +44,7 @@ func TestHandleWorkspacesGET(t *testing.T) {
 }
 
 func TestHandleWorkspacesPOST(t *testing.T) {
+	t.Parallel()
 	h, _ := setupAPI()
 
 	payload := `{"name":"test-ws","owner_email":"u@x.com","plan":"pro"}`
@@ -63,6 +65,7 @@ func TestHandleWorkspacesPOST(t *testing.T) {
 }
 
 func TestHandleWorkspacesPOSTInvalidJSON(t *testing.T) {
+	t.Parallel()
 	h, _ := setupAPI()
 
 	req := httptest.NewRequest(http.MethodPost, "/api/cloud/v1/workspaces", bytes.NewBufferString("{invalid"))
@@ -75,6 +78,7 @@ func TestHandleWorkspacesPOSTInvalidJSON(t *testing.T) {
 }
 
 func TestHandleWorkspacesMethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	h, _ := setupAPI()
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/cloud/v1/workspaces", nil)
@@ -89,6 +93,7 @@ func TestHandleWorkspacesMethodNotAllowed(t *testing.T) {
 // --- handleWorkspaceByID ---
 
 func TestHandleWorkspaceByIDGet(t *testing.T) {
+	t.Parallel()
 	h, svc := setupAPI()
 	ws, _, _ := svc.CreateWorkspace("ws1", "a@b.com", "free")
 
@@ -102,6 +107,7 @@ func TestHandleWorkspaceByIDGet(t *testing.T) {
 }
 
 func TestHandleWorkspaceByIDNotFound(t *testing.T) {
+	t.Parallel()
 	h, _ := setupAPI()
 
 	req := httptest.NewRequest(http.MethodGet, "/api/cloud/v1/workspaces/nonexistent", nil)
@@ -114,6 +120,7 @@ func TestHandleWorkspaceByIDNotFound(t *testing.T) {
 }
 
 func TestHandleWorkspaceByIDEmptyID(t *testing.T) {
+	t.Parallel()
 	h, _ := setupAPI()
 
 	req := httptest.NewRequest(http.MethodGet, "/api/cloud/v1/workspaces/", nil)
@@ -126,6 +133,7 @@ func TestHandleWorkspaceByIDEmptyID(t *testing.T) {
 }
 
 func TestHandleWorkspaceByIDClusters(t *testing.T) {
+	t.Parallel()
 	h, svc := setupAPI()
 	ws, _, _ := svc.CreateWorkspace("ws1", "a@b.com", "free")
 
@@ -140,6 +148,7 @@ func TestHandleWorkspaceByIDClusters(t *testing.T) {
 }
 
 func TestHandleWorkspaceByIDMembers(t *testing.T) {
+	t.Parallel()
 	h, svc := setupAPI()
 	ws, _, _ := svc.CreateWorkspace("ws1", "a@b.com", "free")
 
@@ -154,6 +163,7 @@ func TestHandleWorkspaceByIDMembers(t *testing.T) {
 }
 
 func TestHandleWorkspaceByIDDashboard(t *testing.T) {
+	t.Parallel()
 	h, svc := setupAPI()
 	ws, _, _ := svc.CreateWorkspace("ws1", "a@b.com", "free")
 
@@ -167,6 +177,7 @@ func TestHandleWorkspaceByIDDashboard(t *testing.T) {
 }
 
 func TestHandleWorkspaceByIDDelete(t *testing.T) {
+	t.Parallel()
 	h, svc := setupAPI()
 	ws, _, _ := svc.CreateWorkspace("ws1", "a@b.com", "free")
 
@@ -180,6 +191,7 @@ func TestHandleWorkspaceByIDDelete(t *testing.T) {
 }
 
 func TestHandleWorkspaceByIDUnknownSubpath(t *testing.T) {
+	t.Parallel()
 	h, svc := setupAPI()
 	ws, _, _ := svc.CreateWorkspace("ws1", "a@b.com", "free")
 
@@ -195,6 +207,7 @@ func TestHandleWorkspaceByIDUnknownSubpath(t *testing.T) {
 // --- handleAuth ---
 
 func TestHandleAuthValid(t *testing.T) {
+	t.Parallel()
 	h, svc := setupAPI()
 	_, apiKey, _ := svc.CreateWorkspace("ws1", "a@b.com", "pro")
 
@@ -209,6 +222,7 @@ func TestHandleAuthValid(t *testing.T) {
 }
 
 func TestHandleAuthMissingKey(t *testing.T) {
+	t.Parallel()
 	h, _ := setupAPI()
 
 	req := httptest.NewRequest(http.MethodPost, "/api/cloud/v1/auth", nil)
@@ -221,6 +235,7 @@ func TestHandleAuthMissingKey(t *testing.T) {
 }
 
 func TestHandleAuthInvalidKey(t *testing.T) {
+	t.Parallel()
 	h, _ := setupAPI()
 
 	req := httptest.NewRequest(http.MethodPost, "/api/cloud/v1/auth", nil)
@@ -234,6 +249,7 @@ func TestHandleAuthInvalidKey(t *testing.T) {
 }
 
 func TestHandleAuthMethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	h, _ := setupAPI()
 
 	req := httptest.NewRequest(http.MethodGet, "/api/cloud/v1/auth", nil)
@@ -248,6 +264,7 @@ func TestHandleAuthMethodNotAllowed(t *testing.T) {
 // --- handleBilling ---
 
 func TestHandleBillingValid(t *testing.T) {
+	t.Parallel()
 	h, svc := setupAPI()
 	ws, _, _ := svc.CreateWorkspace("ws1", "a@b.com", "pro")
 
@@ -261,6 +278,7 @@ func TestHandleBillingValid(t *testing.T) {
 }
 
 func TestHandleBillingMissingWorkspace(t *testing.T) {
+	t.Parallel()
 	h, _ := setupAPI()
 
 	req := httptest.NewRequest(http.MethodGet, "/api/cloud/v1/billing", nil)
@@ -273,6 +291,7 @@ func TestHandleBillingMissingWorkspace(t *testing.T) {
 }
 
 func TestHandleBillingNotFound(t *testing.T) {
+	t.Parallel()
 	h, _ := setupAPI()
 
 	req := httptest.NewRequest(http.MethodGet, "/api/cloud/v1/billing?workspace_id=nonexistent", nil)
@@ -287,6 +306,7 @@ func TestHandleBillingNotFound(t *testing.T) {
 // --- handleProvision ---
 
 func TestHandleProvisionValid(t *testing.T) {
+	t.Parallel()
 	h, svc := setupAPI()
 	ws, _, _ := svc.CreateWorkspace("ws1", "a@b.com", "pro")
 
@@ -308,6 +328,7 @@ func TestHandleProvisionValid(t *testing.T) {
 }
 
 func TestHandleProvisionDefaultRegion(t *testing.T) {
+	t.Parallel()
 	h, svc := setupAPI()
 	ws, _, _ := svc.CreateWorkspace("ws1", "a@b.com", "enterprise")
 
@@ -329,6 +350,7 @@ func TestHandleProvisionDefaultRegion(t *testing.T) {
 }
 
 func TestHandleProvisionFreePlanForbidden(t *testing.T) {
+	t.Parallel()
 	h, svc := setupAPI()
 	ws, _, _ := svc.CreateWorkspace("ws1", "a@b.com", "free")
 
@@ -345,6 +367,7 @@ func TestHandleProvisionFreePlanForbidden(t *testing.T) {
 // --- extractAPIKey ---
 
 func TestExtractAPIKeyFromBearer(t *testing.T) {
+	t.Parallel()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	req.Header.Set("Authorization", "Bearer mytoken123")
 	key := extractAPIKey(req)
@@ -354,6 +377,7 @@ func TestExtractAPIKeyFromBearer(t *testing.T) {
 }
 
 func TestExtractAPIKeyFromXAPIKeyHeader(t *testing.T) {
+	t.Parallel()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	req.Header.Set("X-API-Key", "headerkey")
 	key := extractAPIKey(req)
@@ -363,6 +387,7 @@ func TestExtractAPIKeyFromXAPIKeyHeader(t *testing.T) {
 }
 
 func TestExtractAPIKeyEmpty(t *testing.T) {
+	t.Parallel()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	key := extractAPIKey(req)
 	if key != "" {
@@ -373,6 +398,7 @@ func TestExtractAPIKeyEmpty(t *testing.T) {
 // --- writeCloudJSON / writeCloudError ---
 
 func TestWriteCloudJSON(t *testing.T) {
+	t.Parallel()
 	w := httptest.NewRecorder()
 	writeCloudJSON(w, http.StatusOK, map[string]string{"key": "value"})
 
@@ -385,6 +411,7 @@ func TestWriteCloudJSON(t *testing.T) {
 }
 
 func TestWriteCloudError(t *testing.T) {
+	t.Parallel()
 	w := httptest.NewRecorder()
 	writeCloudError(w, http.StatusBadRequest, "bad request")
 
@@ -403,6 +430,7 @@ func TestWriteCloudError(t *testing.T) {
 // --- handleUsage ---
 
 func TestHandleUsageValid(t *testing.T) {
+	t.Parallel()
 	h, svc := setupAPI()
 	ws, _, _ := svc.CreateWorkspace("ws1", "a@b.com", "free")
 
@@ -416,6 +444,7 @@ func TestHandleUsageValid(t *testing.T) {
 }
 
 func TestHandleUsageMissingID(t *testing.T) {
+	t.Parallel()
 	h, _ := setupAPI()
 
 	req := httptest.NewRequest(http.MethodGet, "/api/cloud/v1/usage", nil)
@@ -430,6 +459,7 @@ func TestHandleUsageMissingID(t *testing.T) {
 // --- handlePlans ---
 
 func TestHandlePlans(t *testing.T) {
+	t.Parallel()
 	h, _ := setupAPI()
 
 	req := httptest.NewRequest(http.MethodGet, "/api/cloud/v1/plans", nil)
@@ -452,6 +482,7 @@ func TestHandlePlans(t *testing.T) {
 // --- RegisterRoutes ---
 
 func TestRegisterRoutes(t *testing.T) {
+	t.Parallel()
 	h, _ := setupAPI()
 	mux := http.NewServeMux()
 	h.RegisterRoutes(mux, nil)

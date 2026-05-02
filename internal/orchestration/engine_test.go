@@ -10,6 +10,7 @@ func newTestEngine() *Engine {
 }
 
 func TestRegisterAgent(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	a, err := e.RegisterAgent("agent-1", "Monitor Agent", RoleMonitor, []string{"kafka_list_topics"})
 	if err != nil {
@@ -26,6 +27,7 @@ func TestRegisterAgent(t *testing.T) {
 }
 
 func TestCreateOrchestration(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	e.RegisterAgent("agent-1", "Monitor", RoleMonitor, nil)
 	e.RegisterAgent("agent-2", "Operator", RoleOperator, nil)
@@ -48,6 +50,7 @@ func TestCreateOrchestration(t *testing.T) {
 }
 
 func TestCreateOrchestrationValidation(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	if _, err := e.CreateOrchestration("", "", "", nil); err == nil {
@@ -76,6 +79,7 @@ func TestCreateOrchestrationValidation(t *testing.T) {
 }
 
 func TestGetReadyStepsAndComplete(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	steps := []OrchestrationStep{
@@ -117,6 +121,7 @@ func TestGetReadyStepsAndComplete(t *testing.T) {
 }
 
 func TestHandoffs(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	e.RegisterAgent("a1", "Agent 1", RoleMonitor, nil)
 	e.RegisterAgent("a2", "Agent 2", RoleOperator, nil)
@@ -145,6 +150,7 @@ func TestHandoffs(t *testing.T) {
 }
 
 func TestSharedContext(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	steps := []OrchestrationStep{{ID: "s1", Name: "a", Tool: "t"}}
 	orch, _ := e.CreateOrchestration("test", "", "c", steps)
@@ -157,6 +163,7 @@ func TestSharedContext(t *testing.T) {
 }
 
 func TestFindAgentByRole(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	e.RegisterAgent("a1", "Mon 1", RoleMonitor, nil)
 	e.RegisterAgent("a2", "Mon 2", RoleMonitor, nil)

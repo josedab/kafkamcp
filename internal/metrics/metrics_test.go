@@ -7,6 +7,7 @@ import (
 )
 
 func TestSanitizeAgentLabel(t *testing.T) {
+	t.Parallel()
 	m := New()
 
 	tests := []struct {
@@ -65,6 +66,7 @@ func TestSanitizeAgentLabel(t *testing.T) {
 }
 
 func TestSanitizeAgentLabel_OverflowDeterministic(t *testing.T) {
+	t.Parallel()
 	m := New()
 	agents := make(map[string]struct{})
 	for i := 0; i < maxUniqueAgents; i++ {
@@ -81,6 +83,7 @@ func TestSanitizeAgentLabel_OverflowDeterministic(t *testing.T) {
 }
 
 func TestSanitizeAgentLabel_Concurrent(t *testing.T) {
+	t.Parallel()
 	m := New()
 
 	var wg sync.WaitGroup

@@ -11,6 +11,7 @@ func testLogger() *slog.Logger {
 }
 
 func TestRecordAndAllow(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	e.RecordRequest("agent-1")
@@ -21,6 +22,7 @@ func TestRecordAndAllow(t *testing.T) {
 }
 
 func TestQuotaStatus(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	e.RecordRequest("agent-1")
@@ -36,6 +38,7 @@ func TestQuotaStatus(t *testing.T) {
 }
 
 func TestAdjustQuota(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	e.RecordRequest("agent-1")
@@ -50,6 +53,7 @@ func TestAdjustQuota(t *testing.T) {
 }
 
 func TestResetQuota(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	e.RecordRequest("agent-1")

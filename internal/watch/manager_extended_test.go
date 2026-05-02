@@ -10,6 +10,7 @@ import (
 )
 
 func TestContainsString(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		haystack string
@@ -35,6 +36,7 @@ func TestContainsString(t *testing.T) {
 }
 
 func TestJsonReader(t *testing.T) {
+	t.Parallel()
 	data := []byte(`{"key":"value"}`)
 	r := jsonReader(data)
 	if r.Len() != len(data) {
@@ -43,6 +45,7 @@ func TestJsonReader(t *testing.T) {
 }
 
 func TestSubscribeMultiple(t *testing.T) {
+	t.Parallel()
 	m := NewManager(testLogger())
 	defer m.Close()
 
@@ -58,6 +61,7 @@ func TestSubscribeMultiple(t *testing.T) {
 }
 
 func TestSubscribeIDsAreUnique(t *testing.T) {
+	t.Parallel()
 	m := NewManager(testLogger())
 	defer m.Close()
 
@@ -69,6 +73,7 @@ func TestSubscribeIDsAreUnique(t *testing.T) {
 }
 
 func TestUnsubscribeNonExistent(t *testing.T) {
+	t.Parallel()
 	m := NewManager(testLogger())
 	defer m.Close()
 
@@ -79,6 +84,7 @@ func TestUnsubscribeNonExistent(t *testing.T) {
 }
 
 func TestListSubscriptionsEmpty(t *testing.T) {
+	t.Parallel()
 	m := NewManager(testLogger())
 	defer m.Close()
 
@@ -89,6 +95,7 @@ func TestListSubscriptionsEmpty(t *testing.T) {
 }
 
 func TestListSubscriptionsFilterByAgent(t *testing.T) {
+	t.Parallel()
 	m := NewManager(testLogger())
 	defer m.Close()
 
@@ -109,6 +116,7 @@ func TestListSubscriptionsFilterByAgent(t *testing.T) {
 }
 
 func TestProcessMessageValueFilter(t *testing.T) {
+	t.Parallel()
 	m := NewManager(testLogger())
 	defer m.Close()
 
@@ -138,6 +146,7 @@ func TestProcessMessageValueFilter(t *testing.T) {
 }
 
 func TestProcessMessageMultipleSubscriptionsMatch(t *testing.T) {
+	t.Parallel()
 	m := NewManager(testLogger())
 	defer m.Close()
 
@@ -155,6 +164,7 @@ func TestProcessMessageMultipleSubscriptionsMatch(t *testing.T) {
 }
 
 func TestProcessMessageHeaderKeyPresent(t *testing.T) {
+	t.Parallel()
 	m := NewManager(testLogger())
 	defer m.Close()
 
@@ -185,6 +195,7 @@ func TestProcessMessageHeaderKeyPresent(t *testing.T) {
 }
 
 func TestNotificationChannel(t *testing.T) {
+	t.Parallel()
 	m := NewManager(testLogger())
 	defer m.Close()
 
@@ -214,6 +225,7 @@ func TestNotificationChannel(t *testing.T) {
 }
 
 func TestActiveSubscriptionCountAfterUnsubscribe(t *testing.T) {
+	t.Parallel()
 	m := NewManager(testLogger())
 	defer m.Close()
 
@@ -231,6 +243,7 @@ func TestActiveSubscriptionCountAfterUnsubscribe(t *testing.T) {
 }
 
 func TestWebhookDeliverySuccess(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
@@ -263,6 +276,7 @@ func TestWebhookDeliverySuccess(t *testing.T) {
 }
 
 func TestWebhookDeliveryFailure(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}))
@@ -299,6 +313,7 @@ func TestWebhookDeliveryFailure(t *testing.T) {
 }
 
 func TestCloseRemovesSubscriptions(t *testing.T) {
+	t.Parallel()
 	m := NewManager(testLogger())
 	m.Subscribe("agent-1", "a.*", "", "", "", nil)
 	m.Subscribe("agent-2", "b.*", "", "", "", nil)
@@ -311,6 +326,7 @@ func TestCloseRemovesSubscriptions(t *testing.T) {
 }
 
 func TestProcessMessageContextCancelled(t *testing.T) {
+	t.Parallel()
 	m := NewManager(testLogger())
 	defer m.Close()
 

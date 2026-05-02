@@ -7,6 +7,7 @@ import (
 // --- executeFilter ---
 
 func TestExecuteFilterEquals(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "filter", Config: map[string]string{"field": "key", "operator": "equals", "value": "mykey"}}
 	msg := PipelineMessage{Key: "mykey", Value: "val"}
 	_, keep, _ := executeFilter(step, msg)
@@ -16,6 +17,7 @@ func TestExecuteFilterEquals(t *testing.T) {
 }
 
 func TestExecuteFilterNotEquals(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "filter", Config: map[string]string{"field": "key", "operator": "not_equals", "value": "other"}}
 	msg := PipelineMessage{Key: "mykey"}
 	_, keep, _ := executeFilter(step, msg)
@@ -25,6 +27,7 @@ func TestExecuteFilterNotEquals(t *testing.T) {
 }
 
 func TestExecuteFilterContains(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "filter", Config: map[string]string{"field": "value", "operator": "contains", "value": "err"}}
 	msg := PipelineMessage{Value: "an error occurred"}
 	_, keep, _ := executeFilter(step, msg)
@@ -34,6 +37,7 @@ func TestExecuteFilterContains(t *testing.T) {
 }
 
 func TestExecuteFilterStartsWith(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "filter", Config: map[string]string{"field": "value", "operator": "starts_with", "value": "hello"}}
 	msg := PipelineMessage{Value: "hello world"}
 	_, keep, _ := executeFilter(step, msg)
@@ -43,6 +47,7 @@ func TestExecuteFilterStartsWith(t *testing.T) {
 }
 
 func TestExecuteFilterEndsWith(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "filter", Config: map[string]string{"field": "value", "operator": "ends_with", "value": "world"}}
 	msg := PipelineMessage{Value: "hello world"}
 	_, keep, _ := executeFilter(step, msg)
@@ -52,6 +57,7 @@ func TestExecuteFilterEndsWith(t *testing.T) {
 }
 
 func TestExecuteFilterRegex(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "filter", Config: map[string]string{"field": "value", "operator": "regex", "value": `^\d+$`}}
 	msg := PipelineMessage{Value: "12345"}
 	_, keep, _ := executeFilter(step, msg)
@@ -61,6 +67,7 @@ func TestExecuteFilterRegex(t *testing.T) {
 }
 
 func TestExecuteFilterRegexNoMatch(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "filter", Config: map[string]string{"field": "value", "operator": "regex", "value": `^\d+$`}}
 	msg := PipelineMessage{Value: "not a number"}
 	_, keep, _ := executeFilter(step, msg)
@@ -70,6 +77,7 @@ func TestExecuteFilterRegexNoMatch(t *testing.T) {
 }
 
 func TestExecuteFilterInvalidRegex(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "filter", Config: map[string]string{"field": "value", "operator": "regex", "value": "[invalid"}}
 	msg := PipelineMessage{Value: "test"}
 	_, keep, _ := executeFilter(step, msg)
@@ -79,6 +87,7 @@ func TestExecuteFilterInvalidRegex(t *testing.T) {
 }
 
 func TestExecuteFilterExists(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "filter", Config: map[string]string{"field": "value", "operator": "exists"}}
 	msg := PipelineMessage{Value: "something"}
 	_, keep, _ := executeFilter(step, msg)
@@ -88,6 +97,7 @@ func TestExecuteFilterExists(t *testing.T) {
 }
 
 func TestExecuteFilterNotExists(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "filter", Config: map[string]string{"field": "value", "operator": "not_exists"}}
 	msg := PipelineMessage{Value: ""}
 	_, keep, _ := executeFilter(step, msg)
@@ -97,6 +107,7 @@ func TestExecuteFilterNotExists(t *testing.T) {
 }
 
 func TestExecuteFilterNotContains(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "filter", Config: map[string]string{"field": "value", "operator": "not_contains", "value": "error"}}
 	msg := PipelineMessage{Value: "all good"}
 	_, keep, _ := executeFilter(step, msg)
@@ -106,6 +117,7 @@ func TestExecuteFilterNotContains(t *testing.T) {
 }
 
 func TestExecuteFilterOnHeader(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "filter", Config: map[string]string{"field": "env", "operator": "eq", "value": "prod"}}
 	msg := PipelineMessage{Headers: map[string]string{"env": "prod"}}
 	_, keep, _ := executeFilter(step, msg)
@@ -115,6 +127,7 @@ func TestExecuteFilterOnHeader(t *testing.T) {
 }
 
 func TestExecuteFilterNilHeaders(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "filter", Config: map[string]string{"field": "env", "operator": "eq", "value": "prod"}}
 	msg := PipelineMessage{}
 	_, keep, _ := executeFilter(step, msg)
@@ -124,6 +137,7 @@ func TestExecuteFilterNilHeaders(t *testing.T) {
 }
 
 func TestExecuteFilterDefaultOperator(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "filter", Config: map[string]string{"field": "value", "operator": "unknown_op", "value": "test"}}
 	msg := PipelineMessage{Value: "this is a test"}
 	_, keep, _ := executeFilter(step, msg)
@@ -135,6 +149,7 @@ func TestExecuteFilterDefaultOperator(t *testing.T) {
 // --- executeMap ---
 
 func TestExecuteMapUppercaseKey(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "map", Config: map[string]string{"expression": "uppercase", "target": "key"}}
 	msg := PipelineMessage{Key: "hello"}
 	result, _, _ := executeMap(step, msg)
@@ -144,6 +159,7 @@ func TestExecuteMapUppercaseKey(t *testing.T) {
 }
 
 func TestExecuteMapLowercase(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "map", Config: map[string]string{"expression": "lowercase", "target": "value"}}
 	msg := PipelineMessage{Value: "HELLO"}
 	result, _, _ := executeMap(step, msg)
@@ -153,6 +169,7 @@ func TestExecuteMapLowercase(t *testing.T) {
 }
 
 func TestExecuteMapLowercaseKey(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "map", Config: map[string]string{"expression": "lowercase", "target": "key"}}
 	msg := PipelineMessage{Key: "HELLO"}
 	result, _, _ := executeMap(step, msg)
@@ -162,6 +179,7 @@ func TestExecuteMapLowercaseKey(t *testing.T) {
 }
 
 func TestExecuteMapTrim(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "map", Config: map[string]string{"expression": "trim", "target": "value"}}
 	msg := PipelineMessage{Value: "  hello  "}
 	result, _, _ := executeMap(step, msg)
@@ -171,6 +189,7 @@ func TestExecuteMapTrim(t *testing.T) {
 }
 
 func TestExecuteMapTrimKey(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "map", Config: map[string]string{"expression": "trim", "target": "key"}}
 	msg := PipelineMessage{Key: "  key  "}
 	result, _, _ := executeMap(step, msg)
@@ -180,6 +199,7 @@ func TestExecuteMapTrimKey(t *testing.T) {
 }
 
 func TestExecuteMapPrefix(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "map", Config: map[string]string{"expression": "prefix", "target": "value", "value": "pre_"}}
 	msg := PipelineMessage{Value: "data"}
 	result, _, _ := executeMap(step, msg)
@@ -189,6 +209,7 @@ func TestExecuteMapPrefix(t *testing.T) {
 }
 
 func TestExecuteMapPrefixKey(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "map", Config: map[string]string{"expression": "prefix", "target": "key", "value": "k_"}}
 	msg := PipelineMessage{Key: "1"}
 	result, _, _ := executeMap(step, msg)
@@ -198,6 +219,7 @@ func TestExecuteMapPrefixKey(t *testing.T) {
 }
 
 func TestExecuteMapReplace(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "map", Config: map[string]string{"expression": "replace", "target": "value", "old": "foo", "new": "bar"}}
 	msg := PipelineMessage{Value: "foo and foo"}
 	result, _, _ := executeMap(step, msg)
@@ -207,6 +229,7 @@ func TestExecuteMapReplace(t *testing.T) {
 }
 
 func TestExecuteMapReplaceKey(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "map", Config: map[string]string{"expression": "replace", "target": "key", "old": "a", "new": "b"}}
 	msg := PipelineMessage{Key: "aaa"}
 	result, _, _ := executeMap(step, msg)
@@ -218,6 +241,7 @@ func TestExecuteMapReplaceKey(t *testing.T) {
 // --- executeEnrich ---
 
 func TestExecuteEnrichAddsHeaders(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "enrich", Name: "enricher", Config: map[string]string{"header_env": "production"}}
 	msg := PipelineMessage{Value: "test"}
 	result, _, _ := executeEnrich(step, msg)
@@ -230,6 +254,7 @@ func TestExecuteEnrichAddsHeaders(t *testing.T) {
 }
 
 func TestExecuteEnrichJSONFields(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "enrich", Config: map[string]string{
 		"add_fields": `{"source":"enriched"}`,
 	}}
@@ -241,6 +266,7 @@ func TestExecuteEnrichJSONFields(t *testing.T) {
 }
 
 func TestExecuteEnrichInvalidJSON(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "enrich", Config: map[string]string{
 		"add_fields": `{"source":"enriched"}`,
 	}}
@@ -254,6 +280,7 @@ func TestExecuteEnrichInvalidJSON(t *testing.T) {
 // --- executeTransform ---
 
 func TestExecuteTransformJsonToCsv(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "transform", Config: map[string]string{"format": "json_to_csv"}}
 	msg := PipelineMessage{Value: `{"a":"1","b":"2"}`}
 	result, keep, err := executeTransform(step, msg)
@@ -269,6 +296,7 @@ func TestExecuteTransformJsonToCsv(t *testing.T) {
 }
 
 func TestExecuteTransformWrapJson(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "transform", Config: map[string]string{"format": "wrap_json", "wrapper": "payload"}}
 	msg := PipelineMessage{Value: `"hello"`}
 	result, _, _ := executeTransform(step, msg)
@@ -279,6 +307,7 @@ func TestExecuteTransformWrapJson(t *testing.T) {
 }
 
 func TestExecuteTransformWrapJsonDefaultWrapper(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "transform", Config: map[string]string{"format": "wrap_json"}}
 	msg := PipelineMessage{Value: `42`}
 	result, _, _ := executeTransform(step, msg)
@@ -289,6 +318,7 @@ func TestExecuteTransformWrapJsonDefaultWrapper(t *testing.T) {
 }
 
 func TestExecuteTransformExtractField(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "transform", Config: map[string]string{"format": "extract_field", "field": "name"}}
 	msg := PipelineMessage{Value: `{"name":"test","age":25}`}
 	result, _, _ := executeTransform(step, msg)
@@ -298,6 +328,7 @@ func TestExecuteTransformExtractField(t *testing.T) {
 }
 
 func TestExecuteTransformInvalidJSON(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "transform", Config: map[string]string{"format": "json_to_csv"}}
 	msg := PipelineMessage{Value: "not json"}
 	result, _, _ := executeTransform(step, msg)
@@ -307,6 +338,7 @@ func TestExecuteTransformInvalidJSON(t *testing.T) {
 }
 
 func TestExecuteTransformEmptyPayload(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "transform", Config: map[string]string{"format": "extract_field", "field": "x"}}
 	msg := PipelineMessage{Value: ""}
 	result, _, _ := executeTransform(step, msg)
@@ -318,6 +350,7 @@ func TestExecuteTransformEmptyPayload(t *testing.T) {
 // --- GetPipeline ---
 
 func TestGetPipelineFound(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	steps := []Step{{Type: "filter", Name: "f", Config: map[string]string{"field": "value", "operator": "exists"}}}
 	pipe, _ := e.CreatePipeline("test", "src", "", "agent", steps)
@@ -332,6 +365,7 @@ func TestGetPipelineFound(t *testing.T) {
 }
 
 func TestGetPipelineNotFound(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	_, err := e.GetPipeline("nonexistent")
 	if err == nil {
@@ -342,6 +376,7 @@ func TestGetPipelineNotFound(t *testing.T) {
 // --- GetRun ---
 
 func TestGetRunFound(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	steps := []Step{{Type: "filter", Name: "f", Config: map[string]string{"field": "value", "operator": "exists"}}}
 	pipe, _ := e.CreatePipeline("test", "src", "", "agent", steps)
@@ -357,6 +392,7 @@ func TestGetRunFound(t *testing.T) {
 }
 
 func TestGetRunNotFound(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	_, err := e.GetRun("nonexistent")
 	if err == nil {
@@ -367,6 +403,7 @@ func TestGetRunNotFound(t *testing.T) {
 // --- ListRuns ---
 
 func TestListRunsAll(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	steps := []Step{{Type: "filter", Name: "f", Config: map[string]string{"field": "value", "operator": "exists"}}}
 	pipe, _ := e.CreatePipeline("test", "src", "", "agent", steps)
@@ -380,6 +417,7 @@ func TestListRunsAll(t *testing.T) {
 }
 
 func TestListRunsFilterByPipeline(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	steps := []Step{{Type: "filter", Name: "f", Config: map[string]string{"field": "value", "operator": "exists"}}}
 	pipe1, _ := e.CreatePipeline("test1", "src", "", "agent", steps)
@@ -394,6 +432,7 @@ func TestListRunsFilterByPipeline(t *testing.T) {
 }
 
 func TestListRunsEmpty(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	runs := e.ListRuns("", 0)
 	if len(runs) != 0 {
@@ -402,6 +441,7 @@ func TestListRunsEmpty(t *testing.T) {
 }
 
 func TestListRunsWithLimit(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	steps := []Step{{Type: "filter", Name: "f", Config: map[string]string{"field": "value", "operator": "exists"}}}
 	pipe, _ := e.CreatePipeline("test", "src", "", "agent", steps)
@@ -418,6 +458,7 @@ func TestListRunsWithLimit(t *testing.T) {
 // --- executeStep dispatch ---
 
 func TestExecuteStepAggregate(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "aggregate"}
 	msg := PipelineMessage{Value: "test"}
 	result, keep, err := executeStep(step, msg)
@@ -433,6 +474,7 @@ func TestExecuteStepAggregate(t *testing.T) {
 }
 
 func TestExecuteStepUnknownType(t *testing.T) {
+	t.Parallel()
 	step := Step{Type: "unknown"}
 	msg := PipelineMessage{Value: "test"}
 	_, keep, _ := executeStep(step, msg)
@@ -444,6 +486,7 @@ func TestExecuteStepUnknownType(t *testing.T) {
 // --- Edge cases ---
 
 func TestCreatePipelineEmptySteps(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	_, err := e.CreatePipeline("test", "src", "", "agent", []Step{})
 	if err == nil {
@@ -452,6 +495,7 @@ func TestCreatePipelineEmptySteps(t *testing.T) {
 }
 
 func TestCreatePipelineMissingName(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	_, err := e.CreatePipeline("", "src", "", "agent", []Step{{Type: "filter"}})
 	if err == nil {
@@ -460,6 +504,7 @@ func TestCreatePipelineMissingName(t *testing.T) {
 }
 
 func TestDeletePipelineNotFound(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	err := e.DeletePipeline("nonexistent")
 	if err == nil {
@@ -468,6 +513,7 @@ func TestDeletePipelineNotFound(t *testing.T) {
 }
 
 func TestExecutePausedPipeline(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	steps := []Step{{Type: "filter", Name: "f", Config: map[string]string{"field": "value", "operator": "exists"}}}
 	pipe, _ := e.CreatePipeline("test", "src", "", "agent", steps)

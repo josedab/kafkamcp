@@ -38,6 +38,7 @@ func (m *mockCollector) CollectErrorRate(ctx context.Context, cluster string) ([
 }
 
 func TestStartStop_CleanShutdown(t *testing.T) {
+	t.Parallel()
 	cfg := DefaultConfig()
 	cfg.SampleIntervalSec = 1
 	d := NewDetector(cfg, slog.Default())
@@ -69,6 +70,7 @@ func TestStartStop_CleanShutdown(t *testing.T) {
 }
 
 func TestCollectAndAnalyze_WithMockCollector(t *testing.T) {
+	t.Parallel()
 	cfg := DefaultConfig()
 	d := NewDetector(cfg, slog.Default())
 
@@ -114,20 +116,32 @@ func TestCollectAndAnalyze_WithMockCollector(t *testing.T) {
 }
 
 func TestCollectionLoop_FiresOnInterval(t *testing.T) {
+	t.Parallel()
 	cfg := DefaultConfig()
 	cfg.SampleIntervalSec = 1
 	d := NewDetector(cfg, slog.Default())
 
+	called := make(chan struct{}, 10)
 	var callCount atomic.Int32
 	collector := &mockCollector{
 		lagFn: func(ctx context.Context, cluster string) ([]DataPoint, error) {
 			callCount.Add(1)
+			select {
+			case called <- struct{}{}:
+			default:
+			}
 			return nil, nil
 		},
 	}
 
 	d.Start(context.Background(), collector, "default")
-	time.Sleep(2500 * time.Millisecond)
+
+	// Wait for at least one collection cycle instead of sleeping a fixed duration
+	select {
+	case <-called:
+	case <-time.After(5 * time.Second):
+		t.Fatal("timed out waiting for collection cycle")
+	}
 	d.Stop()
 
 	calls := callCount.Load()
@@ -137,6 +151,7 @@ func TestCollectionLoop_FiresOnInterval(t *testing.T) {
 }
 
 func TestCollectorReturningError_NoPanic(t *testing.T) {
+	t.Parallel()
 	cfg := DefaultConfig()
 	d := NewDetector(cfg, slog.Default())
 
@@ -162,6 +177,7 @@ func TestCollectorReturningError_NoPanic(t *testing.T) {
 }
 
 func TestMultipleStartStop_Idempotency(t *testing.T) {
+	t.Parallel()
 	cfg := DefaultConfig()
 	cfg.SampleIntervalSec = 1
 	d := NewDetector(cfg, slog.Default())
@@ -177,6 +193,7 @@ func TestMultipleStartStop_Idempotency(t *testing.T) {
 }
 
 func TestStartStop_ContextCancel(t *testing.T) {
+	t.Parallel()
 	cfg := DefaultConfig()
 	cfg.SampleIntervalSec = 60 // long interval
 	d := NewDetector(cfg, slog.Default())

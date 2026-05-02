@@ -18,6 +18,7 @@ func newCoverageEngine() *Engine {
 // --- SemanticParse ---
 
 func TestSemanticParseSimpleIntent(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	plan, err := e.SemanticParse("count messages in orders", []string{"orders"})
 	if err != nil {
@@ -29,6 +30,7 @@ func TestSemanticParseSimpleIntent(t *testing.T) {
 }
 
 func TestSemanticParseComplexBoolean(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	plan, err := e.SemanticParse("show where status = failed and region = us-east-1", []string{"logs"})
 	if err != nil {
@@ -40,6 +42,7 @@ func TestSemanticParseComplexBoolean(t *testing.T) {
 }
 
 func TestSemanticParseEmpty(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	_, err := e.SemanticParse("", nil)
 	if err == nil {
@@ -48,6 +51,7 @@ func TestSemanticParseEmpty(t *testing.T) {
 }
 
 func TestSemanticParseTooLong(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	longQuery := ""
 	for i := 0; i < 2001; i++ {
@@ -60,6 +64,7 @@ func TestSemanticParseTooLong(t *testing.T) {
 }
 
 func TestSemanticParseFallbackToRegex(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	plan, err := e.SemanticParse("show me all errors in logs", []string{"logs"})
 	if err != nil {
@@ -71,6 +76,7 @@ func TestSemanticParseFallbackToRegex(t *testing.T) {
 }
 
 func TestSemanticParseWithTimeRange(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	plan, err := e.SemanticParse("show errors in the last 2 hours", []string{"logs"})
 	if err != nil {
@@ -82,6 +88,7 @@ func TestSemanticParseWithTimeRange(t *testing.T) {
 }
 
 func TestSemanticParseWithLimit(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	plan, err := e.SemanticParse("top 10 errors by count", []string{"logs"})
 	if err != nil {
@@ -93,6 +100,7 @@ func TestSemanticParseWithLimit(t *testing.T) {
 }
 
 func TestSemanticParseWithSort(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	plan, err := e.SemanticParse("show messages sort by timestamp desc", []string{"logs"})
 	if err != nil {
@@ -106,6 +114,7 @@ func TestSemanticParseWithSort(t *testing.T) {
 // --- detectIntent ---
 
 func TestDetectIntentCount(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	if e.detectIntent("count messages") != "count" {
 		t.Error("expected count")
@@ -113,6 +122,7 @@ func TestDetectIntentCount(t *testing.T) {
 }
 
 func TestDetectIntentAverage(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	if e.detectIntent("average latency") != "average" {
 		t.Error("expected average")
@@ -120,6 +130,7 @@ func TestDetectIntentAverage(t *testing.T) {
 }
 
 func TestDetectIntentMax(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	if e.detectIntent("maximum throughput") != "max" {
 		t.Error("expected max")
@@ -127,6 +138,7 @@ func TestDetectIntentMax(t *testing.T) {
 }
 
 func TestDetectIntentMin(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	if e.detectIntent("minimum latency") != "min" {
 		t.Error("expected min")
@@ -134,6 +146,7 @@ func TestDetectIntentMin(t *testing.T) {
 }
 
 func TestDetectIntentUnknown(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	intent := e.detectIntent("xyzzy foobar")
 	if intent != "search" {
@@ -142,6 +155,7 @@ func TestDetectIntentUnknown(t *testing.T) {
 }
 
 func TestDetectIntentJoin(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	if e.detectIntent("join orders and users") != "join" {
 		t.Error("expected join")
@@ -149,6 +163,7 @@ func TestDetectIntentJoin(t *testing.T) {
 }
 
 func TestDetectIntentTrend(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	if e.detectIntent("show trend over time") != "trend" {
 		t.Error("expected trend")
@@ -158,6 +173,7 @@ func TestDetectIntentTrend(t *testing.T) {
 // --- extractBooleanFilters ---
 
 func TestExtractBooleanFiltersWhereClause(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	filters := e.extractBooleanFilters("where status = active and region = us-east-1")
 	if len(filters) < 1 {
@@ -166,6 +182,7 @@ func TestExtractBooleanFiltersWhereClause(t *testing.T) {
 }
 
 func TestExtractBooleanFiltersNoFilters(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	filters := e.extractBooleanFilters("show me everything")
 	if len(filters) != 0 {
@@ -174,6 +191,7 @@ func TestExtractBooleanFiltersNoFilters(t *testing.T) {
 }
 
 func TestExtractBooleanFiltersFailed(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	filters := e.extractBooleanFilters("show me failed requests")
 	found := false
@@ -188,6 +206,7 @@ func TestExtractBooleanFiltersFailed(t *testing.T) {
 }
 
 func TestExtractBooleanFiltersError(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	filters := e.extractBooleanFilters("show me error logs")
 	found := false
@@ -202,6 +221,7 @@ func TestExtractBooleanFiltersError(t *testing.T) {
 }
 
 func TestExtractBooleanFiltersEqPattern(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	filters := e.extractBooleanFilters("status is active")
 	if len(filters) == 0 {
@@ -212,6 +232,7 @@ func TestExtractBooleanFiltersEqPattern(t *testing.T) {
 // --- extractAggregation ---
 
 func TestExtractAggregationCount(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	agg := e.extractAggregation("count messages")
 	if agg == nil || agg.Function != "count" {
@@ -220,6 +241,7 @@ func TestExtractAggregationCount(t *testing.T) {
 }
 
 func TestExtractAggregationAvg(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	agg := e.extractAggregation("average latency")
 	if agg == nil || agg.Function != "avg" {
@@ -228,6 +250,7 @@ func TestExtractAggregationAvg(t *testing.T) {
 }
 
 func TestExtractAggregationSum(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	agg := e.extractAggregation("sum of bytes")
 	if agg == nil || agg.Function != "sum" {
@@ -236,6 +259,7 @@ func TestExtractAggregationSum(t *testing.T) {
 }
 
 func TestExtractAggregationMax(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	agg := e.extractAggregation("maximum throughput")
 	if agg == nil || agg.Function != "max" {
@@ -244,6 +268,7 @@ func TestExtractAggregationMax(t *testing.T) {
 }
 
 func TestExtractAggregationMin(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	agg := e.extractAggregation("minimum latency")
 	if agg == nil || agg.Function != "min" {
@@ -252,6 +277,7 @@ func TestExtractAggregationMin(t *testing.T) {
 }
 
 func TestExtractAggregationNone(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	agg := e.extractAggregation("show me everything")
 	if agg != nil {
@@ -260,6 +286,7 @@ func TestExtractAggregationNone(t *testing.T) {
 }
 
 func TestExtractAggregationGroupBy(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	agg := e.extractAggregation("group events by region")
 	if agg == nil || agg.Function != "group_by" {
@@ -268,6 +295,7 @@ func TestExtractAggregationGroupBy(t *testing.T) {
 }
 
 func TestExtractAggregationWithGroupBy(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	agg := e.extractAggregation("count messages by topic")
 	if agg == nil {
@@ -281,6 +309,7 @@ func TestExtractAggregationWithGroupBy(t *testing.T) {
 // --- extractTimeRange ---
 
 func TestExtractTimeRangeLastN(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	tr := e.extractTimeRange("in the last 3 hours")
 	if tr == nil {
@@ -292,6 +321,7 @@ func TestExtractTimeRangeLastN(t *testing.T) {
 }
 
 func TestExtractTimeRangeYesterday(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	tr := e.extractTimeRange("since yesterday")
 	if tr == nil {
@@ -300,6 +330,7 @@ func TestExtractTimeRangeYesterday(t *testing.T) {
 }
 
 func TestExtractTimeRangeToday(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	tr := e.extractTimeRange("today")
 	if tr == nil {
@@ -308,6 +339,7 @@ func TestExtractTimeRangeToday(t *testing.T) {
 }
 
 func TestExtractTimeRangeNone(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	tr := e.extractTimeRange("show me stuff")
 	if tr != nil {
@@ -318,6 +350,7 @@ func TestExtractTimeRangeNone(t *testing.T) {
 // --- extractLimit ---
 
 func TestExtractLimitValid(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	l := e.extractLimit("top 25 results")
 	if l != 25 {
@@ -326,6 +359,7 @@ func TestExtractLimitValid(t *testing.T) {
 }
 
 func TestExtractLimitNone(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	l := e.extractLimit("show me stuff")
 	if l != 0 {
@@ -336,6 +370,7 @@ func TestExtractLimitNone(t *testing.T) {
 // --- extractSort ---
 
 func TestExtractSortDesc(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	s := e.extractSort("sort by timestamp desc")
 	if s != "timestamp:desc" {
@@ -344,6 +379,7 @@ func TestExtractSortDesc(t *testing.T) {
 }
 
 func TestExtractSortAsc(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	s := e.extractSort("order by name asc")
 	if s != "name:asc" {
@@ -352,6 +388,7 @@ func TestExtractSortAsc(t *testing.T) {
 }
 
 func TestExtractSortNone(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	s := e.extractSort("show me stuff")
 	if s != "" {
@@ -362,6 +399,7 @@ func TestExtractSortNone(t *testing.T) {
 // --- CacheResult / GetCached ---
 
 func TestCacheResultAndGet(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	result := ExecutionResult{TotalCount: 42}
 	e.CacheResult("test query", result)
@@ -379,6 +417,7 @@ func TestCacheResultAndGet(t *testing.T) {
 }
 
 func TestGetCachedMiss(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	_, ok := e.GetCached("nonexistent")
 	if ok {
@@ -387,6 +426,7 @@ func TestGetCachedMiss(t *testing.T) {
 }
 
 func TestGetCachedExpired(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	e.cacheTTL = 1 * time.Millisecond
 	e.CacheResult("expiring", ExecutionResult{TotalCount: 1})
@@ -399,6 +439,7 @@ func TestGetCachedExpired(t *testing.T) {
 }
 
 func TestCacheResultCaseInsensitive(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	e.CacheResult("My Query", ExecutionResult{TotalCount: 10})
 
@@ -414,6 +455,7 @@ func TestCacheResultCaseInsensitive(t *testing.T) {
 // --- RecordHistory / GetHistory ---
 
 func TestRecordAndGetHistory(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	e.RecordHistory("q1", QueryPlan{Intent: "search"}, 10, 100)
 	e.RecordHistory("q2", QueryPlan{Intent: "count"}, 5, 50)
@@ -429,6 +471,7 @@ func TestRecordAndGetHistory(t *testing.T) {
 }
 
 func TestGetHistoryLimitBounds(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	e.RecordHistory("q1", QueryPlan{}, 0, 0)
 
@@ -452,6 +495,7 @@ func TestGetHistoryLimitBounds(t *testing.T) {
 }
 
 func TestRecordHistoryMaxEntries(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	e.maxHistory = 3
 
@@ -468,6 +512,7 @@ func TestRecordHistoryMaxEntries(t *testing.T) {
 // --- Suggest ---
 
 func TestSuggestFromHistory(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	e.RecordHistory("show me errors in logs", QueryPlan{}, 0, 0)
 
@@ -478,6 +523,7 @@ func TestSuggestFromHistory(t *testing.T) {
 }
 
 func TestSuggestFromTemplates(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 
 	suggestions := e.Suggest("show", []string{"orders"})
@@ -487,6 +533,7 @@ func TestSuggestFromTemplates(t *testing.T) {
 }
 
 func TestSuggestDeduplication(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	e.RecordHistory("count messages in orders", QueryPlan{}, 0, 0)
 	e.RecordHistory("count messages in orders", QueryPlan{}, 0, 0)
@@ -502,6 +549,7 @@ func TestSuggestDeduplication(t *testing.T) {
 }
 
 func TestSuggestEmptyPrefix(t *testing.T) {
+	t.Parallel()
 	e := newCoverageEngine()
 	e.RecordHistory("test query", QueryPlan{}, 0, 0)
 
@@ -514,6 +562,7 @@ func TestSuggestEmptyPrefix(t *testing.T) {
 // --- normalizeOperator ---
 
 func TestNormalizeOperatorVariants(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		input, expected string
 	}{
@@ -534,6 +583,7 @@ func TestNormalizeOperatorVariants(t *testing.T) {
 // --- isCommonWord ---
 
 func TestIsCommonWord(t *testing.T) {
+	t.Parallel()
 	if !isCommonWord("show") {
 		t.Error("expected 'show' to be common")
 	}

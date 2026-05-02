@@ -10,6 +10,7 @@ func newTestBuilder() *Builder {
 }
 
 func TestParseFilterIntent(t *testing.T) {
+	t.Parallel()
 	b := newTestBuilder()
 
 	r := b.Parse("Filter orders from orders-topic where amount > 100")
@@ -25,6 +26,7 @@ func TestParseFilterIntent(t *testing.T) {
 }
 
 func TestParseTransformIntent(t *testing.T) {
+	t.Parallel()
 	b := newTestBuilder()
 
 	r := b.Parse("Transform messages from events to processed-events converting to uppercase")
@@ -40,6 +42,7 @@ func TestParseTransformIntent(t *testing.T) {
 }
 
 func TestParseAggregateIntent(t *testing.T) {
+	t.Parallel()
 	b := newTestBuilder()
 
 	r := b.Parse("Count messages from clicks group by user_id in 5 minute window")
@@ -52,6 +55,7 @@ func TestParseAggregateIntent(t *testing.T) {
 }
 
 func TestParseSyncIntent(t *testing.T) {
+	t.Parallel()
 	b := newTestBuilder()
 
 	r := b.Parse("Sync data from source-topic to destination-topic")
@@ -61,6 +65,7 @@ func TestParseSyncIntent(t *testing.T) {
 }
 
 func TestGenerate(t *testing.T) {
+	t.Parallel()
 	b := newTestBuilder()
 
 	spec, err := b.Generate("Filter orders from orders-topic where amount > 100", "agent-1")
@@ -82,6 +87,7 @@ func TestGenerate(t *testing.T) {
 }
 
 func TestGenerateWithSyncConnectConfig(t *testing.T) {
+	t.Parallel()
 	b := newTestBuilder()
 
 	spec, err := b.Generate("Sync data from source-topic to target-topic", "agent")
@@ -94,6 +100,7 @@ func TestGenerateWithSyncConnectConfig(t *testing.T) {
 }
 
 func TestGenerateValidation(t *testing.T) {
+	t.Parallel()
 	b := newTestBuilder()
 
 	if _, err := b.Generate("", "agent"); err == nil {
@@ -102,6 +109,7 @@ func TestGenerateValidation(t *testing.T) {
 }
 
 func TestValidateAndDeploy(t *testing.T) {
+	t.Parallel()
 	b := newTestBuilder()
 
 	spec, _ := b.Generate("Filter from orders where type = 'premium'", "agent")
@@ -125,6 +133,7 @@ func TestValidateAndDeploy(t *testing.T) {
 }
 
 func TestListAndDelete(t *testing.T) {
+	t.Parallel()
 	b := newTestBuilder()
 
 	b.Generate("Filter from t1", "a")

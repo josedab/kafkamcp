@@ -11,6 +11,7 @@ func newTestEngine() *Engine {
 }
 
 func TestCreateSession(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	s := e.CreateSession("agent-1")
 
@@ -26,6 +27,7 @@ func TestCreateSession(t *testing.T) {
 }
 
 func TestAddTurnAndResolveReference(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	s := e.CreateSession("agent-1")
 
@@ -46,6 +48,7 @@ func TestAddTurnAndResolveReference(t *testing.T) {
 }
 
 func TestClassifyIntent(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	tests := []struct {
@@ -71,6 +74,7 @@ func TestClassifyIntent(t *testing.T) {
 }
 
 func TestCloseSession(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	s := e.CreateSession("agent-1")
 
@@ -85,6 +89,7 @@ func TestCloseSession(t *testing.T) {
 }
 
 func TestListTemplates(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	all := e.ListTemplates("")
@@ -99,6 +104,7 @@ func TestListTemplates(t *testing.T) {
 }
 
 func TestSessionContextAccumulates(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	s := e.CreateSession("agent-1")
 
@@ -118,6 +124,7 @@ func TestSessionContextAccumulates(t *testing.T) {
 }
 
 func TestListSessions_AllWhenEmpty(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	e.CreateSession("agent-1")
 	e.CreateSession("agent-2")
@@ -130,6 +137,7 @@ func TestListSessions_AllWhenEmpty(t *testing.T) {
 }
 
 func TestListSessions_FilterByAgentID(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	e.CreateSession("agent-1")
 	e.CreateSession("agent-2")
@@ -147,6 +155,7 @@ func TestListSessions_FilterByAgentID(t *testing.T) {
 }
 
 func TestListSessions_UnknownAgent(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	e.CreateSession("agent-1")
 
@@ -157,6 +166,7 @@ func TestListSessions_UnknownAgent(t *testing.T) {
 }
 
 func TestGetTemplate_Exists(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	tmpl, err := e.GetTemplate("incident_triage")
 	if err != nil {
@@ -168,6 +178,7 @@ func TestGetTemplate_Exists(t *testing.T) {
 }
 
 func TestGetTemplate_NotFound(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	_, err := e.GetTemplate("nonexistent")
 	if err == nil {
@@ -176,6 +187,7 @@ func TestGetTemplate_NotFound(t *testing.T) {
 }
 
 func TestCleanupExpired_RemovesOldSessions(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	// Create a session and manually backdate it
@@ -199,6 +211,7 @@ func TestCleanupExpired_RemovesOldSessions(t *testing.T) {
 }
 
 func TestCleanupExpired_KeepsActiveSessions(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	e.CreateSession("agent-1")
 	e.CreateSession("agent-2")
@@ -210,6 +223,7 @@ func TestCleanupExpired_KeepsActiveSessions(t *testing.T) {
 }
 
 func TestCleanupExpired_EmptyEngine(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	count := e.CleanupExpired()
 	if count != 0 {
@@ -218,6 +232,7 @@ func TestCleanupExpired_EmptyEngine(t *testing.T) {
 }
 
 func TestClassifyIntent_QueryIntents(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	tests := []struct {
@@ -237,6 +252,7 @@ func TestClassifyIntent_QueryIntents(t *testing.T) {
 }
 
 func TestClassifyIntent_ActionIntents(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 
 	tests := []struct {
@@ -256,6 +272,7 @@ func TestClassifyIntent_ActionIntents(t *testing.T) {
 }
 
 func TestClassifyIntent_AmbiguousReturnsGeneral(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	intent := e.ClassifyIntent("", "hello there")
 	if intent.Type != "general_query" {
@@ -267,6 +284,7 @@ func TestClassifyIntent_AmbiguousReturnsGeneral(t *testing.T) {
 }
 
 func TestResolveReference_LastTopic(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	s := e.CreateSession("agent-1")
 	e.AddTurn(s.ID, "describe orders", Intent{}, nil, "", map[string]any{"last_topic": "orders"})
@@ -281,6 +299,7 @@ func TestResolveReference_LastTopic(t *testing.T) {
 }
 
 func TestResolveReference_PreviousCluster(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	s := e.CreateSession("agent-1")
 	e.AddTurn(s.ID, "check cluster", Intent{}, nil, "", map[string]any{"last_cluster": "prod-1"})
@@ -295,6 +314,7 @@ func TestResolveReference_PreviousCluster(t *testing.T) {
 }
 
 func TestResolveReference_UnknownSession(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	_, err := e.ResolveReference("nonexistent", "that topic")
 	if err == nil {
@@ -303,6 +323,7 @@ func TestResolveReference_UnknownSession(t *testing.T) {
 }
 
 func TestResolveReference_NoContext(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	s := e.CreateSession("agent-1")
 
@@ -316,6 +337,7 @@ func TestResolveReference_NoContext(t *testing.T) {
 }
 
 func TestClassifyIntent_WithSessionContext(t *testing.T) {
+	t.Parallel()
 	e := newTestEngine()
 	s := e.CreateSession("agent-1")
 	e.AddTurn(s.ID, "check orders", Intent{}, nil, "", map[string]any{"last_topic": "orders"})

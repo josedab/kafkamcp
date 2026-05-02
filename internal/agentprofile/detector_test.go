@@ -6,6 +6,7 @@ import (
 )
 
 func TestNewDetector(t *testing.T) {
+	t.Parallel()
 	d := NewDetector(DefaultDetectorConfig(), nil)
 	if d == nil {
 		t.Fatal("NewDetector returned nil")
@@ -17,6 +18,7 @@ func TestNewDetector(t *testing.T) {
 }
 
 func TestRecordAccessCreatesProfile(t *testing.T) {
+	t.Parallel()
 	d := NewDetector(DefaultDetectorConfig(), nil)
 	d.RecordAccess(AccessEvent{
 		AgentID:   "agent-1",
@@ -40,6 +42,7 @@ func TestRecordAccessCreatesProfile(t *testing.T) {
 }
 
 func TestRecordAccessNoAlertsBeforeBaseline(t *testing.T) {
+	t.Parallel()
 	d := NewDetector(DefaultDetectorConfig(), nil)
 	alerts := d.RecordAccess(AccessEvent{
 		AgentID:   "agent-1",
@@ -55,6 +58,7 @@ func TestRecordAccessNoAlertsBeforeBaseline(t *testing.T) {
 }
 
 func TestBulkReadDetection(t *testing.T) {
+	t.Parallel()
 	cfg := DefaultDetectorConfig()
 	cfg.BaselineDays = 0 // Instant baseline for testing
 	cfg.BulkReadThreshold = 100
@@ -80,6 +84,7 @@ func TestBulkReadDetection(t *testing.T) {
 }
 
 func TestGetAlerts(t *testing.T) {
+	t.Parallel()
 	d := NewDetector(DefaultDetectorConfig(), nil)
 	alerts := d.GetAlerts("", 10)
 	if len(alerts) != 0 {
@@ -88,6 +93,7 @@ func TestGetAlerts(t *testing.T) {
 }
 
 func TestZScore(t *testing.T) {
+	t.Parallel()
 	d := NewDetector(DefaultDetectorConfig(), nil)
 	window := []float64{10, 10, 10, 10, 10}
 	z := d.zScore(window, 10)

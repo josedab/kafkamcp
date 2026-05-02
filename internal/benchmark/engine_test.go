@@ -6,6 +6,7 @@ import (
 )
 
 func TestGeneratePayload(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	payload := e.GeneratePayload(1024)
 	if len(payload) != 1024 {
@@ -14,6 +15,7 @@ func TestGeneratePayload(t *testing.T) {
 }
 
 func TestGeneratePayload_ZeroSize(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	payload := e.GeneratePayload(0)
 	if len(payload) != 100 {
@@ -22,6 +24,7 @@ func TestGeneratePayload_ZeroSize(t *testing.T) {
 }
 
 func TestCreateBenchmark(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	result := e.CreateBenchmark(BenchmarkConfig{
 		Topic:            "test-topic",
@@ -38,6 +41,7 @@ func TestCreateBenchmark(t *testing.T) {
 }
 
 func TestCreateBenchmark_Defaults(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	result := e.CreateBenchmark(BenchmarkConfig{Topic: "test"})
 	if result.Config.MessageCount != 1000 {
@@ -49,6 +53,7 @@ func TestCreateBenchmark_Defaults(t *testing.T) {
 }
 
 func TestRecordMetrics(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	bench := e.CreateBenchmark(BenchmarkConfig{Topic: "test", Type: "producer"})
 
@@ -71,6 +76,7 @@ func TestRecordMetrics(t *testing.T) {
 }
 
 func TestRecordMetrics_Both(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	bench := e.CreateBenchmark(BenchmarkConfig{Topic: "test", Type: "both"})
 
@@ -94,6 +100,7 @@ func TestRecordMetrics_Both(t *testing.T) {
 }
 
 func TestListResults(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	e.CreateBenchmark(BenchmarkConfig{Topic: "test-1"})
 	e.CreateBenchmark(BenchmarkConfig{Topic: "test-2"})

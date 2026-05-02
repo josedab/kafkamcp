@@ -14,6 +14,7 @@ func testLogger() *slog.Logger {
 }
 
 func TestDefaultConfig(t *testing.T) {
+	t.Parallel()
 	cfg := DefaultConfig()
 
 	if cfg.SampleIntervalSec != 10 {
@@ -40,6 +41,7 @@ func TestDefaultConfig(t *testing.T) {
 }
 
 func TestNewDetectorAppliesDefaults(t *testing.T) {
+	t.Parallel()
 	d := NewDetector(DetectorConfig{}, testLogger())
 
 	if d.config.BufferSize != DefaultConfig().BufferSize {
@@ -66,6 +68,7 @@ func TestNewDetectorAppliesDefaults(t *testing.T) {
 }
 
 func TestRingBufferNewAndCapacity(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name string
 		size int
@@ -94,6 +97,7 @@ func TestRingBufferNewAndCapacity(t *testing.T) {
 }
 
 func TestRingBufferAddWrapAround(t *testing.T) {
+	t.Parallel()
 	rb := newRingBuffer(3)
 	now := time.Now()
 
@@ -127,6 +131,7 @@ func TestRingBufferAddWrapAround(t *testing.T) {
 }
 
 func TestRingBufferSnapshotFiltering(t *testing.T) {
+	t.Parallel()
 	rb := newRingBuffer(10)
 	now := time.Now()
 
@@ -156,6 +161,7 @@ func TestRingBufferSnapshotFiltering(t *testing.T) {
 }
 
 func TestRingBufferSingleCapacity(t *testing.T) {
+	t.Parallel()
 	rb := newRingBuffer(1)
 	now := time.Now()
 
@@ -172,6 +178,7 @@ func TestRingBufferSingleCapacity(t *testing.T) {
 }
 
 func TestMeanStddevExtended(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		values   []float64
@@ -199,6 +206,7 @@ func TestMeanStddevExtended(t *testing.T) {
 }
 
 func TestAddAlertCapAtMax(t *testing.T) {
+	t.Parallel()
 	cfg := DefaultConfig()
 	cfg.MaxAlerts = 5
 	d := NewDetector(cfg, testLogger())
@@ -223,6 +231,7 @@ func TestAddAlertCapAtMax(t *testing.T) {
 }
 
 func TestGenerateMessage(t *testing.T) {
+	t.Parallel()
 	d := NewDetector(DefaultConfig(), testLogger())
 
 	tests := []struct {
@@ -296,6 +305,7 @@ func TestGenerateMessage(t *testing.T) {
 }
 
 func TestGenerateHypothesis(t *testing.T) {
+	t.Parallel()
 	d := NewDetector(DefaultConfig(), testLogger())
 
 	tests := []struct {
@@ -323,6 +333,7 @@ func TestGenerateHypothesis(t *testing.T) {
 }
 
 func TestIQROutlier(t *testing.T) {
+	t.Parallel()
 	d := NewDetector(DefaultConfig(), testLogger())
 
 	data := []float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
@@ -348,6 +359,7 @@ func TestIQROutlier(t *testing.T) {
 }
 
 func TestIQROutlierZeroIQR(t *testing.T) {
+	t.Parallel()
 	d := NewDetector(DefaultConfig(), testLogger())
 	data := []float64{5, 5, 5, 5, 5}
 	if d.iqrOutlier(100, data) {
@@ -356,6 +368,7 @@ func TestIQROutlierZeroIQR(t *testing.T) {
 }
 
 func TestPercentileExtended(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name string
 		data []float64
@@ -380,6 +393,7 @@ func TestPercentileExtended(t *testing.T) {
 }
 
 func TestIngestPointCreatesBuffer(t *testing.T) {
+	t.Parallel()
 	d := NewDetector(DefaultConfig(), testLogger())
 
 	now := time.Now()
@@ -404,6 +418,7 @@ func TestIngestPointCreatesBuffer(t *testing.T) {
 }
 
 func TestIngestPointTriggersAlert(t *testing.T) {
+	t.Parallel()
 	cfg := DefaultConfig()
 	cfg.BaselineWindowSec = 3600
 	d := NewDetector(cfg, testLogger())
@@ -434,6 +449,7 @@ func TestIngestPointTriggersAlert(t *testing.T) {
 }
 
 func TestGetStatusAfterIngestion(t *testing.T) {
+	t.Parallel()
 	d := NewDetector(DefaultConfig(), testLogger())
 
 	d.IngestPoint(DataPoint{
@@ -450,6 +466,7 @@ func TestGetStatusAfterIngestion(t *testing.T) {
 }
 
 func TestDetectAnomalySensitivity(t *testing.T) {
+	t.Parallel()
 	// Use a baseline with meaningful variance so z-scores are realistic
 	baseline := make([]DataPoint, 100)
 	for i := range baseline {
@@ -487,6 +504,7 @@ func TestDetectAnomalySensitivity(t *testing.T) {
 }
 
 func TestBufferKey(t *testing.T) {
+	t.Parallel()
 	d := NewDetector(DefaultConfig(), testLogger())
 
 	key := d.bufferKey(MetricConsumerLag, "my-group")
@@ -496,6 +514,7 @@ func TestBufferKey(t *testing.T) {
 }
 
 func TestGetAlertsWithLimit(t *testing.T) {
+	t.Parallel()
 	d := NewDetector(DefaultConfig(), testLogger())
 	now := time.Now()
 
@@ -514,6 +533,7 @@ func TestGetAlertsWithLimit(t *testing.T) {
 }
 
 func TestGetAlertsFilterByMetric(t *testing.T) {
+	t.Parallel()
 	d := NewDetector(DefaultConfig(), testLogger())
 	now := time.Now()
 

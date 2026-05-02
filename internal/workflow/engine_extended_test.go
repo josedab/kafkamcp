@@ -6,6 +6,7 @@ import (
 )
 
 func TestNewEngineHasBuiltinTemplates(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	templates := e.ListTemplates("")
 	if len(templates) < 5 {
@@ -14,6 +15,7 @@ func TestNewEngineHasBuiltinTemplates(t *testing.T) {
 }
 
 func TestListTemplatesByCategory(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	ops := e.ListTemplates("operations")
 	for _, tmpl := range ops {
@@ -27,6 +29,7 @@ func TestListTemplatesByCategory(t *testing.T) {
 }
 
 func TestListTemplatesEmptyCategory(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	all := e.ListTemplates("")
 	ops := e.ListTemplates("operations")
@@ -36,6 +39,7 @@ func TestListTemplatesEmptyCategory(t *testing.T) {
 }
 
 func TestListTemplatesNonexistentCategory(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	result := e.ListTemplates("nonexistent")
 	if len(result) != 0 {
@@ -44,6 +48,7 @@ func TestListTemplatesNonexistentCategory(t *testing.T) {
 }
 
 func TestGetTemplateExists(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	tmpl, err := e.GetTemplate("dlq-investigation")
 	if err != nil {
@@ -61,6 +66,7 @@ func TestGetTemplateExists(t *testing.T) {
 }
 
 func TestGetTemplateNotFound(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	_, err := e.GetTemplate("nonexistent-template")
 	if err == nil {
@@ -69,6 +75,7 @@ func TestGetTemplateNotFound(t *testing.T) {
 }
 
 func TestRegisterTemplate(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	err := e.RegisterTemplate(Template{
 		Name:        "custom-workflow",
@@ -92,6 +99,7 @@ func TestRegisterTemplate(t *testing.T) {
 }
 
 func TestRegisterTemplateEmptyName(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	err := e.RegisterTemplate(Template{Steps: []Step{{ID: "s1", Tool: "t"}}})
 	if err == nil {
@@ -100,6 +108,7 @@ func TestRegisterTemplateEmptyName(t *testing.T) {
 }
 
 func TestRegisterTemplateNoSteps(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	err := e.RegisterTemplate(Template{Name: "empty-workflow"})
 	if err == nil {
@@ -108,6 +117,7 @@ func TestRegisterTemplateNoSteps(t *testing.T) {
 }
 
 func TestStartExecutionExtended(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	exec, err := e.StartExecution("dlq-investigation", map[string]any{
 		"topic": "orders-dlq",
@@ -127,6 +137,7 @@ func TestStartExecutionExtended(t *testing.T) {
 }
 
 func TestStartExecutionMissingRequired(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	_, err := e.StartExecution("dlq-investigation", map[string]any{})
 	if err == nil {
@@ -135,6 +146,7 @@ func TestStartExecutionMissingRequired(t *testing.T) {
 }
 
 func TestStartExecutionDefaultParams(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	exec, err := e.StartExecution("dlq-investigation", map[string]any{
 		"topic": "test-dlq",
@@ -149,6 +161,7 @@ func TestStartExecutionDefaultParams(t *testing.T) {
 }
 
 func TestStartExecutionNonexistentTemplate(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	_, err := e.StartExecution("nonexistent", map[string]any{})
 	if err == nil {
@@ -157,6 +170,7 @@ func TestStartExecutionNonexistentTemplate(t *testing.T) {
 }
 
 func TestCompleteStep(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	exec, _ := e.StartExecution("dlq-investigation", map[string]any{"topic": "t"})
 
@@ -175,6 +189,7 @@ func TestCompleteStep(t *testing.T) {
 }
 
 func TestCompleteStepNotFound(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	err := e.CompleteStep("nonexistent-exec", StepResult{Status: "success"})
 	if err == nil {
@@ -183,6 +198,7 @@ func TestCompleteStepNotFound(t *testing.T) {
 }
 
 func TestCompleteAllSteps(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	exec, _ := e.StartExecution("dlq-investigation", map[string]any{"topic": "t"})
 
@@ -200,6 +216,7 @@ func TestCompleteAllSteps(t *testing.T) {
 }
 
 func TestCompleteStepFailedWithStopOnError(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	e.RegisterTemplate(Template{
 		Name: "fail-test",
@@ -221,6 +238,7 @@ func TestCompleteStepFailedWithStopOnError(t *testing.T) {
 }
 
 func TestGetExecution(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	exec, _ := e.StartExecution("dlq-investigation", map[string]any{"topic": "t"})
 
@@ -234,6 +252,7 @@ func TestGetExecution(t *testing.T) {
 }
 
 func TestGetExecutionNotFound(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	_, err := e.GetExecution("nonexistent")
 	if err == nil {
@@ -242,6 +261,7 @@ func TestGetExecutionNotFound(t *testing.T) {
 }
 
 func TestGetNextStep(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	exec, _ := e.StartExecution("dlq-investigation", map[string]any{"topic": "t"})
 
@@ -258,6 +278,7 @@ func TestGetNextStep(t *testing.T) {
 }
 
 func TestGetNextStepAfterCompletion(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	exec, _ := e.StartExecution("dlq-investigation", map[string]any{"topic": "t"})
 
@@ -275,6 +296,7 @@ func TestGetNextStepAfterCompletion(t *testing.T) {
 }
 
 func TestGetNextStepNotFound(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	_, err := e.GetNextStep("nonexistent")
 	if err == nil {
@@ -283,6 +305,7 @@ func TestGetNextStepNotFound(t *testing.T) {
 }
 
 func TestResolveStepArgsExtended(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	step := Step{
 		ID:   "test",
@@ -300,6 +323,7 @@ func TestResolveStepArgsExtended(t *testing.T) {
 }
 
 func TestInterpolateExtended(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		template string
@@ -325,6 +349,7 @@ func TestInterpolateExtended(t *testing.T) {
 }
 
 func TestBuiltinTemplateCategories(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	categories := make(map[string]bool)
 	for _, tmpl := range e.ListTemplates("") {
@@ -340,6 +365,7 @@ func TestBuiltinTemplateCategories(t *testing.T) {
 }
 
 func TestBuiltinTemplateTags(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	tmpl, _ := e.GetTemplate("dlq-investigation")
 	if len(tmpl.Tags) == 0 {
@@ -348,6 +374,7 @@ func TestBuiltinTemplateTags(t *testing.T) {
 }
 
 func TestGetStepOnErrorDefault(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	exec, _ := e.StartExecution("dlq-investigation", map[string]any{"topic": "t"})
 

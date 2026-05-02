@@ -6,6 +6,7 @@ import (
 )
 
 func TestStartAndEndSession(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	s := e.StartSession("agent-1", nil)
 	if s.Status != "recording" {
@@ -21,6 +22,7 @@ func TestStartAndEndSession(t *testing.T) {
 }
 
 func TestRecordCall(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	s := e.StartSession("agent-1", nil)
 	if err := e.RecordCall(s.ID, "kafka_list_topics", map[string]any{"filter": "*"}, map[string]any{"count": 5}, false, "", 120); err != nil {
@@ -36,6 +38,7 @@ func TestRecordCall(t *testing.T) {
 }
 
 func TestRecordCall_CompletedSession(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	s := e.StartSession("agent-1", nil)
 	_ = e.EndSession(s.ID)
@@ -46,6 +49,7 @@ func TestRecordCall_CompletedSession(t *testing.T) {
 }
 
 func TestReplay(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	s := e.StartSession("agent-1", nil)
 	_ = e.RecordCall(s.ID, "kafka_list_topics", nil, nil, false, "", 100)
@@ -68,6 +72,7 @@ func TestReplay(t *testing.T) {
 }
 
 func TestListSessions(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	e.StartSession("agent-1", nil)
 	e.StartSession("agent-2", nil)

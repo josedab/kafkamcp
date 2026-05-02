@@ -16,6 +16,7 @@ func newTestDashboard() *Dashboard {
 }
 
 func TestRecordTopicCost(t *testing.T) {
+	t.Parallel()
 	d := NewDashboard(slog.Default())
 	d.RecordTopicCost("test", 10.0, 5.0, 4, 100)
 
@@ -26,6 +27,7 @@ func TestRecordTopicCost(t *testing.T) {
 }
 
 func TestTakeSnapshot(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboard()
 
 	snap := d.TakeSnapshot("aws-msk")
@@ -48,6 +50,7 @@ func TestTakeSnapshot(t *testing.T) {
 }
 
 func TestGetRightsizeRecommendations(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboard()
 
 	recs := d.GetRightsizeRecommendations()
@@ -66,6 +69,7 @@ func TestGetRightsizeRecommendations(t *testing.T) {
 }
 
 func TestForecastSpend(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboard()
 	d.TakeSnapshot("aws-msk")
 	d.TakeSnapshot("aws-msk")
@@ -88,6 +92,7 @@ func TestForecastSpend(t *testing.T) {
 }
 
 func TestSetBudget(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboard()
 
 	alert, err := d.SetBudget("monthly-limit", 500)
@@ -111,6 +116,7 @@ func TestSetBudget(t *testing.T) {
 }
 
 func TestSetBudgetValidation(t *testing.T) {
+	t.Parallel()
 	d := NewDashboard(slog.Default())
 
 	if _, err := d.SetBudget("", 100); err == nil {
@@ -122,6 +128,7 @@ func TestSetBudgetValidation(t *testing.T) {
 }
 
 func TestGetSummary(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboard()
 
 	summary := d.GetSummary()
@@ -137,6 +144,7 @@ func TestGetSummary(t *testing.T) {
 }
 
 func TestGetSnapshots(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboard()
 	d.TakeSnapshot("provider-a")
 	d.TakeSnapshot("provider-a")

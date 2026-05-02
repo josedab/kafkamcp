@@ -6,6 +6,7 @@ import (
 )
 
 func TestNewCorrelator(t *testing.T) {
+	t.Parallel()
 	c := NewCorrelator(DefaultCorrelatorConfig(), nil)
 	if c == nil {
 		t.Fatal("NewCorrelator returned nil")
@@ -17,6 +18,7 @@ func TestNewCorrelator(t *testing.T) {
 }
 
 func TestIngestSingleEvent(t *testing.T) {
+	t.Parallel()
 	c := NewCorrelator(DefaultCorrelatorConfig(), nil)
 	result := c.IngestEvent(AnomalyEvent{
 		Cluster:   "prod-1",
@@ -33,6 +35,7 @@ func TestIngestSingleEvent(t *testing.T) {
 }
 
 func TestIngestCorrelatedEvents(t *testing.T) {
+	t.Parallel()
 	c := NewCorrelator(DefaultCorrelatorConfig(), nil)
 	now := time.Now()
 
@@ -62,6 +65,7 @@ func TestIngestCorrelatedEvents(t *testing.T) {
 }
 
 func TestCrossClusterCorrelation(t *testing.T) {
+	t.Parallel()
 	c := NewCorrelator(DefaultCorrelatorConfig(), nil)
 	c.SetDependencies([]TopicDependency{
 		{Source: "orders", Target: "orders-replica", Type: "mirrors"},
@@ -88,6 +92,7 @@ func TestCrossClusterCorrelation(t *testing.T) {
 }
 
 func TestGenerateReport(t *testing.T) {
+	t.Parallel()
 	c := NewCorrelator(DefaultCorrelatorConfig(), nil)
 	now := time.Now()
 
@@ -119,6 +124,7 @@ func TestGenerateReport(t *testing.T) {
 }
 
 func TestGenerateReportNotFound(t *testing.T) {
+	t.Parallel()
 	c := NewCorrelator(DefaultCorrelatorConfig(), nil)
 	_, err := c.GenerateReport("nonexistent")
 	if err == nil {
@@ -127,6 +133,7 @@ func TestGenerateReportNotFound(t *testing.T) {
 }
 
 func TestGetIncidents(t *testing.T) {
+	t.Parallel()
 	c := NewCorrelator(DefaultCorrelatorConfig(), nil)
 	incidents := c.GetIncidents(10)
 	if len(incidents) != 0 {
@@ -135,6 +142,7 @@ func TestGetIncidents(t *testing.T) {
 }
 
 func TestOverlaps_SharedTopics(t *testing.T) {
+	t.Parallel()
 	c := NewCorrelator(DefaultCorrelatorConfig(), nil)
 	incident := &IncidentCluster{
 		Events: []AnomalyEvent{
@@ -150,6 +158,7 @@ func TestOverlaps_SharedTopics(t *testing.T) {
 }
 
 func TestOverlaps_SharedClusters(t *testing.T) {
+	t.Parallel()
 	c := NewCorrelator(DefaultCorrelatorConfig(), nil)
 	incident := &IncidentCluster{
 		Events: []AnomalyEvent{
@@ -165,6 +174,7 @@ func TestOverlaps_SharedClusters(t *testing.T) {
 }
 
 func TestOverlaps_DisjointEvents(t *testing.T) {
+	t.Parallel()
 	c := NewCorrelator(DefaultCorrelatorConfig(), nil)
 	incident := &IncidentCluster{
 		Events: []AnomalyEvent{
@@ -180,6 +190,7 @@ func TestOverlaps_DisjointEvents(t *testing.T) {
 }
 
 func TestOverlaps_EmptyTopics(t *testing.T) {
+	t.Parallel()
 	c := NewCorrelator(DefaultCorrelatorConfig(), nil)
 	incident := &IncidentCluster{
 		Events: []AnomalyEvent{
@@ -196,6 +207,7 @@ func TestOverlaps_EmptyTopics(t *testing.T) {
 }
 
 func TestMergeIntoIncident_AppendEvents(t *testing.T) {
+	t.Parallel()
 	c := NewCorrelator(DefaultCorrelatorConfig(), nil)
 	now := time.Now()
 	incident := &IncidentCluster{
@@ -215,6 +227,7 @@ func TestMergeIntoIncident_AppendEvents(t *testing.T) {
 }
 
 func TestMergeIntoIncident_DuplicatePrevention(t *testing.T) {
+	t.Parallel()
 	c := NewCorrelator(DefaultCorrelatorConfig(), nil)
 	now := time.Now()
 	incident := &IncidentCluster{
@@ -234,6 +247,7 @@ func TestMergeIntoIncident_DuplicatePrevention(t *testing.T) {
 }
 
 func TestMergeIntoIncident_SeverityUpgrade(t *testing.T) {
+	t.Parallel()
 	c := NewCorrelator(DefaultCorrelatorConfig(), nil)
 	now := time.Now()
 	incident := &IncidentCluster{
@@ -254,6 +268,7 @@ func TestMergeIntoIncident_SeverityUpgrade(t *testing.T) {
 }
 
 func TestCalculateBlastRadius_WithDependencies(t *testing.T) {
+	t.Parallel()
 	c := NewCorrelator(DefaultCorrelatorConfig(), nil)
 	c.SetDependencies([]TopicDependency{
 		{Source: "orders", Target: "order-analytics", Type: "produces_to"},
@@ -276,6 +291,7 @@ func TestCalculateBlastRadius_WithDependencies(t *testing.T) {
 }
 
 func TestCalculateBlastRadius_EmptyDependencies(t *testing.T) {
+	t.Parallel()
 	c := NewCorrelator(DefaultCorrelatorConfig(), nil)
 
 	incident := &IncidentCluster{
@@ -294,6 +310,7 @@ func TestCalculateBlastRadius_EmptyDependencies(t *testing.T) {
 }
 
 func TestCalculateBlastRadius_HighImpact(t *testing.T) {
+	t.Parallel()
 	c := NewCorrelator(DefaultCorrelatorConfig(), nil)
 
 	incident := &IncidentCluster{
@@ -309,6 +326,7 @@ func TestCalculateBlastRadius_HighImpact(t *testing.T) {
 }
 
 func TestCalculateBlastRadius_CriticalImpact(t *testing.T) {
+	t.Parallel()
 	c := NewCorrelator(DefaultCorrelatorConfig(), nil)
 
 	incident := &IncidentCluster{
@@ -324,6 +342,7 @@ func TestCalculateBlastRadius_CriticalImpact(t *testing.T) {
 }
 
 func TestGenerateRemediation_BrokerComponent(t *testing.T) {
+	t.Parallel()
 	c := NewCorrelator(DefaultCorrelatorConfig(), nil)
 	incident := &IncidentCluster{
 		RootCause: &RootCause{Component: "broker"},
@@ -335,6 +354,7 @@ func TestGenerateRemediation_BrokerComponent(t *testing.T) {
 }
 
 func TestGenerateRemediation_ConsumerComponent(t *testing.T) {
+	t.Parallel()
 	c := NewCorrelator(DefaultCorrelatorConfig(), nil)
 	incident := &IncidentCluster{
 		RootCause: &RootCause{Component: "consumer"},
@@ -346,6 +366,7 @@ func TestGenerateRemediation_ConsumerComponent(t *testing.T) {
 }
 
 func TestGenerateRemediation_ProducerComponent(t *testing.T) {
+	t.Parallel()
 	c := NewCorrelator(DefaultCorrelatorConfig(), nil)
 	incident := &IncidentCluster{
 		RootCause: &RootCause{Component: "producer"},
@@ -357,6 +378,7 @@ func TestGenerateRemediation_ProducerComponent(t *testing.T) {
 }
 
 func TestGenerateRemediation_SchemaComponent(t *testing.T) {
+	t.Parallel()
 	c := NewCorrelator(DefaultCorrelatorConfig(), nil)
 	incident := &IncidentCluster{
 		RootCause: &RootCause{Component: "schema"},
@@ -368,6 +390,7 @@ func TestGenerateRemediation_SchemaComponent(t *testing.T) {
 }
 
 func TestGenerateRemediation_UnknownComponent(t *testing.T) {
+	t.Parallel()
 	c := NewCorrelator(DefaultCorrelatorConfig(), nil)
 	incident := &IncidentCluster{
 		RootCause: &RootCause{Component: "xyz"},
@@ -379,6 +402,7 @@ func TestGenerateRemediation_UnknownComponent(t *testing.T) {
 }
 
 func TestGenerateRemediation_NilRootCause(t *testing.T) {
+	t.Parallel()
 	c := NewCorrelator(DefaultCorrelatorConfig(), nil)
 	incident := &IncidentCluster{RootCause: nil}
 	steps := c.generateRemediation(incident)
@@ -388,6 +412,7 @@ func TestGenerateRemediation_NilRootCause(t *testing.T) {
 }
 
 func TestIdentifyRootCause_SingleBrokerDown(t *testing.T) {
+	t.Parallel()
 	c := NewCorrelator(DefaultCorrelatorConfig(), nil)
 	now := time.Now()
 	incident := &IncidentCluster{
@@ -409,6 +434,7 @@ func TestIdentifyRootCause_SingleBrokerDown(t *testing.T) {
 }
 
 func TestIdentifyRootCause_MultipleCandidates(t *testing.T) {
+	t.Parallel()
 	c := NewCorrelator(DefaultCorrelatorConfig(), nil)
 	now := time.Now()
 	incident := &IncidentCluster{
@@ -429,6 +455,7 @@ func TestIdentifyRootCause_MultipleCandidates(t *testing.T) {
 }
 
 func TestIdentifyRootCause_NoEvents(t *testing.T) {
+	t.Parallel()
 	c := NewCorrelator(DefaultCorrelatorConfig(), nil)
 	incident := &IncidentCluster{Events: []AnomalyEvent{}}
 	rc := c.identifyRootCause(incident)
@@ -438,6 +465,7 @@ func TestIdentifyRootCause_NoEvents(t *testing.T) {
 }
 
 func TestIdentifyRootCause_UnknownType(t *testing.T) {
+	t.Parallel()
 	c := NewCorrelator(DefaultCorrelatorConfig(), nil)
 	now := time.Now()
 	incident := &IncidentCluster{
@@ -459,6 +487,7 @@ func TestIdentifyRootCause_UnknownType(t *testing.T) {
 }
 
 func TestIdentifyRootCause_CrossClusterEvidence(t *testing.T) {
+	t.Parallel()
 	c := NewCorrelator(DefaultCorrelatorConfig(), nil)
 	now := time.Now()
 	incident := &IncidentCluster{

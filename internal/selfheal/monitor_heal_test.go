@@ -5,6 +5,7 @@ import (
 )
 
 func TestDiagnoseRootCause_NoMembers(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	rc := m.DiagnoseRootCause("group-1", 5000, 0, 0, 0)
 	if rc.Category != "no_members" {
@@ -19,6 +20,7 @@ func TestDiagnoseRootCause_NoMembers(t *testing.T) {
 }
 
 func TestDiagnoseRootCause_RebalanceStorm(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	rc := m.DiagnoseRootCause("group-2", 1000, 5.0, 15, 3)
 	if rc.Category != "rebalance_storm" {
@@ -30,6 +32,7 @@ func TestDiagnoseRootCause_RebalanceStorm(t *testing.T) {
 }
 
 func TestDiagnoseRootCause_StuckPartition(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	rc := m.DiagnoseRootCause("group-3", 50000, 0, 0, 2)
 	if rc.Category != "stuck_partition" {
@@ -41,6 +44,7 @@ func TestDiagnoseRootCause_StuckPartition(t *testing.T) {
 }
 
 func TestDiagnoseRootCause_SlowConsumer(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	rc := m.DiagnoseRootCause("group-4", 200000, 0.3, 0, 2)
 	if rc.Category != "slow_consumer" {
@@ -52,6 +56,7 @@ func TestDiagnoseRootCause_SlowConsumer(t *testing.T) {
 }
 
 func TestDiagnoseRootCause_GCPressure(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	rc := m.DiagnoseRootCause("group-5", 60000, 2.0, 0, 2)
 	if rc.Category != "gc_pressure" {
@@ -63,6 +68,7 @@ func TestDiagnoseRootCause_GCPressure(t *testing.T) {
 }
 
 func TestDiagnoseRootCause_NetworkTimeout(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	rc := m.DiagnoseRootCause("group-6", 1000, 5.0, 1, 3)
 	if rc.Category != "network_timeout" {
@@ -74,6 +80,7 @@ func TestDiagnoseRootCause_NetworkTimeout(t *testing.T) {
 }
 
 func TestDiagnoseRootCause_PriorityOrder(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	// no_members should take priority over rebalance_storm
 	rc := m.DiagnoseRootCause("group-prio", 100000, 0, 15, 0)
@@ -83,6 +90,7 @@ func TestDiagnoseRootCause_PriorityOrder(t *testing.T) {
 }
 
 func TestGeneratePlaybook_NoMembers(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	rc := &RootCause{Category: "no_members"}
 	pb := m.GeneratePlaybook(rc, false)
@@ -98,6 +106,7 @@ func TestGeneratePlaybook_NoMembers(t *testing.T) {
 }
 
 func TestGeneratePlaybook_NoMembers_AutoExecute(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	rc := &RootCause{Category: "no_members"}
 	pb := m.GeneratePlaybook(rc, true)
@@ -110,6 +119,7 @@ func TestGeneratePlaybook_NoMembers_AutoExecute(t *testing.T) {
 }
 
 func TestGeneratePlaybook_RebalanceStorm(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	rc := &RootCause{Category: "rebalance_storm"}
 	pb := m.GeneratePlaybook(rc, false)
@@ -127,6 +137,7 @@ func TestGeneratePlaybook_RebalanceStorm(t *testing.T) {
 }
 
 func TestGeneratePlaybook_StuckPartition(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	rc := &RootCause{Category: "stuck_partition"}
 	pb := m.GeneratePlaybook(rc, true)
@@ -145,6 +156,7 @@ func TestGeneratePlaybook_StuckPartition(t *testing.T) {
 }
 
 func TestGeneratePlaybook_SlowConsumer(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	rc := &RootCause{Category: "slow_consumer"}
 	pb := m.GeneratePlaybook(rc, false)
@@ -157,6 +169,7 @@ func TestGeneratePlaybook_SlowConsumer(t *testing.T) {
 }
 
 func TestGeneratePlaybook_GCPressure(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	rc := &RootCause{Category: "gc_pressure"}
 	pb := m.GeneratePlaybook(rc, true)
@@ -172,6 +185,7 @@ func TestGeneratePlaybook_GCPressure(t *testing.T) {
 }
 
 func TestGeneratePlaybook_NetworkTimeout(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	rc := &RootCause{Category: "network_timeout"}
 	pb := m.GeneratePlaybook(rc, false)
@@ -188,6 +202,7 @@ func TestGeneratePlaybook_NetworkTimeout(t *testing.T) {
 }
 
 func TestGeneratePlaybook_StepNumbering(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	rc := &RootCause{Category: "no_members"}
 	pb := m.GeneratePlaybook(rc, false)
@@ -199,6 +214,7 @@ func TestGeneratePlaybook_StepNumbering(t *testing.T) {
 }
 
 func TestHeal_HealthyGroup(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	result := m.Heal("healthy-group", 100, 3, 10.0, 0, false)
 	if !result.Success {
@@ -228,6 +244,7 @@ func TestHeal_HealthyGroup(t *testing.T) {
 }
 
 func TestHeal_DegradedGroup(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	result := m.Heal("degraded-group", 50000, 2, 5.0, 6, false)
 	if result.Success {
@@ -245,6 +262,7 @@ func TestHeal_DegradedGroup(t *testing.T) {
 }
 
 func TestHeal_DeadGroup(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	result := m.Heal("dead-group", 2_000_000, 0, 0, 15, true)
 	if result.Success {
@@ -262,6 +280,7 @@ func TestHeal_DeadGroup(t *testing.T) {
 }
 
 func TestHeal_RecordsHistory(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	m.Heal("hist-heal-group", 100, 3, 10.0, 0, false)
 	history := m.GetHealthHistory("hist-heal-group")
@@ -271,6 +290,7 @@ func TestHeal_RecordsHistory(t *testing.T) {
 }
 
 func TestHeal_AutoExecutePropagates(t *testing.T) {
+	t.Parallel()
 	m := NewMonitor()
 	result := m.Heal("auto-group", 50000, 0, 0, 0, true)
 	foundAutoExecute := false

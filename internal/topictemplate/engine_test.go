@@ -7,6 +7,7 @@ import (
 )
 
 func TestParseTemplate_JSON(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	tmpl, err := e.ParseTemplate(`{
 		"spec": {"topic_name": "orders", "partitions": 6, "replication_factor": 3,
@@ -24,6 +25,7 @@ func TestParseTemplate_JSON(t *testing.T) {
 }
 
 func TestParseTemplate_YAML(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	tmpl, err := e.ParseTemplate(`
 spec:
@@ -42,6 +44,7 @@ spec:
 }
 
 func TestParseTemplate_Validation(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	_, err := e.ParseTemplate(`{"spec": {"topic_name": "", "partitions": 0}}`, "json")
 	if err == nil {
@@ -50,6 +53,7 @@ func TestParseTemplate_Validation(t *testing.T) {
 }
 
 func TestComputeDiff_NewTopic(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	tmpl := &TopicTemplate{
 		Metadata: TemplateMetadata{Name: "test"},
@@ -65,6 +69,7 @@ func TestComputeDiff_NewTopic(t *testing.T) {
 }
 
 func TestComputeDiff_InSync(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	tmpl := &TopicTemplate{
 		Metadata: TemplateMetadata{Name: "test"},
@@ -77,6 +82,7 @@ func TestComputeDiff_InSync(t *testing.T) {
 }
 
 func TestComputeDiff_ConfigDrift(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	tmpl := &TopicTemplate{
 		Metadata: TemplateMetadata{Name: "test"},
@@ -89,6 +95,7 @@ func TestComputeDiff_ConfigDrift(t *testing.T) {
 }
 
 func TestSaveAndListTemplates(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	tmpl := &TopicTemplate{
 		Metadata: TemplateMetadata{Name: "test-tmpl"},
@@ -104,6 +111,7 @@ func TestSaveAndListTemplates(t *testing.T) {
 }
 
 func TestGetTemplate_Exists(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	tmpl := &TopicTemplate{
 		Metadata: TemplateMetadata{Name: "my-tmpl"},
@@ -121,6 +129,7 @@ func TestGetTemplate_Exists(t *testing.T) {
 }
 
 func TestGetTemplate_NotFound(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	_, err := e.GetTemplate("unknown")
 	if err == nil {
@@ -129,6 +138,7 @@ func TestGetTemplate_NotFound(t *testing.T) {
 }
 
 func TestDeleteTemplate_Success(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	tmpl := &TopicTemplate{
 		Metadata: TemplateMetadata{Name: "del-tmpl"},
@@ -147,6 +157,7 @@ func TestDeleteTemplate_Success(t *testing.T) {
 }
 
 func TestDeleteTemplate_NotFound(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	err := e.DeleteTemplate("unknown")
 	if err == nil {
@@ -155,6 +166,7 @@ func TestDeleteTemplate_NotFound(t *testing.T) {
 }
 
 func TestDeleteTemplate_Isolation(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	t1 := &TopicTemplate{Metadata: TemplateMetadata{Name: "tmpl-a"}, Spec: TopicSpec{TopicName: "a", Partitions: 1, ReplicationFactor: 1}}
 	t2 := &TopicTemplate{Metadata: TemplateMetadata{Name: "tmpl-b"}, Spec: TopicSpec{TopicName: "b", Partitions: 1, ReplicationFactor: 1}}
@@ -170,6 +182,7 @@ func TestDeleteTemplate_Isolation(t *testing.T) {
 }
 
 func TestComputePlan_CreateAction(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	diff := &DiffResult{
 		TemplateName: "test",
@@ -190,6 +203,7 @@ func TestComputePlan_CreateAction(t *testing.T) {
 }
 
 func TestComputePlan_UpdateAction(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	diff := &DiffResult{
 		TemplateName: "test",
@@ -207,6 +221,7 @@ func TestComputePlan_UpdateAction(t *testing.T) {
 }
 
 func TestComputePlan_NoChange(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	diff := &DiffResult{
 		TemplateName: "test",
@@ -222,6 +237,7 @@ func TestComputePlan_NoChange(t *testing.T) {
 }
 
 func TestExportTemplate_JSON(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	tmpl := &TopicTemplate{
 		APIVersion: "v1",
@@ -240,6 +256,7 @@ func TestExportTemplate_JSON(t *testing.T) {
 }
 
 func TestExportTemplate_YAML(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	tmpl := &TopicTemplate{
 		APIVersion: "v1",
@@ -258,6 +275,7 @@ func TestExportTemplate_YAML(t *testing.T) {
 }
 
 func TestExportTemplate_UnknownFormat(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	tmpl := &TopicTemplate{Spec: TopicSpec{TopicName: "test"}}
 
@@ -268,6 +286,7 @@ func TestExportTemplate_UnknownFormat(t *testing.T) {
 }
 
 func TestExportTemplate_EmptyConfigs(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	tmpl := &TopicTemplate{
 		Metadata: TemplateMetadata{Name: "test"},
@@ -281,6 +300,7 @@ func TestExportTemplate_EmptyConfigs(t *testing.T) {
 }
 
 func TestParseTemplate_MalformedJSON(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	_, err := e.ParseTemplate(`{invalid`, "json")
 	if err == nil {
@@ -289,6 +309,7 @@ func TestParseTemplate_MalformedJSON(t *testing.T) {
 }
 
 func TestParseTemplate_MalformedYAML(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	_, err := e.ParseTemplate(`{invalid: [`, "yaml")
 	if err == nil {
@@ -297,6 +318,7 @@ func TestParseTemplate_MalformedYAML(t *testing.T) {
 }
 
 func TestParseTemplate_MissingRequiredFields(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	// Missing topic_name
 	_, err := e.ParseTemplate(`{"spec": {"partitions": 3, "replication_factor": 1}}`, "json")
@@ -312,6 +334,7 @@ func TestParseTemplate_MissingRequiredFields(t *testing.T) {
 }
 
 func TestParseTemplate_UnsupportedFormat(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	_, err := e.ParseTemplate(`data`, "xml")
 	if err == nil {

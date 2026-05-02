@@ -7,6 +7,7 @@ import (
 )
 
 func TestTimeSeriesAnalyzerAnalyze(t *testing.T) {
+	t.Parallel()
 	now := time.Now()
 
 	t.Run("enough_data", func(t *testing.T) {
@@ -52,6 +53,7 @@ func TestTimeSeriesAnalyzerAnalyze(t *testing.T) {
 }
 
 func TestMannKendallTest(t *testing.T) {
+	t.Parallel()
 	t.Run("increasing_trend", func(t *testing.T) {
 		values := make([]float64, 30)
 		for i := range values {
@@ -106,6 +108,7 @@ func TestMannKendallTest(t *testing.T) {
 }
 
 func TestDetectSeasonalityFFT(t *testing.T) {
+	t.Parallel()
 	t.Run("seasonal_data", func(t *testing.T) {
 		n := 64
 		values := make([]float64, n)
@@ -143,6 +146,7 @@ func TestDetectSeasonalityFFT(t *testing.T) {
 }
 
 func TestPearsonCorrelation(t *testing.T) {
+	t.Parallel()
 	t.Run("perfect_positive", func(t *testing.T) {
 		x := []float64{1, 2, 3, 4, 5}
 		y := []float64{2, 4, 6, 8, 10}
@@ -179,6 +183,7 @@ func TestPearsonCorrelation(t *testing.T) {
 }
 
 func TestSpearmanCorrelation(t *testing.T) {
+	t.Parallel()
 	t.Run("basic", func(t *testing.T) {
 		x := []float64{1, 2, 3, 4, 5}
 		y := []float64{2, 4, 6, 8, 10}
@@ -190,6 +195,7 @@ func TestSpearmanCorrelation(t *testing.T) {
 }
 
 func TestComputeStats(t *testing.T) {
+	t.Parallel()
 	t.Run("normal_values", func(t *testing.T) {
 		values := []float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 		stats := computeStats(values)
@@ -228,6 +234,7 @@ func TestComputeStats(t *testing.T) {
 }
 
 func TestCorrelateMetrics(t *testing.T) {
+	t.Parallel()
 	now := time.Now()
 
 	t.Run("valid_correlation", func(t *testing.T) {
@@ -265,6 +272,7 @@ func TestCorrelateMetrics(t *testing.T) {
 // --- findOutliers tests ---
 
 func TestFindOutliersNoOutliers(t *testing.T) {
+	t.Parallel()
 	// Normal distribution, no outliers
 	values := []float64{10, 11, 10.5, 11.2, 10.8, 10.3, 11.1, 10.7}
 	points := makeDataPoints(values)
@@ -275,6 +283,7 @@ func TestFindOutliersNoOutliers(t *testing.T) {
 }
 
 func TestFindOutliersClearOutlier(t *testing.T) {
+	t.Parallel()
 	values := []float64{10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 100}
 	points := makeDataPoints(values)
 	outliers := findOutliers(points, values)
@@ -291,6 +300,7 @@ func TestFindOutliersClearOutlier(t *testing.T) {
 }
 
 func TestFindOutliersDropOutlier(t *testing.T) {
+	t.Parallel()
 	values := []float64{100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 0}
 	points := makeDataPoints(values)
 	outliers := findOutliers(points, values)
@@ -309,6 +319,7 @@ func TestFindOutliersDropOutlier(t *testing.T) {
 }
 
 func TestFindOutliersAllSameValues(t *testing.T) {
+	t.Parallel()
 	values := []float64{5, 5, 5, 5, 5}
 	points := makeDataPoints(values)
 	outliers := findOutliers(points, values)
@@ -320,6 +331,7 @@ func TestFindOutliersAllSameValues(t *testing.T) {
 // --- computeStats tests ---
 
 func TestComputeStatsEmpty(t *testing.T) {
+	t.Parallel()
 	stats := computeStats([]float64{})
 	if stats.Count != 0 {
 		t.Errorf("expected count 0 for empty, got %d", stats.Count)
@@ -327,6 +339,7 @@ func TestComputeStatsEmpty(t *testing.T) {
 }
 
 func TestComputeStatsNegativeValues(t *testing.T) {
+	t.Parallel()
 	values := []float64{-10, -5, 0, 5, 10}
 	stats := computeStats(values)
 	if stats.Count != 5 {
@@ -344,6 +357,7 @@ func TestComputeStatsNegativeValues(t *testing.T) {
 }
 
 func TestComputeStatsSingleValue(t *testing.T) {
+	t.Parallel()
 	stats := computeStats([]float64{42})
 	if stats.StdDev != 0 {
 		t.Errorf("expected stddev 0 for single value, got %f", stats.StdDev)
@@ -354,6 +368,7 @@ func TestComputeStatsSingleValue(t *testing.T) {
 }
 
 func TestComputeStatsTwoValues(t *testing.T) {
+	t.Parallel()
 	stats := computeStats([]float64{0, 100})
 	if stats.Count != 2 {
 		t.Errorf("expected count 2, got %d", stats.Count)
@@ -366,6 +381,7 @@ func TestComputeStatsTwoValues(t *testing.T) {
 // --- spearmanCorrelation tests ---
 
 func TestSpearmanPerfectNegative(t *testing.T) {
+	t.Parallel()
 	x := []float64{1, 2, 3, 4, 5}
 	y := []float64{10, 8, 6, 4, 2}
 	r := spearmanCorrelation(x, y)
@@ -375,6 +391,7 @@ func TestSpearmanPerfectNegative(t *testing.T) {
 }
 
 func TestSpearmanTies(t *testing.T) {
+	t.Parallel()
 	x := []float64{1, 2, 2, 4, 5}
 	y := []float64{5, 4, 3, 2, 1}
 	r := spearmanCorrelation(x, y)
@@ -384,6 +401,7 @@ func TestSpearmanTies(t *testing.T) {
 }
 
 func TestSpearmanSinglePoint(t *testing.T) {
+	t.Parallel()
 	r := spearmanCorrelation([]float64{1}, []float64{2})
 	if r != 0 {
 		t.Errorf("expected 0 for single point, got %f", r)
@@ -391,6 +409,7 @@ func TestSpearmanSinglePoint(t *testing.T) {
 }
 
 func TestSpearmanIdenticalSeries(t *testing.T) {
+	t.Parallel()
 	x := []float64{5, 5, 5, 5}
 	y := []float64{5, 5, 5, 5}
 	r := spearmanCorrelation(x, y)
@@ -403,6 +422,7 @@ func TestSpearmanIdenticalSeries(t *testing.T) {
 // --- Correlation strength/direction ---
 
 func TestCorrelateModerate(t *testing.T) {
+	t.Parallel()
 	now := time.Now()
 	a := NewTimeSeriesAnalyzer()
 	vals := []float64{1, 3, 2, 5, 4, 6, 5, 8}
@@ -421,6 +441,7 @@ func TestCorrelateModerate(t *testing.T) {
 }
 
 func TestCorrelateNegative(t *testing.T) {
+	t.Parallel()
 	now := time.Now()
 	a := NewTimeSeriesAnalyzer()
 	for i := 0; i < 10; i++ {
@@ -438,6 +459,7 @@ func TestCorrelateNegative(t *testing.T) {
 }
 
 func TestCorrelateInsufficientData(t *testing.T) {
+	t.Parallel()
 	now := time.Now()
 	a := NewTimeSeriesAnalyzer()
 	a.RecordPoint(MetricConsumerLag, "s1", 1.0, now)
@@ -451,6 +473,7 @@ func TestCorrelateInsufficientData(t *testing.T) {
 // --- Pearson additional tests ---
 
 func TestPearsonMismatchedLengths(t *testing.T) {
+	t.Parallel()
 	r := pearsonCorrelation([]float64{1, 2, 3}, []float64{1, 2})
 	if r != 0 {
 		t.Errorf("expected 0 for mismatched lengths, got %f", r)
@@ -458,6 +481,7 @@ func TestPearsonMismatchedLengths(t *testing.T) {
 }
 
 func TestPearsonConstantValues(t *testing.T) {
+	t.Parallel()
 	x := []float64{5, 5, 5, 5, 5}
 	y := []float64{1, 2, 3, 4, 5}
 	r := pearsonCorrelation(x, y)
@@ -469,6 +493,7 @@ func TestPearsonConstantValues(t *testing.T) {
 // --- Ranks test ---
 
 func TestRanks(t *testing.T) {
+	t.Parallel()
 	r := ranks([]float64{30, 10, 20})
 	if r[0] != 3 || r[1] != 1 || r[2] != 2 {
 		t.Errorf("expected [3,1,2], got %v", r)

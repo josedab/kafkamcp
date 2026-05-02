@@ -5,6 +5,7 @@ import (
 )
 
 func TestValidateDesiredState(t *testing.T) {
+	t.Parallel()
 	m := NewManager(nil)
 
 	// Valid state
@@ -32,6 +33,7 @@ func TestValidateDesiredState(t *testing.T) {
 }
 
 func TestDiff(t *testing.T) {
+	t.Parallel()
 	m := NewManager(nil)
 
 	desired := DesiredState{
@@ -65,6 +67,7 @@ func TestDiff(t *testing.T) {
 }
 
 func TestGeneratePlan(t *testing.T) {
+	t.Parallel()
 	m := NewManager(nil)
 
 	diff := &DiffResult{
@@ -85,6 +88,7 @@ func TestGeneratePlan(t *testing.T) {
 }
 
 func TestValidateDesiredState_MissingTopicName(t *testing.T) {
+	t.Parallel()
 	m := NewManager(nil)
 	errs := m.ValidateDesiredState(DesiredState{
 		Version: "1",
@@ -102,6 +106,7 @@ func TestValidateDesiredState_MissingTopicName(t *testing.T) {
 }
 
 func TestValidateDesiredState_MissingPartitions(t *testing.T) {
+	t.Parallel()
 	m := NewManager(nil)
 	errs := m.ValidateDesiredState(DesiredState{
 		Version: "1",
@@ -119,6 +124,7 @@ func TestValidateDesiredState_MissingPartitions(t *testing.T) {
 }
 
 func TestValidateDesiredState_NegativePartitions(t *testing.T) {
+	t.Parallel()
 	m := NewManager(nil)
 	errs := m.ValidateDesiredState(DesiredState{
 		Version: "1",
@@ -136,6 +142,7 @@ func TestValidateDesiredState_NegativePartitions(t *testing.T) {
 }
 
 func TestValidateDesiredState_ZeroReplication(t *testing.T) {
+	t.Parallel()
 	m := NewManager(nil)
 	errs := m.ValidateDesiredState(DesiredState{
 		Version: "1",
@@ -153,6 +160,7 @@ func TestValidateDesiredState_ZeroReplication(t *testing.T) {
 }
 
 func TestValidateDesiredState_DuplicateTopicNames(t *testing.T) {
+	t.Parallel()
 	m := NewManager(nil)
 	errs := m.ValidateDesiredState(DesiredState{
 		Version: "1",
@@ -173,6 +181,7 @@ func TestValidateDesiredState_DuplicateTopicNames(t *testing.T) {
 }
 
 func TestValidateDesiredState_EmptyState(t *testing.T) {
+	t.Parallel()
 	m := NewManager(nil)
 	errs := m.ValidateDesiredState(DesiredState{Version: "1"})
 	if len(errs) != 0 {
@@ -181,6 +190,7 @@ func TestValidateDesiredState_EmptyState(t *testing.T) {
 }
 
 func TestValidateDesiredState_MissingVersion(t *testing.T) {
+	t.Parallel()
 	m := NewManager(nil)
 	errs := m.ValidateDesiredState(DesiredState{
 		Topics: []TopicSpec{{Name: "test", Partitions: 1, ReplicationFactor: 1}},
@@ -197,6 +207,7 @@ func TestValidateDesiredState_MissingVersion(t *testing.T) {
 }
 
 func TestValidateDesiredState_UnicodeTopicNames(t *testing.T) {
+	t.Parallel()
 	m := NewManager(nil)
 	errs := m.ValidateDesiredState(DesiredState{
 		Version: "1",
@@ -213,6 +224,7 @@ func TestValidateDesiredState_UnicodeTopicNames(t *testing.T) {
 }
 
 func TestValidateDesiredState_InvalidSchemaType(t *testing.T) {
+	t.Parallel()
 	m := NewManager(nil)
 	errs := m.ValidateDesiredState(DesiredState{
 		Version: "1",
@@ -232,6 +244,7 @@ func TestValidateDesiredState_InvalidSchemaType(t *testing.T) {
 }
 
 func TestValidateDesiredState_MissingSchemaFields(t *testing.T) {
+	t.Parallel()
 	m := NewManager(nil)
 	errs := m.ValidateDesiredState(DesiredState{
 		Version: "1",
@@ -245,6 +258,7 @@ func TestValidateDesiredState_MissingSchemaFields(t *testing.T) {
 }
 
 func TestValidateDesiredState_ValidSchemaTypes(t *testing.T) {
+	t.Parallel()
 	m := NewManager(nil)
 	for _, st := range []string{"AVRO", "PROTOBUF", "JSON"} {
 		errs := m.ValidateDesiredState(DesiredState{
@@ -262,6 +276,7 @@ func TestValidateDesiredState_ValidSchemaTypes(t *testing.T) {
 }
 
 func TestValidateDesiredState_MultipleErrors(t *testing.T) {
+	t.Parallel()
 	m := NewManager(nil)
 	errs := m.ValidateDesiredState(DesiredState{
 		// Missing version

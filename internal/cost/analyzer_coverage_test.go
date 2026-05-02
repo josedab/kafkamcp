@@ -5,6 +5,7 @@ import (
 )
 
 func TestCompressionFactor(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		input string
 		want  float64

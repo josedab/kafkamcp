@@ -34,6 +34,7 @@ func (p *testToolPlugin) Tools() []ToolDefinition {
 }
 
 func TestRegisterAndList(t *testing.T) {
+	t.Parallel()
 	r := NewRegistry(nil)
 	defer r.Close()
 
@@ -56,6 +57,7 @@ func TestRegisterAndList(t *testing.T) {
 }
 
 func TestRegisterDuplicate(t *testing.T) {
+	t.Parallel()
 	r := NewRegistry(nil)
 	defer r.Close()
 
@@ -68,6 +70,7 @@ func TestRegisterDuplicate(t *testing.T) {
 }
 
 func TestUnregister(t *testing.T) {
+	t.Parallel()
 	r := NewRegistry(nil)
 	p := &testPlugin{name: "removable", version: "1.0.0"}
 	_ = r.Register(context.Background(), p, nil)
@@ -85,6 +88,7 @@ func TestUnregister(t *testing.T) {
 }
 
 func TestUnregisterNotFound(t *testing.T) {
+	t.Parallel()
 	r := NewRegistry(nil)
 	err := r.Unregister("nonexistent")
 	if err == nil {
@@ -93,6 +97,7 @@ func TestUnregisterNotFound(t *testing.T) {
 }
 
 func TestToolProvider(t *testing.T) {
+	t.Parallel()
 	r := NewRegistry(nil)
 	defer r.Close()
 
@@ -115,6 +120,7 @@ func TestToolProvider(t *testing.T) {
 }
 
 func TestRegisterNil(t *testing.T) {
+	t.Parallel()
 	r := NewRegistry(nil)
 	err := r.Register(context.Background(), nil, nil)
 	if err == nil {

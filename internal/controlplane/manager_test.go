@@ -7,6 +7,7 @@ import (
 )
 
 func TestOrgLifecycle(t *testing.T) {
+	t.Parallel()
 	m := NewManager(slog.Default())
 
 	org, err := m.CreateOrganization("Acme Corp", "pro")
@@ -32,6 +33,7 @@ func TestOrgLifecycle(t *testing.T) {
 }
 
 func TestAPIKeyFlow(t *testing.T) {
+	t.Parallel()
 	m := NewManager(slog.Default())
 	org, _ := m.CreateOrganization("Test", "starter")
 
@@ -58,6 +60,7 @@ func TestAPIKeyFlow(t *testing.T) {
 }
 
 func TestInstanceLifecycle(t *testing.T) {
+	t.Parallel()
 	m := NewManager(slog.Default())
 	org, _ := m.CreateOrganization("Test", "pro")
 
@@ -96,6 +99,7 @@ func TestInstanceLifecycle(t *testing.T) {
 }
 
 func TestUsageTracking(t *testing.T) {
+	t.Parallel()
 	m := NewManager(slog.Default())
 	org, _ := m.CreateOrganization("Test", "pro")
 

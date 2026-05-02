@@ -8,6 +8,7 @@ import (
 // --- Pause/Resume tests ---
 
 func TestPauseSubscription(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
@@ -25,6 +26,7 @@ func TestPauseSubscription(t *testing.T) {
 }
 
 func TestPauseSubscription_Idempotent(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
@@ -43,6 +45,7 @@ func TestPauseSubscription_Idempotent(t *testing.T) {
 }
 
 func TestPauseSubscription_NotFound(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
@@ -53,6 +56,7 @@ func TestPauseSubscription_NotFound(t *testing.T) {
 }
 
 func TestPauseSubscription_WrongAgent(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
@@ -65,6 +69,7 @@ func TestPauseSubscription_WrongAgent(t *testing.T) {
 }
 
 func TestResumeSubscription(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
@@ -83,6 +88,7 @@ func TestResumeSubscription(t *testing.T) {
 }
 
 func TestResumeSubscription_Idempotent(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
@@ -96,6 +102,7 @@ func TestResumeSubscription_Idempotent(t *testing.T) {
 }
 
 func TestResumeSubscription_NotFound(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
@@ -106,6 +113,7 @@ func TestResumeSubscription_NotFound(t *testing.T) {
 }
 
 func TestResumeSubscription_WrongAgent(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
@@ -121,6 +129,7 @@ func TestResumeSubscription_WrongAgent(t *testing.T) {
 // --- ExpireStale tests ---
 
 func TestExpireStale_NoExpired(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
@@ -133,6 +142,7 @@ func TestExpireStale_NoExpired(t *testing.T) {
 }
 
 func TestExpireStale_ExpiredSubscription(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
@@ -156,6 +166,7 @@ func TestExpireStale_ExpiredSubscription(t *testing.T) {
 }
 
 func TestExpireStale_FutureExpiration(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
@@ -173,6 +184,7 @@ func TestExpireStale_FutureExpiration(t *testing.T) {
 }
 
 func TestExpireStale_MixedExpirations(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
@@ -196,6 +208,7 @@ func TestExpireStale_MixedExpirations(t *testing.T) {
 // --- Paused subscription doesn't count as active ---
 
 func TestActiveSubscriptionCount_ExcludesPaused(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 

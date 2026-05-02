@@ -9,6 +9,7 @@ import (
 )
 
 func TestSuggestSchemaFixes_ValidMessageNoSuggestions(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
 			return []kafka.Message{
@@ -29,6 +30,7 @@ func TestSuggestSchemaFixes_ValidMessageNoSuggestions(t *testing.T) {
 }
 
 func TestSuggestSchemaFixes_NestedObjectValue(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
 			return []kafka.Message{
@@ -59,6 +61,7 @@ func TestSuggestSchemaFixes_NestedObjectValue(t *testing.T) {
 }
 
 func TestSuggestSchemaFixes_MultipleNullFieldsAggregated(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
 			return []kafka.Message{
@@ -92,6 +95,7 @@ func TestSuggestSchemaFixes_MultipleNullFieldsAggregated(t *testing.T) {
 }
 
 func TestSuggestSchemaFixes_NonSchemaErrorHeader(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
 			return []kafka.Message{
@@ -118,6 +122,7 @@ func TestSuggestSchemaFixes_NonSchemaErrorHeader(t *testing.T) {
 }
 
 func TestSuggestSchemaFixes_BothNullAndEmptyInSameField(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
 			return []kafka.Message{
@@ -152,6 +157,7 @@ func TestSuggestSchemaFixes_BothNullAndEmptyInSameField(t *testing.T) {
 }
 
 func TestSuggestSchemaFixes_InvalidJSONMessage(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
 			return []kafka.Message{
@@ -177,6 +183,7 @@ func TestSuggestSchemaFixes_InvalidJSONMessage(t *testing.T) {
 }
 
 func TestSuggestSchemaFixes_SchemaMismatchHeader(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
 			return []kafka.Message{
@@ -205,6 +212,7 @@ func TestSuggestSchemaFixes_SchemaMismatchHeader(t *testing.T) {
 }
 
 func TestSuggestSchemaFixes_LimitDefault(t *testing.T) {
+	t.Parallel()
 	var capturedLimit int
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
@@ -224,6 +232,7 @@ func TestSuggestSchemaFixes_LimitDefault(t *testing.T) {
 }
 
 func TestSuggestSchemaFixes_NegativeLimit(t *testing.T) {
+	t.Parallel()
 	var capturedLimit int
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
@@ -243,6 +252,7 @@ func TestSuggestSchemaFixes_NegativeLimit(t *testing.T) {
 }
 
 func TestSuggestSchemaFixes_ConsumeErrorExt(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
 			return nil, errors.New("consume failed")
@@ -257,6 +267,7 @@ func TestSuggestSchemaFixes_ConsumeErrorExt(t *testing.T) {
 }
 
 func TestSuggestSchemaFixes_EmptyConsumeResult(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
 			return nil, nil
@@ -274,6 +285,7 @@ func TestSuggestSchemaFixes_EmptyConsumeResult(t *testing.T) {
 }
 
 func TestSuggestSchemaFixes_MixOfValidInvalidNull(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
 			return []kafka.Message{

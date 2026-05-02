@@ -12,6 +12,7 @@ func testLogger() *slog.Logger {
 }
 
 func TestParseSimpleSelect(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	query, err := e.Parse("SELECT * FROM orders WHERE status = active LIMIT 10", "agent-1")
@@ -30,6 +31,7 @@ func TestParseSimpleSelect(t *testing.T) {
 }
 
 func TestParseAggregation(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	query, err := e.Parse("SELECT region, COUNT(*) count, SUM(amount) total FROM orders GROUP BY region", "agent-1")
@@ -45,6 +47,7 @@ func TestParseAggregation(t *testing.T) {
 }
 
 func TestExecuteSimple(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	query, _ := e.Parse("SELECT * FROM test_topic", "agent-1")
@@ -63,6 +66,7 @@ func TestExecuteSimple(t *testing.T) {
 }
 
 func TestExecuteWithWhere(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	query, _ := e.Parse("SELECT * FROM test_topic WHERE age > 28", "agent-1")
@@ -79,6 +83,7 @@ func TestExecuteWithWhere(t *testing.T) {
 }
 
 func TestExecuteAggregation(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	query, _ := e.Parse("SELECT region, COUNT(*) count FROM test_topic GROUP BY region", "agent-1")
@@ -95,6 +100,7 @@ func TestExecuteAggregation(t *testing.T) {
 }
 
 func TestExplain(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	query, _ := e.Parse("SELECT COUNT(*) FROM orders WHERE status = active WINDOW TUMBLING 5m", "agent-1")
@@ -110,6 +116,7 @@ func TestExplain(t *testing.T) {
 // --- GetQuery tests ---
 
 func TestGetQueryFound(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	q, _ := e.Parse("SELECT * FROM test_topic", "agent-1")
 
@@ -123,6 +130,7 @@ func TestGetQueryFound(t *testing.T) {
 }
 
 func TestGetQueryNotFound(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	_, err := e.GetQuery("nonexistent")
 	if err == nil {
@@ -133,6 +141,7 @@ func TestGetQueryNotFound(t *testing.T) {
 // --- ListQueries tests ---
 
 func TestListQueriesEmpty(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	result := e.ListQueries(10)
 	if len(result) != 0 {
@@ -141,6 +150,7 @@ func TestListQueriesEmpty(t *testing.T) {
 }
 
 func TestListQueries(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.Parse("SELECT * FROM t1", "a1")
 	e.Parse("SELECT * FROM t2", "a2")
@@ -153,6 +163,7 @@ func TestListQueries(t *testing.T) {
 }
 
 func TestListQueriesWithLimit(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.Parse("SELECT * FROM t1", "a1")
 	e.Parse("SELECT * FROM t2", "a2")
@@ -165,6 +176,7 @@ func TestListQueriesWithLimit(t *testing.T) {
 }
 
 func TestListQueriesDefaultLimit(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.Parse("SELECT * FROM t1", "a1")
 
@@ -177,6 +189,7 @@ func TestListQueriesDefaultLimit(t *testing.T) {
 // --- DeleteQuery tests ---
 
 func TestDeleteQuery(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	q, _ := e.Parse("SELECT * FROM test_topic", "agent-1")
 
@@ -192,6 +205,7 @@ func TestDeleteQuery(t *testing.T) {
 }
 
 func TestDeleteQueryNotFound(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	err := e.DeleteQuery("nonexistent")
 	if err == nil {
@@ -200,6 +214,7 @@ func TestDeleteQueryNotFound(t *testing.T) {
 }
 
 func TestDeleteThenList(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	q1, _ := e.Parse("SELECT * FROM t1", "a1")
 	e.Parse("SELECT * FROM t2", "a2")
@@ -214,6 +229,7 @@ func TestDeleteThenList(t *testing.T) {
 // --- matchWhere tests for all operators ---
 
 func TestMatchWhereEquals(t *testing.T) {
+	t.Parallel()
 	msg := map[string]any{"status": "active"}
 	w := &WhereClause{Field: "status", Operator: "=", Value: "active"}
 	if !matchWhere(msg, w) {
@@ -226,6 +242,7 @@ func TestMatchWhereEquals(t *testing.T) {
 }
 
 func TestMatchWhereNotEquals(t *testing.T) {
+	t.Parallel()
 	msg := map[string]any{"status": "active"}
 	w := &WhereClause{Field: "status", Operator: "!=", Value: "inactive"}
 	if !matchWhere(msg, w) {
@@ -238,6 +255,7 @@ func TestMatchWhereNotEquals(t *testing.T) {
 }
 
 func TestMatchWhereGreaterThan(t *testing.T) {
+	t.Parallel()
 	msg := map[string]any{"age": 30.0}
 	w := &WhereClause{Field: "age", Operator: ">", Value: "25"}
 	if !matchWhere(msg, w) {
@@ -250,6 +268,7 @@ func TestMatchWhereGreaterThan(t *testing.T) {
 }
 
 func TestMatchWhereLessThan(t *testing.T) {
+	t.Parallel()
 	msg := map[string]any{"age": 20.0}
 	w := &WhereClause{Field: "age", Operator: "<", Value: "25"}
 	if !matchWhere(msg, w) {
@@ -258,6 +277,7 @@ func TestMatchWhereLessThan(t *testing.T) {
 }
 
 func TestMatchWhereGreaterOrEqual(t *testing.T) {
+	t.Parallel()
 	msg := map[string]any{"age": 30.0}
 	w := &WhereClause{Field: "age", Operator: ">=", Value: "30"}
 	if !matchWhere(msg, w) {
@@ -266,6 +286,7 @@ func TestMatchWhereGreaterOrEqual(t *testing.T) {
 }
 
 func TestMatchWhereLessOrEqual(t *testing.T) {
+	t.Parallel()
 	msg := map[string]any{"age": 25.0}
 	w := &WhereClause{Field: "age", Operator: "<=", Value: "25"}
 	if !matchWhere(msg, w) {
@@ -274,6 +295,7 @@ func TestMatchWhereLessOrEqual(t *testing.T) {
 }
 
 func TestMatchWhereLike(t *testing.T) {
+	t.Parallel()
 	msg := map[string]any{"name": "hello-world"}
 	w := &WhereClause{Field: "name", Operator: "LIKE", Value: "hello%"}
 	if !matchWhere(msg, w) {
@@ -290,6 +312,7 @@ func TestMatchWhereLike(t *testing.T) {
 }
 
 func TestMatchWhereLikeRegexSpecialChars(t *testing.T) {
+	t.Parallel()
 	msg := map[string]any{"name": "test.value"}
 	w := &WhereClause{Field: "name", Operator: "LIKE", Value: "test%"}
 	if !matchWhere(msg, w) {
@@ -298,6 +321,7 @@ func TestMatchWhereLikeRegexSpecialChars(t *testing.T) {
 }
 
 func TestMatchWhereFieldMissing(t *testing.T) {
+	t.Parallel()
 	msg := map[string]any{"name": "test"}
 	w := &WhereClause{Field: "missing", Operator: "=", Value: "test"}
 	if matchWhere(msg, w) {
@@ -306,6 +330,7 @@ func TestMatchWhereFieldMissing(t *testing.T) {
 }
 
 func TestMatchWhereDefaultOperator(t *testing.T) {
+	t.Parallel()
 	msg := map[string]any{"status": "active"}
 	w := &WhereClause{Field: "status", Operator: "UNKNOWN", Value: "active"}
 	if !matchWhere(msg, w) {
@@ -314,6 +339,7 @@ func TestMatchWhereDefaultOperator(t *testing.T) {
 }
 
 func TestMatchWhereWithBoolValue(t *testing.T) {
+	t.Parallel()
 	msg := map[string]any{"active": true}
 	w := &WhereClause{Field: "active", Operator: "=", Value: "true"}
 	if !matchWhere(msg, w) {
@@ -322,6 +348,7 @@ func TestMatchWhereWithBoolValue(t *testing.T) {
 }
 
 func TestMatchWhereWithStringNumeric(t *testing.T) {
+	t.Parallel()
 	msg := map[string]any{"count": "42"}
 	w := &WhereClause{Field: "count", Operator: ">", Value: "10"}
 	if !matchWhere(msg, w) {
@@ -332,6 +359,7 @@ func TestMatchWhereWithStringNumeric(t *testing.T) {
 // --- toFloat64 tests ---
 
 func TestToFloat64(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		input    any
 		expected float64
@@ -372,6 +400,7 @@ func TestToFloat64(t *testing.T) {
 // --- Concurrent GetQuery ---
 
 func TestConcurrentGetQuery(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	q, _ := e.Parse("SELECT * FROM orders", "agent-1")
 

@@ -8,6 +8,7 @@ import (
 // --- ListLocks ---
 
 func TestListLocksEmpty(t *testing.T) {
+	t.Parallel()
 	c := newTestCoordinator()
 	locks := c.ListLocks()
 	if len(locks) != 0 {
@@ -16,6 +17,7 @@ func TestListLocksEmpty(t *testing.T) {
 }
 
 func TestListLocksActiveListed(t *testing.T) {
+	t.Parallel()
 	c := newTestCoordinator()
 	c.AcquireLock("agent-1", "res-1", 60, nil)
 	c.AcquireLock("agent-2", "res-2", 60, nil)
@@ -27,9 +29,13 @@ func TestListLocksActiveListed(t *testing.T) {
 }
 
 func TestListLocksExpiredFiltered(t *testing.T) {
+	t.Parallel()
 	c := newTestCoordinator()
 	c.AcquireLock("agent-1", "res-1", 1, nil)
-	time.Sleep(2 * time.Second)
+	// Force lock expiry by backdating ExpiresAt instead of sleeping
+	c.mu.Lock()
+	c.locks["res-1"].ExpiresAt = time.Now().Add(-time.Second)
+	c.mu.Unlock()
 
 	locks := c.ListLocks()
 	if len(locks) != 0 {
@@ -40,6 +46,7 @@ func TestListLocksExpiredFiltered(t *testing.T) {
 // --- MergeClocks ---
 
 func TestMergeClocksDisjointAgents(t *testing.T) {
+	t.Parallel()
 	c := newTestCoordinator()
 	c.IncrementClock("agent-1", "res")
 
@@ -53,6 +60,7 @@ func TestMergeClocksDisjointAgents(t *testing.T) {
 }
 
 func TestMergeClocksOverlappingTakeMax(t *testing.T) {
+	t.Parallel()
 	c := newTestCoordinator()
 	for i := 0; i < 3; i++ {
 		c.IncrementClock("agent-1", "res")
@@ -65,6 +73,7 @@ func TestMergeClocksOverlappingTakeMax(t *testing.T) {
 }
 
 func TestMergeClocksLocalHigher(t *testing.T) {
+	t.Parallel()
 	c := newTestCoordinator()
 	for i := 0; i < 10; i++ {
 		c.IncrementClock("agent-1", "res")
@@ -77,6 +86,7 @@ func TestMergeClocksLocalHigher(t *testing.T) {
 }
 
 func TestMergeClocksEmptyMerge(t *testing.T) {
+	t.Parallel()
 	c := newTestCoordinator()
 	c.IncrementClock("agent-1", "res")
 
@@ -87,6 +97,7 @@ func TestMergeClocksEmptyMerge(t *testing.T) {
 }
 
 func TestMergeClocksNewResource(t *testing.T) {
+	t.Parallel()
 	c := newTestCoordinator()
 	vc := c.MergeClocks("new-res", map[string]int64{"agent-1": 7})
 	if vc.Counters["agent-1"] != 7 {
@@ -97,6 +108,7 @@ func TestMergeClocksNewResource(t *testing.T) {
 // --- MarkRead ---
 
 func TestMarkReadSingleMessage(t *testing.T) {
+	t.Parallel()
 	c := newTestCoordinator()
 	msg, _ := c.SendMessage("a1", "a2", "notification", "test", "body")
 
@@ -112,6 +124,7 @@ func TestMarkReadSingleMessage(t *testing.T) {
 }
 
 func TestMarkReadNonExistent(t *testing.T) {
+	t.Parallel()
 	c := newTestCoordinator()
 	err := c.MarkRead("agent", "nonexistent")
 	if err == nil {
@@ -120,6 +133,7 @@ func TestMarkReadNonExistent(t *testing.T) {
 }
 
 func TestMarkReadIdempotent(t *testing.T) {
+	t.Parallel()
 	c := newTestCoordinator()
 	msg, _ := c.SendMessage("a1", "a2", "notification", "test", "body")
 
@@ -131,6 +145,7 @@ func TestMarkReadIdempotent(t *testing.T) {
 }
 
 func TestMarkReadWrongAgent(t *testing.T) {
+	t.Parallel()
 	c := newTestCoordinator()
 	msg, _ := c.SendMessage("a1", "a2", "notification", "test", "body")
 
@@ -143,9 +158,13 @@ func TestMarkReadWrongAgent(t *testing.T) {
 // --- CleanExpiredLocks ---
 
 func TestCleanExpiredLocksRemovesExpired(t *testing.T) {
+	t.Parallel()
 	c := newTestCoordinator()
 	c.AcquireLock("agent-1", "res-1", 1, nil)
-	time.Sleep(2 * time.Second)
+	// Force lock expiry by backdating ExpiresAt instead of sleeping
+	c.mu.Lock()
+	c.locks["res-1"].ExpiresAt = time.Now().Add(-time.Second)
+	c.mu.Unlock()
 
 	cleaned := c.CleanExpiredLocks()
 	if cleaned != 1 {
@@ -154,6 +173,7 @@ func TestCleanExpiredLocksRemovesExpired(t *testing.T) {
 }
 
 func TestCleanExpiredLocksRetainsActive(t *testing.T) {
+	t.Parallel()
 	c := newTestCoordinator()
 	c.AcquireLock("agent-1", "res-1", 3600, nil)
 
@@ -164,6 +184,7 @@ func TestCleanExpiredLocksRetainsActive(t *testing.T) {
 }
 
 func TestCleanExpiredLocksEmpty(t *testing.T) {
+	t.Parallel()
 	c := newTestCoordinator()
 	cleaned := c.CleanExpiredLocks()
 	if cleaned != 0 {
@@ -174,6 +195,7 @@ func TestCleanExpiredLocksEmpty(t *testing.T) {
 // --- AcquireLock edge cases ---
 
 func TestAcquireLockDefaultTTL(t *testing.T) {
+	t.Parallel()
 	c := newTestCoordinator()
 	result := c.AcquireLock("agent-1", "res", 0, nil)
 	if !result.Acquired {
@@ -185,6 +207,7 @@ func TestAcquireLockDefaultTTL(t *testing.T) {
 }
 
 func TestAcquireLockNegativeTTL(t *testing.T) {
+	t.Parallel()
 	c := newTestCoordinator()
 	result := c.AcquireLock("agent-1", "res", -5, nil)
 	if !result.Acquired {
@@ -196,6 +219,7 @@ func TestAcquireLockNegativeTTL(t *testing.T) {
 }
 
 func TestAcquireLockClampedTTL(t *testing.T) {
+	t.Parallel()
 	c := newTestCoordinator()
 	result := c.AcquireLock("agent-1", "res", 9999, nil)
 	if !result.Acquired {
@@ -207,6 +231,7 @@ func TestAcquireLockClampedTTL(t *testing.T) {
 }
 
 func TestAcquireLockOverrideBySameAgent(t *testing.T) {
+	t.Parallel()
 	c := newTestCoordinator()
 	c.AcquireLock("agent-1", "res", 30, nil)
 	result := c.AcquireLock("agent-1", "res", 60, nil)
@@ -221,6 +246,7 @@ func TestAcquireLockOverrideBySameAgent(t *testing.T) {
 // --- SendMessage edge cases ---
 
 func TestSendMessageBroadcast(t *testing.T) {
+	t.Parallel()
 	c := newTestCoordinator()
 	msg, err := c.SendMessage("a1", "*", "broadcast", "alert", "system alert")
 	if err != nil {
@@ -242,6 +268,7 @@ func TestSendMessageBroadcast(t *testing.T) {
 }
 
 func TestSendMessageEmptyFrom(t *testing.T) {
+	t.Parallel()
 	c := newTestCoordinator()
 	_, err := c.SendMessage("", "a2", "request", "", "")
 	if err == nil {
@@ -250,6 +277,7 @@ func TestSendMessageEmptyFrom(t *testing.T) {
 }
 
 func TestSendMessageEmptyTo(t *testing.T) {
+	t.Parallel()
 	c := newTestCoordinator()
 	_, err := c.SendMessage("a1", "", "request", "", "")
 	if err == nil {
@@ -258,6 +286,7 @@ func TestSendMessageEmptyTo(t *testing.T) {
 }
 
 func TestSendMessageEmptyBody(t *testing.T) {
+	t.Parallel()
 	c := newTestCoordinator()
 	msg, err := c.SendMessage("a1", "a2", "request", "test", "")
 	if err != nil {
@@ -271,6 +300,7 @@ func TestSendMessageEmptyBody(t *testing.T) {
 // --- GetMessages ---
 
 func TestGetMessagesUnreadOnly(t *testing.T) {
+	t.Parallel()
 	c := newTestCoordinator()
 	msg, _ := c.SendMessage("a1", "a2", "request", "test", "body")
 	c.SendMessage("a1", "a2", "request", "test2", "body2")
@@ -285,6 +315,7 @@ func TestGetMessagesUnreadOnly(t *testing.T) {
 // --- ReleaseLock edge cases ---
 
 func TestReleaseLockNotExists(t *testing.T) {
+	t.Parallel()
 	c := newTestCoordinator()
 	err := c.ReleaseLock("agent", "nonexistent")
 	if err == nil {
@@ -295,6 +326,7 @@ func TestReleaseLockNotExists(t *testing.T) {
 // --- GetClock ---
 
 func TestGetClockNonExistent(t *testing.T) {
+	t.Parallel()
 	c := newTestCoordinator()
 	vc := c.GetClock("nonexistent")
 	if vc == nil {

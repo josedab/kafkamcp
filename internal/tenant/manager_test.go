@@ -5,6 +5,7 @@ import (
 )
 
 func TestCreateTenant(t *testing.T) {
+	t.Parallel()
 	m := NewManager()
 	tenant, apiKey, err := m.CreateTenant("Test Corp", "admin@test.com", "pro")
 	if err != nil {
@@ -25,6 +26,7 @@ func TestCreateTenant(t *testing.T) {
 }
 
 func TestCreateTenantDuplicateEmail(t *testing.T) {
+	t.Parallel()
 	m := NewManager()
 	_, _, _ = m.CreateTenant("Corp A", "same@email.com", "free")
 	_, _, err := m.CreateTenant("Corp B", "same@email.com", "free")
@@ -34,6 +36,7 @@ func TestCreateTenantDuplicateEmail(t *testing.T) {
 }
 
 func TestCreateTenantValidation(t *testing.T) {
+	t.Parallel()
 	m := NewManager()
 	_, _, err := m.CreateTenant("", "test@test.com", "free")
 	if err == nil {
@@ -42,6 +45,7 @@ func TestCreateTenantValidation(t *testing.T) {
 }
 
 func TestGetTenant(t *testing.T) {
+	t.Parallel()
 	m := NewManager()
 	tenant, _, _ := m.CreateTenant("Test", "t@t.com", "free")
 	found, err := m.GetTenant(tenant.ID)
@@ -54,6 +58,7 @@ func TestGetTenant(t *testing.T) {
 }
 
 func TestPlanLimits(t *testing.T) {
+	t.Parallel()
 	free := PlanLimits("free")
 	if free.MaxClusters != 1 {
 		t.Errorf("expected free plan max_clusters=1, got %d", free.MaxClusters)
@@ -69,6 +74,7 @@ func TestPlanLimits(t *testing.T) {
 }
 
 func TestRecordUsageAndCheckLimits(t *testing.T) {
+	t.Parallel()
 	m := NewManager()
 	tenant, _, _ := m.CreateTenant("Test", "t@t.com", "free")
 
@@ -95,6 +101,7 @@ func TestRecordUsageAndCheckLimits(t *testing.T) {
 }
 
 func TestAddCluster(t *testing.T) {
+	t.Parallel()
 	m := NewManager()
 	tenant, _, _ := m.CreateTenant("Test", "t@t.com", "free")
 

@@ -16,6 +16,7 @@ func testLogger() *slog.Logger {
 // ============= EventHubs Adapter Tests =============
 
 func TestEventHubsAdapter_Protocol(t *testing.T) {
+	t.Parallel()
 	a := NewEventHubsAdapter(BackendConfig{}, testLogger())
 	if a.Protocol() != ProtocolEventHubs {
 		t.Errorf("expected %s, got %s", ProtocolEventHubs, a.Protocol())
@@ -23,6 +24,7 @@ func TestEventHubsAdapter_Protocol(t *testing.T) {
 }
 
 func TestEventHubsAdapter_ConnectNoEndpoints(t *testing.T) {
+	t.Parallel()
 	a := NewEventHubsAdapter(BackendConfig{}, testLogger())
 	err := a.Connect(context.Background())
 	if err == nil {
@@ -31,6 +33,7 @@ func TestEventHubsAdapter_ConnectNoEndpoints(t *testing.T) {
 }
 
 func TestEventHubsAdapter_OperationsWhenDisconnected(t *testing.T) {
+	t.Parallel()
 	a := NewEventHubsAdapter(BackendConfig{}, testLogger())
 
 	_, err := a.Produce(context.Background(), ProduceRequest{Topic: "test"})
@@ -65,6 +68,7 @@ func TestEventHubsAdapter_OperationsWhenDisconnected(t *testing.T) {
 }
 
 func TestEventHubsAdapter_FullLifecycle(t *testing.T) {
+	t.Parallel()
 	a := NewEventHubsAdapter(BackendConfig{
 		Endpoints: []string{"eventhub.servicebus.windows.net:9093"},
 	}, testLogger())
@@ -144,6 +148,7 @@ func TestEventHubsAdapter_FullLifecycle(t *testing.T) {
 // ============= Kinesis Adapter Tests =============
 
 func TestKinesisAdapter_Protocol(t *testing.T) {
+	t.Parallel()
 	a := NewKinesisAdapter(BackendConfig{}, testLogger())
 	if a.Protocol() != ProtocolKinesis {
 		t.Errorf("expected %s, got %s", ProtocolKinesis, a.Protocol())
@@ -151,6 +156,7 @@ func TestKinesisAdapter_Protocol(t *testing.T) {
 }
 
 func TestKinesisAdapter_ConnectNoEndpoints(t *testing.T) {
+	t.Parallel()
 	a := NewKinesisAdapter(BackendConfig{}, testLogger())
 	err := a.Connect(context.Background())
 	if err == nil {
@@ -159,6 +165,7 @@ func TestKinesisAdapter_ConnectNoEndpoints(t *testing.T) {
 }
 
 func TestKinesisAdapter_OperationsWhenDisconnected(t *testing.T) {
+	t.Parallel()
 	a := NewKinesisAdapter(BackendConfig{}, testLogger())
 
 	_, err := a.Produce(context.Background(), ProduceRequest{Topic: "test"})
@@ -193,6 +200,7 @@ func TestKinesisAdapter_OperationsWhenDisconnected(t *testing.T) {
 }
 
 func TestKinesisAdapter_FullLifecycle(t *testing.T) {
+	t.Parallel()
 	a := NewKinesisAdapter(BackendConfig{
 		Endpoints: []string{"kinesis.us-east-1.amazonaws.com"},
 	}, testLogger())
@@ -270,6 +278,7 @@ func TestKinesisAdapter_FullLifecycle(t *testing.T) {
 // ============= categorizeBackendError Tests =============
 
 func TestCategorizeBackendError(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name string
 		err  string
@@ -305,6 +314,7 @@ func (e *mockError) Error() string { return e.msg }
 // ============= Manager EventHubs/Kinesis Registration =============
 
 func TestManagerRegisterEventHubs(t *testing.T) {
+	t.Parallel()
 	m := NewManager(testLogger())
 	err := m.RegisterBackend(BackendConfig{
 		Name:      "eventhubs-test",
@@ -325,6 +335,7 @@ func TestManagerRegisterEventHubs(t *testing.T) {
 }
 
 func TestManagerRegisterKinesis(t *testing.T) {
+	t.Parallel()
 	m := NewManager(testLogger())
 	err := m.RegisterBackend(BackendConfig{
 		Name:      "kinesis-test",
@@ -345,6 +356,7 @@ func TestManagerRegisterKinesis(t *testing.T) {
 }
 
 func TestManagerRegisterDuplicate(t *testing.T) {
+	t.Parallel()
 	m := NewManager(testLogger())
 	_ = m.RegisterBackend(BackendConfig{
 		Name: "dup", Protocol: ProtocolNATS, Endpoints: []string{"localhost:4222"},
@@ -358,6 +370,7 @@ func TestManagerRegisterDuplicate(t *testing.T) {
 }
 
 func TestManagerListBackends_HealthCheck(t *testing.T) {
+	t.Parallel()
 	m := NewManager(testLogger())
 	_ = m.RegisterBackend(BackendConfig{
 		Name: "nats-health", Protocol: ProtocolNATS, Endpoints: []string{"localhost:4222"},
@@ -378,6 +391,7 @@ func TestManagerListBackends_HealthCheck(t *testing.T) {
 }
 
 func TestManagerListBackends_Healthy(t *testing.T) {
+	t.Parallel()
 	m := NewManager(testLogger())
 	_ = m.RegisterBackend(BackendConfig{
 		Name: "nats-ok", Protocol: ProtocolNATS, Endpoints: []string{"localhost:4222"},

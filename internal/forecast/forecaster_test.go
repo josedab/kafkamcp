@@ -7,6 +7,7 @@ import (
 )
 
 func TestNewForecaster(t *testing.T) {
+	t.Parallel()
 	f := NewForecaster(7)
 	if f.retentionDays != 7 {
 		t.Fatalf("expected retentionDays=7, got %d", f.retentionDays)
@@ -17,6 +18,7 @@ func TestNewForecaster(t *testing.T) {
 }
 
 func TestNewForecasterDefaultRetention(t *testing.T) {
+	t.Parallel()
 	f := NewForecaster(0)
 	if f.retentionDays != 30 {
 		t.Fatalf("expected default retentionDays=30, got %d", f.retentionDays)
@@ -24,6 +26,7 @@ func TestNewForecasterDefaultRetention(t *testing.T) {
 }
 
 func TestRecordMetricAndHistory(t *testing.T) {
+	t.Parallel()
 	f := NewForecaster(30)
 	now := time.Now()
 
@@ -40,6 +43,7 @@ func TestRecordMetricAndHistory(t *testing.T) {
 }
 
 func TestRecordMetricRingBuffer(t *testing.T) {
+	t.Parallel()
 	f := NewForecaster(30)
 	now := time.Now()
 
@@ -63,6 +67,7 @@ func TestRecordMetricRingBuffer(t *testing.T) {
 }
 
 func TestGetMetricHistoryEmpty(t *testing.T) {
+	t.Parallel()
 	f := NewForecaster(30)
 	history := f.GetMetricHistory("nonexistent", "metric")
 	if len(history) != 0 {
@@ -71,6 +76,7 @@ func TestGetMetricHistoryEmpty(t *testing.T) {
 }
 
 func TestGetMetricHistoryReturnsCopy(t *testing.T) {
+	t.Parallel()
 	f := NewForecaster(30)
 	f.RecordMetric(Metric{Topic: "t", MetricName: "m", Value: 1, Timestamp: time.Now()})
 
@@ -84,6 +90,7 @@ func TestGetMetricHistoryReturnsCopy(t *testing.T) {
 }
 
 func TestForecastTopicInsufficientData(t *testing.T) {
+	t.Parallel()
 	f := NewForecaster(30)
 	f.RecordMetric(Metric{Topic: "t", MetricName: "m", Value: 10, Timestamp: time.Now()})
 
@@ -94,6 +101,7 @@ func TestForecastTopicInsufficientData(t *testing.T) {
 }
 
 func TestForecastTopicNoData(t *testing.T) {
+	t.Parallel()
 	f := NewForecaster(30)
 	_, err := f.ForecastTopic("missing", "metric", 7)
 	if err == nil {
@@ -102,6 +110,7 @@ func TestForecastTopicNoData(t *testing.T) {
 }
 
 func TestForecastTopicLinearGrowth(t *testing.T) {
+	t.Parallel()
 	f := NewForecaster(30)
 	base := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 
@@ -153,6 +162,7 @@ func TestForecastTopicLinearGrowth(t *testing.T) {
 }
 
 func TestForecastTopicShrinking(t *testing.T) {
+	t.Parallel()
 	f := NewForecaster(30)
 	base := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 
@@ -175,6 +185,7 @@ func TestForecastTopicShrinking(t *testing.T) {
 }
 
 func TestForecastTopicStable(t *testing.T) {
+	t.Parallel()
 	f := NewForecaster(30)
 	base := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 
@@ -197,6 +208,7 @@ func TestForecastTopicStable(t *testing.T) {
 }
 
 func TestLinearRegression(t *testing.T) {
+	t.Parallel()
 	base := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	points := []Metric{
 		{Value: 10, Timestamp: base},
@@ -214,6 +226,7 @@ func TestLinearRegression(t *testing.T) {
 }
 
 func TestLinearRegressionSinglePoint(t *testing.T) {
+	t.Parallel()
 	points := []Metric{
 		{Value: 42, Timestamp: time.Now()},
 	}
@@ -227,6 +240,7 @@ func TestLinearRegressionSinglePoint(t *testing.T) {
 }
 
 func TestLinearRegressionEmpty(t *testing.T) {
+	t.Parallel()
 	slope, intercept := linearRegression(nil)
 	if slope != 0 || intercept != 0 {
 		t.Fatalf("expected (0,0) for empty input, got (%f,%f)", slope, intercept)
@@ -234,6 +248,7 @@ func TestLinearRegressionEmpty(t *testing.T) {
 }
 
 func TestDetectTrend(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		slope, mean float64
 		want        string
@@ -254,6 +269,7 @@ func TestDetectTrend(t *testing.T) {
 }
 
 func TestDetectSeasonalityNone(t *testing.T) {
+	t.Parallel()
 	// Too few points.
 	points := make([]Metric, 5)
 	base := time.Now()
@@ -266,6 +282,7 @@ func TestDetectSeasonalityNone(t *testing.T) {
 }
 
 func TestDetectSeasonalityWeekly(t *testing.T) {
+	t.Parallel()
 	base := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	points := make([]Metric, 28)
 	for i := 0; i < 28; i++ {
@@ -283,6 +300,7 @@ func TestDetectSeasonalityWeekly(t *testing.T) {
 }
 
 func TestGenerateForecastRecommendations(t *testing.T) {
+	t.Parallel()
 	growing := generateForecastRecommendations("t1", "growing", 2.0)
 	if len(growing) == 0 {
 		t.Fatal("expected recommendations for growing trend")
@@ -305,6 +323,7 @@ func TestGenerateForecastRecommendations(t *testing.T) {
 }
 
 func TestMetricKey(t *testing.T) {
+	t.Parallel()
 	got := metricKey("orders", "throughput")
 	if got != "orders:throughput" {
 		t.Fatalf("expected orders:throughput, got %s", got)
@@ -312,6 +331,7 @@ func TestMetricKey(t *testing.T) {
 }
 
 func TestForecastTimestampFormat(t *testing.T) {
+	t.Parallel()
 	f := NewForecaster(30)
 	base := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	for d := 0; d < 5; d++ {
@@ -331,6 +351,7 @@ func TestForecastTimestampFormat(t *testing.T) {
 }
 
 func TestConcurrentAccess(t *testing.T) {
+	t.Parallel()
 	f := NewForecaster(30)
 	base := time.Now()
 

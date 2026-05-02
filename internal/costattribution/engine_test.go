@@ -11,6 +11,7 @@ func testLogger() *slog.Logger {
 }
 
 func TestRecordAndGetCost(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	cost := e.RecordMetrics("topic", "orders", 1024*1024, 512*1024, 1000, 500, 1024*1024*1024)
@@ -28,6 +29,7 @@ func TestRecordAndGetCost(t *testing.T) {
 }
 
 func TestCreateAllocation(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	e.RecordMetrics("topic", "orders", 0, 0, 0, 0, 1024*1024*1024)
@@ -42,6 +44,7 @@ func TestCreateAllocation(t *testing.T) {
 }
 
 func TestCreateBudget(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	budget, err := e.CreateBudget("dev-budget", "team-dev", 500.0, nil, nil)
@@ -57,6 +60,7 @@ func TestCreateBudget(t *testing.T) {
 }
 
 func TestBudgetAlerts(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	// Record large usage

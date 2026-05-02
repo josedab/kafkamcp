@@ -7,6 +7,7 @@ import (
 )
 
 func TestIngestAndQuery(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 
 	now := time.Now()
@@ -26,6 +27,7 @@ func TestIngestAndQuery(t *testing.T) {
 }
 
 func TestCorrelate(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 
 	now := time.Now()
@@ -60,6 +62,7 @@ func TestCorrelate(t *testing.T) {
 }
 
 func TestRegisterEndpoint(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 
 	e.RegisterEndpoint(ExternalEndpoint{
@@ -79,6 +82,7 @@ func TestRegisterEndpoint(t *testing.T) {
 }
 
 func TestMaxSignals(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	e.maxSignals = 100
 

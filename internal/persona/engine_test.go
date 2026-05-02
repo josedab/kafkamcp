@@ -5,6 +5,7 @@ import (
 )
 
 func TestNewEngineHasBuiltins(t *testing.T) {
+	t.Parallel()
 	e := NewEngine()
 	personas := e.ListPersonas()
 	if len(personas) != 5 {
@@ -20,6 +21,7 @@ func TestNewEngineHasBuiltins(t *testing.T) {
 }
 
 func TestGetPersonaNotFound(t *testing.T) {
+	t.Parallel()
 	e := NewEngine()
 	_, err := e.GetPersona("nonexistent")
 	if err == nil {
@@ -28,6 +30,7 @@ func TestGetPersonaNotFound(t *testing.T) {
 }
 
 func TestSetActiveAndGetActive(t *testing.T) {
+	t.Parallel()
 	e := NewEngine()
 
 	// Default active is developer.
@@ -46,6 +49,7 @@ func TestSetActiveAndGetActive(t *testing.T) {
 }
 
 func TestSetActiveNotFound(t *testing.T) {
+	t.Parallel()
 	e := NewEngine()
 	if err := e.SetActive("nonexistent"); err == nil {
 		t.Fatal("expected error for nonexistent persona")
@@ -53,6 +57,7 @@ func TestSetActiveNotFound(t *testing.T) {
 }
 
 func TestIsToolAllowed(t *testing.T) {
+	t.Parallel()
 	e := NewEngine()
 
 	// Admin has wildcard access.
@@ -93,6 +98,7 @@ func TestIsToolAllowed(t *testing.T) {
 }
 
 func TestApplyDefaults(t *testing.T) {
+	t.Parallel()
 	e := NewEngine()
 
 	args := map[string]any{"custom_key": "custom_value"}
@@ -120,6 +126,7 @@ func TestApplyDefaults(t *testing.T) {
 }
 
 func TestApplyDefaultsUnknownPersona(t *testing.T) {
+	t.Parallel()
 	e := NewEngine()
 	args := map[string]any{"key": "value"}
 	merged := e.ApplyDefaults("nonexistent", args)
@@ -129,6 +136,7 @@ func TestApplyDefaultsUnknownPersona(t *testing.T) {
 }
 
 func TestListPersonasContent(t *testing.T) {
+	t.Parallel()
 	e := NewEngine()
 	personas := e.ListPersonas()
 
@@ -157,6 +165,7 @@ func TestListPersonasContent(t *testing.T) {
 }
 
 func TestPersonaFields(t *testing.T) {
+	t.Parallel()
 	e := NewEngine()
 
 	sre, _ := e.GetPersona("sre")
@@ -177,6 +186,7 @@ func TestPersonaFields(t *testing.T) {
 }
 
 func TestApplyDefaultsNilArgs(t *testing.T) {
+	t.Parallel()
 	e := NewEngine()
 	merged := e.ApplyDefaults("developer", nil)
 	if merged["output_format"] != "json" {

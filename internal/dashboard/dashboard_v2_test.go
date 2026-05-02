@@ -24,6 +24,7 @@ func newTestDashboardV2(km kafka.KafkaManager) *DashboardV2 {
 }
 
 func TestNewDashboardV2(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboardV2(nil)
 	if d == nil {
 		t.Fatal("expected non-nil dashboard v2")
@@ -31,6 +32,7 @@ func TestNewDashboardV2(t *testing.T) {
 }
 
 func TestHandleTopologyV2(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return []kafka.TopicSummary{
@@ -83,6 +85,7 @@ func TestHandleTopologyV2(t *testing.T) {
 }
 
 func TestHandleTopologyV2MethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboardV2(&kafka.MockKafkaManager{})
 	mux := http.NewServeMux()
 	d.RegisterRoutes(mux, nil)
@@ -97,6 +100,7 @@ func TestHandleTopologyV2MethodNotAllowed(t *testing.T) {
 }
 
 func TestHandleTopologyV2ListTopicsError(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return nil, errors.New("connection refused")
@@ -116,6 +120,7 @@ func TestHandleTopologyV2ListTopicsError(t *testing.T) {
 }
 
 func TestHandleHeatmap(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboardV2(&kafka.MockKafkaManager{})
 	mux := http.NewServeMux()
 	d.RegisterRoutes(mux, nil)
@@ -141,6 +146,7 @@ func TestHandleHeatmap(t *testing.T) {
 }
 
 func TestHandleHeatmapDefaultHours(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboardV2(&kafka.MockKafkaManager{})
 	mux := http.NewServeMux()
 	d.RegisterRoutes(mux, nil)
@@ -162,6 +168,7 @@ func TestHandleHeatmapDefaultHours(t *testing.T) {
 }
 
 func TestHandleHeatmap12Hours(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboardV2(&kafka.MockKafkaManager{})
 	mux := http.NewServeMux()
 	d.RegisterRoutes(mux, nil)
@@ -180,6 +187,7 @@ func TestHandleHeatmap12Hours(t *testing.T) {
 }
 
 func TestHandleHeatmapMethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboardV2(&kafka.MockKafkaManager{})
 	mux := http.NewServeMux()
 	d.RegisterRoutes(mux, nil)
@@ -194,6 +202,7 @@ func TestHandleHeatmapMethodNotAllowed(t *testing.T) {
 }
 
 func TestHandleMessageTail(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
 			return []kafka.Message{
@@ -223,6 +232,7 @@ func TestHandleMessageTail(t *testing.T) {
 }
 
 func TestHandleMessageTailTruncation(t *testing.T) {
+	t.Parallel()
 	largeValue := make([]byte, 3000)
 	for i := range largeValue {
 		largeValue[i] = 'x'
@@ -248,6 +258,7 @@ func TestHandleMessageTailTruncation(t *testing.T) {
 }
 
 func TestHandleMessageTailNoTopic(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboardV2(&kafka.MockKafkaManager{})
 	mux := http.NewServeMux()
 	d.RegisterRoutes(mux, nil)
@@ -262,6 +273,7 @@ func TestHandleMessageTailNoTopic(t *testing.T) {
 }
 
 func TestHandleMessageTailError(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
 			return nil, errors.New("kafka error")
@@ -281,6 +293,7 @@ func TestHandleMessageTailError(t *testing.T) {
 }
 
 func TestHandleMessageTailMethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboardV2(&kafka.MockKafkaManager{})
 	mux := http.NewServeMux()
 	d.RegisterRoutes(mux, nil)
@@ -295,6 +308,7 @@ func TestHandleMessageTailMethodNotAllowed(t *testing.T) {
 }
 
 func TestHandleListTailers(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboardV2(&kafka.MockKafkaManager{})
 	mux := http.NewServeMux()
 	d.RegisterRoutes(mux, nil)
@@ -317,6 +331,7 @@ func TestHandleListTailers(t *testing.T) {
 }
 
 func TestHandleListTailersMethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboardV2(&kafka.MockKafkaManager{})
 	mux := http.NewServeMux()
 	d.RegisterRoutes(mux, nil)
@@ -331,6 +346,7 @@ func TestHandleListTailersMethodNotAllowed(t *testing.T) {
 }
 
 func TestHandleClusterOverview(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		GetClusterMetadataFn: func(ctx context.Context, cluster string) (*kafka.ClusterMetadata, error) {
 			return &kafka.ClusterMetadata{
@@ -376,6 +392,7 @@ func TestHandleClusterOverview(t *testing.T) {
 }
 
 func TestHandleClusterOverviewUnhealthy(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		GetClusterMetadataFn: func(ctx context.Context, cluster string) (*kafka.ClusterMetadata, error) {
 			return &kafka.ClusterMetadata{ClusterID: "c1"}, nil
@@ -406,6 +423,7 @@ func TestHandleClusterOverviewUnhealthy(t *testing.T) {
 }
 
 func TestHandleClusterOverviewMethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboardV2(&kafka.MockKafkaManager{})
 	mux := http.NewServeMux()
 	d.RegisterRoutes(mux, nil)
@@ -420,6 +438,7 @@ func TestHandleClusterOverviewMethodNotAllowed(t *testing.T) {
 }
 
 func TestHandleConsumerGroupsDetailSpecific(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		DescribeConsumerGroupFn: func(ctx context.Context, cluster, groupID string) (*kafka.ConsumerGroupDetail, error) {
 			return &kafka.ConsumerGroupDetail{
@@ -443,6 +462,7 @@ func TestHandleConsumerGroupsDetailSpecific(t *testing.T) {
 }
 
 func TestHandleConsumerGroupsDetailNotFound(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		DescribeConsumerGroupFn: func(ctx context.Context, cluster, groupID string) (*kafka.ConsumerGroupDetail, error) {
 			return nil, errors.New("not found")
@@ -462,6 +482,7 @@ func TestHandleConsumerGroupsDetailNotFound(t *testing.T) {
 }
 
 func TestHandleConsumerGroupsDetailListAll(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListConsumerGroupsFn: func(ctx context.Context, cluster string) ([]kafka.ConsumerGroupSummary, error) {
 			return []kafka.ConsumerGroupSummary{
@@ -492,6 +513,7 @@ func TestHandleConsumerGroupsDetailListAll(t *testing.T) {
 }
 
 func TestHandleConsumerGroupsDetailListError(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListConsumerGroupsFn: func(ctx context.Context, cluster string) ([]kafka.ConsumerGroupSummary, error) {
 			return nil, errors.New("error")
@@ -511,6 +533,7 @@ func TestHandleConsumerGroupsDetailListError(t *testing.T) {
 }
 
 func TestHandleConsumerGroupsDetailMethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboardV2(&kafka.MockKafkaManager{})
 	mux := http.NewServeMux()
 	d.RegisterRoutes(mux, nil)
@@ -525,6 +548,7 @@ func TestHandleConsumerGroupsDetailMethodNotAllowed(t *testing.T) {
 }
 
 func TestHandlePartitionView(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		DescribeTopicFn: func(ctx context.Context, cluster, topicName string) (*kafka.TopicDetail, error) {
 			return &kafka.TopicDetail{
@@ -559,6 +583,7 @@ func TestHandlePartitionView(t *testing.T) {
 }
 
 func TestHandlePartitionViewNoTopic(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboardV2(&kafka.MockKafkaManager{})
 	mux := http.NewServeMux()
 	d.RegisterRoutes(mux, nil)
@@ -573,6 +598,7 @@ func TestHandlePartitionViewNoTopic(t *testing.T) {
 }
 
 func TestHandlePartitionViewNotFound(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		DescribeTopicFn: func(ctx context.Context, cluster, topicName string) (*kafka.TopicDetail, error) {
 			return nil, errors.New("not found")
@@ -592,6 +618,7 @@ func TestHandlePartitionViewNotFound(t *testing.T) {
 }
 
 func TestHandlePartitionViewMethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboardV2(&kafka.MockKafkaManager{})
 	mux := http.NewServeMux()
 	d.RegisterRoutes(mux, nil)
@@ -606,6 +633,7 @@ func TestHandlePartitionViewMethodNotAllowed(t *testing.T) {
 }
 
 func TestRecordAgentCall(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboardV2(&kafka.MockKafkaManager{})
 	d.RecordAgentCall("agent-1", "list_topics", false)
 	d.RecordAgentCall("agent-1", "consume", true)
@@ -628,6 +656,7 @@ func TestRecordAgentCall(t *testing.T) {
 }
 
 func TestMarshalJSON(t *testing.T) {
+	t.Parallel()
 	data, err := marshalJSON(map[string]string{"key": "value"})
 	if err != nil {
 		t.Fatalf("marshalJSON failed: %v", err)
@@ -642,6 +671,7 @@ func TestMarshalJSON(t *testing.T) {
 }
 
 func TestHandleSSETailNoFlusher(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboardV2(&kafka.MockKafkaManager{})
 
 	// httptest.ResponseRecorder implements http.Flusher, so use a custom writer that doesn't
@@ -655,6 +685,7 @@ func TestHandleSSETailNoFlusher(t *testing.T) {
 }
 
 func TestHandleSSETailNoTopic(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboardV2(&kafka.MockKafkaManager{})
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v2/messages/tail-stream", nil)
@@ -667,6 +698,7 @@ func TestHandleSSETailNoTopic(t *testing.T) {
 }
 
 func TestRegisterRoutesWithNilAuth(t *testing.T) {
+	t.Parallel()
 	d := newTestDashboardV2(&kafka.MockKafkaManager{})
 	mux := http.NewServeMux()
 	d.RegisterRoutes(mux, nil)

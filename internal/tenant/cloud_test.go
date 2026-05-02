@@ -25,6 +25,7 @@ func setupControlPlane(t *testing.T) (*ControlPlane, string) {
 // --- ControlPlane Region tests ---
 
 func TestControlPlane_AddAndListRegions(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager()
 	cp := NewControlPlane(mgr)
 
@@ -47,6 +48,7 @@ func TestControlPlane_AddAndListRegions(t *testing.T) {
 // --- Billing tests ---
 
 func TestControlPlane_SetupAndGetBilling(t *testing.T) {
+	t.Parallel()
 	cp, tenantID := setupControlPlane(t)
 
 	billing := BillingInfo{
@@ -68,6 +70,7 @@ func TestControlPlane_SetupAndGetBilling(t *testing.T) {
 }
 
 func TestControlPlane_SetupBilling_InvalidTenant(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager()
 	cp := NewControlPlane(mgr)
 	err := cp.SetupBilling("nonexistent", BillingInfo{})
@@ -77,6 +80,7 @@ func TestControlPlane_SetupBilling_InvalidTenant(t *testing.T) {
 }
 
 func TestControlPlane_GetBilling_NoBilling(t *testing.T) {
+	t.Parallel()
 	cp, _ := setupControlPlane(t)
 	_, err := cp.GetBilling("nonexistent")
 	if err == nil {
@@ -87,6 +91,7 @@ func TestControlPlane_GetBilling_NoBilling(t *testing.T) {
 // --- ResourceQuota tests ---
 
 func TestControlPlane_SetAndGetResourceQuota(t *testing.T) {
+	t.Parallel()
 	cp, tenantID := setupControlPlane(t)
 
 	quota := ResourceQuota{MaxCPUMillicores: 4000, MaxMemoryMB: 2048, MaxConcurrentAgents: 50}
@@ -101,6 +106,7 @@ func TestControlPlane_SetAndGetResourceQuota(t *testing.T) {
 }
 
 func TestControlPlane_SetResourceQuota_InvalidTenant(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager()
 	cp := NewControlPlane(mgr)
 	err := cp.SetResourceQuota("nonexistent", ResourceQuota{})
@@ -110,6 +116,7 @@ func TestControlPlane_SetResourceQuota_InvalidTenant(t *testing.T) {
 }
 
 func TestControlPlane_GetResourceQuota_DefaultsByPlan(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager()
 	cp := NewControlPlane(mgr)
 
@@ -133,6 +140,7 @@ func TestControlPlane_GetResourceQuota_DefaultsByPlan(t *testing.T) {
 }
 
 func TestControlPlane_GetResourceQuota_UnknownTenant(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager()
 	cp := NewControlPlane(mgr)
 	q := cp.GetResourceQuota("missing")
@@ -144,6 +152,7 @@ func TestControlPlane_GetResourceQuota_UnknownTenant(t *testing.T) {
 // --- SSO tests ---
 
 func TestControlPlane_ConfigureAndGetSSO(t *testing.T) {
+	t.Parallel()
 	cp, tenantID := setupControlPlane(t)
 
 	sso := SSOConfig{Provider: "oidc", ClientID: "client123", IssuerURL: "https://auth.example.com"}
@@ -158,6 +167,7 @@ func TestControlPlane_ConfigureAndGetSSO(t *testing.T) {
 }
 
 func TestControlPlane_ConfigureSSO_InvalidTenant(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager()
 	cp := NewControlPlane(mgr)
 	err := cp.ConfigureSSO("nonexistent", SSOConfig{})
@@ -167,6 +177,7 @@ func TestControlPlane_ConfigureSSO_InvalidTenant(t *testing.T) {
 }
 
 func TestControlPlane_GetSSO_NotConfigured(t *testing.T) {
+	t.Parallel()
 	cp, tenantID := setupControlPlane(t)
 	_, err := cp.GetSSO(tenantID)
 	if err == nil {
@@ -177,6 +188,7 @@ func TestControlPlane_GetSSO_NotConfigured(t *testing.T) {
 // --- NetworkIsolation tests ---
 
 func TestControlPlane_ConfigureAndGetNetworkIsolation(t *testing.T) {
+	t.Parallel()
 	cp, tenantID := setupControlPlane(t)
 
 	iso := NetworkIsolation{VPCEnabled: true, TLSRequired: true, PrivateLink: true}
@@ -191,6 +203,7 @@ func TestControlPlane_ConfigureAndGetNetworkIsolation(t *testing.T) {
 }
 
 func TestControlPlane_ConfigureNetworkIsolation_InvalidTenant(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager()
 	cp := NewControlPlane(mgr)
 	err := cp.ConfigureNetworkIsolation("nonexistent", NetworkIsolation{})
@@ -200,6 +213,7 @@ func TestControlPlane_ConfigureNetworkIsolation_InvalidTenant(t *testing.T) {
 }
 
 func TestControlPlane_GetNetworkIsolation_Default(t *testing.T) {
+	t.Parallel()
 	cp, tenantID := setupControlPlane(t)
 	got := cp.GetNetworkIsolation(tenantID)
 	if !got.TLSRequired {
@@ -210,6 +224,7 @@ func TestControlPlane_GetNetworkIsolation_Default(t *testing.T) {
 // --- Usage/Billing cost tests ---
 
 func TestControlPlane_RecordUsagePeriod(t *testing.T) {
+	t.Parallel()
 	cp, tenantID := setupControlPlane(t)
 
 	record := UsageBillingRecord{
@@ -231,6 +246,7 @@ func TestControlPlane_RecordUsagePeriod(t *testing.T) {
 }
 
 func TestControlPlane_ComputeCost(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager()
 	cp := NewControlPlane(mgr)
 
@@ -248,6 +264,7 @@ func TestControlPlane_ComputeCost(t *testing.T) {
 }
 
 func TestControlPlane_GetUsageRecords_FilterByTenant(t *testing.T) {
+	t.Parallel()
 	cp, tenantID := setupControlPlane(t)
 
 	cp.RecordUsagePeriod(UsageBillingRecord{TenantID: tenantID, ToolCalls: 10})
@@ -260,6 +277,7 @@ func TestControlPlane_GetUsageRecords_FilterByTenant(t *testing.T) {
 }
 
 func TestControlPlane_RecordUsagePeriod_Cap10000(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager()
 	cp := NewControlPlane(mgr)
 	for i := 0; i < 10005; i++ {
@@ -276,6 +294,7 @@ func TestControlPlane_RecordUsagePeriod_Cap10000(t *testing.T) {
 // --- GenerateAdminAPIKey tests ---
 
 func TestGenerateAdminAPIKey(t *testing.T) {
+	t.Parallel()
 	key, err := GenerateAdminAPIKey()
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -291,6 +310,7 @@ func TestGenerateAdminAPIKey(t *testing.T) {
 // --- InstanceManager tests ---
 
 func TestInstanceManager_RegisterAndGet(t *testing.T) {
+	t.Parallel()
 	im := NewInstanceManager()
 	im.RegisterInstance(TenantInstance{
 		TenantID:   "t1",
@@ -311,6 +331,7 @@ func TestInstanceManager_RegisterAndGet(t *testing.T) {
 }
 
 func TestInstanceManager_SetAutoScaleConfig(t *testing.T) {
+	t.Parallel()
 	im := NewInstanceManager()
 	im.SetAutoScaleConfig("t1", AutoScaleConfig{
 		Enabled: true, MinInstances: 2, MaxInstances: 10, TargetCPUPercent: 70,
@@ -324,6 +345,7 @@ func TestInstanceManager_SetAutoScaleConfig(t *testing.T) {
 }
 
 func TestInstanceManager_EvaluateAutoScale_NoConfig(t *testing.T) {
+	t.Parallel()
 	im := NewInstanceManager()
 	action, count := im.EvaluateAutoScale("t1")
 	if action != "none" || count != 0 {
@@ -332,6 +354,7 @@ func TestInstanceManager_EvaluateAutoScale_NoConfig(t *testing.T) {
 }
 
 func TestInstanceManager_EvaluateAutoScale_Disabled(t *testing.T) {
+	t.Parallel()
 	im := NewInstanceManager()
 	im.SetAutoScaleConfig("t1", AutoScaleConfig{Enabled: false})
 	action, _ := im.EvaluateAutoScale("t1")
@@ -341,6 +364,7 @@ func TestInstanceManager_EvaluateAutoScale_Disabled(t *testing.T) {
 }
 
 func TestInstanceManager_EvaluateAutoScale_NoInstances(t *testing.T) {
+	t.Parallel()
 	im := NewInstanceManager()
 	im.SetAutoScaleConfig("t1", AutoScaleConfig{Enabled: true, MinInstances: 3, MaxInstances: 10, TargetCPUPercent: 70})
 
@@ -351,6 +375,7 @@ func TestInstanceManager_EvaluateAutoScale_NoInstances(t *testing.T) {
 }
 
 func TestInstanceManager_EvaluateAutoScale_ScaleUp(t *testing.T) {
+	t.Parallel()
 	im := NewInstanceManager()
 	im.SetAutoScaleConfig("t1", AutoScaleConfig{Enabled: true, MinInstances: 1, MaxInstances: 5, TargetCPUPercent: 50})
 	im.RegisterInstance(TenantInstance{TenantID: "t1", InstanceID: "i1", CPU: 80.0})
@@ -362,6 +387,7 @@ func TestInstanceManager_EvaluateAutoScale_ScaleUp(t *testing.T) {
 }
 
 func TestInstanceManager_EvaluateAutoScale_ScaleDown(t *testing.T) {
+	t.Parallel()
 	im := NewInstanceManager()
 	im.SetAutoScaleConfig("t1", AutoScaleConfig{Enabled: true, MinInstances: 1, MaxInstances: 5, TargetCPUPercent: 80})
 	im.RegisterInstance(TenantInstance{TenantID: "t1", InstanceID: "i1", CPU: 10.0})
@@ -374,6 +400,7 @@ func TestInstanceManager_EvaluateAutoScale_ScaleDown(t *testing.T) {
 }
 
 func TestInstanceManager_EvaluateAutoScale_None(t *testing.T) {
+	t.Parallel()
 	im := NewInstanceManager()
 	im.SetAutoScaleConfig("t1", AutoScaleConfig{Enabled: true, MinInstances: 1, MaxInstances: 5, TargetCPUPercent: 70})
 	im.RegisterInstance(TenantInstance{TenantID: "t1", InstanceID: "i1", CPU: 50.0})
@@ -385,6 +412,7 @@ func TestInstanceManager_EvaluateAutoScale_None(t *testing.T) {
 }
 
 func TestInstanceManager_EvaluateAutoScale_AtMaxInstances(t *testing.T) {
+	t.Parallel()
 	im := NewInstanceManager()
 	im.SetAutoScaleConfig("t1", AutoScaleConfig{Enabled: true, MinInstances: 1, MaxInstances: 1, TargetCPUPercent: 50})
 	im.RegisterInstance(TenantInstance{TenantID: "t1", InstanceID: "i1", CPU: 90.0})
@@ -398,6 +426,7 @@ func TestInstanceManager_EvaluateAutoScale_AtMaxInstances(t *testing.T) {
 // --- HTTP API tests ---
 
 func TestControlPlaneAPI_AuthMiddleware(t *testing.T) {
+	t.Parallel()
 	cp, _ := setupControlPlane(t)
 	api := NewControlPlaneAPI(cp, "secret-key")
 	handler := api.Handler()
@@ -430,6 +459,7 @@ func TestControlPlaneAPI_AuthMiddleware(t *testing.T) {
 }
 
 func TestControlPlaneAPI_NoAuthRequired(t *testing.T) {
+	t.Parallel()
 	cp, _ := setupControlPlane(t)
 	api := NewControlPlaneAPI(cp, "")
 	handler := api.Handler()
@@ -443,6 +473,7 @@ func TestControlPlaneAPI_NoAuthRequired(t *testing.T) {
 }
 
 func TestControlPlaneAPI_HandleTenants_GET(t *testing.T) {
+	t.Parallel()
 	cp, _ := setupControlPlane(t)
 	api := NewControlPlaneAPI(cp, "test-key")
 	handler := api.Handler()
@@ -463,6 +494,7 @@ func TestControlPlaneAPI_HandleTenants_GET(t *testing.T) {
 }
 
 func TestControlPlaneAPI_HandleTenants_POST(t *testing.T) {
+	t.Parallel()
 	mgr := NewManager()
 	cp := NewControlPlane(mgr)
 	api := NewControlPlaneAPI(cp, "test-key")
@@ -480,6 +512,7 @@ func TestControlPlaneAPI_HandleTenants_POST(t *testing.T) {
 }
 
 func TestControlPlaneAPI_HandleTenants_MethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	cp, _ := setupControlPlane(t)
 	api := NewControlPlaneAPI(cp, "test-key")
 	handler := api.Handler()
@@ -494,6 +527,7 @@ func TestControlPlaneAPI_HandleTenants_MethodNotAllowed(t *testing.T) {
 }
 
 func TestControlPlaneAPI_HandleTenantByID(t *testing.T) {
+	t.Parallel()
 	cp, tenantID := setupControlPlane(t)
 	api := NewControlPlaneAPI(cp, "test-key")
 	handler := api.Handler()
@@ -509,6 +543,7 @@ func TestControlPlaneAPI_HandleTenantByID(t *testing.T) {
 }
 
 func TestControlPlaneAPI_HandleTenantByID_NotFound(t *testing.T) {
+	t.Parallel()
 	cp, _ := setupControlPlane(t)
 	api := NewControlPlaneAPI(cp, "test-key")
 	handler := api.Handler()
@@ -523,6 +558,7 @@ func TestControlPlaneAPI_HandleTenantByID_NotFound(t *testing.T) {
 }
 
 func TestControlPlaneAPI_HandleRegions_MethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	cp, _ := setupControlPlane(t)
 	api := NewControlPlaneAPI(cp, "test-key")
 	handler := api.Handler()
@@ -537,6 +573,7 @@ func TestControlPlaneAPI_HandleRegions_MethodNotAllowed(t *testing.T) {
 }
 
 func TestControlPlaneAPI_HandleBilling_GET(t *testing.T) {
+	t.Parallel()
 	cp, tenantID := setupControlPlane(t)
 	cp.SetupBilling(tenantID, BillingInfo{PlanID: "pro", Status: "active"})
 	api := NewControlPlaneAPI(cp, "test-key")
@@ -553,6 +590,7 @@ func TestControlPlaneAPI_HandleBilling_GET(t *testing.T) {
 }
 
 func TestControlPlaneAPI_HandleBilling_POST(t *testing.T) {
+	t.Parallel()
 	cp, tenantID := setupControlPlane(t)
 	api := NewControlPlaneAPI(cp, "test-key")
 	handler := api.Handler()
@@ -569,6 +607,7 @@ func TestControlPlaneAPI_HandleBilling_POST(t *testing.T) {
 }
 
 func TestControlPlaneAPI_HandleBilling_MethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	cp, tenantID := setupControlPlane(t)
 	api := NewControlPlaneAPI(cp, "test-key")
 	handler := api.Handler()
@@ -583,6 +622,7 @@ func TestControlPlaneAPI_HandleBilling_MethodNotAllowed(t *testing.T) {
 }
 
 func TestControlPlaneAPI_HandleQuotas_GET(t *testing.T) {
+	t.Parallel()
 	cp, tenantID := setupControlPlane(t)
 	api := NewControlPlaneAPI(cp, "test-key")
 	handler := api.Handler()
@@ -598,6 +638,7 @@ func TestControlPlaneAPI_HandleQuotas_GET(t *testing.T) {
 }
 
 func TestControlPlaneAPI_HandleQuotas_PUT(t *testing.T) {
+	t.Parallel()
 	cp, tenantID := setupControlPlane(t)
 	api := NewControlPlaneAPI(cp, "test-key")
 	handler := api.Handler()
@@ -614,6 +655,7 @@ func TestControlPlaneAPI_HandleQuotas_PUT(t *testing.T) {
 }
 
 func TestControlPlaneAPI_HandleQuotas_MethodNotAllowed(t *testing.T) {
+	t.Parallel()
 	cp, tenantID := setupControlPlane(t)
 	api := NewControlPlaneAPI(cp, "test-key")
 	handler := api.Handler()
@@ -628,6 +670,7 @@ func TestControlPlaneAPI_HandleQuotas_MethodNotAllowed(t *testing.T) {
 }
 
 func TestControlPlaneAPI_HandleBilling_EmptyTenantID(t *testing.T) {
+	t.Parallel()
 	cp, _ := setupControlPlane(t)
 	api := NewControlPlaneAPI(cp, "test-key")
 	handler := api.Handler()
@@ -642,6 +685,7 @@ func TestControlPlaneAPI_HandleBilling_EmptyTenantID(t *testing.T) {
 }
 
 func TestControlPlaneAPI_HandleQuotas_EmptyTenantID(t *testing.T) {
+	t.Parallel()
 	cp, _ := setupControlPlane(t)
 	api := NewControlPlaneAPI(cp, "test-key")
 	handler := api.Handler()

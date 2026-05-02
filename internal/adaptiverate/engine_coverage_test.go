@@ -8,6 +8,7 @@ import (
 // --- AllStatus ---
 
 func TestAllStatusEmpty(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	statuses := e.AllStatus()
 	if len(statuses) != 0 {
@@ -16,6 +17,7 @@ func TestAllStatusEmpty(t *testing.T) {
 }
 
 func TestAllStatusMultipleAgents(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.RecordRequest("agent-1")
 	e.RecordRequest("agent-2")
@@ -28,6 +30,7 @@ func TestAllStatusMultipleAgents(t *testing.T) {
 }
 
 func TestAllStatusDifferentStates(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.RecordRequest("agent-1")
 	e.AdjustQuota(QuotaRequest{AgentID: "agent-2", Action: "increase", Amount: 100})
@@ -41,6 +44,7 @@ func TestAllStatusDifferentStates(t *testing.T) {
 // --- autoAdjustQuota ---
 
 func TestAutoAdjustQuotaBurstDetection(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	profile := e.getOrCreateProfile("agent-1")
 	profile.DynamicQuota = 10
@@ -54,6 +58,7 @@ func TestAutoAdjustQuotaBurstDetection(t *testing.T) {
 }
 
 func TestAutoAdjustQuotaMaxCeiling(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	profile := e.getOrCreateProfile("agent-1")
 	profile.BaseQuota = 10
@@ -69,6 +74,7 @@ func TestAutoAdjustQuotaMaxCeiling(t *testing.T) {
 }
 
 func TestAutoAdjustQuotaLowUsageDecrease(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	profile := e.getOrCreateProfile("agent-1")
 	profile.DynamicQuota = 60
@@ -83,6 +89,7 @@ func TestAutoAdjustQuotaLowUsageDecrease(t *testing.T) {
 }
 
 func TestAutoAdjustQuotaFloorEnforcement(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	profile := e.getOrCreateProfile("agent-1")
 	profile.DynamicQuota = 31 // just above base/2=30
@@ -99,6 +106,7 @@ func TestAutoAdjustQuotaFloorEnforcement(t *testing.T) {
 // --- AdjustQuota ---
 
 func TestAdjustQuotaIncrease(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.RecordRequest("agent-1")
 
@@ -112,6 +120,7 @@ func TestAdjustQuotaIncrease(t *testing.T) {
 }
 
 func TestAdjustQuotaDecrease(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.RecordRequest("agent-1")
 
@@ -122,6 +131,7 @@ func TestAdjustQuotaDecrease(t *testing.T) {
 }
 
 func TestAdjustQuotaDecreaseFloor(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.RecordRequest("agent-1")
 
@@ -134,6 +144,7 @@ func TestAdjustQuotaDecreaseFloor(t *testing.T) {
 }
 
 func TestAdjustQuotaIncreaseCeiling(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.RecordRequest("agent-1")
 
@@ -146,6 +157,7 @@ func TestAdjustQuotaIncreaseCeiling(t *testing.T) {
 }
 
 func TestAdjustQuotaReset(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.RecordRequest("agent-1")
 	e.AdjustQuota(QuotaRequest{AgentID: "agent-1", Action: "increase", Amount: 100})
@@ -157,6 +169,7 @@ func TestAdjustQuotaReset(t *testing.T) {
 }
 
 func TestAdjustQuotaGrantCredits(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.RecordRequest("agent-1")
 
@@ -170,6 +183,7 @@ func TestAdjustQuotaGrantCredits(t *testing.T) {
 }
 
 func TestAdjustQuotaGrantCreditsCapped(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.RecordRequest("agent-1")
 
@@ -182,6 +196,7 @@ func TestAdjustQuotaGrantCreditsCapped(t *testing.T) {
 }
 
 func TestAdjustQuotaInvalidAction(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	_, err := e.AdjustQuota(QuotaRequest{AgentID: "agent-1", Action: "invalid"})
 	if err == nil {
@@ -190,6 +205,7 @@ func TestAdjustQuotaInvalidAction(t *testing.T) {
 }
 
 func TestAdjustQuotaEmptyAgentID(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	_, err := e.AdjustQuota(QuotaRequest{AgentID: "", Action: "increase"})
 	if err == nil {
@@ -198,6 +214,7 @@ func TestAdjustQuotaEmptyAgentID(t *testing.T) {
 }
 
 func TestAdjustQuotaDefaultAmount(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.RecordRequest("agent-1")
 
@@ -211,6 +228,7 @@ func TestAdjustQuotaDefaultAmount(t *testing.T) {
 // --- Allow ---
 
 func TestAllowWithinQuota(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	allowed := e.Allow("agent-1")
 	if !allowed {
@@ -219,6 +237,7 @@ func TestAllowWithinQuota(t *testing.T) {
 }
 
 func TestAllowExceededUseBurstCredits(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	profile := e.getOrCreateProfile("agent-1")
 	profile.CurrentRate = 100 // exceed dynamic quota (60)
@@ -243,6 +262,7 @@ func TestAllowExceededUseBurstCredits(t *testing.T) {
 }
 
 func TestAllowExceededNoCredits(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	e.mu.Lock()
@@ -260,6 +280,7 @@ func TestAllowExceededNoCredits(t *testing.T) {
 // --- refillCredits ---
 
 func TestRefillCredits(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	profile := e.getOrCreateProfile("agent-1")
 	profile.Credits = 5
@@ -272,6 +293,7 @@ func TestRefillCredits(t *testing.T) {
 }
 
 func TestRefillCreditsCapped(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	profile := e.getOrCreateProfile("agent-1")
 	profile.Credits = 19
@@ -284,6 +306,7 @@ func TestRefillCreditsCapped(t *testing.T) {
 }
 
 func TestRefillCreditsZeroLastRequest(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	profile := e.getOrCreateProfile("agent-1")
 	profile.Credits = 5
@@ -298,6 +321,7 @@ func TestRefillCreditsZeroLastRequest(t *testing.T) {
 // --- GetStatus edge cases ---
 
 func TestGetStatusNewAgent(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	status := e.GetStatus("new-agent")
 	if status.BaseQuota != 60 {
@@ -306,6 +330,7 @@ func TestGetStatusNewAgent(t *testing.T) {
 }
 
 func TestGetStatusHighUtilization(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	for i := 0; i < 100; i++ {
 		e.RecordRequest("busy-agent")
@@ -318,6 +343,7 @@ func TestGetStatusHighUtilization(t *testing.T) {
 }
 
 func TestGetStatusDenyRate(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	e.mu.Lock()
@@ -335,6 +361,7 @@ func TestGetStatusDenyRate(t *testing.T) {
 // --- getOrCreateProfile ---
 
 func TestGetOrCreateProfileNew(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.mu.Lock()
 	profile := e.getOrCreateProfile("new-agent")
@@ -349,6 +376,7 @@ func TestGetOrCreateProfileNew(t *testing.T) {
 }
 
 func TestGetOrCreateProfileExisting(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	e.RecordRequest("agent-1")
 

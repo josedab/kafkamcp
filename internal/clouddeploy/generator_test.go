@@ -7,6 +7,7 @@ import (
 )
 
 func TestGenerateAWS(t *testing.T) {
+	t.Parallel()
 	g := NewGenerator(slog.Default())
 
 	cfg := DeploymentConfig{
@@ -56,6 +57,7 @@ func TestGenerateAWS(t *testing.T) {
 }
 
 func TestGenerateGCP(t *testing.T) {
+	t.Parallel()
 	g := NewGenerator(slog.Default())
 
 	templates, err := g.Generate(DeploymentConfig{
@@ -79,6 +81,7 @@ func TestGenerateGCP(t *testing.T) {
 }
 
 func TestGenerateAzure(t *testing.T) {
+	t.Parallel()
 	g := NewGenerator(slog.Default())
 
 	templates, err := g.Generate(DeploymentConfig{
@@ -102,6 +105,7 @@ func TestGenerateAzure(t *testing.T) {
 }
 
 func TestGenerateDefaults(t *testing.T) {
+	t.Parallel()
 	g := NewGenerator(slog.Default())
 
 	templates, err := g.Generate(DeploymentConfig{Provider: ProviderAWS, Service: ServiceMSK})
@@ -117,6 +121,7 @@ func TestGenerateDefaults(t *testing.T) {
 }
 
 func TestListTemplates(t *testing.T) {
+	t.Parallel()
 	g := NewGenerator(slog.Default())
 
 	g.Generate(DeploymentConfig{Provider: ProviderAWS, Service: ServiceMSK})

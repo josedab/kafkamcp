@@ -6,6 +6,7 @@ import (
 )
 
 func TestProfile_Empty(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	result := e.Profile("test-topic", nil)
 	if result.SampleCount != 0 {
@@ -14,6 +15,7 @@ func TestProfile_Empty(t *testing.T) {
 }
 
 func TestProfile_WithSamples(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	samples := []MessageSample{
 		{KeySize: 10, ValueSize: 100, HasKey: true, KeyHash: "key1", SchemaType: "json"},
@@ -45,6 +47,7 @@ func TestProfile_WithSamples(t *testing.T) {
 }
 
 func TestGetCachedProfile(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	samples := []MessageSample{
 		{KeySize: 10, ValueSize: 100, HasKey: true, KeyHash: "k", SchemaType: "json"},

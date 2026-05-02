@@ -11,6 +11,7 @@ func testLogger() *slog.Logger {
 }
 
 func TestIndexAndSearch(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	_, err := e.Index("orders", "topic", "Customer orders stream", "team-commerce", []string{"commerce", "orders"}, nil, nil)
@@ -27,6 +28,7 @@ func TestIndexAndSearch(t *testing.T) {
 }
 
 func TestSearchByType(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	e.Index("orders", "topic", "", "", nil, nil, nil)
@@ -39,6 +41,7 @@ func TestSearchByType(t *testing.T) {
 }
 
 func TestTagging(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	entry, _ := e.Index("orders", "topic", "", "", nil, nil, nil)
@@ -52,6 +55,7 @@ func TestTagging(t *testing.T) {
 }
 
 func TestStats(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	e.Index("topic1", "topic", "desc", "owner1", []string{"tag1"}, nil, nil)
@@ -67,6 +71,7 @@ func TestStats(t *testing.T) {
 }
 
 func TestQualityScore(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	// Full metadata entry should have high quality

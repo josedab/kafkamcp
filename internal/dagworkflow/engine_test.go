@@ -11,6 +11,7 @@ func testLogger() *slog.Logger {
 }
 
 func TestCreateWorkflow(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	steps := []DAGStep{
@@ -31,6 +32,7 @@ func TestCreateWorkflow(t *testing.T) {
 }
 
 func TestCreateWorkflowVersioning(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	steps := []DAGStep{{ID: "s1", Name: "S1", Tool: "tool1"}}
@@ -44,6 +46,7 @@ func TestCreateWorkflowVersioning(t *testing.T) {
 }
 
 func TestDAGCycleDetection(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	steps := []DAGStep{
@@ -58,6 +61,7 @@ func TestDAGCycleDetection(t *testing.T) {
 }
 
 func TestRunAndReadySteps(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 
 	steps := []DAGStep{
@@ -92,6 +96,7 @@ func TestRunAndReadySteps(t *testing.T) {
 }
 
 func TestCancelRun(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(testLogger())
 	steps := []DAGStep{{ID: "s1", Name: "S1", Tool: "t1"}}
 	wf, _ := e.CreateWorkflow("cancel-test", "", "agent-1", nil, steps, nil)

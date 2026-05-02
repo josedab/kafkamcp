@@ -13,6 +13,7 @@ func newTestMarketplace(t *testing.T) *Marketplace {
 }
 
 func TestMarketplaceSearch(t *testing.T) {
+	t.Parallel()
 	m := newTestMarketplace(t)
 
 	t.Run("empty query returns all entries", func(t *testing.T) {
@@ -85,6 +86,7 @@ func TestMarketplaceSearch(t *testing.T) {
 }
 
 func TestMarketplaceInstall(t *testing.T) {
+	t.Parallel()
 	t.Run("successful install", func(t *testing.T) {
 		m := newTestMarketplace(t)
 
@@ -163,6 +165,7 @@ func TestMarketplaceInstall(t *testing.T) {
 }
 
 func TestMarketplaceGetEntry(t *testing.T) {
+	t.Parallel()
 	m := newTestMarketplace(t)
 
 	t.Run("found", func(t *testing.T) {
@@ -187,6 +190,7 @@ func TestMarketplaceGetEntry(t *testing.T) {
 }
 
 func TestMarketplacePublish(t *testing.T) {
+	t.Parallel()
 	m := newTestMarketplace(t)
 
 	t.Run("valid publish", func(t *testing.T) {
@@ -229,6 +233,7 @@ func TestMarketplacePublish(t *testing.T) {
 }
 
 func TestMarketplaceSeedCatalog(t *testing.T) {
+	t.Parallel()
 	m := newTestMarketplace(t)
 
 	expected := []string{

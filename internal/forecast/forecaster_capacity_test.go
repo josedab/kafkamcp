@@ -11,6 +11,7 @@ import (
 // ---------------------------------------------------------------------------
 
 func TestExponentialSmoothing(t *testing.T) {
+	t.Parallel()
 	values := []float64{10, 20, 30, 40, 50}
 	result := ExponentialSmoothing(values, 0.3, 3)
 
@@ -28,6 +29,7 @@ func TestExponentialSmoothing(t *testing.T) {
 }
 
 func TestExponentialSmoothingEmpty(t *testing.T) {
+	t.Parallel()
 	result := ExponentialSmoothing(nil, 0.5, 5)
 	if result != nil {
 		t.Fatalf("expected nil for empty input, got %v", result)
@@ -35,6 +37,7 @@ func TestExponentialSmoothingEmpty(t *testing.T) {
 }
 
 func TestExponentialSmoothingSingleValue(t *testing.T) {
+	t.Parallel()
 	result := ExponentialSmoothing([]float64{42}, 0.5, 3)
 	if len(result) != 3 {
 		t.Fatalf("expected 3 predictions, got %d", len(result))
@@ -48,6 +51,7 @@ func TestExponentialSmoothingSingleValue(t *testing.T) {
 }
 
 func TestExponentialSmoothingAlphaEdgeCases(t *testing.T) {
+	t.Parallel()
 	values := []float64{10, 20, 30}
 
 	// alpha <= 0 → defaults to 0.3
@@ -71,6 +75,7 @@ func TestExponentialSmoothingAlphaEdgeCases(t *testing.T) {
 }
 
 func TestExponentialSmoothingZeroHorizon(t *testing.T) {
+	t.Parallel()
 	result := ExponentialSmoothing([]float64{1, 2, 3}, 0.5, 0)
 	if len(result) != 0 {
 		t.Fatalf("expected 0 predictions for zero horizon, got %d", len(result))
@@ -82,6 +87,7 @@ func TestExponentialSmoothingZeroHorizon(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestGenerateCapacityPlan(t *testing.T) {
+	t.Parallel()
 	f := NewForecaster(30)
 	base := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 
@@ -125,6 +131,7 @@ func TestGenerateCapacityPlan(t *testing.T) {
 }
 
 func TestGenerateCapacityPlanEmptyMetrics(t *testing.T) {
+	t.Parallel()
 	f := NewForecaster(30)
 	plan := f.GenerateCapacityPlan("empty-cluster", 7, 500)
 
@@ -144,6 +151,7 @@ func TestGenerateCapacityPlanEmptyMetrics(t *testing.T) {
 }
 
 func TestGenerateCapacityPlanDefaults(t *testing.T) {
+	t.Parallel()
 	f := NewForecaster(30)
 	base := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 
@@ -165,6 +173,7 @@ func TestGenerateCapacityPlanDefaults(t *testing.T) {
 }
 
 func TestGenerateCapacityPlanMultipleTopics(t *testing.T) {
+	t.Parallel()
 	f := NewForecaster(30)
 	base := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 
@@ -191,6 +200,7 @@ func TestGenerateCapacityPlanMultipleTopics(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestSplitMetricKey(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		input string
 		want  [2]string
@@ -217,6 +227,7 @@ func TestSplitMetricKey(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestExtractValues(t *testing.T) {
+	t.Parallel()
 	points := []Metric{
 		{Value: 1.1},
 		{Value: 2.2},
@@ -235,6 +246,7 @@ func TestExtractValues(t *testing.T) {
 }
 
 func TestExtractValuesEmpty(t *testing.T) {
+	t.Parallel()
 	vals := extractValues(nil)
 	if len(vals) != 0 {
 		t.Fatalf("expected 0 values for nil input, got %d", len(vals))
@@ -242,6 +254,7 @@ func TestExtractValuesEmpty(t *testing.T) {
 }
 
 func TestExponentialSmoothing_Alpha0(t *testing.T) {
+	t.Parallel()
 	values := []float64{10, 20, 30, 40, 50}
 	// alpha=0 should default to 0.3
 	result := ExponentialSmoothing(values, 0, 3)
@@ -257,6 +270,7 @@ func TestExponentialSmoothing_Alpha0(t *testing.T) {
 }
 
 func TestExponentialSmoothing_Alpha1(t *testing.T) {
+	t.Parallel()
 	values := []float64{10, 20, 30, 40, 50}
 	result := ExponentialSmoothing(values, 1.0, 3)
 	if len(result) != 3 {
@@ -270,6 +284,7 @@ func TestExponentialSmoothing_Alpha1(t *testing.T) {
 }
 
 func TestExponentialSmoothing_TypicalAlpha(t *testing.T) {
+	t.Parallel()
 	values := []float64{100, 100, 100, 100, 100}
 	result := ExponentialSmoothing(values, 0.3, 5)
 	if len(result) != 5 {
@@ -284,6 +299,7 @@ func TestExponentialSmoothing_TypicalAlpha(t *testing.T) {
 }
 
 func TestExponentialSmoothing_AllZeroValues(t *testing.T) {
+	t.Parallel()
 	values := []float64{0, 0, 0, 0, 0}
 	result := ExponentialSmoothing(values, 0.3, 3)
 	if len(result) != 3 {
@@ -297,6 +313,7 @@ func TestExponentialSmoothing_AllZeroValues(t *testing.T) {
 }
 
 func TestExponentialSmoothing_NegativeMetrics(t *testing.T) {
+	t.Parallel()
 	values := []float64{-10, -20, -30}
 	result := ExponentialSmoothing(values, 0.3, 2)
 	if len(result) != 2 {
@@ -309,6 +326,7 @@ func TestExponentialSmoothing_NegativeMetrics(t *testing.T) {
 }
 
 func TestGenerateCapacityPlan_InsufficientData(t *testing.T) {
+	t.Parallel()
 	f := NewForecaster(30)
 	base := time.Now()
 	// Only 2 data points (< 3 for trend)
@@ -326,6 +344,7 @@ func TestGenerateCapacityPlan_InsufficientData(t *testing.T) {
 }
 
 func TestGenerateCapacityRecommendations_HighUtilization(t *testing.T) {
+	t.Parallel()
 	f := NewForecaster(30)
 	base := time.Now()
 
@@ -351,6 +370,7 @@ func TestGenerateCapacityRecommendations_HighUtilization(t *testing.T) {
 }
 
 func TestSplitMetricKey_Malformed(t *testing.T) {
+	t.Parallel()
 	// Colons in topic name
 	got := splitMetricKey("my:fancy:topic:throughput")
 	if got[0] != "my:fancy:topic" || got[1] != "throughput" {
@@ -365,6 +385,7 @@ func TestSplitMetricKey_Malformed(t *testing.T) {
 }
 
 func TestExtractValues_SinglePoint(t *testing.T) {
+	t.Parallel()
 	points := []Metric{{Value: 42.5}}
 	vals := extractValues(points)
 	if len(vals) != 1 || vals[0] != 42.5 {
