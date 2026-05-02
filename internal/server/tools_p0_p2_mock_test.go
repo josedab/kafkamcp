@@ -13,6 +13,7 @@ import (
 // ===================== handleListSchemas =====================
 
 func TestHandleListSchemas_NoSchemaRegistry(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleListSchemas(context.Background(), makeToolRequest(nil))
@@ -23,6 +24,7 @@ func TestHandleListSchemas_NoSchemaRegistry(t *testing.T) {
 }
 
 func TestHandleListSchemas_WithClient(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	sc, _ := schema.NewClient("http://localhost:8081", "", "", 100, 60)
@@ -37,6 +39,7 @@ func TestHandleListSchemas_WithClient(t *testing.T) {
 }
 
 func TestHandleListSchemas_AuthDenied(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	result, err := s.handleListSchemas(context.Background(), makeToolRequest(nil))
 	if err != nil {
@@ -48,6 +51,7 @@ func TestHandleListSchemas_AuthDenied(t *testing.T) {
 // ===================== handleListConnectors =====================
 
 func TestHandleListConnectors_ConnectClientNil(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleListConnectors(context.Background(), makeToolRequest(nil))
@@ -62,6 +66,7 @@ func TestHandleListConnectors_ConnectClientNil(t *testing.T) {
 }
 
 func TestHandleListConnectors_AuthDenied(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServer(t, withDefaultDeny)
 	s.kafkaManager = mock
@@ -75,6 +80,7 @@ func TestHandleListConnectors_AuthDenied(t *testing.T) {
 // ===================== handleDescribeConnector =====================
 
 func TestHandleDescribeConnector_MissingName_Mock(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleDescribeConnector(context.Background(), makeToolRequest(nil))
@@ -85,6 +91,7 @@ func TestHandleDescribeConnector_MissingName_Mock(t *testing.T) {
 }
 
 func TestHandleDescribeConnector_ConnectClientNil(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleDescribeConnector(context.Background(), makeToolRequest(map[string]any{
@@ -99,6 +106,7 @@ func TestHandleDescribeConnector_ConnectClientNil(t *testing.T) {
 // ===================== handleNaturalLanguageQuery (p2) =====================
 
 func TestHandleNaturalLanguageQuery_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return []kafka.TopicSummary{{Name: "orders"}, {Name: "payments"}}, nil
@@ -123,6 +131,7 @@ func TestHandleNaturalLanguageQuery_Success(t *testing.T) {
 }
 
 func TestHandleNaturalLanguageQuery_MissingQuery_Mock(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleNaturalLanguageQuery(context.Background(), makeToolRequest(nil))
@@ -133,6 +142,7 @@ func TestHandleNaturalLanguageQuery_MissingQuery_Mock(t *testing.T) {
 }
 
 func TestHandleNaturalLanguageQuery_ListTopicsError(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return nil, fmt.Errorf("connection refused")
@@ -149,6 +159,7 @@ func TestHandleNaturalLanguageQuery_ListTopicsError(t *testing.T) {
 }
 
 func TestHandleNaturalLanguageQuery_DefaultDenyFiltering(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return []kafka.TopicSummary{{Name: "orders"}, {Name: "secret"}}, nil
@@ -174,6 +185,7 @@ func TestHandleNaturalLanguageQuery_DefaultDenyFiltering(t *testing.T) {
 // ===================== handleAggregate (p2) =====================
 
 func TestHandleAggregate_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		AggregateFn: func(ctx context.Context, cluster string, req kafka.AggregateRequest) (*kafka.AggregateResult, error) {
 			return &kafka.AggregateResult{
@@ -193,6 +205,7 @@ func TestHandleAggregate_Success(t *testing.T) {
 }
 
 func TestHandleAggregate_MissingTopic_Mock(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleAggregate(context.Background(), makeToolRequest(nil))
@@ -205,6 +218,7 @@ func TestHandleAggregate_MissingTopic_Mock(t *testing.T) {
 // ===================== handleJoin (p2) =====================
 
 func TestHandleJoin_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		JoinTopicsFn: func(ctx context.Context, cluster string, req kafka.JoinRequest) (*kafka.JoinResult, error) {
 			return &kafka.JoinResult{
@@ -226,6 +240,7 @@ func TestHandleJoin_Success(t *testing.T) {
 }
 
 func TestHandleJoin_MissingTopics_Mock(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleJoin(context.Background(), makeToolRequest(nil))

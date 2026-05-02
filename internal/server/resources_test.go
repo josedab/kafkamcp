@@ -20,6 +20,7 @@ func makeResourceRequest(uri string) mcp.ReadResourceRequest {
 // handleAuditLogResource does not call logAudit on the success path.
 
 func TestHandleAuditLogResource_NoDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	contents, err := s.handleAuditLogResource(ctx, makeResourceRequest("kafka://audit/log"))
@@ -35,6 +36,7 @@ func TestHandleAuditLogResource_NoDeny(t *testing.T) {
 // replicationMon is nil in test server so handler returns early.
 
 func TestHandleReplicationStatus_NilMonitor(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	contents, err := s.handleReplicationStatus(ctx, makeResourceRequest("kafka://replication/status"))
@@ -50,6 +52,7 @@ func TestHandleReplicationStatus_NilMonitor(t *testing.T) {
 // URI validation errors are returned before logAudit is called.
 
 func TestHandleTopicResource_EmptyName(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	_, err := s.handleTopicResource(ctx, makeResourceRequest("kafka://topics/"))
@@ -59,6 +62,7 @@ func TestHandleTopicResource_EmptyName(t *testing.T) {
 }
 
 func TestHandleTopicResource_InvalidURI(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	_, err := s.handleTopicResource(ctx, makeResourceRequest("bad-uri"))
@@ -68,6 +72,7 @@ func TestHandleTopicResource_InvalidURI(t *testing.T) {
 }
 
 func TestHandleTopicResource_NameTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	longName := strings.Repeat("a", maxInputLength+1)
@@ -81,6 +86,7 @@ func TestHandleTopicResource_NameTooLong(t *testing.T) {
 // URI validation errors are returned before logAudit is called.
 
 func TestHandleGroupResource_InvalidURI(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	_, err := s.handleGroupResource(ctx, makeResourceRequest("bad-uri"))
@@ -90,6 +96,7 @@ func TestHandleGroupResource_InvalidURI(t *testing.T) {
 }
 
 func TestHandleGroupResource_EmptyGroupID(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	_, err := s.handleGroupResource(ctx, makeResourceRequest("kafka://groups/"))
@@ -99,6 +106,7 @@ func TestHandleGroupResource_EmptyGroupID(t *testing.T) {
 }
 
 func TestHandleGroupResource_GroupIDTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	longID := strings.Repeat("g", maxInputLength+1)
@@ -111,6 +119,7 @@ func TestHandleGroupResource_GroupIDTooLong(t *testing.T) {
 // ===================== WatchManager / MaskingEngine accessors =====================
 
 func TestWatchManager_ReturnsNonNil(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	if s.WatchManager() == nil {
 		t.Error("expected non-nil WatchManager")
@@ -118,6 +127,7 @@ func TestWatchManager_ReturnsNonNil(t *testing.T) {
 }
 
 func TestMaskingEngine_ReturnsNonNil(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	if s.MaskingEngine() == nil {
 		t.Error("expected non-nil MaskingEngine")
@@ -127,6 +137,7 @@ func TestMaskingEngine_ReturnsNonNil(t *testing.T) {
 // ===================== Server accessor tests =====================
 
 func TestMetrics_ReturnsNonNil(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	if s.Metrics() == nil {
 		t.Error("expected non-nil Metrics")
@@ -134,6 +145,7 @@ func TestMetrics_ReturnsNonNil(t *testing.T) {
 }
 
 func TestMCPServer_ReturnsNil(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	// mcpServer is nil in test server (not initialized with mcp-go)
 	if s.MCPServer() != nil {
@@ -142,6 +154,7 @@ func TestMCPServer_ReturnsNil(t *testing.T) {
 }
 
 func TestSetOTelProvider(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	s.SetOTelProvider(nil)
 	// Should not panic

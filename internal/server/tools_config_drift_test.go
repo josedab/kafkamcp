@@ -12,6 +12,7 @@ import (
 // ===================== handleConfigDrift: compare action =====================
 
 func TestHandleConfigDrift_Compare_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		CompareConfigsFn: func(ctx context.Context, sourceCluster, targetCluster, topic string) (*kafka.ConfigCompareResult, error) {
 			return &kafka.ConfigCompareResult{
@@ -47,6 +48,7 @@ func TestHandleConfigDrift_Compare_Success(t *testing.T) {
 }
 
 func TestHandleConfigDrift_Compare_MissingSource(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleConfigDrift(context.Background(), makeToolRequest(map[string]any{
@@ -63,6 +65,7 @@ func TestHandleConfigDrift_Compare_MissingSource(t *testing.T) {
 }
 
 func TestHandleConfigDrift_Compare_MissingTarget(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleConfigDrift(context.Background(), makeToolRequest(map[string]any{
@@ -79,6 +82,7 @@ func TestHandleConfigDrift_Compare_MissingTarget(t *testing.T) {
 }
 
 func TestHandleConfigDrift_Compare_WithTopicFilter(t *testing.T) {
+	t.Parallel()
 	var capturedTopic string
 	mock := &kafka.MockKafkaManager{
 		CompareConfigsFn: func(ctx context.Context, sourceCluster, targetCluster, topic string) (*kafka.ConfigCompareResult, error) {
@@ -99,6 +103,7 @@ func TestHandleConfigDrift_Compare_WithTopicFilter(t *testing.T) {
 }
 
 func TestHandleConfigDrift_Compare_EmptyDiff(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		CompareConfigsFn: func(ctx context.Context, sourceCluster, targetCluster, topic string) (*kafka.ConfigCompareResult, error) {
 			return &kafka.ConfigCompareResult{
@@ -121,6 +126,7 @@ func TestHandleConfigDrift_Compare_EmptyDiff(t *testing.T) {
 }
 
 func TestHandleConfigDrift_Compare_Error(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		CompareConfigsFn: func(ctx context.Context, sourceCluster, targetCluster, topic string) (*kafka.ConfigCompareResult, error) {
 			return nil, fmt.Errorf("cluster unreachable")
@@ -141,6 +147,7 @@ func TestHandleConfigDrift_Compare_Error(t *testing.T) {
 // ===================== handleConfigDrift: audit action =====================
 
 func TestHandleConfigDrift_Audit_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		AuditConfigsFn: func(ctx context.Context, cluster, topic string, template map[string]string) (*kafka.ConfigAuditResult, error) {
 			return &kafka.ConfigAuditResult{
@@ -170,6 +177,7 @@ func TestHandleConfigDrift_Audit_Success(t *testing.T) {
 }
 
 func TestHandleConfigDrift_Audit_NilTemplate(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		AuditConfigsFn: func(ctx context.Context, cluster, topic string, template map[string]string) (*kafka.ConfigAuditResult, error) {
 			return &kafka.ConfigAuditResult{
@@ -190,6 +198,7 @@ func TestHandleConfigDrift_Audit_NilTemplate(t *testing.T) {
 }
 
 func TestHandleConfigDrift_Audit_Error(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		AuditConfigsFn: func(ctx context.Context, cluster, topic string, template map[string]string) (*kafka.ConfigAuditResult, error) {
 			return nil, fmt.Errorf("access denied")
@@ -207,6 +216,7 @@ func TestHandleConfigDrift_Audit_Error(t *testing.T) {
 }
 
 func TestHandleConfigDrift_Audit_AllCompliant(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		AuditConfigsFn: func(ctx context.Context, cluster, topic string, template map[string]string) (*kafka.ConfigAuditResult, error) {
 			return &kafka.ConfigAuditResult{
@@ -232,6 +242,7 @@ func TestHandleConfigDrift_Audit_AllCompliant(t *testing.T) {
 // ===================== handleConfigDrift: invalid action =====================
 
 func TestHandleConfigDrift_InvalidAction_Mock(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleConfigDrift(context.Background(), makeToolRequest(map[string]any{
@@ -249,6 +260,7 @@ func TestHandleConfigDrift_InvalidAction_Mock(t *testing.T) {
 // ===================== handleConfigDrift: auth denied =====================
 
 func TestHandleConfigDrift_AuthDenied_Mock(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServer(t, withDefaultDeny)
 	s.kafkaManager = mock

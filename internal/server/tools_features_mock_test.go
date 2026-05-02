@@ -14,6 +14,7 @@ import (
 // ===================== handleGitOpsDiff =====================
 
 func TestHandleGitOpsDiff_ValidDesiredState(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return []kafka.TopicSummary{
@@ -49,6 +50,7 @@ func TestHandleGitOpsDiff_ValidDesiredState(t *testing.T) {
 }
 
 func TestHandleGitOpsDiff_EmptyDesiredState(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return []kafka.TopicSummary{{Name: "orders", Partitions: 3}}, nil
@@ -66,6 +68,7 @@ func TestHandleGitOpsDiff_EmptyDesiredState(t *testing.T) {
 }
 
 func TestHandleGitOpsDiff_ListTopicsError(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return nil, fmt.Errorf("connection refused")
@@ -82,6 +85,7 @@ func TestHandleGitOpsDiff_ListTopicsError(t *testing.T) {
 // ===================== handleNLQuery =====================
 
 func TestHandleNLQuery_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return []kafka.TopicSummary{{Name: "orders"}, {Name: "payments"}}, nil
@@ -107,6 +111,7 @@ func TestHandleNLQuery_Success(t *testing.T) {
 }
 
 func TestHandleNLQuery_MissingQuery_Mock(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	result, err := s.handleNLQuery(context.Background(), makeToolRequest(nil))
 	if err != nil {
@@ -116,6 +121,7 @@ func TestHandleNLQuery_MissingQuery_Mock(t *testing.T) {
 }
 
 func TestHandleNLQuery_ListTopicsError(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return nil, fmt.Errorf("connection refused")
@@ -134,6 +140,7 @@ func TestHandleNLQuery_ListTopicsError(t *testing.T) {
 // ===================== handleAnomalies =====================
 
 func TestHandleAnomalies_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleAnomalies(context.Background(), makeToolRequest(nil))
@@ -148,6 +155,7 @@ func TestHandleAnomalies_Success(t *testing.T) {
 }
 
 func TestHandleAnomalies_NilDetector_Mock(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	s.anomalyDetector = nil
@@ -159,6 +167,7 @@ func TestHandleAnomalies_NilDetector_Mock(t *testing.T) {
 }
 
 func TestHandleAnomalies_SeverityFilter(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleAnomalies(context.Background(), makeToolRequest(map[string]any{
@@ -171,6 +180,7 @@ func TestHandleAnomalies_SeverityFilter(t *testing.T) {
 }
 
 func TestHandleAnomalies_MetricFilter(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleAnomalies(context.Background(), makeToolRequest(map[string]any{
@@ -183,6 +193,7 @@ func TestHandleAnomalies_MetricFilter(t *testing.T) {
 }
 
 func TestHandleAnomalies_LimitParam(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleAnomalies(context.Background(), makeToolRequest(map[string]any{
@@ -197,6 +208,7 @@ func TestHandleAnomalies_LimitParam(t *testing.T) {
 // ===================== matchesFilters =====================
 
 func TestMatchesFilters_EmptyFilters(t *testing.T) {
+	t.Parallel()
 	msg := kafka.Message{Value: map[string]any{"status": "ok"}}
 	if !matchesFilters(msg, nil) {
 		t.Error("expected true for empty filters")
@@ -204,6 +216,7 @@ func TestMatchesFilters_EmptyFilters(t *testing.T) {
 }
 
 func TestMatchesFilters_EqMatch(t *testing.T) {
+	t.Parallel()
 	msg := kafka.Message{Value: map[string]any{"status": "error"}}
 	filters := []nlquery.Filter{
 		{Field: "status", Operator: "eq", Value: "error"},
@@ -214,6 +227,7 @@ func TestMatchesFilters_EqMatch(t *testing.T) {
 }
 
 func TestMatchesFilters_EqNoMatch(t *testing.T) {
+	t.Parallel()
 	msg := kafka.Message{Value: map[string]any{"status": "ok"}}
 	filters := []nlquery.Filter{
 		{Field: "status", Operator: "eq", Value: "error"},
@@ -226,6 +240,7 @@ func TestMatchesFilters_EqNoMatch(t *testing.T) {
 // ===================== extractFieldValue =====================
 
 func TestExtractFieldValue_EmptyField(t *testing.T) {
+	t.Parallel()
 	val := extractFieldValue("hello", "")
 	if val != "hello" {
 		t.Errorf("expected 'hello', got %v", val)
@@ -233,6 +248,7 @@ func TestExtractFieldValue_EmptyField(t *testing.T) {
 }
 
 func TestExtractFieldValue_MapField(t *testing.T) {
+	t.Parallel()
 	val := extractFieldValue(map[string]any{"status": "ok"}, "status")
 	if val != "ok" {
 		t.Errorf("expected 'ok', got %v", val)
@@ -240,6 +256,7 @@ func TestExtractFieldValue_MapField(t *testing.T) {
 }
 
 func TestExtractFieldValue_NonMap(t *testing.T) {
+	t.Parallel()
 	val := extractFieldValue("not-a-map", "field")
 	if val != nil {
 		t.Errorf("expected nil, got %v", val)
@@ -249,6 +266,7 @@ func TestExtractFieldValue_NonMap(t *testing.T) {
 // ===================== intFromAny =====================
 
 func TestIntFromAny_Types(t *testing.T) {
+	t.Parallel()
 	if intFromAny(float64(42), 0) != 42 {
 		t.Error("expected 42 from float64")
 	}
@@ -266,6 +284,7 @@ func TestIntFromAny_Types(t *testing.T) {
 // ===================== estimateThroughput =====================
 
 func TestEstimateThroughput_WithMessages(t *testing.T) {
+	t.Parallel()
 	detail := &kafka.TopicDetail{
 		Partitions: []kafka.PartitionDetail{
 			{EarliestOffset: 0, LatestOffset: 3600},
@@ -278,6 +297,7 @@ func TestEstimateThroughput_WithMessages(t *testing.T) {
 }
 
 func TestEstimateThroughput_Empty(t *testing.T) {
+	t.Parallel()
 	detail := &kafka.TopicDetail{
 		Partitions: []kafka.PartitionDetail{
 			{EarliestOffset: 0, LatestOffset: 0},
@@ -291,6 +311,7 @@ func TestEstimateThroughput_Empty(t *testing.T) {
 
 // verify response JSON shape
 func TestHandleAnomalies_ResponseShape(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, _ := s.handleAnomalies(context.Background(), makeToolRequest(nil))

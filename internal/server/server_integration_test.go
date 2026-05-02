@@ -14,6 +14,7 @@ import (
 // ===================== validateAgentID Tests =====================
 
 func TestValidateAgentID_DefaultDenyDisabled(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	if result := s.validateAgentID("anonymous"); result != nil {
 		t.Error("expected nil when default_deny is false")
@@ -24,6 +25,7 @@ func TestValidateAgentID_DefaultDenyDisabled(t *testing.T) {
 }
 
 func TestValidateAgentID_DefaultDenyEnabled(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 
 	if result := s.validateAgentID("anonymous"); result == nil {
@@ -40,6 +42,7 @@ func TestValidateAgentID_DefaultDenyEnabled(t *testing.T) {
 // ===================== checkAuth Tests =====================
 
 func TestCheckAuth_NoDefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	result := s.checkAuth("anonymous", "kafka_list_topics", auth.ResourceTopic, "*", auth.ActionRead)
 	if result != nil {
@@ -48,6 +51,7 @@ func TestCheckAuth_NoDefaultDeny(t *testing.T) {
 }
 
 func TestCheckAuth_DefaultDeny_AllowedAgent(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	result := s.checkAuth("allowed-agent", "kafka_list_topics", auth.ResourceTopic, "my-topic", auth.ActionRead)
 	if result != nil {
@@ -56,6 +60,7 @@ func TestCheckAuth_DefaultDeny_AllowedAgent(t *testing.T) {
 }
 
 func TestCheckAuth_DefaultDeny_UnknownAgent(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	result := s.checkAuth("unknown", "kafka_list_topics", auth.ResourceTopic, "*", auth.ActionRead)
 	if result == nil {
@@ -64,6 +69,7 @@ func TestCheckAuth_DefaultDeny_UnknownAgent(t *testing.T) {
 }
 
 func TestCheckAuth_DefaultDeny_Anonymous(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	result := s.checkAuth("anonymous", "kafka_list_topics", auth.ResourceTopic, "*", auth.ActionRead)
 	if result == nil {
@@ -74,6 +80,7 @@ func TestCheckAuth_DefaultDeny_Anonymous(t *testing.T) {
 // ===================== checkRateLimit Tests =====================
 
 func TestCheckRateLimit_NoLimit(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	result := s.checkRateLimit("anonymous", "kafka_list_topics")
 	if result != nil {
@@ -82,6 +89,7 @@ func TestCheckRateLimit_NoLimit(t *testing.T) {
 }
 
 func TestCheckRateLimit_WithLimit(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withRateLimit)
 	// First request should succeed
 	if result := s.checkRateLimit("rate-limited-agent", "kafka_list_topics"); result != nil {
@@ -103,6 +111,7 @@ func TestCheckRateLimit_WithLimit(t *testing.T) {
 // ===================== checkResourceRateLimit Tests =====================
 
 func TestCheckResourceRateLimit_NoLimit(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	err := s.checkResourceRateLimit("anonymous", "kafka://cluster/health")
 	if err != nil {
@@ -113,6 +122,7 @@ func TestCheckResourceRateLimit_NoLimit(t *testing.T) {
 // ===================== hasSchemaRegistry Tests =====================
 
 func TestHasSchemaRegistry_Empty(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	if s.hasSchemaRegistry() {
 		t.Error("expected false with no schema clients")
@@ -120,6 +130,7 @@ func TestHasSchemaRegistry_Empty(t *testing.T) {
 }
 
 func TestHasSchemaRegistry_WithClient(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	sc, _ := schema.NewClient("http://localhost:8081", "", "", 100, 60)
 	s.schemaClients["test-cluster"] = sc
@@ -131,6 +142,7 @@ func TestHasSchemaRegistry_WithClient(t *testing.T) {
 // ===================== getSchemaClient Tests =====================
 
 func TestGetSchemaClient_NoClients(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	// kafkaManager is nil, so calling with a cluster name that triggers
 	// DefaultClusterName will panic. Test with direct map access.
@@ -142,6 +154,7 @@ func TestGetSchemaClient_NoClients(t *testing.T) {
 // ===================== acquireExpensiveOp / releaseExpensiveOp Tests =====================
 
 func TestAcquireReleaseExpensiveOp(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 
@@ -153,6 +166,7 @@ func TestAcquireReleaseExpensiveOp(t *testing.T) {
 }
 
 func TestAcquireExpensiveOp_CancelledContext(t *testing.T) {
+	t.Parallel()
 	s := &Server{expensiveOps: make(chan struct{}, 1)}
 	// Fill the semaphore
 	s.expensiveOps <- struct{}{}
@@ -167,6 +181,7 @@ func TestAcquireExpensiveOp_CancelledContext(t *testing.T) {
 }
 
 func TestAcquireExpensiveOp_FillAndDrain(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 
@@ -190,6 +205,7 @@ func TestAcquireExpensiveOp_FillAndDrain(t *testing.T) {
 // ===================== validateResourceAgentID Tests =====================
 
 func TestValidateResourceAgentID_NoDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	if err := s.validateResourceAgentID("anonymous"); err != nil {
 		t.Errorf("expected nil, got %v", err)
@@ -197,6 +213,7 @@ func TestValidateResourceAgentID_NoDeny(t *testing.T) {
 }
 
 func TestValidateResourceAgentID_DefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 
 	if err := s.validateResourceAgentID("anonymous"); err == nil {
@@ -214,6 +231,7 @@ func TestValidateResourceAgentID_DefaultDeny(t *testing.T) {
 // These test the early-return paths before kafkaManager is accessed.
 
 func TestHandleDescribeTopic_MissingTopic(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleDescribeTopic(ctx, makeToolRequest(nil))
@@ -227,6 +245,7 @@ func TestHandleDescribeTopic_MissingTopic(t *testing.T) {
 }
 
 func TestHandleConsume_MissingTopic(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleConsume(ctx, makeToolRequest(nil))
@@ -237,6 +256,7 @@ func TestHandleConsume_MissingTopic(t *testing.T) {
 }
 
 func TestHandleCreateTopic_MissingName(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleCreateTopic(ctx, makeToolRequest(nil))
@@ -247,6 +267,7 @@ func TestHandleCreateTopic_MissingName(t *testing.T) {
 }
 
 func TestHandleCreateTopic_ExcessivePartitions(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleCreateTopic(ctx, makeToolRequest(map[string]any{
@@ -259,6 +280,7 @@ func TestHandleCreateTopic_ExcessivePartitions(t *testing.T) {
 }
 
 func TestHandleCreateTopic_ExcessiveReplication(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleCreateTopic(ctx, makeToolRequest(map[string]any{
@@ -271,6 +293,7 @@ func TestHandleCreateTopic_ExcessiveReplication(t *testing.T) {
 }
 
 func TestHandleAlterTopic_MissingName(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleAlterTopic(ctx, makeToolRequest(nil))
@@ -281,6 +304,7 @@ func TestHandleAlterTopic_MissingName(t *testing.T) {
 }
 
 func TestHandleDeleteTopic_MissingName(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleDeleteTopic(ctx, makeToolRequest(nil))
@@ -291,6 +315,7 @@ func TestHandleDeleteTopic_MissingName(t *testing.T) {
 }
 
 func TestHandleSearch_MissingTopic(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleSearch(ctx, makeToolRequest(nil))
@@ -301,6 +326,7 @@ func TestHandleSearch_MissingTopic(t *testing.T) {
 }
 
 func TestHandleResetOffsets_MissingFields(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleResetOffsets(ctx, makeToolRequest(nil))
@@ -311,6 +337,7 @@ func TestHandleResetOffsets_MissingFields(t *testing.T) {
 }
 
 func TestHandleDescribeConsumerGroup_MissingGroupID(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleDescribeConsumerGroup(ctx, makeToolRequest(nil))
@@ -321,6 +348,7 @@ func TestHandleDescribeConsumerGroup_MissingGroupID(t *testing.T) {
 }
 
 func TestHandleSubscribe_MissingTopic(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleSubscribe(ctx, makeToolRequest(nil))
@@ -331,6 +359,7 @@ func TestHandleSubscribe_MissingTopic(t *testing.T) {
 }
 
 func TestHandleAnalyzeDLQ_MissingTopic(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleAnalyzeDLQ(ctx, makeToolRequest(nil))
@@ -343,6 +372,7 @@ func TestHandleAnalyzeDLQ_MissingTopic(t *testing.T) {
 // ===================== Default Deny Handler Tests =====================
 
 func TestHandleDescribeTopic_DefaultDeny_Anonymous(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleDescribeTopic(ctx, makeToolRequest(map[string]any{"topic": "test"}))
@@ -353,6 +383,7 @@ func TestHandleDescribeTopic_DefaultDeny_Anonymous(t *testing.T) {
 }
 
 func TestHandleConsume_DefaultDeny_Anonymous(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleConsume(ctx, makeToolRequest(map[string]any{"topic": "test"}))
@@ -363,6 +394,7 @@ func TestHandleConsume_DefaultDeny_Anonymous(t *testing.T) {
 }
 
 func TestHandleCreateTopic_DefaultDeny_Anonymous(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleCreateTopic(ctx, makeToolRequest(map[string]any{"name": "test"}))
@@ -373,6 +405,7 @@ func TestHandleCreateTopic_DefaultDeny_Anonymous(t *testing.T) {
 }
 
 func TestHandleListTopics_DefaultDeny_Anonymous(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleListTopics(ctx, makeToolRequest(nil))
@@ -385,6 +418,7 @@ func TestHandleListTopics_DefaultDeny_Anonymous(t *testing.T) {
 // ===================== New Feature Handler Tests =====================
 
 func TestHandleDataContract_UnknownAction(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleDataContract(ctx, makeToolRequest(map[string]any{"action": "bad"}))
@@ -395,6 +429,7 @@ func TestHandleDataContract_UnknownAction(t *testing.T) {
 }
 
 func TestHandleDataContract_EmptyAction(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleDataContract(ctx, makeToolRequest(map[string]any{}))
@@ -405,6 +440,7 @@ func TestHandleDataContract_EmptyAction(t *testing.T) {
 }
 
 func TestHandleDataContract_ValidateMissingTopic(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleDataContract(ctx, makeToolRequest(map[string]any{"action": "validate"}))
@@ -415,6 +451,7 @@ func TestHandleDataContract_ValidateMissingTopic(t *testing.T) {
 }
 
 func TestHandleDataContract_ValidateMissingMessage(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleDataContract(ctx, makeToolRequest(map[string]any{
@@ -427,6 +464,7 @@ func TestHandleDataContract_ValidateMissingMessage(t *testing.T) {
 }
 
 func TestHandleDataContract_ValidateInvalidMessage(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleDataContract(ctx, makeToolRequest(map[string]any{
@@ -439,6 +477,7 @@ func TestHandleDataContract_ValidateInvalidMessage(t *testing.T) {
 }
 
 func TestHandleDataContract_RegisterMissingContract(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleDataContract(ctx, makeToolRequest(map[string]any{"action": "register"}))
@@ -449,6 +488,7 @@ func TestHandleDataContract_RegisterMissingContract(t *testing.T) {
 }
 
 func TestHandleDataContract_GetMissingTopic(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleDataContract(ctx, makeToolRequest(map[string]any{"action": "get"}))
@@ -459,6 +499,7 @@ func TestHandleDataContract_GetMissingTopic(t *testing.T) {
 }
 
 func TestHandleDataContract_ComplianceMissingTopic(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleDataContract(ctx, makeToolRequest(map[string]any{"action": "compliance"}))
@@ -469,6 +510,7 @@ func TestHandleDataContract_ComplianceMissingTopic(t *testing.T) {
 }
 
 func TestHandlePersona_GetNonExistentPersona(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handlePersona(ctx, makeToolRequest(map[string]any{"action": "get", "persona": "nonexistent"}))
@@ -479,6 +521,7 @@ func TestHandlePersona_GetNonExistentPersona(t *testing.T) {
 }
 
 func TestHandlePersona_ActivateNonExistent(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handlePersona(ctx, makeToolRequest(map[string]any{"action": "activate", "persona": "nonexistent"}))
@@ -489,6 +532,7 @@ func TestHandlePersona_ActivateNonExistent(t *testing.T) {
 }
 
 func TestHandlePersona_GetMissingName(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handlePersona(ctx, makeToolRequest(map[string]any{"action": "get"}))
@@ -499,6 +543,7 @@ func TestHandlePersona_GetMissingName(t *testing.T) {
 }
 
 func TestHandlePersona_ActivateMissingName(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handlePersona(ctx, makeToolRequest(map[string]any{"action": "activate"}))
@@ -509,6 +554,7 @@ func TestHandlePersona_ActivateMissingName(t *testing.T) {
 }
 
 func TestHandlePersona_UnknownAction(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handlePersona(ctx, makeToolRequest(map[string]any{"action": "bad"}))
@@ -519,6 +565,7 @@ func TestHandlePersona_UnknownAction(t *testing.T) {
 }
 
 func TestHandleMigrationPlan_PlanMissingSource(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleMigrationPlan(ctx, makeToolRequest(map[string]any{
@@ -531,6 +578,7 @@ func TestHandleMigrationPlan_PlanMissingSource(t *testing.T) {
 }
 
 func TestHandleMigrationPlan_ValidateNoPlan(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleMigrationPlan(ctx, makeToolRequest(map[string]any{"action": "validate"}))
@@ -541,6 +589,7 @@ func TestHandleMigrationPlan_ValidateNoPlan(t *testing.T) {
 }
 
 func TestHandleMigrationPlan_PlanMissingClusters(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleMigrationPlan(ctx, makeToolRequest(map[string]any{"action": "plan"}))
@@ -551,6 +600,7 @@ func TestHandleMigrationPlan_PlanMissingClusters(t *testing.T) {
 }
 
 func TestHandleMigrationPlan_UnknownAction(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleMigrationPlan(ctx, makeToolRequest(map[string]any{"action": "bad"}))
@@ -561,6 +611,7 @@ func TestHandleMigrationPlan_UnknownAction(t *testing.T) {
 }
 
 func TestHandleTraceLineage_UnknownAction(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleTraceLineage(ctx, makeToolRequest(map[string]any{"action": "bad"}))
@@ -571,6 +622,7 @@ func TestHandleTraceLineage_UnknownAction(t *testing.T) {
 }
 
 func TestHandleTraceLineage_AnnotatePII_MissingTopic(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleTraceLineage(ctx, makeToolRequest(map[string]any{"action": "annotate_pii"}))
@@ -581,6 +633,7 @@ func TestHandleTraceLineage_AnnotatePII_MissingTopic(t *testing.T) {
 }
 
 func TestHandleTraceLineage_AnnotatePII_MissingField(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleTraceLineage(ctx, makeToolRequest(map[string]any{
@@ -593,6 +646,7 @@ func TestHandleTraceLineage_AnnotatePII_MissingField(t *testing.T) {
 }
 
 func TestHandleTraceLineage_DetectPII_MissingTopic(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleTraceLineage(ctx, makeToolRequest(map[string]any{"action": "detect_pii"}))
@@ -603,6 +657,7 @@ func TestHandleTraceLineage_DetectPII_MissingTopic(t *testing.T) {
 }
 
 func TestHandleTraceLineage_TraceMissingTopic(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleTraceLineage(ctx, makeToolRequest(map[string]any{"action": "trace"}))
@@ -613,6 +668,7 @@ func TestHandleTraceLineage_TraceMissingTopic(t *testing.T) {
 }
 
 func TestHandleGroupHealth_MissingGroupID(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleGroupHealth(ctx, makeToolRequest(nil))
@@ -623,6 +679,7 @@ func TestHandleGroupHealth_MissingGroupID(t *testing.T) {
 }
 
 func TestHandleDiagnoseLag_MissingGroupID(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleDiagnoseLag(ctx, makeToolRequest(nil))
@@ -633,6 +690,7 @@ func TestHandleDiagnoseLag_MissingGroupID(t *testing.T) {
 }
 
 func TestHandleForecast_MissingTopic(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleForecast(ctx, makeToolRequest(nil))
@@ -645,6 +703,7 @@ func TestHandleForecast_MissingTopic(t *testing.T) {
 // ===================== withToolAuth middleware Tests =====================
 
 func TestWithToolAuth_RateLimitDenied(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withRateLimit)
 	ctx := context.Background()
 
@@ -671,6 +730,7 @@ func TestWithToolAuth_RateLimitDenied(t *testing.T) {
 }
 
 func TestWithToolAuth_AuthDenied(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 
@@ -689,6 +749,7 @@ func TestWithToolAuth_AuthDenied(t *testing.T) {
 }
 
 func TestWithToolAuth_AllowedAgent(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 
@@ -712,6 +773,7 @@ func TestWithToolAuth_AllowedAgent(t *testing.T) {
 // ===================== Advanced/Feature Handler Validation Tests =====================
 
 func TestHandleAgentRegistry_UnknownAction(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleAgentRegistry(ctx, makeToolRequest(map[string]any{"action": "bad"}))
@@ -722,6 +784,7 @@ func TestHandleAgentRegistry_UnknownAction(t *testing.T) {
 }
 
 func TestHandleAgentRegistry_ClaimMissingFields(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleAgentRegistry(ctx, makeToolRequest(map[string]any{"action": "claim"}))
@@ -732,6 +795,7 @@ func TestHandleAgentRegistry_ClaimMissingFields(t *testing.T) {
 }
 
 func TestHandleAgentRegistry_ReleaseMissingFields(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleAgentRegistry(ctx, makeToolRequest(map[string]any{"action": "release"}))
@@ -742,6 +806,7 @@ func TestHandleAgentRegistry_ReleaseMissingFields(t *testing.T) {
 }
 
 func TestHandleAgentRegistry_ShareCursorMissingFields(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleAgentRegistry(ctx, makeToolRequest(map[string]any{"action": "share_cursor"}))
@@ -752,6 +817,7 @@ func TestHandleAgentRegistry_ShareCursorMissingFields(t *testing.T) {
 }
 
 func TestHandleAgentRegistry_HandoffMissingTarget(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleAgentRegistry(ctx, makeToolRequest(map[string]any{"action": "handoff"}))
@@ -762,6 +828,7 @@ func TestHandleAgentRegistry_HandoffMissingTarget(t *testing.T) {
 }
 
 func TestHandleWorkflows_ExecuteMissingTemplate(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleWorkflows(ctx, makeToolRequest(map[string]any{"action": "execute"}))
@@ -772,6 +839,7 @@ func TestHandleWorkflows_ExecuteMissingTemplate(t *testing.T) {
 }
 
 func TestHandleWorkflows_UnknownAction(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleWorkflows(ctx, makeToolRequest(map[string]any{"action": "bad"}))
@@ -782,6 +850,7 @@ func TestHandleWorkflows_UnknownAction(t *testing.T) {
 }
 
 func TestHandlePlatformInfo_DefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handlePlatformInfo(ctx, makeToolRequest(nil))
@@ -792,6 +861,7 @@ func TestHandlePlatformInfo_DefaultDeny(t *testing.T) {
 }
 
 func TestHandleAnomalies_DefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleAnomalies(ctx, makeToolRequest(nil))

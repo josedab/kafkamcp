@@ -44,6 +44,7 @@ func resultText(t *testing.T, result *mcp.CallToolResult) string {
 // ===================== handleListTopics with mock =====================
 
 func TestHandleListTopics_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return []kafka.TopicSummary{
@@ -71,6 +72,7 @@ func TestHandleListTopics_Success(t *testing.T) {
 }
 
 func TestHandleListTopics_WithFilter(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return []kafka.TopicSummary{
@@ -99,6 +101,7 @@ func TestHandleListTopics_WithFilter(t *testing.T) {
 }
 
 func TestHandleListTopics_Error(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return nil, fmt.Errorf("connection refused")
@@ -118,6 +121,7 @@ func TestHandleListTopics_Error(t *testing.T) {
 }
 
 func TestHandleListTopics_ClusterResolution(t *testing.T) {
+	t.Parallel()
 	var calledCluster string
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
@@ -137,6 +141,7 @@ func TestHandleListTopics_ClusterResolution(t *testing.T) {
 // ===================== handleConsume with mock =====================
 
 func TestHandleConsume_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
 			return []kafka.Message{
@@ -161,6 +166,7 @@ func TestHandleConsume_Success(t *testing.T) {
 }
 
 func TestHandleConsume_Error(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
 			return nil, fmt.Errorf("timeout waiting for messages")
@@ -179,6 +185,7 @@ func TestHandleConsume_Error(t *testing.T) {
 // ===================== handleProduce with mock =====================
 
 func TestHandleProduce_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ProduceFn: func(ctx context.Context, cluster, topic string, messages []kafka.ProduceMessage, opts kafka.ProduceOptions) ([]kafka.DeliveryResult, error) {
 			results := make([]kafka.DeliveryResult, len(messages))
@@ -212,6 +219,7 @@ func TestHandleProduce_Success(t *testing.T) {
 }
 
 func TestHandleProduce_DeliveryFailure(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ProduceFn: func(ctx context.Context, cluster, topic string, messages []kafka.ProduceMessage, opts kafka.ProduceOptions) ([]kafka.DeliveryResult, error) {
 			return nil, fmt.Errorf("broker unavailable")
@@ -233,6 +241,7 @@ func TestHandleProduce_DeliveryFailure(t *testing.T) {
 // ===================== handleDescribeTopic with mock =====================
 
 func TestHandleDescribeTopic_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		DescribeTopicFn: func(ctx context.Context, cluster, topicName string) (*kafka.TopicDetail, error) {
 			return &kafka.TopicDetail{
@@ -267,6 +276,7 @@ func TestHandleDescribeTopic_Success(t *testing.T) {
 }
 
 func TestHandleDescribeTopic_NotFound(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		DescribeTopicFn: func(ctx context.Context, cluster, topicName string) (*kafka.TopicDetail, error) {
 			return nil, fmt.Errorf("topic %q not found", topicName)
@@ -288,6 +298,7 @@ func TestHandleDescribeTopic_NotFound(t *testing.T) {
 // ===================== handleListConsumerGroups with mock =====================
 
 func TestHandleListConsumerGroups_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListConsumerGroupsFn: func(ctx context.Context, cluster string) ([]kafka.ConsumerGroupSummary, error) {
 			return []kafka.ConsumerGroupSummary{
@@ -314,6 +325,7 @@ func TestHandleListConsumerGroups_Success(t *testing.T) {
 // ===================== handleDescribeConsumerGroup with mock =====================
 
 func TestHandleDescribeConsumerGroup_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		DescribeConsumerGroupFn: func(ctx context.Context, cluster, groupID string) (*kafka.ConsumerGroupDetail, error) {
 			return &kafka.ConsumerGroupDetail{
@@ -347,6 +359,7 @@ func TestHandleDescribeConsumerGroup_Success(t *testing.T) {
 // ===================== handleSubscribe with mock =====================
 
 func TestHandleSubscribe_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		SubscribeFn: func(ctx context.Context, cluster string, req kafka.SubscribeRequest) (*kafka.SubscribeResult, error) {
 			return &kafka.SubscribeResult{
@@ -374,6 +387,7 @@ func TestHandleSubscribe_Success(t *testing.T) {
 // ===================== handleAnalyzeDLQ with mock =====================
 
 func TestHandleAnalyzeDLQ_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		AnalyzeDLQFn: func(ctx context.Context, cluster, topic string, limit int) (*kafka.AnalyzeDLQResult, error) {
 			return &kafka.AnalyzeDLQResult{
@@ -404,6 +418,7 @@ func TestHandleAnalyzeDLQ_Success(t *testing.T) {
 // ===================== handleSearch with mock =====================
 
 func TestHandleSearch_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		SearchMessagesFn: func(ctx context.Context, cluster string, req kafka.SearchRequest) ([]kafka.SearchMessage, int, error) {
 			return []kafka.Message{
@@ -427,6 +442,7 @@ func TestHandleSearch_Success(t *testing.T) {
 // ===================== MCP response format verification =====================
 
 func TestHandleListTopics_ResponseFormat(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return []kafka.TopicSummary{{Name: "test", Partitions: 1}}, nil
@@ -454,6 +470,7 @@ func TestHandleListTopics_ResponseFormat(t *testing.T) {
 // ===================== Error propagation =====================
 
 func TestHandleConsume_ErrorPropagation(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
 			return nil, fmt.Errorf("topic \"nonexistent\" not found")
@@ -470,6 +487,7 @@ func TestHandleConsume_ErrorPropagation(t *testing.T) {
 // ===================== handleResetOffsets with mock =====================
 
 func TestHandleResetOffsets_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ResetOffsetsFn: func(ctx context.Context, cluster string, req kafka.ResetOffsetsRequest) (*kafka.ResetOffsetsResult, error) {
 			return &kafka.ResetOffsetsResult{
@@ -495,6 +513,7 @@ func TestHandleResetOffsets_Success(t *testing.T) {
 // ===================== handleCreateTopic with mock =====================
 
 func TestHandleCreateTopic_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		CreateTopicFn: func(ctx context.Context, cluster string, req kafka.CreateTopicRequest) error {
 			return nil
@@ -515,6 +534,7 @@ func TestHandleCreateTopic_Success(t *testing.T) {
 }
 
 func TestHandleCreateTopic_Error(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		CreateTopicFn: func(ctx context.Context, cluster string, req kafka.CreateTopicRequest) error {
 			return fmt.Errorf("topic already exists")
@@ -528,6 +548,7 @@ func TestHandleCreateTopic_Error(t *testing.T) {
 // ===================== handleDeleteTopic with mock =====================
 
 func TestHandleDeleteTopic_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		DeleteTopicFn: func(ctx context.Context, cluster, topicName string) error {
 			return nil
@@ -544,6 +565,7 @@ func TestHandleDeleteTopic_Success(t *testing.T) {
 // ===================== handleAlterTopic with mock =====================
 
 func TestHandleAlterTopic_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		AlterTopicFn: func(ctx context.Context, cluster string, req kafka.AlterTopicRequest) error {
 			return nil
@@ -563,6 +585,7 @@ func TestHandleAlterTopic_Success(t *testing.T) {
 // ===================== Auth denied paths with mock =====================
 
 func TestHandleListTopics_AuthDenied(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServer(t, withDefaultDeny)
 	s.kafkaManager = mock
@@ -579,6 +602,7 @@ func TestHandleListTopics_AuthDenied(t *testing.T) {
 }
 
 func TestHandleConsume_AuthDenied(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServer(t, withDefaultDeny)
 	s.kafkaManager = mock
@@ -591,6 +615,7 @@ func TestHandleConsume_AuthDenied(t *testing.T) {
 }
 
 func TestHandleProduce_AuthDenied(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServer(t, withDefaultDeny)
 	s.kafkaManager = mock

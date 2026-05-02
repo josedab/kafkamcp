@@ -11,6 +11,7 @@ import (
 // ===================== handleAgentRegistry: register =====================
 
 func TestHandleAgentRegistry_Register(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	ctx := context.Background()
@@ -32,6 +33,7 @@ func TestHandleAgentRegistry_Register(t *testing.T) {
 // ===================== handleAgentRegistry: heartbeat =====================
 
 func TestHandleAgentRegistry_Heartbeat_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	ctx := context.Background()
@@ -56,6 +58,7 @@ func TestHandleAgentRegistry_Heartbeat_Success(t *testing.T) {
 }
 
 func TestHandleAgentRegistry_Heartbeat_UnregisteredAgent(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 
@@ -72,6 +75,7 @@ func TestHandleAgentRegistry_Heartbeat_UnregisteredAgent(t *testing.T) {
 // ===================== handleAgentRegistry: claim =====================
 
 func TestHandleAgentRegistry_Claim_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	ctx := context.Background()
@@ -97,6 +101,7 @@ func TestHandleAgentRegistry_Claim_Success(t *testing.T) {
 }
 
 func TestHandleAgentRegistry_Claim_MissingParams(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 
@@ -124,6 +129,7 @@ func TestHandleAgentRegistry_Claim_MissingParams(t *testing.T) {
 // ===================== handleAgentRegistry: release =====================
 
 func TestHandleAgentRegistry_Release_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	ctx := context.Background()
@@ -149,6 +155,7 @@ func TestHandleAgentRegistry_Release_Success(t *testing.T) {
 }
 
 func TestHandleAgentRegistry_Release_MissingParams(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 
@@ -164,6 +171,7 @@ func TestHandleAgentRegistry_Release_MissingParams(t *testing.T) {
 // ===================== handleAgentRegistry: share_cursor =====================
 
 func TestHandleAgentRegistry_ShareCursor_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	ctx := context.Background()
@@ -187,6 +195,7 @@ func TestHandleAgentRegistry_ShareCursor_Success(t *testing.T) {
 }
 
 func TestHandleAgentRegistry_ShareCursor_MissingParams(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 
@@ -203,6 +212,7 @@ func TestHandleAgentRegistry_ShareCursor_MissingParams(t *testing.T) {
 // ===================== handleAgentRegistry: handoff =====================
 
 func TestHandleAgentRegistry_Handoff_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	ctx := context.Background()
@@ -227,6 +237,7 @@ func TestHandleAgentRegistry_Handoff_Success(t *testing.T) {
 }
 
 func TestHandleAgentRegistry_Handoff_MissingTarget(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 
@@ -245,6 +256,7 @@ func TestHandleAgentRegistry_Handoff_MissingTarget(t *testing.T) {
 // ===================== handleAgentRegistry: list_agents =====================
 
 func TestHandleAgentRegistry_ListAgents(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	ctx := context.Background()
@@ -269,6 +281,7 @@ func TestHandleAgentRegistry_ListAgents(t *testing.T) {
 // ===================== handleAgentRegistry: unknown action =====================
 
 func TestHandleAgentRegistry_UnknownAction_Mock(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 
@@ -287,6 +300,7 @@ func TestHandleAgentRegistry_UnknownAction_Mock(t *testing.T) {
 // ===================== handleAgentRegistry: nil registry =====================
 
 func TestHandleAgentRegistry_NilRegistry_Mock(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	s.agentRegistry = nil
@@ -306,6 +320,7 @@ func TestHandleAgentRegistry_NilRegistry_Mock(t *testing.T) {
 // ===================== handleAgentRegistry: auth denied =====================
 
 func TestHandleAgentRegistry_AuthDenied(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServer(t, withDefaultDeny)
 	s.kafkaManager = mock

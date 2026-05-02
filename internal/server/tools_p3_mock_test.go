@@ -12,6 +12,7 @@ import (
 // ===================== handleSchemaDiff =====================
 
 func TestHandleSchemaDiff_MissingSubject_Mock(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleSchemaDiff(context.Background(), makeToolRequest(nil))
@@ -22,6 +23,7 @@ func TestHandleSchemaDiff_MissingSubject_Mock(t *testing.T) {
 }
 
 func TestHandleSchemaDiff_NoSchemaRegistry(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleSchemaDiff(context.Background(), makeToolRequest(map[string]any{
@@ -40,6 +42,7 @@ func TestHandleSchemaDiff_NoSchemaRegistry(t *testing.T) {
 }
 
 func TestHandleSchemaDiff_MissingVersionFrom(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	sc, _ := schema.NewClient("http://localhost:8081", "", "", 100, 60)
@@ -54,6 +57,7 @@ func TestHandleSchemaDiff_MissingVersionFrom(t *testing.T) {
 }
 
 func TestHandleSchemaDiff_AuthDenied(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	result, err := s.handleSchemaDiff(context.Background(), makeToolRequest(map[string]any{
 		"subject":      "orders-value",
@@ -68,6 +72,7 @@ func TestHandleSchemaDiff_AuthDenied(t *testing.T) {
 // ===================== handleWatchUnsubscribe =====================
 
 func TestHandleWatchUnsubscribe_MissingID(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleWatch(context.Background(), makeToolRequest(map[string]any{
@@ -80,6 +85,7 @@ func TestHandleWatchUnsubscribe_MissingID(t *testing.T) {
 }
 
 func TestHandleWatchUnsubscribe_NilManager(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	s.watchManager = nil
@@ -94,6 +100,7 @@ func TestHandleWatchUnsubscribe_NilManager(t *testing.T) {
 }
 
 func TestHandleWatchUnsubscribe_NotFound(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleWatch(context.Background(), makeToolRequest(map[string]any{
@@ -109,6 +116,7 @@ func TestHandleWatchUnsubscribe_NotFound(t *testing.T) {
 // ===================== handleWatchList =====================
 
 func TestHandleWatchList_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleWatch(context.Background(), makeToolRequest(map[string]any{
@@ -125,6 +133,7 @@ func TestHandleWatchList_Success(t *testing.T) {
 }
 
 func TestHandleWatchList_NilManager(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	s.watchManager = nil
@@ -140,6 +149,7 @@ func TestHandleWatchList_NilManager(t *testing.T) {
 // ===================== handleWatchSubscribe =====================
 
 func TestHandleWatchSubscribe_MissingPattern(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleWatch(context.Background(), makeToolRequest(map[string]any{
@@ -152,6 +162,7 @@ func TestHandleWatchSubscribe_MissingPattern(t *testing.T) {
 }
 
 func TestHandleWatchSubscribe_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleWatch(context.Background(), makeToolRequest(map[string]any{
@@ -169,6 +180,7 @@ func TestHandleWatchSubscribe_Success(t *testing.T) {
 }
 
 func TestHandleWatchSubscribe_NilManager(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	s.watchManager = nil
@@ -185,6 +197,7 @@ func TestHandleWatchSubscribe_NilManager(t *testing.T) {
 // ===================== handleWatch unknown action =====================
 
 func TestHandleWatch_UnknownAction_Mock(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleWatch(context.Background(), makeToolRequest(map[string]any{
@@ -199,6 +212,7 @@ func TestHandleWatch_UnknownAction_Mock(t *testing.T) {
 // ===================== handleRemediateDLQ =====================
 
 func TestHandleRemediateDLQ_MissingTopic_Mock(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleRemediateDLQ(context.Background(), makeToolRequest(nil))

@@ -11,6 +11,7 @@ import (
 // ===================== handleSuggestSchemaEvolution =====================
 
 func TestHandleSuggestSchemaEvolution_MissingSubject(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 
@@ -27,6 +28,7 @@ func TestHandleSuggestSchemaEvolution_MissingSubject(t *testing.T) {
 }
 
 func TestHandleSuggestSchemaEvolution_MissingChange(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 
@@ -43,6 +45,7 @@ func TestHandleSuggestSchemaEvolution_MissingChange(t *testing.T) {
 }
 
 func TestHandleSuggestSchemaEvolution_NoSchemaClient(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	// No schema clients configured, so sc will be nil
@@ -62,6 +65,7 @@ func TestHandleSuggestSchemaEvolution_NoSchemaClient(t *testing.T) {
 }
 
 func TestHandleSuggestSchemaEvolution_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 
@@ -83,6 +87,7 @@ func TestHandleSuggestSchemaEvolution_Success(t *testing.T) {
 }
 
 func TestHandleSuggestSchemaEvolution_AuthDenied(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServer(t, withDefaultDeny)
 	s.kafkaManager = mock
@@ -98,6 +103,7 @@ func TestHandleSuggestSchemaEvolution_AuthDenied(t *testing.T) {
 }
 
 func TestHandleSuggestSchemaEvolution_LengthValidation(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 

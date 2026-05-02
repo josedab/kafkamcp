@@ -7,6 +7,7 @@ import (
 )
 
 func TestApplyAggregation_Count(t *testing.T) {
+	t.Parallel()
 	data := []map[string]any{
 		{"topic": "t1", "value": map[string]any{"status": "ok"}},
 		{"topic": "t2", "value": map[string]any{"status": "ok"}},
@@ -23,6 +24,7 @@ func TestApplyAggregation_Count(t *testing.T) {
 }
 
 func TestApplyAggregation_CountWithGroupBy(t *testing.T) {
+	t.Parallel()
 	data := []map[string]any{
 		{"topic": "orders", "value": map[string]any{"status": "ok"}},
 		{"topic": "orders", "value": map[string]any{"status": "ok"}},
@@ -48,6 +50,7 @@ func TestApplyAggregation_CountWithGroupBy(t *testing.T) {
 }
 
 func TestApplyAggregation_Sum(t *testing.T) {
+	t.Parallel()
 	data := []map[string]any{
 		{"value": map[string]any{"amount": 10.0}},
 		{"value": map[string]any{"amount": 20.0}},
@@ -67,6 +70,7 @@ func TestApplyAggregation_Sum(t *testing.T) {
 }
 
 func TestApplyAggregation_Avg(t *testing.T) {
+	t.Parallel()
 	data := []map[string]any{
 		{"value": map[string]any{"price": 10.0}},
 		{"value": map[string]any{"price": 30.0}},
@@ -82,6 +86,7 @@ func TestApplyAggregation_Avg(t *testing.T) {
 }
 
 func TestApplyAggregation_Min(t *testing.T) {
+	t.Parallel()
 	data := []map[string]any{
 		{"value": map[string]any{"latency": 5.0}},
 		{"value": map[string]any{"latency": 2.0}},
@@ -95,6 +100,7 @@ func TestApplyAggregation_Min(t *testing.T) {
 }
 
 func TestApplyAggregation_Max(t *testing.T) {
+	t.Parallel()
 	data := []map[string]any{
 		{"value": map[string]any{"latency": 5.0}},
 		{"value": map[string]any{"latency": 2.0}},
@@ -108,6 +114,7 @@ func TestApplyAggregation_Max(t *testing.T) {
 }
 
 func TestApplyAggregation_GroupBy(t *testing.T) {
+	t.Parallel()
 	data := []map[string]any{
 		{"value": map[string]any{"region": "us"}},
 		{"value": map[string]any{"region": "eu"}},
@@ -126,6 +133,7 @@ func TestApplyAggregation_GroupBy(t *testing.T) {
 }
 
 func TestApplyAggregation_EmptyData(t *testing.T) {
+	t.Parallel()
 	result := applyAggregation(nil, &nlquery.AggregationStep{Function: "count"})
 	if result != nil {
 		t.Errorf("expected nil for empty data, got %v", result)
@@ -138,6 +146,7 @@ func TestApplyAggregation_EmptyData(t *testing.T) {
 }
 
 func TestApplyAggregation_NilStep(t *testing.T) {
+	t.Parallel()
 	data := []map[string]any{{"key": "val"}}
 	result := applyAggregation(data, nil)
 	if len(result) != 1 {
@@ -146,6 +155,7 @@ func TestApplyAggregation_NilStep(t *testing.T) {
 }
 
 func TestApplyAggregation_NonNumericFields(t *testing.T) {
+	t.Parallel()
 	data := []map[string]any{
 		{"value": map[string]any{"name": "alice"}},
 		{"value": map[string]any{"name": "bob"}},
@@ -161,6 +171,7 @@ func TestApplyAggregation_NonNumericFields(t *testing.T) {
 }
 
 func TestApplyAggregation_MissingField(t *testing.T) {
+	t.Parallel()
 	data := []map[string]any{{"topic": "t1"}}
 	result := applyAggregation(data, &nlquery.AggregationStep{Function: "avg", Field: ""})
 	if len(result) != 1 {
@@ -169,6 +180,7 @@ func TestApplyAggregation_MissingField(t *testing.T) {
 }
 
 func TestApplyAggregation_GroupByEmptyGroupByField(t *testing.T) {
+	t.Parallel()
 	data := []map[string]any{{"topic": "t1"}}
 	result := applyAggregation(data, &nlquery.AggregationStep{Function: "group_by", GroupBy: ""})
 	if len(result) != 1 {
@@ -177,6 +189,7 @@ func TestApplyAggregation_GroupByEmptyGroupByField(t *testing.T) {
 }
 
 func TestExtractNestedField_TopLevel(t *testing.T) {
+	t.Parallel()
 	row := map[string]any{"topic": "orders", "partition": 0}
 	if v := extractNestedField(row, "topic"); v != "orders" {
 		t.Errorf("expected 'orders', got %v", v)
@@ -184,6 +197,7 @@ func TestExtractNestedField_TopLevel(t *testing.T) {
 }
 
 func TestExtractNestedField_NestedValue(t *testing.T) {
+	t.Parallel()
 	row := map[string]any{
 		"value": map[string]any{"status": "active", "count": 42},
 	}
@@ -196,6 +210,7 @@ func TestExtractNestedField_NestedValue(t *testing.T) {
 }
 
 func TestExtractNestedField_MissingField(t *testing.T) {
+	t.Parallel()
 	row := map[string]any{"topic": "orders"}
 	if v := extractNestedField(row, "nonexistent"); v != nil {
 		t.Errorf("expected nil for missing field, got %v", v)
@@ -203,6 +218,7 @@ func TestExtractNestedField_MissingField(t *testing.T) {
 }
 
 func TestExtractNestedField_ValueNotMap(t *testing.T) {
+	t.Parallel()
 	row := map[string]any{"value": "plain-string"}
 	if v := extractNestedField(row, "nested_key"); v != nil {
 		t.Errorf("expected nil when value is not a map, got %v", v)
@@ -210,6 +226,7 @@ func TestExtractNestedField_ValueNotMap(t *testing.T) {
 }
 
 func TestToFloat64(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name  string
 		input any

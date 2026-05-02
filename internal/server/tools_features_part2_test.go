@@ -12,6 +12,7 @@ import (
 // ===================== handleWorkflows =====================
 
 func TestHandleWorkflows_List(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleWorkflows(context.Background(), makeToolRequest(map[string]any{
@@ -28,6 +29,7 @@ func TestHandleWorkflows_List(t *testing.T) {
 }
 
 func TestHandleWorkflows_Describe(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleWorkflows(context.Background(), makeToolRequest(map[string]any{
@@ -41,6 +43,7 @@ func TestHandleWorkflows_Describe(t *testing.T) {
 }
 
 func TestHandleWorkflows_DescribeMissingTemplate(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleWorkflows(context.Background(), makeToolRequest(map[string]any{
@@ -53,6 +56,7 @@ func TestHandleWorkflows_DescribeMissingTemplate(t *testing.T) {
 }
 
 func TestHandleWorkflows_ExecuteWithParams(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleWorkflows(context.Background(), makeToolRequest(map[string]any{
@@ -67,6 +71,7 @@ func TestHandleWorkflows_ExecuteWithParams(t *testing.T) {
 }
 
 func TestHandleWorkflows_ExecuteMissingTemplate_Mock(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleWorkflows(context.Background(), makeToolRequest(map[string]any{
@@ -79,6 +84,7 @@ func TestHandleWorkflows_ExecuteMissingTemplate_Mock(t *testing.T) {
 }
 
 func TestHandleWorkflows_ExecuteNotFound(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleWorkflows(context.Background(), makeToolRequest(map[string]any{
@@ -94,6 +100,7 @@ func TestHandleWorkflows_ExecuteNotFound(t *testing.T) {
 // ===================== handleCostAnalyze =====================
 
 func TestHandleCostAnalyze_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		DescribeTopicFn: func(ctx context.Context, cluster, topicName string) (*kafka.TopicDetail, error) {
 			return &kafka.TopicDetail{
@@ -117,6 +124,7 @@ func TestHandleCostAnalyze_Success(t *testing.T) {
 }
 
 func TestHandleCostAnalyze_MissingTopic_Mock(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleCostAnalyze(context.Background(), makeToolRequest(nil))
@@ -127,6 +135,7 @@ func TestHandleCostAnalyze_MissingTopic_Mock(t *testing.T) {
 }
 
 func TestHandleCostAnalyze_DescribeError(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		DescribeTopicFn: func(ctx context.Context, cluster, topicName string) (*kafka.TopicDetail, error) {
 			return nil, fmt.Errorf("topic not found")
@@ -145,6 +154,7 @@ func TestHandleCostAnalyze_DescribeError(t *testing.T) {
 // ===================== handleKnowledgeGraphQuery =====================
 
 func TestHandleKnowledgeGraphQuery_MissingQuery(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleKnowledgeGraphQuery(context.Background(), makeToolRequest(nil))
@@ -155,6 +165,7 @@ func TestHandleKnowledgeGraphQuery_MissingQuery(t *testing.T) {
 }
 
 func TestHandleKnowledgeGraphQuery_EmptyGraph(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return nil, nil
@@ -176,6 +187,7 @@ func TestHandleKnowledgeGraphQuery_EmptyGraph(t *testing.T) {
 // ===================== refreshKnowledgeGraph =====================
 
 func TestRefreshKnowledgeGraph_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return []kafka.TopicSummary{{Name: "orders", Partitions: 3}}, nil
@@ -198,6 +210,7 @@ func TestRefreshKnowledgeGraph_Success(t *testing.T) {
 }
 
 func TestRefreshKnowledgeGraph_ListTopicsError(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return nil, fmt.Errorf("connection refused")

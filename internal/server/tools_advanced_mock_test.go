@@ -12,6 +12,7 @@ import (
 // ===================== handleCreateConnector =====================
 
 func TestHandleCreateConnector_MissingName_Mock(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	result, err := s.handleCreateConnector(context.Background(), makeToolRequest(nil))
 	if err != nil {
@@ -21,6 +22,7 @@ func TestHandleCreateConnector_MissingName_Mock(t *testing.T) {
 }
 
 func TestHandleCreateConnector_MissingConfig(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleCreateConnector(context.Background(), makeToolRequest(map[string]any{
@@ -33,6 +35,7 @@ func TestHandleCreateConnector_MissingConfig(t *testing.T) {
 }
 
 func TestHandleCreateConnector_AuthDenied(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServer(t, withDefaultDeny)
 	s.kafkaManager = mock
@@ -49,6 +52,7 @@ func TestHandleCreateConnector_AuthDenied(t *testing.T) {
 // ===================== handleUpdateConnector =====================
 
 func TestHandleUpdateConnector_MissingName_Mock(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	result, err := s.handleUpdateConnector(context.Background(), makeToolRequest(nil))
 	if err != nil {
@@ -58,6 +62,7 @@ func TestHandleUpdateConnector_MissingName_Mock(t *testing.T) {
 }
 
 func TestHandleUpdateConnector_MissingConfig(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleUpdateConnector(context.Background(), makeToolRequest(map[string]any{
@@ -72,6 +77,7 @@ func TestHandleUpdateConnector_MissingConfig(t *testing.T) {
 // ===================== handleDeleteConnector =====================
 
 func TestHandleDeleteConnector_MissingName_Mock(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	result, err := s.handleDeleteConnector(context.Background(), makeToolRequest(nil))
 	if err != nil {
@@ -81,6 +87,7 @@ func TestHandleDeleteConnector_MissingName_Mock(t *testing.T) {
 }
 
 func TestHandleDeleteConnector_AuthDenied(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServer(t, withDefaultDeny)
 	s.kafkaManager = mock
@@ -96,6 +103,7 @@ func TestHandleDeleteConnector_AuthDenied(t *testing.T) {
 // ===================== handleRestartConnector =====================
 
 func TestHandleRestartConnector_MissingName_Mock(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	result, err := s.handleRestartConnector(context.Background(), makeToolRequest(nil))
 	if err != nil {
@@ -107,6 +115,7 @@ func TestHandleRestartConnector_MissingName_Mock(t *testing.T) {
 // ===================== handleConnectorHealth =====================
 
 func TestHandleConnectorHealth_MissingName_Mock(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	result, err := s.handleConnectorHealth(context.Background(), makeToolRequest(nil))
 	if err != nil {
@@ -118,6 +127,7 @@ func TestHandleConnectorHealth_MissingName_Mock(t *testing.T) {
 // ===================== handleTraceMessage =====================
 
 func TestHandleTraceMessage_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return []kafka.TopicSummary{{Name: "orders"}, {Name: "payments"}}, nil
@@ -148,6 +158,7 @@ func TestHandleTraceMessage_Success(t *testing.T) {
 }
 
 func TestHandleTraceMessage_MissingCorrelationID_Mock(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	result, err := s.handleTraceMessage(context.Background(), makeToolRequest(nil))
 	if err != nil {
@@ -157,6 +168,7 @@ func TestHandleTraceMessage_MissingCorrelationID_Mock(t *testing.T) {
 }
 
 func TestHandleTraceMessage_WithSpecificTopics(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		TraceMessageFn: func(ctx context.Context, cluster, correlationID, headerName string, topics []string, maxScan int) (*kafka.TraceResult, error) {
 			if len(topics) != 2 {
@@ -179,6 +191,7 @@ func TestHandleTraceMessage_WithSpecificTopics(t *testing.T) {
 // ===================== handleListACLs =====================
 
 func TestHandleListACLs_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListACLsFn: func(ctx context.Context, cluster, principal, resourceType string, includeAnalysis bool) (*kafka.ACLResult, error) {
 			return &kafka.ACLResult{
@@ -206,6 +219,7 @@ func TestHandleListACLs_Success(t *testing.T) {
 }
 
 func TestHandleListACLs_AuthDenied(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServer(t, withDefaultDeny)
 	s.kafkaManager = mock
@@ -217,6 +231,7 @@ func TestHandleListACLs_AuthDenied(t *testing.T) {
 }
 
 func TestHandleListACLs_Error(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListACLsFn: func(ctx context.Context, cluster, principal, resourceType string, includeAnalysis bool) (*kafka.ACLResult, error) {
 			return nil, fmt.Errorf("unauthorized")
@@ -233,6 +248,7 @@ func TestHandleListACLs_Error(t *testing.T) {
 // ===================== handleTimeTravel =====================
 
 func TestHandleTimeTravel_SnapshotSuccess(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		TimeTravelSnapshotFn: func(ctx context.Context, cluster, topic, timestamp string, maxKeys int) (*kafka.TimeTravelSnapshot, error) {
 			return &kafka.TimeTravelSnapshot{
@@ -252,6 +268,7 @@ func TestHandleTimeTravel_SnapshotSuccess(t *testing.T) {
 }
 
 func TestHandleTimeTravel_MissingTopic_Mock(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	result, err := s.handleTimeTravel(context.Background(), makeToolRequest(nil))
 	if err != nil {
@@ -261,6 +278,7 @@ func TestHandleTimeTravel_MissingTopic_Mock(t *testing.T) {
 }
 
 func TestHandleTimeTravel_DiffSuccess(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		TimeTravelDiffFn: func(ctx context.Context, cluster, topic, tsFrom, tsTo string, maxKeys int) (*kafka.TimeTravelDiffResult, error) {
 			return &kafka.TimeTravelDiffResult{
@@ -281,6 +299,7 @@ func TestHandleTimeTravel_DiffSuccess(t *testing.T) {
 }
 
 func TestHandleTimeTravel_UnknownAction(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	result, err := s.handleTimeTravel(context.Background(), makeToolRequest(map[string]any{
 		"topic": "orders", "action": "invalid",
@@ -294,6 +313,7 @@ func TestHandleTimeTravel_UnknownAction(t *testing.T) {
 // ===================== extractStringMapArg =====================
 
 func TestExtractStringMapArg_ValidMap(t *testing.T) {
+	t.Parallel()
 	req := makeToolRequest(map[string]any{
 		"config": map[string]any{"key": "value"},
 	})
@@ -304,6 +324,7 @@ func TestExtractStringMapArg_ValidMap(t *testing.T) {
 }
 
 func TestExtractStringMapArg_Missing(t *testing.T) {
+	t.Parallel()
 	req := makeToolRequest(nil)
 	result := extractStringMapArg(req, "config")
 	if result != nil {

@@ -12,6 +12,7 @@ import (
 // ===================== handlePluginRegistry =====================
 
 func TestHandlePluginRegistry_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handlePluginRegistry(context.Background(), mcp.ReadResourceRequest{})
@@ -28,6 +29,7 @@ func TestHandlePluginRegistry_Success(t *testing.T) {
 }
 
 func TestHandlePluginRegistry_NilRegistry(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	s.pluginRegistry = nil
@@ -47,6 +49,7 @@ func TestHandlePluginRegistry_NilRegistry(t *testing.T) {
 // ===================== handleWatchSubscriptionsResource =====================
 
 func TestHandleWatchSubscriptionsResource_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleWatchSubscriptionsResource(context.Background(), mcp.ReadResourceRequest{})
@@ -63,6 +66,7 @@ func TestHandleWatchSubscriptionsResource_Success(t *testing.T) {
 }
 
 func TestHandleWatchSubscriptionsResource_NilManager(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	s.watchManager = nil
@@ -82,6 +86,7 @@ func TestHandleWatchSubscriptionsResource_NilManager(t *testing.T) {
 // ===================== handleReplicationStatus =====================
 
 func TestHandleReplicationStatus_NilMonitor_Mock(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	s.replicationMon = nil
@@ -99,6 +104,7 @@ func TestHandleReplicationStatus_NilMonitor_Mock(t *testing.T) {
 }
 
 func TestHandleReplicationStatus_WithMonitor(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleReplicationStatus(context.Background(), mcp.ReadResourceRequest{})
@@ -113,6 +119,7 @@ func TestHandleReplicationStatus_WithMonitor(t *testing.T) {
 // ===================== computeSchemaDiff =====================
 
 func TestComputeSchemaDiff_AddedRemovedModified(t *testing.T) {
+	t.Parallel()
 	from := map[string]any{
 		"fields": []any{
 			map[string]any{"name": "id", "type": "int"},
@@ -149,6 +156,7 @@ func TestComputeSchemaDiff_AddedRemovedModified(t *testing.T) {
 }
 
 func TestComputeSchemaDiff_IdenticalSchemas(t *testing.T) {
+	t.Parallel()
 	schema := map[string]any{
 		"fields": []any{
 			map[string]any{"name": "id", "type": "int"},
@@ -164,6 +172,7 @@ func TestComputeSchemaDiff_IdenticalSchemas(t *testing.T) {
 // ===================== extractSchemaFields =====================
 
 func TestExtractSchemaFields_AvroFormat(t *testing.T) {
+	t.Parallel()
 	schema := map[string]any{
 		"fields": []any{
 			map[string]any{"name": "id", "type": "int"},
@@ -177,6 +186,7 @@ func TestExtractSchemaFields_AvroFormat(t *testing.T) {
 }
 
 func TestExtractSchemaFields_JSONSchemaFormat(t *testing.T) {
+	t.Parallel()
 	schema := map[string]any{
 		"properties": map[string]any{
 			"id":   map[string]any{"type": "integer"},
@@ -190,6 +200,7 @@ func TestExtractSchemaFields_JSONSchemaFormat(t *testing.T) {
 }
 
 func TestExtractSchemaFields_StringJSON(t *testing.T) {
+	t.Parallel()
 	schema := `{"fields": [{"name": "id", "type": "int"}]}`
 	fields := extractSchemaFields(schema)
 	if len(fields) != 1 {
@@ -200,6 +211,7 @@ func TestExtractSchemaFields_StringJSON(t *testing.T) {
 // ===================== formatDuration =====================
 
 func TestFormatDuration_Milliseconds(t *testing.T) {
+	t.Parallel()
 	result := formatDuration(500 * 1e6) // 500ms in nanoseconds
 	if !strings.Contains(result, "ms") {
 		t.Errorf("expected ms format, got %s", result)
@@ -209,6 +221,7 @@ func TestFormatDuration_Milliseconds(t *testing.T) {
 // ===================== Server getters =====================
 
 func TestWatchManager(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	if s.WatchManager() == nil {
@@ -217,6 +230,7 @@ func TestWatchManager(t *testing.T) {
 }
 
 func TestMaskingEngine(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	if s.MaskingEngine() == nil {

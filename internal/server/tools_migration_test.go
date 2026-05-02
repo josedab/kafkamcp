@@ -11,6 +11,7 @@ import (
 // ===================== handleMigrationExecute =====================
 
 func TestHandleMigrationExecute_MissingPlanID(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithMock(t, &kafka.MockKafkaManager{})
 	result, err := s.handleMigrationExecute(context.Background(), makeToolRequest(nil))
 	if err != nil {
@@ -24,6 +25,7 @@ func TestHandleMigrationExecute_MissingPlanID(t *testing.T) {
 }
 
 func TestHandleMigrationExecute_NonexistentPlan(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithMock(t, &kafka.MockKafkaManager{})
 	result, err := s.handleMigrationExecute(context.Background(), makeToolRequest(map[string]any{
 		"plan_id": "nonexistent",
@@ -37,6 +39,7 @@ func TestHandleMigrationExecute_NonexistentPlan(t *testing.T) {
 // ===================== handleMigrationStatus =====================
 
 func TestHandleMigrationStatus_MissingPlanID(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithMock(t, &kafka.MockKafkaManager{})
 	result, err := s.handleMigrationStatus(context.Background(), makeToolRequest(nil))
 	if err != nil {
@@ -50,6 +53,7 @@ func TestHandleMigrationStatus_MissingPlanID(t *testing.T) {
 }
 
 func TestHandleMigrationStatus_NonexistentPlan(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithMock(t, &kafka.MockKafkaManager{})
 	result, err := s.handleMigrationStatus(context.Background(), makeToolRequest(map[string]any{
 		"plan_id": "nonexistent",
@@ -61,6 +65,7 @@ func TestHandleMigrationStatus_NonexistentPlan(t *testing.T) {
 }
 
 func TestHandleMigrationStatus_InvalidView(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithMock(t, &kafka.MockKafkaManager{})
 	result, err := s.handleMigrationStatus(context.Background(), makeToolRequest(map[string]any{
 		"plan_id": "some-plan",
@@ -75,6 +80,7 @@ func TestHandleMigrationStatus_InvalidView(t *testing.T) {
 // ===================== handleMigrationRollback =====================
 
 func TestHandleMigrationRollback_MissingPlanID(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithMock(t, &kafka.MockKafkaManager{})
 	result, err := s.handleMigrationRollback(context.Background(), makeToolRequest(nil))
 	if err != nil {
@@ -88,6 +94,7 @@ func TestHandleMigrationRollback_MissingPlanID(t *testing.T) {
 }
 
 func TestHandleMigrationRollback_NonexistentPlan(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithMock(t, &kafka.MockKafkaManager{})
 	result, err := s.handleMigrationRollback(context.Background(), makeToolRequest(map[string]any{
 		"plan_id": "nonexistent",

@@ -12,6 +12,7 @@ import (
 // ===================== computeSchemaDiff Tests =====================
 
 func TestComputeSchemaDiff(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name          string
 		schemaFrom    any
@@ -141,6 +142,7 @@ func TestComputeSchemaDiff(t *testing.T) {
 // ===================== extractSchemaFields Tests =====================
 
 func TestExtractSchemaFields(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name       string
 		schema     any
@@ -212,6 +214,7 @@ func TestExtractSchemaFields(t *testing.T) {
 // ===================== formatDuration Tests =====================
 
 func TestFormatDuration(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		duration time.Duration
@@ -243,6 +246,7 @@ func TestFormatDuration(t *testing.T) {
 // ===================== extractStringMapArg Tests =====================
 
 func TestExtractStringMapArg(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name string
 		args any
@@ -328,6 +332,7 @@ func TestExtractStringMapArg(t *testing.T) {
 // ===================== matchesFilters Additional Tests =====================
 
 func TestMatchesFiltersComplex(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		msg     kafka.Message
@@ -447,6 +452,7 @@ func TestMatchesFiltersComplex(t *testing.T) {
 // ===================== estimateThroughput Additional Tests =====================
 
 func TestEstimateThroughputEdgeCases(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name   string
 		detail *kafka.TopicDetail
@@ -510,6 +516,7 @@ func TestEstimateThroughputEdgeCases(t *testing.T) {
 // ===================== Constants Validation Tests =====================
 
 func TestConstantsAreReasonable(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name  string
 		value int
@@ -539,12 +546,14 @@ func TestConstantsAreReasonable(t *testing.T) {
 }
 
 func TestDefaultSearchScanLessThanMax(t *testing.T) {
+	t.Parallel()
 	if DefaultSearchScan > MaxSearchScan {
 		t.Errorf("DefaultSearchScan (%d) should be <= MaxSearchScan (%d)", DefaultSearchScan, MaxSearchScan)
 	}
 }
 
 func TestMaxConsumeLimitLessThanMaxSearchScan(t *testing.T) {
+	t.Parallel()
 	if MaxConsumeLimit > MaxSearchScan {
 		t.Errorf("MaxConsumeLimit (%d) should be <= MaxSearchScan (%d)", MaxConsumeLimit, MaxSearchScan)
 	}

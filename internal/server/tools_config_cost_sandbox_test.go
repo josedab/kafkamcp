@@ -24,6 +24,7 @@ func newTestServerWithConfigCostSandbox(t *testing.T, mock *kafka.MockKafkaManag
 // ===================== handleConfigHistory =====================
 
 func TestHandleConfigHistory_MissingParams(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithConfigCostSandbox(t, mock)
 	result, err := s.handleConfigHistory(context.Background(), makeToolRequest(nil), "agent-1", map[string]any{}, time.Now())
@@ -37,6 +38,7 @@ func TestHandleConfigHistory_MissingParams(t *testing.T) {
 }
 
 func TestHandleConfigHistory_MissingResourceID(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithConfigCostSandbox(t, &kafka.MockKafkaManager{})
 	result, _ := s.handleConfigHistory(context.Background(), makeToolRequest(nil), "agent-1",
 		map[string]any{"resource": "topic"}, time.Now())
@@ -44,6 +46,7 @@ func TestHandleConfigHistory_MissingResourceID(t *testing.T) {
 }
 
 func TestHandleConfigHistory_ValidParams(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithConfigCostSandbox(t, &kafka.MockKafkaManager{})
 	result, err := s.handleConfigHistory(context.Background(), makeToolRequest(nil), "agent-1",
 		map[string]any{"resource": "topic", "resource_id": "orders"}, time.Now())
@@ -54,6 +57,7 @@ func TestHandleConfigHistory_ValidParams(t *testing.T) {
 }
 
 func TestHandleConfigHistory_AuditReport(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithConfigCostSandbox(t, &kafka.MockKafkaManager{})
 	result, err := s.handleConfigHistory(context.Background(), makeToolRequest(nil), "agent-1",
 		map[string]any{"resource": "topic", "resource_id": "orders", "audit_report": true}, time.Now())
@@ -66,12 +70,14 @@ func TestHandleConfigHistory_AuditReport(t *testing.T) {
 // ===================== handleConfigRollback =====================
 
 func TestHandleConfigRollback_MissingParams(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithConfigCostSandbox(t, &kafka.MockKafkaManager{})
 	result, _ := s.handleConfigRollback(context.Background(), makeToolRequest(nil), "agent-1", map[string]any{}, time.Now())
 	assertIsError(t, result)
 }
 
 func TestHandleConfigRollback_InvalidVersion(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithConfigCostSandbox(t, &kafka.MockKafkaManager{})
 	result, _ := s.handleConfigRollback(context.Background(), makeToolRequest(nil), "agent-1",
 		map[string]any{"resource": "topic", "resource_id": "orders", "target_version": float64(0)}, time.Now())
@@ -85,12 +91,14 @@ func TestHandleConfigRollback_InvalidVersion(t *testing.T) {
 // ===================== handleConfigCompare =====================
 
 func TestHandleConfigCompare_MissingParams(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithConfigCostSandbox(t, &kafka.MockKafkaManager{})
 	result, _ := s.handleConfigCompare(context.Background(), makeToolRequest(nil), "agent-1", map[string]any{}, time.Now())
 	assertIsError(t, result)
 }
 
 func TestHandleConfigCompare_InvalidVersions(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithConfigCostSandbox(t, &kafka.MockKafkaManager{})
 	result, _ := s.handleConfigCompare(context.Background(), makeToolRequest(nil), "agent-1",
 		map[string]any{"resource": "topic", "resource_id": "orders", "version1": float64(0), "version2": float64(1)}, time.Now())
@@ -104,6 +112,7 @@ func TestHandleConfigCompare_InvalidVersions(t *testing.T) {
 // ===================== handleCostLive =====================
 
 func TestHandleCostLive_AllCosts(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithConfigCostSandbox(t, &kafka.MockKafkaManager{})
 	result, err := s.handleCostLive(context.Background(), makeToolRequest(nil), "agent-1", map[string]any{}, time.Now())
 	if err != nil {
@@ -113,6 +122,7 @@ func TestHandleCostLive_AllCosts(t *testing.T) {
 }
 
 func TestHandleCostLive_SpecificResource(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithConfigCostSandbox(t, &kafka.MockKafkaManager{})
 	result, err := s.handleCostLive(context.Background(), makeToolRequest(nil), "agent-1",
 		map[string]any{"resource_type": "topic", "resource_name": "orders"}, time.Now())
@@ -126,6 +136,7 @@ func TestHandleCostLive_SpecificResource(t *testing.T) {
 // ===================== handleCostAllocate =====================
 
 func TestHandleCostAllocate_InvalidAction(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithConfigCostSandbox(t, &kafka.MockKafkaManager{})
 	result, _ := s.handleCostAllocate(context.Background(), makeToolRequest(nil), "agent-1",
 		map[string]any{"action": "invalid"}, time.Now())
@@ -133,6 +144,7 @@ func TestHandleCostAllocate_InvalidAction(t *testing.T) {
 }
 
 func TestHandleCostAllocate_CreateMissingName(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithConfigCostSandbox(t, &kafka.MockKafkaManager{})
 	result, _ := s.handleCostAllocate(context.Background(), makeToolRequest(nil), "agent-1",
 		map[string]any{"action": "create"}, time.Now())
@@ -140,6 +152,7 @@ func TestHandleCostAllocate_CreateMissingName(t *testing.T) {
 }
 
 func TestHandleCostAllocate_List(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithConfigCostSandbox(t, &kafka.MockKafkaManager{})
 	result, err := s.handleCostAllocate(context.Background(), makeToolRequest(nil), "agent-1",
 		map[string]any{"action": "list"}, time.Now())
@@ -152,6 +165,7 @@ func TestHandleCostAllocate_List(t *testing.T) {
 // ===================== handleCostBudget =====================
 
 func TestHandleCostBudget_InvalidAction(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithConfigCostSandbox(t, &kafka.MockKafkaManager{})
 	result, _ := s.handleCostBudget(context.Background(), makeToolRequest(nil), "agent-1",
 		map[string]any{"action": "invalid"}, time.Now())
@@ -159,6 +173,7 @@ func TestHandleCostBudget_InvalidAction(t *testing.T) {
 }
 
 func TestHandleCostBudget_CreateMissingName(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithConfigCostSandbox(t, &kafka.MockKafkaManager{})
 	result, _ := s.handleCostBudget(context.Background(), makeToolRequest(nil), "agent-1",
 		map[string]any{"action": "create"}, time.Now())
@@ -166,6 +181,7 @@ func TestHandleCostBudget_CreateMissingName(t *testing.T) {
 }
 
 func TestHandleCostBudget_List(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithConfigCostSandbox(t, &kafka.MockKafkaManager{})
 	result, err := s.handleCostBudget(context.Background(), makeToolRequest(nil), "agent-1",
 		map[string]any{"action": "list"}, time.Now())
@@ -178,12 +194,14 @@ func TestHandleCostBudget_List(t *testing.T) {
 // ===================== handleSandboxCreate =====================
 
 func TestHandleSandboxCreate_MissingName(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithConfigCostSandbox(t, &kafka.MockKafkaManager{})
 	result, _ := s.handleSandboxCreate(context.Background(), makeToolRequest(nil), "agent-1", map[string]any{}, time.Now())
 	assertIsError(t, result)
 }
 
 func TestHandleSandboxCreate_ValidParams(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithConfigCostSandbox(t, &kafka.MockKafkaManager{})
 	result, err := s.handleSandboxCreate(context.Background(), makeToolRequest(nil), "agent-1",
 		map[string]any{"name": "test-sb"}, time.Now())
@@ -200,12 +218,14 @@ func TestHandleSandboxCreate_ValidParams(t *testing.T) {
 // ===================== handleSandboxExec =====================
 
 func TestHandleSandboxExec_MissingParams(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithConfigCostSandbox(t, &kafka.MockKafkaManager{})
 	result, _ := s.handleSandboxExec(context.Background(), makeToolRequest(nil), "agent-1", map[string]any{}, time.Now())
 	assertIsError(t, result)
 }
 
 func TestHandleSandboxExec_MissingSandboxID(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithConfigCostSandbox(t, &kafka.MockKafkaManager{})
 	result, _ := s.handleSandboxExec(context.Background(), makeToolRequest(nil), "agent-1",
 		map[string]any{"tool": "kafka_produce"}, time.Now())
@@ -213,6 +233,7 @@ func TestHandleSandboxExec_MissingSandboxID(t *testing.T) {
 }
 
 func TestHandleSandboxExec_NonexistentSandbox(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithConfigCostSandbox(t, &kafka.MockKafkaManager{})
 	result, _ := s.handleSandboxExec(context.Background(), makeToolRequest(nil), "agent-1",
 		map[string]any{"sandbox_id": "fake", "tool": "kafka_produce"}, time.Now())
@@ -222,6 +243,7 @@ func TestHandleSandboxExec_NonexistentSandbox(t *testing.T) {
 // ===================== handleSandboxManage =====================
 
 func TestHandleSandboxManage_InvalidAction(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithConfigCostSandbox(t, &kafka.MockKafkaManager{})
 	result, _ := s.handleSandboxManage(context.Background(), makeToolRequest(nil), "agent-1",
 		map[string]any{"action": "invalid"}, time.Now())
@@ -229,6 +251,7 @@ func TestHandleSandboxManage_InvalidAction(t *testing.T) {
 }
 
 func TestHandleSandboxManage_ListAction(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithConfigCostSandbox(t, &kafka.MockKafkaManager{})
 	result, err := s.handleSandboxManage(context.Background(), makeToolRequest(nil), "agent-1",
 		map[string]any{"action": "list"}, time.Now())
@@ -239,6 +262,7 @@ func TestHandleSandboxManage_ListAction(t *testing.T) {
 }
 
 func TestHandleSandboxManage_DestroyMissingID(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithConfigCostSandbox(t, &kafka.MockKafkaManager{})
 	result, _ := s.handleSandboxManage(context.Background(), makeToolRequest(nil), "agent-1",
 		map[string]any{"action": "destroy"}, time.Now())
@@ -246,6 +270,7 @@ func TestHandleSandboxManage_DestroyMissingID(t *testing.T) {
 }
 
 func TestHandleSandboxManage_GetMissingID(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithConfigCostSandbox(t, &kafka.MockKafkaManager{})
 	result, _ := s.handleSandboxManage(context.Background(), makeToolRequest(nil), "agent-1",
 		map[string]any{"action": "get"}, time.Now())
@@ -253,6 +278,7 @@ func TestHandleSandboxManage_GetMissingID(t *testing.T) {
 }
 
 func TestHandleSandboxManage_PromotionReportMissingID(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithConfigCostSandbox(t, &kafka.MockKafkaManager{})
 	result, _ := s.handleSandboxManage(context.Background(), makeToolRequest(nil), "agent-1",
 		map[string]any{"action": "promotion_report"}, time.Now())
@@ -260,6 +286,7 @@ func TestHandleSandboxManage_PromotionReportMissingID(t *testing.T) {
 }
 
 func TestSandboxLifecycle(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithConfigCostSandbox(t, &kafka.MockKafkaManager{})
 
 	// Create

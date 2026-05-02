@@ -12,6 +12,7 @@ import (
 // ===================== handleMigrationPlan =====================
 
 func TestHandleMigrationPlan_PlanSuccess(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			if cluster == "src" {
@@ -35,6 +36,7 @@ func TestHandleMigrationPlan_PlanSuccess(t *testing.T) {
 }
 
 func TestHandleMigrationPlan_MissingClusters(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleMigrationPlan(context.Background(), makeToolRequest(map[string]any{
@@ -47,6 +49,7 @@ func TestHandleMigrationPlan_MissingClusters(t *testing.T) {
 }
 
 func TestHandleMigrationPlan_ListAction(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleMigrationPlan(context.Background(), makeToolRequest(map[string]any{
@@ -63,6 +66,7 @@ func TestHandleMigrationPlan_ListAction(t *testing.T) {
 }
 
 func TestHandleMigrationPlan_ListTopicsError(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return nil, fmt.Errorf("connection refused")
@@ -81,6 +85,7 @@ func TestHandleMigrationPlan_ListTopicsError(t *testing.T) {
 // ===================== handleTraceLineage =====================
 
 func TestHandleTraceLineage_TraceSuccess(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		GetTopicGraphFn: func(ctx context.Context, cluster string) (*kafka.TopicGraph, error) {
 			return &kafka.TopicGraph{
@@ -99,6 +104,7 @@ func TestHandleTraceLineage_TraceSuccess(t *testing.T) {
 }
 
 func TestHandleTraceLineage_TraceMissingTopic_Mock(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleTraceLineage(context.Background(), makeToolRequest(map[string]any{
@@ -111,6 +117,7 @@ func TestHandleTraceLineage_TraceMissingTopic_Mock(t *testing.T) {
 }
 
 func TestHandleTraceLineage_ComplianceReport(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleTraceLineage(context.Background(), makeToolRequest(map[string]any{
@@ -123,6 +130,7 @@ func TestHandleTraceLineage_ComplianceReport(t *testing.T) {
 }
 
 func TestHandleTraceLineage_DetectPII(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleTraceLineage(context.Background(), makeToolRequest(map[string]any{
@@ -137,6 +145,7 @@ func TestHandleTraceLineage_DetectPII(t *testing.T) {
 // ===================== handleDiagnoseLag =====================
 
 func TestHandleDiagnoseLag_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		DescribeConsumerGroupFn: func(ctx context.Context, cluster, groupID string) (*kafka.ConsumerGroupDetail, error) {
 			return &kafka.ConsumerGroupDetail{
@@ -161,6 +170,7 @@ func TestHandleDiagnoseLag_Success(t *testing.T) {
 }
 
 func TestHandleDiagnoseLag_GroupNotFound(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		DescribeConsumerGroupFn: func(ctx context.Context, cluster, groupID string) (*kafka.ConsumerGroupDetail, error) {
 			return nil, fmt.Errorf("group %q not found", groupID)
@@ -177,6 +187,7 @@ func TestHandleDiagnoseLag_GroupNotFound(t *testing.T) {
 }
 
 func TestHandleDiagnoseLag_HealthyGroup(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		DescribeConsumerGroupFn: func(ctx context.Context, cluster, groupID string) (*kafka.ConsumerGroupDetail, error) {
 			return &kafka.ConsumerGroupDetail{
@@ -201,6 +212,7 @@ func TestHandleDiagnoseLag_HealthyGroup(t *testing.T) {
 // ===================== handleForecast =====================
 
 func TestHandleForecast_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		DescribeTopicFn: func(ctx context.Context, cluster, topicName string) (*kafka.TopicDetail, error) {
 			return &kafka.TopicDetail{
@@ -224,6 +236,7 @@ func TestHandleForecast_Success(t *testing.T) {
 }
 
 func TestHandleForecast_MissingTopic_Mock(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleForecast(context.Background(), makeToolRequest(nil))
@@ -234,6 +247,7 @@ func TestHandleForecast_MissingTopic_Mock(t *testing.T) {
 }
 
 func TestHandleForecast_DescribeError(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		DescribeTopicFn: func(ctx context.Context, cluster, topicName string) (*kafka.TopicDetail, error) {
 			return nil, fmt.Errorf("topic not found")
@@ -252,6 +266,7 @@ func TestHandleForecast_DescribeError(t *testing.T) {
 // ===================== handleGroupHealth =====================
 
 func TestHandleGroupHealth_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		DescribeConsumerGroupFn: func(ctx context.Context, cluster, groupID string) (*kafka.ConsumerGroupDetail, error) {
 			return &kafka.ConsumerGroupDetail{
@@ -273,6 +288,7 @@ func TestHandleGroupHealth_Success(t *testing.T) {
 }
 
 func TestHandleGroupHealth_DescribeError(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		DescribeConsumerGroupFn: func(ctx context.Context, cluster, groupID string) (*kafka.ConsumerGroupDetail, error) {
 			return nil, fmt.Errorf("group not found")
@@ -291,6 +307,7 @@ func TestHandleGroupHealth_DescribeError(t *testing.T) {
 // ===================== handlePersona =====================
 
 func TestHandlePersona_List(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handlePersona(context.Background(), makeToolRequest(map[string]any{
@@ -309,6 +326,7 @@ func TestHandlePersona_List(t *testing.T) {
 // ===================== handleDataContract =====================
 
 func TestHandleDataContract_ListSuccess(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleDataContract(context.Background(), makeToolRequest(map[string]any{

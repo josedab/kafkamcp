@@ -35,6 +35,7 @@ import (
 )
 
 func TestWithOptions(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name   string
 		option Option
@@ -199,6 +200,7 @@ func TestWithOptions(t *testing.T) {
 }
 
 func TestWithOptions_Composable(t *testing.T) {
+	t.Parallel()
 	s := &Server{}
 	opts := []Option{
 		WithAuditLogger(&audit.Logger{}),
@@ -226,6 +228,7 @@ func TestWithOptions_Composable(t *testing.T) {
 }
 
 func TestWithOptions_OverridesExisting(t *testing.T) {
+	t.Parallel()
 	s := &Server{}
 	first := &audit.Logger{}
 	second := &audit.Logger{}

@@ -12,6 +12,7 @@ import (
 )
 
 func TestMatchTopicFilter(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		pattern string
 		name    string
@@ -43,6 +44,7 @@ func TestMatchTopicFilter(t *testing.T) {
 }
 
 func TestExtractAgentID(t *testing.T) {
+	t.Parallel()
 	// extractAgentID with no headers returns "anonymous"
 	req := mcp.CallToolRequest{}
 	id := extractAgentID(req)
@@ -52,6 +54,7 @@ func TestExtractAgentID(t *testing.T) {
 }
 
 func TestExtractAgentIDWithHeader(t *testing.T) {
+	t.Parallel()
 	req := mcp.CallToolRequest{}
 	req.Header = http.Header{"X-Agent-Id": []string{"my-agent"}}
 	id := extractAgentID(req)
@@ -61,6 +64,7 @@ func TestExtractAgentIDWithHeader(t *testing.T) {
 }
 
 func TestMarshalResult(t *testing.T) {
+	t.Parallel()
 	result, err := marshalResult(map[string]any{"key": "value"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -71,6 +75,7 @@ func TestMarshalResult(t *testing.T) {
 }
 
 func TestMarshalResourceJSON(t *testing.T) {
+	t.Parallel()
 	contents, err := marshalResourceJSON("kafka://test", map[string]any{"foo": "bar"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -81,6 +86,7 @@ func TestMarshalResourceJSON(t *testing.T) {
 }
 
 func TestExtractAgentIDFromResource(t *testing.T) {
+	t.Parallel()
 	req := mcp.ReadResourceRequest{}
 	id := extractAgentIDFromResource(req)
 	if id != "anonymous" {
@@ -89,6 +95,7 @@ func TestExtractAgentIDFromResource(t *testing.T) {
 }
 
 func TestExtractAgentIDFromResourceWithHeader(t *testing.T) {
+	t.Parallel()
 	req := mcp.ReadResourceRequest{}
 	req.Header = http.Header{"X-Agent-Id": []string{"resource-agent"}}
 	id := extractAgentIDFromResource(req)
@@ -98,6 +105,7 @@ func TestExtractAgentIDFromResourceWithHeader(t *testing.T) {
 }
 
 func TestServerCloseStopsSubsystems(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 
 	// Replace nil kafkaManager with a mock so Close() doesn't panic.

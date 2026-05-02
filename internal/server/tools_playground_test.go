@@ -13,6 +13,7 @@ import (
 // ===================== handlePlayground - create =====================
 
 func TestHandlePlayground_CreateSuccess(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		PlaygroundCreateFn: func(ctx context.Context, cluster, agentID, name string, partitions int32) (*kafka.PlaygroundTopicResult, error) {
 			return &kafka.PlaygroundTopicResult{
@@ -43,6 +44,7 @@ func TestHandlePlayground_CreateSuccess(t *testing.T) {
 }
 
 func TestHandlePlayground_CreateError(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		PlaygroundCreateFn: func(ctx context.Context, cluster, agentID, name string, partitions int32) (*kafka.PlaygroundTopicResult, error) {
 			return nil, fmt.Errorf("topic already exists")
@@ -61,6 +63,7 @@ func TestHandlePlayground_CreateError(t *testing.T) {
 }
 
 func TestHandlePlayground_CreatePartitionCap(t *testing.T) {
+	t.Parallel()
 	var gotPartitions int32
 	mock := &kafka.MockKafkaManager{
 		PlaygroundCreateFn: func(ctx context.Context, cluster, agentID, name string, partitions int32) (*kafka.PlaygroundTopicResult, error) {
@@ -88,6 +91,7 @@ func TestHandlePlayground_CreatePartitionCap(t *testing.T) {
 // ===================== handlePlayground - produce_sample =====================
 
 func TestHandlePlayground_ProduceSampleSuccess(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		PlaygroundProduceSampleFn: func(ctx context.Context, cluster, agentID, name, pattern string, count int) (map[string]any, error) {
 			return map[string]any{
@@ -116,6 +120,7 @@ func TestHandlePlayground_ProduceSampleSuccess(t *testing.T) {
 }
 
 func TestHandlePlayground_ProduceSampleError(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		PlaygroundProduceSampleFn: func(ctx context.Context, cluster, agentID, name, pattern string, count int) (map[string]any, error) {
 			return nil, fmt.Errorf("topic not found")
@@ -134,6 +139,7 @@ func TestHandlePlayground_ProduceSampleError(t *testing.T) {
 }
 
 func TestHandlePlayground_ProduceSampleCountCap(t *testing.T) {
+	t.Parallel()
 	var gotCount int
 	mock := &kafka.MockKafkaManager{
 		PlaygroundProduceSampleFn: func(ctx context.Context, cluster, agentID, name, pattern string, count int) (map[string]any, error) {
@@ -156,6 +162,7 @@ func TestHandlePlayground_ProduceSampleCountCap(t *testing.T) {
 // ===================== handlePlayground - list =====================
 
 func TestHandlePlayground_ListSuccess(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		PlaygroundListFn: func(ctx context.Context, cluster, agentID string) ([]kafka.TopicSummary, error) {
 			return []kafka.TopicSummary{
@@ -185,6 +192,7 @@ func TestHandlePlayground_ListSuccess(t *testing.T) {
 }
 
 func TestHandlePlayground_ListEmpty(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		PlaygroundListFn: func(ctx context.Context, cluster, agentID string) ([]kafka.TopicSummary, error) {
 			return nil, nil
@@ -202,6 +210,7 @@ func TestHandlePlayground_ListEmpty(t *testing.T) {
 }
 
 func TestHandlePlayground_ListError(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		PlaygroundListFn: func(ctx context.Context, cluster, agentID string) ([]kafka.TopicSummary, error) {
 			return nil, fmt.Errorf("cluster unavailable")
@@ -221,6 +230,7 @@ func TestHandlePlayground_ListError(t *testing.T) {
 // ===================== handlePlayground - cleanup =====================
 
 func TestHandlePlayground_CleanupSuccess(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		PlaygroundCleanupFn: func(ctx context.Context, cluster, agentID string) (int, error) {
 			return 3, nil
@@ -245,6 +255,7 @@ func TestHandlePlayground_CleanupSuccess(t *testing.T) {
 }
 
 func TestHandlePlayground_CleanupError(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		PlaygroundCleanupFn: func(ctx context.Context, cluster, agentID string) (int, error) {
 			return 0, fmt.Errorf("cleanup failed")
@@ -264,6 +275,7 @@ func TestHandlePlayground_CleanupError(t *testing.T) {
 // ===================== handlePlayground - invalid action =====================
 
 func TestHandlePlayground_InvalidAction(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithMock(t, &kafka.MockKafkaManager{})
 
 	result, err := s.handlePlayground(context.Background(), makeToolRequest(map[string]any{
@@ -281,6 +293,7 @@ func TestHandlePlayground_InvalidAction(t *testing.T) {
 // ===================== handlePlayground - auth denied =====================
 
 func TestHandlePlayground_AuthDenied(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServer(t, withDefaultDeny)
 	s.kafkaManager = mock

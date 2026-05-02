@@ -12,6 +12,7 @@ import (
 )
 
 func TestClampInt64(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name       string
 		v, min, max int64
@@ -37,6 +38,7 @@ func TestClampInt64(t *testing.T) {
 }
 
 func TestValidateStringLength(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		value   string
@@ -62,6 +64,7 @@ func TestValidateStringLength(t *testing.T) {
 }
 
 func TestSanitizeAuditParams(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name   string
 		tool   string
@@ -119,6 +122,7 @@ func TestSanitizeAuditParams(t *testing.T) {
 }
 
 func TestSanitizeAuditParamsSchemaRedacted(t *testing.T) {
+	t.Parallel()
 	params := map[string]any{"subject": "test", "schema": `{"type":"record"}`}
 	result := sanitizeAuditParams("kafka_check_schema_compatibility", params)
 	if result["schema"] != "**REDACTED**" {
@@ -130,6 +134,7 @@ func TestSanitizeAuditParamsSchemaRedacted(t *testing.T) {
 }
 
 func TestMarshalResultComplex(t *testing.T) {
+	t.Parallel()
 	data := map[string]any{
 		"topics": []string{"a", "b", "c"},
 		"count":  3,
@@ -144,6 +149,7 @@ func TestMarshalResultComplex(t *testing.T) {
 }
 
 func TestMarshalResultNil(t *testing.T) {
+	t.Parallel()
 	result, err := marshalResult(nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -154,6 +160,7 @@ func TestMarshalResultNil(t *testing.T) {
 }
 
 func TestMarshalResourceJSONComplex(t *testing.T) {
+	t.Parallel()
 	data := map[string]any{"status": "healthy", "brokers": 3}
 	contents, err := marshalResourceJSON("kafka://cluster/health", data)
 	if err != nil {
@@ -165,6 +172,7 @@ func TestMarshalResourceJSONComplex(t *testing.T) {
 }
 
 func TestMatchTopicFilterAdditional(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		pattern string
 		name    string
@@ -187,6 +195,7 @@ func TestMatchTopicFilterAdditional(t *testing.T) {
 }
 
 func TestExtractAgentIDVariants(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		headerKey string
@@ -213,6 +222,7 @@ func TestExtractAgentIDVariants(t *testing.T) {
 }
 
 func TestExtractAgentIDFromResourceVariants(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		headerKey string
@@ -238,6 +248,7 @@ func TestExtractAgentIDFromResourceVariants(t *testing.T) {
 }
 
 func TestContainsStr(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		s, substr string
 		want      bool
@@ -258,6 +269,7 @@ func TestContainsStr(t *testing.T) {
 }
 
 func TestSearchString(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		s, substr string
 		want      bool
@@ -276,6 +288,7 @@ func TestSearchString(t *testing.T) {
 }
 
 func TestExtractFieldValue(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name  string
 		value any
@@ -298,6 +311,7 @@ func TestExtractFieldValue(t *testing.T) {
 }
 
 func TestEstimateThroughput(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name   string
 		detail *kafka.TopicDetail
@@ -339,6 +353,7 @@ func TestEstimateThroughput(t *testing.T) {
 }
 
 func TestIntFromAny(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name string
 		v    any
@@ -361,6 +376,7 @@ func TestIntFromAny(t *testing.T) {
 }
 
 func TestMatchesFilters(t *testing.T) {
+	t.Parallel()
 	msg := kafka.Message{
 		Value: map[string]any{
 			"status": "error",

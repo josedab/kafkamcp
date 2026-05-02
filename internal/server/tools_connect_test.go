@@ -6,6 +6,7 @@ import (
 )
 
 func TestValidateConnectorConfig_NormalPassthrough(t *testing.T) {
+	t.Parallel()
 	config := map[string]string{
 		"connector.class": "io.debezium.connector.mysql.MySqlConnector",
 		"tasks.max":       "1",
@@ -23,6 +24,7 @@ func TestValidateConnectorConfig_NormalPassthrough(t *testing.T) {
 }
 
 func TestValidateConnectorConfig_RedactsSensitiveKeys(t *testing.T) {
+	t.Parallel()
 	sensitiveKeys := []string{
 		"database.password",
 		"aws.secret.access.key",
@@ -50,6 +52,7 @@ func TestValidateConnectorConfig_RedactsSensitiveKeys(t *testing.T) {
 }
 
 func TestValidateConnectorConfig_CaseInsensitiveRedaction(t *testing.T) {
+	t.Parallel()
 	config := map[string]string{
 		"Database.PASSWORD": "secret",
 		"MY.SECRET.KEY":     "hidden",
@@ -66,6 +69,7 @@ func TestValidateConnectorConfig_CaseInsensitiveRedaction(t *testing.T) {
 }
 
 func TestValidateConnectorConfig_OversizedKeyRejected(t *testing.T) {
+	t.Parallel()
 	longKey := strings.Repeat("x", maxInputLength+1)
 	config := map[string]string{longKey: "value"}
 	deny, _ := validateConnectorConfig(config)
@@ -75,6 +79,7 @@ func TestValidateConnectorConfig_OversizedKeyRejected(t *testing.T) {
 }
 
 func TestValidateConnectorConfig_OversizedValueRejected(t *testing.T) {
+	t.Parallel()
 	longVal := strings.Repeat("v", maxInputLength+1)
 	config := map[string]string{"key": longVal}
 	deny, _ := validateConnectorConfig(config)
@@ -84,6 +89,7 @@ func TestValidateConnectorConfig_OversizedValueRejected(t *testing.T) {
 }
 
 func TestValidateConnectorConfig_EmptyConfig(t *testing.T) {
+	t.Parallel()
 	deny, redacted := validateConnectorConfig(map[string]string{})
 	if deny != nil {
 		t.Fatalf("unexpected denial for empty config")
@@ -94,6 +100,7 @@ func TestValidateConnectorConfig_EmptyConfig(t *testing.T) {
 }
 
 func TestValidateConnectorConfig_MultipleSensitiveKeys(t *testing.T) {
+	t.Parallel()
 	config := map[string]string{
 		"normal.key":       "visible",
 		"database.password": "secret1",

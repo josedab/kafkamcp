@@ -10,6 +10,7 @@ import (
 )
 
 func TestGenerateOpenAPIPaths_HasExpectedPaths(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithMock(t, &kafka.MockKafkaManager{})
 	paths := s.generateOpenAPIPaths()
 
@@ -32,6 +33,7 @@ func TestGenerateOpenAPIPaths_HasExpectedPaths(t *testing.T) {
 }
 
 func TestGenerateOpenAPIPaths_PostWithSummaryAndDescription(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithMock(t, &kafka.MockKafkaManager{})
 	paths := s.generateOpenAPIPaths()
 
@@ -52,6 +54,7 @@ func TestGenerateOpenAPIPaths_PostWithSummaryAndDescription(t *testing.T) {
 }
 
 func TestGenerateOpenAPIPaths_OperationIdStripsPrefix(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithMock(t, &kafka.MockKafkaManager{})
 	paths := s.generateOpenAPIPaths()
 
@@ -69,6 +72,7 @@ func TestGenerateOpenAPIPaths_OperationIdStripsPrefix(t *testing.T) {
 }
 
 func TestGenerateOpenAPIPaths_SecurityScheme(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithMock(t, &kafka.MockKafkaManager{})
 	paths := s.generateOpenAPIPaths()
 
@@ -86,6 +90,7 @@ func TestGenerateOpenAPIPaths_SecurityScheme(t *testing.T) {
 }
 
 func TestHandleOpenAPISpec_ReturnsValidJSON(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithMock(t, &kafka.MockKafkaManager{})
 	result, err := s.handleOpenAPISpec(context.Background(), makeToolRequest(nil))
 	if err != nil {
@@ -112,6 +117,7 @@ func TestHandleOpenAPISpec_ReturnsValidJSON(t *testing.T) {
 }
 
 func TestHandleOpenAPISpec_InfoFields(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithMock(t, &kafka.MockKafkaManager{})
 	result, _ := s.handleOpenAPISpec(context.Background(), makeToolRequest(nil))
 	text := resultText(t, result)
@@ -129,6 +135,7 @@ func TestHandleOpenAPISpec_InfoFields(t *testing.T) {
 }
 
 func TestHandleOpenAPISpec_ComponentsSecurityScheme(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithMock(t, &kafka.MockKafkaManager{})
 	result, _ := s.handleOpenAPISpec(context.Background(), makeToolRequest(nil))
 	text := resultText(t, result)

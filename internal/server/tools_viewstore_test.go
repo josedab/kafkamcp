@@ -21,6 +21,7 @@ func newTestServerWithViewStore(t *testing.T, mock *kafka.MockKafkaManager) *Ser
 // ===================== handleViewCreate =====================
 
 func TestHandleViewCreate_MissingName(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithViewStore(t, &kafka.MockKafkaManager{})
 	result, _ := s.handleViewCreate(context.Background(), makeToolRequest(nil), "agent-1",
 		map[string]any{"source_topic": "orders"}, time.Now())
@@ -28,6 +29,7 @@ func TestHandleViewCreate_MissingName(t *testing.T) {
 }
 
 func TestHandleViewCreate_MissingSourceTopic(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithViewStore(t, &kafka.MockKafkaManager{})
 	result, _ := s.handleViewCreate(context.Background(), makeToolRequest(nil), "agent-1",
 		map[string]any{"name": "my-view"}, time.Now())
@@ -35,6 +37,7 @@ func TestHandleViewCreate_MissingSourceTopic(t *testing.T) {
 }
 
 func TestHandleViewCreate_ValidParams(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithViewStore(t, &kafka.MockKafkaManager{})
 	result, err := s.handleViewCreate(context.Background(), makeToolRequest(nil), "agent-1",
 		map[string]any{"name": "test-view", "source_topic": "orders"}, time.Now())
@@ -50,6 +53,7 @@ func TestHandleViewCreate_ValidParams(t *testing.T) {
 }
 
 func TestHandleViewCreate_WithAggregation(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithViewStore(t, &kafka.MockKafkaManager{})
 	result, err := s.handleViewCreate(context.Background(), makeToolRequest(nil), "agent-1",
 		map[string]any{
@@ -67,6 +71,7 @@ func TestHandleViewCreate_WithAggregation(t *testing.T) {
 // ===================== handleViewQuery =====================
 
 func TestHandleViewQuery_MissingViewID(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithViewStore(t, &kafka.MockKafkaManager{})
 	result, _ := s.handleViewQuery(context.Background(), makeToolRequest(nil), "agent-1",
 		map[string]any{}, time.Now())
@@ -74,6 +79,7 @@ func TestHandleViewQuery_MissingViewID(t *testing.T) {
 }
 
 func TestHandleViewQuery_NonexistentView(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithViewStore(t, &kafka.MockKafkaManager{})
 	result, _ := s.handleViewQuery(context.Background(), makeToolRequest(nil), "agent-1",
 		map[string]any{"view_id": "nonexistent"}, time.Now())
@@ -81,6 +87,7 @@ func TestHandleViewQuery_NonexistentView(t *testing.T) {
 }
 
 func TestHandleViewQuery_ValidQuery(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithViewStore(t, &kafka.MockKafkaManager{})
 
 	// Create a view first
@@ -106,6 +113,7 @@ func TestHandleViewQuery_ValidQuery(t *testing.T) {
 // ===================== handleViewStatus =====================
 
 func TestHandleViewStatus_InvalidAction(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithViewStore(t, &kafka.MockKafkaManager{})
 	result, _ := s.handleViewStatus(context.Background(), makeToolRequest(nil), "agent-1",
 		map[string]any{"action": "invalid"}, time.Now())
@@ -113,6 +121,7 @@ func TestHandleViewStatus_InvalidAction(t *testing.T) {
 }
 
 func TestHandleViewStatus_ListAction(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithViewStore(t, &kafka.MockKafkaManager{})
 	s.viewStoreEngine.CreateView("list-test", "orders", "_key", "", "", 0, 0, nil, nil, "", "", "agent-1")
 
@@ -125,6 +134,7 @@ func TestHandleViewStatus_ListAction(t *testing.T) {
 }
 
 func TestHandleViewStatus_GetMissingID(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithViewStore(t, &kafka.MockKafkaManager{})
 	result, _ := s.handleViewStatus(context.Background(), makeToolRequest(nil), "agent-1",
 		map[string]any{"action": "get"}, time.Now())
@@ -132,6 +142,7 @@ func TestHandleViewStatus_GetMissingID(t *testing.T) {
 }
 
 func TestHandleViewStatus_GetUnknownID(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithViewStore(t, &kafka.MockKafkaManager{})
 	result, _ := s.handleViewStatus(context.Background(), makeToolRequest(nil), "agent-1",
 		map[string]any{"action": "get", "view_id": "nonexistent"}, time.Now())
@@ -139,6 +150,7 @@ func TestHandleViewStatus_GetUnknownID(t *testing.T) {
 }
 
 func TestHandleViewStatus_StatsValidID(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithViewStore(t, &kafka.MockKafkaManager{})
 	view, _ := s.viewStoreEngine.CreateView("stats-test", "orders", "_key", "", "", 0, 0, nil, nil, "", "", "agent-1")
 
@@ -158,6 +170,7 @@ func TestHandleViewStatus_StatsValidID(t *testing.T) {
 }
 
 func TestHandleViewStatus_StatsMissingID(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithViewStore(t, &kafka.MockKafkaManager{})
 	result, _ := s.handleViewStatus(context.Background(), makeToolRequest(nil), "agent-1",
 		map[string]any{"action": "stats"}, time.Now())
@@ -165,6 +178,7 @@ func TestHandleViewStatus_StatsMissingID(t *testing.T) {
 }
 
 func TestHandleViewStatus_DeleteAction(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithViewStore(t, &kafka.MockKafkaManager{})
 	view, _ := s.viewStoreEngine.CreateView("delete-test", "orders", "_key", "", "", 0, 0, nil, nil, "", "", "agent-1")
 

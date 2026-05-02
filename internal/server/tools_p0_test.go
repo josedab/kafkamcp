@@ -11,6 +11,7 @@ import (
 // ===================== handleProduce =====================
 
 func TestHandleProduce_MissingTopic(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleProduce(ctx, makeToolRequest(map[string]any{
@@ -23,6 +24,7 @@ func TestHandleProduce_MissingTopic(t *testing.T) {
 }
 
 func TestHandleProduce_MissingMessages(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleProduce(ctx, makeToolRequest(map[string]any{
@@ -35,6 +37,7 @@ func TestHandleProduce_MissingMessages(t *testing.T) {
 }
 
 func TestHandleProduce_InvalidMessagesFormat(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleProduce(ctx, makeToolRequest(map[string]any{
@@ -48,6 +51,7 @@ func TestHandleProduce_InvalidMessagesFormat(t *testing.T) {
 }
 
 func TestHandleProduce_EmptyMessages(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleProduce(ctx, makeToolRequest(map[string]any{
@@ -61,6 +65,7 @@ func TestHandleProduce_EmptyMessages(t *testing.T) {
 }
 
 func TestHandleProduce_TooManyMessages(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	msgs := make([]any, MaxProduceMessages+1)
@@ -78,6 +83,7 @@ func TestHandleProduce_TooManyMessages(t *testing.T) {
 }
 
 func TestHandleProduce_TopicTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	longTopic := strings.Repeat("t", maxInputLength+1)
@@ -92,6 +98,7 @@ func TestHandleProduce_TopicTooLong(t *testing.T) {
 }
 
 func TestHandleProduce_DefaultDeny_Anonymous(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleProduce(ctx, makeToolRequest(map[string]any{
@@ -105,6 +112,7 @@ func TestHandleProduce_DefaultDeny_Anonymous(t *testing.T) {
 }
 
 func TestHandleProduce_MessageSizeExceeded(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, func(cfg *config.Config) {
 		cfg.Server.MaxMessageSize = 10 // 10 bytes max
 	})
@@ -122,6 +130,7 @@ func TestHandleProduce_MessageSizeExceeded(t *testing.T) {
 // ===================== handleListConsumerGroups =====================
 
 func TestHandleListConsumerGroups_DefaultDeny_Anonymous(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleListConsumerGroups(ctx, makeToolRequest(nil))
@@ -132,6 +141,7 @@ func TestHandleListConsumerGroups_DefaultDeny_Anonymous(t *testing.T) {
 }
 
 func TestHandleListConsumerGroups_StateFilterTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	longFilter := strings.Repeat("s", maxInputLength+1)
@@ -145,6 +155,7 @@ func TestHandleListConsumerGroups_StateFilterTooLong(t *testing.T) {
 }
 
 func TestHandleListConsumerGroups_RateLimit(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withRateLimit)
 	ctx := context.Background()
 	req := makeToolRequest(nil)
@@ -166,6 +177,7 @@ func TestHandleListConsumerGroups_RateLimit(t *testing.T) {
 // ===================== handleListSchemas =====================
 
 func TestHandleListSchemas_DefaultDeny_Anonymous(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleListSchemas(ctx, makeToolRequest(nil))
@@ -176,6 +188,7 @@ func TestHandleListSchemas_DefaultDeny_Anonymous(t *testing.T) {
 }
 
 func TestHandleListSchemas_FilterTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	longFilter := strings.Repeat("f", maxInputLength+1)
@@ -189,6 +202,7 @@ func TestHandleListSchemas_FilterTooLong(t *testing.T) {
 }
 
 func TestHandleListSchemas_RateLimit(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withRateLimit)
 	ctx := context.Background()
 	req := makeToolRequest(nil)
@@ -210,6 +224,7 @@ func TestHandleListSchemas_RateLimit(t *testing.T) {
 // ===================== handleGetSchema =====================
 
 func TestHandleGetSchema_MissingSubject(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleGetSchema(ctx, makeToolRequest(nil))
@@ -220,6 +235,7 @@ func TestHandleGetSchema_MissingSubject(t *testing.T) {
 }
 
 func TestHandleGetSchema_SubjectTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleGetSchema(ctx, makeToolRequest(map[string]any{
@@ -232,6 +248,7 @@ func TestHandleGetSchema_SubjectTooLong(t *testing.T) {
 }
 
 func TestHandleGetSchema_DefaultDeny_Anonymous(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleGetSchema(ctx, makeToolRequest(map[string]any{
@@ -246,6 +263,7 @@ func TestHandleGetSchema_DefaultDeny_Anonymous(t *testing.T) {
 // ===================== handleAlterTopic =====================
 
 func TestHandleAlterTopic_MissingConfigs(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleAlterTopic(ctx, makeToolRequest(map[string]any{
@@ -258,6 +276,7 @@ func TestHandleAlterTopic_MissingConfigs(t *testing.T) {
 }
 
 func TestHandleAlterTopic_DefaultDeny_Anonymous(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleAlterTopic(ctx, makeToolRequest(map[string]any{
@@ -270,6 +289,7 @@ func TestHandleAlterTopic_DefaultDeny_Anonymous(t *testing.T) {
 }
 
 func TestHandleAlterTopic_NameTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleAlterTopic(ctx, makeToolRequest(map[string]any{
@@ -284,6 +304,7 @@ func TestHandleAlterTopic_NameTooLong(t *testing.T) {
 // ===================== handleDeleteTopic =====================
 
 func TestHandleDeleteTopic_DefaultDeny_Anonymous(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleDeleteTopic(ctx, makeToolRequest(map[string]any{
@@ -296,6 +317,7 @@ func TestHandleDeleteTopic_DefaultDeny_Anonymous(t *testing.T) {
 }
 
 func TestHandleDeleteTopic_NameTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleDeleteTopic(ctx, makeToolRequest(map[string]any{
@@ -310,6 +332,7 @@ func TestHandleDeleteTopic_NameTooLong(t *testing.T) {
 // ===================== handleSearch =====================
 
 func TestHandleSearch_DefaultDeny_Anonymous(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleSearch(ctx, makeToolRequest(map[string]any{
@@ -322,6 +345,7 @@ func TestHandleSearch_DefaultDeny_Anonymous(t *testing.T) {
 }
 
 func TestHandleSearch_TopicTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleSearch(ctx, makeToolRequest(map[string]any{
@@ -334,6 +358,7 @@ func TestHandleSearch_TopicTooLong(t *testing.T) {
 }
 
 func TestHandleSearch_KeyFilterTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleSearch(ctx, makeToolRequest(map[string]any{
@@ -349,6 +374,7 @@ func TestHandleSearch_KeyFilterTooLong(t *testing.T) {
 // ===================== handleResetOffsets =====================
 
 func TestHandleResetOffsets_GroupIDTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleResetOffsets(ctx, makeToolRequest(map[string]any{
@@ -363,6 +389,7 @@ func TestHandleResetOffsets_GroupIDTooLong(t *testing.T) {
 }
 
 func TestHandleResetOffsets_DefaultDeny_Anonymous(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleResetOffsets(ctx, makeToolRequest(map[string]any{
@@ -379,6 +406,7 @@ func TestHandleResetOffsets_DefaultDeny_Anonymous(t *testing.T) {
 // ===================== handleCheckSchemaCompatibility =====================
 
 func TestHandleCheckSchemaCompatibility_MissingFields(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleCheckSchemaCompatibility(ctx, makeToolRequest(nil))
@@ -389,6 +417,7 @@ func TestHandleCheckSchemaCompatibility_MissingFields(t *testing.T) {
 }
 
 func TestHandleCheckSchemaCompatibility_SubjectTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleCheckSchemaCompatibility(ctx, makeToolRequest(map[string]any{
@@ -402,6 +431,7 @@ func TestHandleCheckSchemaCompatibility_SubjectTooLong(t *testing.T) {
 }
 
 func TestHandleCheckSchemaCompatibility_SchemaTooLarge(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleCheckSchemaCompatibility(ctx, makeToolRequest(map[string]any{
@@ -415,6 +445,7 @@ func TestHandleCheckSchemaCompatibility_SchemaTooLarge(t *testing.T) {
 }
 
 func TestHandleCheckSchemaCompatibility_DefaultDeny_Anonymous(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleCheckSchemaCompatibility(ctx, makeToolRequest(map[string]any{
@@ -430,6 +461,7 @@ func TestHandleCheckSchemaCompatibility_DefaultDeny_Anonymous(t *testing.T) {
 // ===================== handleAggregate =====================
 
 func TestHandleAggregate_MissingTopic(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleAggregate(ctx, makeToolRequest(nil))
@@ -440,6 +472,7 @@ func TestHandleAggregate_MissingTopic(t *testing.T) {
 }
 
 func TestHandleAggregate_TopicTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleAggregate(ctx, makeToolRequest(map[string]any{
@@ -452,6 +485,7 @@ func TestHandleAggregate_TopicTooLong(t *testing.T) {
 }
 
 func TestHandleAggregate_DefaultDeny_Anonymous(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleAggregate(ctx, makeToolRequest(map[string]any{
@@ -466,6 +500,7 @@ func TestHandleAggregate_DefaultDeny_Anonymous(t *testing.T) {
 // ===================== handleDescribeConnector =====================
 
 func TestHandleDescribeConnector_MissingName(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleDescribeConnector(ctx, makeToolRequest(nil))
@@ -476,6 +511,7 @@ func TestHandleDescribeConnector_MissingName(t *testing.T) {
 }
 
 func TestHandleDescribeConnector_NameTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleDescribeConnector(ctx, makeToolRequest(map[string]any{
@@ -488,6 +524,7 @@ func TestHandleDescribeConnector_NameTooLong(t *testing.T) {
 }
 
 func TestHandleDescribeConnector_DefaultDeny_Anonymous(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleDescribeConnector(ctx, makeToolRequest(map[string]any{
@@ -502,6 +539,7 @@ func TestHandleDescribeConnector_DefaultDeny_Anonymous(t *testing.T) {
 // ===================== handleListConnectors =====================
 
 func TestHandleListConnectors_DefaultDeny_Anonymous(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleListConnectors(ctx, makeToolRequest(nil))
@@ -514,6 +552,7 @@ func TestHandleListConnectors_DefaultDeny_Anonymous(t *testing.T) {
 // ===================== handleRecommend =====================
 
 func TestHandleRecommend_DefaultDeny_Anonymous(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleRecommend(ctx, makeToolRequest(nil))
@@ -526,6 +565,7 @@ func TestHandleRecommend_DefaultDeny_Anonymous(t *testing.T) {
 // ===================== handleListACLs =====================
 
 func TestHandleListACLs_DefaultDeny_Anonymous(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleListACLs(ctx, makeToolRequest(nil))
@@ -538,6 +578,7 @@ func TestHandleListACLs_DefaultDeny_Anonymous(t *testing.T) {
 // ===================== handleTraceMessage =====================
 
 func TestHandleTraceMessage_MissingCorrelationID(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleTraceMessage(ctx, makeToolRequest(nil))
@@ -548,6 +589,7 @@ func TestHandleTraceMessage_MissingCorrelationID(t *testing.T) {
 }
 
 func TestHandleTraceMessage_CorrelationIDTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleTraceMessage(ctx, makeToolRequest(map[string]any{
@@ -560,6 +602,7 @@ func TestHandleTraceMessage_CorrelationIDTooLong(t *testing.T) {
 }
 
 func TestHandleTraceMessage_DefaultDeny_Anonymous(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleTraceMessage(ctx, makeToolRequest(map[string]any{
@@ -574,6 +617,7 @@ func TestHandleTraceMessage_DefaultDeny_Anonymous(t *testing.T) {
 // ===================== handleStream =====================
 
 func TestHandleStream_UnknownAction(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleStream(ctx, makeToolRequest(map[string]any{
@@ -586,6 +630,7 @@ func TestHandleStream_UnknownAction(t *testing.T) {
 }
 
 func TestHandleStream_StartMissingTopic(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleStream(ctx, makeToolRequest(map[string]any{
@@ -598,6 +643,7 @@ func TestHandleStream_StartMissingTopic(t *testing.T) {
 }
 
 func TestHandleStream_StartTopicTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleStream(ctx, makeToolRequest(map[string]any{
@@ -611,6 +657,7 @@ func TestHandleStream_StartTopicTooLong(t *testing.T) {
 }
 
 func TestHandleStream_StartDefaultDeny_Anonymous(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleStream(ctx, makeToolRequest(map[string]any{
@@ -624,6 +671,7 @@ func TestHandleStream_StartDefaultDeny_Anonymous(t *testing.T) {
 }
 
 func TestHandleStream_PollMissingSessionID(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleStream(ctx, makeToolRequest(map[string]any{
@@ -636,6 +684,7 @@ func TestHandleStream_PollMissingSessionID(t *testing.T) {
 }
 
 func TestHandleStream_ControlMissingSessionID(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleStream(ctx, makeToolRequest(map[string]any{
@@ -650,6 +699,7 @@ func TestHandleStream_ControlMissingSessionID(t *testing.T) {
 // ===================== connectTLSOpts =====================
 
 func TestConnectTLSOpts_Empty(t *testing.T) {
+	t.Parallel()
 	cfg := &config.ClusterConfig{}
 	opts := connectTLSOpts(cfg)
 	if len(opts) != 0 {
@@ -658,6 +708,7 @@ func TestConnectTLSOpts_Empty(t *testing.T) {
 }
 
 func TestConnectTLSOpts_WithCA(t *testing.T) {
+	t.Parallel()
 	cfg := &config.ClusterConfig{ConnectTLS: config.ConnectTLSConfig{CAFile: "/tmp/ca.pem"}}
 	opts := connectTLSOpts(cfg)
 	if len(opts) != 1 {
@@ -666,6 +717,7 @@ func TestConnectTLSOpts_WithCA(t *testing.T) {
 }
 
 func TestConnectTLSOpts_WithInsecureSkipVerify(t *testing.T) {
+	t.Parallel()
 	cfg := &config.ClusterConfig{ConnectTLS: config.ConnectTLSConfig{InsecureSkipVerify: true}}
 	opts := connectTLSOpts(cfg)
 	if len(opts) != 1 {
@@ -674,6 +726,7 @@ func TestConnectTLSOpts_WithInsecureSkipVerify(t *testing.T) {
 }
 
 func TestConnectTLSOpts_WithBoth(t *testing.T) {
+	t.Parallel()
 	cfg := &config.ClusterConfig{ConnectTLS: config.ConnectTLSConfig{CAFile: "/tmp/ca.pem", InsecureSkipVerify: true}}
 	opts := connectTLSOpts(cfg)
 	if len(opts) != 2 {
@@ -684,6 +737,7 @@ func TestConnectTLSOpts_WithBoth(t *testing.T) {
 // ===================== handleDeleteConnector =====================
 
 func TestHandleDeleteConnector_MissingName(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleDeleteConnector(ctx, makeToolRequest(nil))
@@ -694,6 +748,7 @@ func TestHandleDeleteConnector_MissingName(t *testing.T) {
 }
 
 func TestHandleDeleteConnector_NameTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleDeleteConnector(ctx, makeToolRequest(map[string]any{
@@ -706,6 +761,7 @@ func TestHandleDeleteConnector_NameTooLong(t *testing.T) {
 }
 
 func TestHandleDeleteConnector_DefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleDeleteConnector(ctx, makeToolRequest(map[string]any{
@@ -720,6 +776,7 @@ func TestHandleDeleteConnector_DefaultDeny(t *testing.T) {
 // ===================== handleConnectorHealth =====================
 
 func TestHandleConnectorHealth_MissingName(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleConnectorHealth(ctx, makeToolRequest(nil))
@@ -730,6 +787,7 @@ func TestHandleConnectorHealth_MissingName(t *testing.T) {
 }
 
 func TestHandleConnectorHealth_NameTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleConnectorHealth(ctx, makeToolRequest(map[string]any{
@@ -742,6 +800,7 @@ func TestHandleConnectorHealth_NameTooLong(t *testing.T) {
 }
 
 func TestHandleConnectorHealth_DefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleConnectorHealth(ctx, makeToolRequest(map[string]any{
@@ -756,6 +815,7 @@ func TestHandleConnectorHealth_DefaultDeny(t *testing.T) {
 // ===================== handleSchemaDiff =====================
 
 func TestHandleSchemaDiff_MissingSubject(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleSchemaDiff(ctx, makeToolRequest(nil))
@@ -766,6 +826,7 @@ func TestHandleSchemaDiff_MissingSubject(t *testing.T) {
 }
 
 func TestHandleSchemaDiff_SubjectTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleSchemaDiff(ctx, makeToolRequest(map[string]any{
@@ -778,6 +839,7 @@ func TestHandleSchemaDiff_SubjectTooLong(t *testing.T) {
 }
 
 func TestHandleSchemaDiff_DefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleSchemaDiff(ctx, makeToolRequest(map[string]any{
@@ -792,6 +854,7 @@ func TestHandleSchemaDiff_DefaultDeny(t *testing.T) {
 // ===================== handleWatch =====================
 
 func TestHandleWatch_UnknownAction(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleWatch(ctx, makeToolRequest(map[string]any{
@@ -804,6 +867,7 @@ func TestHandleWatch_UnknownAction(t *testing.T) {
 }
 
 func TestHandleWatch_SubscribeMissingPattern(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleWatch(ctx, makeToolRequest(map[string]any{
@@ -816,6 +880,7 @@ func TestHandleWatch_SubscribeMissingPattern(t *testing.T) {
 }
 
 func TestHandleWatch_SubscribePatternTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleWatch(ctx, makeToolRequest(map[string]any{
@@ -829,6 +894,7 @@ func TestHandleWatch_SubscribePatternTooLong(t *testing.T) {
 }
 
 func TestHandleWatch_SubscribeDefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleWatch(ctx, makeToolRequest(map[string]any{
@@ -842,6 +908,7 @@ func TestHandleWatch_SubscribeDefaultDeny(t *testing.T) {
 }
 
 func TestHandleWatch_UnsubscribeMissingID(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleWatch(ctx, makeToolRequest(map[string]any{
@@ -856,6 +923,7 @@ func TestHandleWatch_UnsubscribeMissingID(t *testing.T) {
 // ===================== handleNLQuery =====================
 
 func TestHandleNLQuery_MissingQuery(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleNLQuery(ctx, makeToolRequest(nil))
@@ -866,6 +934,7 @@ func TestHandleNLQuery_MissingQuery(t *testing.T) {
 }
 
 func TestHandleNLQuery_QueryTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleNLQuery(ctx, makeToolRequest(map[string]any{
@@ -878,6 +947,7 @@ func TestHandleNLQuery_QueryTooLong(t *testing.T) {
 }
 
 func TestHandleNLQuery_DefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleNLQuery(ctx, makeToolRequest(map[string]any{
@@ -892,6 +962,7 @@ func TestHandleNLQuery_DefaultDeny(t *testing.T) {
 // ===================== handleGroupHealth =====================
 
 func TestHandleGroupHealth_DefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleGroupHealth(ctx, makeToolRequest(map[string]any{
@@ -906,6 +977,7 @@ func TestHandleGroupHealth_DefaultDeny(t *testing.T) {
 // ===================== handleDiagnoseLag =====================
 
 func TestHandleDiagnoseLag_DefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleDiagnoseLag(ctx, makeToolRequest(map[string]any{
@@ -920,6 +992,7 @@ func TestHandleDiagnoseLag_DefaultDeny(t *testing.T) {
 // ===================== handleCostWhatIf =====================
 
 func TestHandleCostWhatIf_MissingTopic(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleCostWhatIf(ctx, makeToolRequest(nil))
@@ -930,6 +1003,7 @@ func TestHandleCostWhatIf_MissingTopic(t *testing.T) {
 }
 
 func TestHandleCostWhatIf_DefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleCostWhatIf(ctx, makeToolRequest(map[string]any{
@@ -944,6 +1018,7 @@ func TestHandleCostWhatIf_DefaultDeny(t *testing.T) {
 // ===================== handleIngestAnomaly =====================
 
 func TestHandleIngestAnomaly_MissingFields(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleIngestAnomaly(ctx, makeToolRequest(nil))
@@ -954,6 +1029,7 @@ func TestHandleIngestAnomaly_MissingFields(t *testing.T) {
 }
 
 func TestHandleIngestAnomaly_DefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleIngestAnomaly(ctx, makeToolRequest(map[string]any{
@@ -969,6 +1045,7 @@ func TestHandleIngestAnomaly_DefaultDeny(t *testing.T) {
 // ===================== handleRemediateDLQ =====================
 
 func TestHandleRemediateDLQ_MissingTopic(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleRemediateDLQ(ctx, makeToolRequest(nil))
@@ -981,6 +1058,7 @@ func TestHandleRemediateDLQ_MissingTopic(t *testing.T) {
 // ===================== handlePlatformInfo =====================
 
 func TestHandlePlatformInfo_DefaultDeny_Anon(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handlePlatformInfo(ctx, makeToolRequest(nil))
@@ -993,6 +1071,7 @@ func TestHandlePlatformInfo_DefaultDeny_Anon(t *testing.T) {
 // ===================== handleCostWaste =====================
 
 func TestHandleCostWaste_DefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleCostWaste(ctx, makeToolRequest(nil))
@@ -1005,6 +1084,7 @@ func TestHandleCostWaste_DefaultDeny(t *testing.T) {
 // ===================== handleGitOpsDiff =====================
 
 func TestHandleGitOpsDiff_DefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleGitOpsDiff(ctx, makeToolRequest(nil))
@@ -1017,6 +1097,7 @@ func TestHandleGitOpsDiff_DefaultDeny(t *testing.T) {
 // ===================== handleKnowledgeGraphQuery =====================
 
 func TestHandleKnowledgeGraphQuery_DefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleKnowledgeGraphQuery(ctx, makeToolRequest(nil))
@@ -1029,6 +1110,7 @@ func TestHandleKnowledgeGraphQuery_DefaultDeny(t *testing.T) {
 // ===================== handleCostAnalyze =====================
 
 func TestHandleCostAnalyze_DefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleCostAnalyze(ctx, makeToolRequest(nil))
@@ -1041,6 +1123,7 @@ func TestHandleCostAnalyze_DefaultDeny(t *testing.T) {
 // ===================== handleSubscribe =====================
 
 func TestHandleSubscribe_DefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleSubscribe(ctx, makeToolRequest(map[string]any{
@@ -1055,6 +1138,7 @@ func TestHandleSubscribe_DefaultDeny(t *testing.T) {
 // ===================== handleDescribeTopic =====================
 
 func TestHandleDescribeTopic_TopicTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleDescribeTopic(ctx, makeToolRequest(map[string]any{
@@ -1069,6 +1153,7 @@ func TestHandleDescribeTopic_TopicTooLong(t *testing.T) {
 // ===================== handleConsume =====================
 
 func TestHandleConsume_TopicTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleConsume(ctx, makeToolRequest(map[string]any{
@@ -1083,6 +1168,7 @@ func TestHandleConsume_TopicTooLong(t *testing.T) {
 // ===================== handleAnalyzeDLQ =====================
 
 func TestHandleAnalyzeDLQ_TopicTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleAnalyzeDLQ(ctx, makeToolRequest(map[string]any{
@@ -1095,6 +1181,7 @@ func TestHandleAnalyzeDLQ_TopicTooLong(t *testing.T) {
 }
 
 func TestHandleAnalyzeDLQ_DefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleAnalyzeDLQ(ctx, makeToolRequest(map[string]any{
@@ -1109,6 +1196,7 @@ func TestHandleAnalyzeDLQ_DefaultDeny(t *testing.T) {
 // ===================== handleDescribeConsumerGroup =====================
 
 func TestHandleDescribeConsumerGroup_GroupIDTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleDescribeConsumerGroup(ctx, makeToolRequest(map[string]any{
@@ -1123,6 +1211,7 @@ func TestHandleDescribeConsumerGroup_GroupIDTooLong(t *testing.T) {
 // ===================== handleCreateConnector =====================
 
 func TestHandleCreateConnector_MissingName(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleCreateConnector(ctx, makeToolRequest(nil))
@@ -1133,6 +1222,7 @@ func TestHandleCreateConnector_MissingName(t *testing.T) {
 }
 
 func TestHandleCreateConnector_DefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleCreateConnector(ctx, makeToolRequest(map[string]any{
@@ -1147,6 +1237,7 @@ func TestHandleCreateConnector_DefaultDeny(t *testing.T) {
 // ===================== handleUpdateConnector =====================
 
 func TestHandleUpdateConnector_MissingName(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleUpdateConnector(ctx, makeToolRequest(nil))
@@ -1157,6 +1248,7 @@ func TestHandleUpdateConnector_MissingName(t *testing.T) {
 }
 
 func TestHandleUpdateConnector_DefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleUpdateConnector(ctx, makeToolRequest(map[string]any{
@@ -1171,6 +1263,7 @@ func TestHandleUpdateConnector_DefaultDeny(t *testing.T) {
 // ===================== handleRestartConnector =====================
 
 func TestHandleRestartConnector_MissingName(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleRestartConnector(ctx, makeToolRequest(nil))
@@ -1181,6 +1274,7 @@ func TestHandleRestartConnector_MissingName(t *testing.T) {
 }
 
 func TestHandleRestartConnector_DefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleRestartConnector(ctx, makeToolRequest(map[string]any{
@@ -1195,6 +1289,7 @@ func TestHandleRestartConnector_DefaultDeny(t *testing.T) {
 // ===================== handleTimeTravel =====================
 
 func TestHandleTimeTravel_MissingTopic(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleTimeTravel(ctx, makeToolRequest(nil))
@@ -1205,6 +1300,7 @@ func TestHandleTimeTravel_MissingTopic(t *testing.T) {
 }
 
 func TestHandleTimeTravel_DefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleTimeTravel(ctx, makeToolRequest(map[string]any{
@@ -1219,6 +1315,7 @@ func TestHandleTimeTravel_DefaultDeny(t *testing.T) {
 // ===================== handleConfigDrift =====================
 
 func TestHandleConfigDrift_DefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleConfigDrift(ctx, makeToolRequest(nil))
@@ -1231,6 +1328,7 @@ func TestHandleConfigDrift_DefaultDeny(t *testing.T) {
 // ===================== handlePlayground =====================
 
 func TestHandlePlayground_DefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handlePlayground(ctx, makeToolRequest(map[string]any{
@@ -1245,6 +1343,7 @@ func TestHandlePlayground_DefaultDeny(t *testing.T) {
 // ===================== handleForecast =====================
 
 func TestHandleForecast_DefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleForecast(ctx, makeToolRequest(map[string]any{
@@ -1259,6 +1358,7 @@ func TestHandleForecast_DefaultDeny(t *testing.T) {
 // ===================== handleSubscribe =====================
 
 func TestHandleSubscribe_TopicTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleSubscribe(ctx, makeToolRequest(map[string]any{
@@ -1273,6 +1373,7 @@ func TestHandleSubscribe_TopicTooLong(t *testing.T) {
 // ===================== handleRemediateDLQ =====================
 
 func TestHandleRemediateDLQ_TopicTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleRemediateDLQ(ctx, makeToolRequest(map[string]any{
@@ -1285,6 +1386,7 @@ func TestHandleRemediateDLQ_TopicTooLong(t *testing.T) {
 }
 
 func TestHandleRemediateDLQ_DefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleRemediateDLQ(ctx, makeToolRequest(map[string]any{
@@ -1299,6 +1401,7 @@ func TestHandleRemediateDLQ_DefaultDeny(t *testing.T) {
 // ===================== handleConfigDrift compare missing clusters =====================
 
 func TestHandleConfigDrift_CompareMissingClusters(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleConfigDrift(ctx, makeToolRequest(map[string]any{
@@ -1311,6 +1414,7 @@ func TestHandleConfigDrift_CompareMissingClusters(t *testing.T) {
 }
 
 func TestHandleConfigDrift_UnknownAction(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleConfigDrift(ctx, makeToolRequest(map[string]any{
@@ -1325,6 +1429,7 @@ func TestHandleConfigDrift_UnknownAction(t *testing.T) {
 // ===================== handlePlayground unknown action =====================
 
 func TestHandlePlayground_UnknownAction(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handlePlayground(ctx, makeToolRequest(map[string]any{
@@ -1339,6 +1444,7 @@ func TestHandlePlayground_UnknownAction(t *testing.T) {
 // ===================== handleCostAnalyze missing topic =====================
 
 func TestHandleCostAnalyze_MissingTopic(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleCostAnalyze(ctx, makeToolRequest(nil))
@@ -1354,6 +1460,7 @@ func TestHandleCostAnalyze_MissingTopic(t *testing.T) {
 // ===================== handleJoin =====================
 
 func TestHandleJoin_MissingTopics(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleJoin(ctx, makeToolRequest(nil))
@@ -1364,6 +1471,7 @@ func TestHandleJoin_MissingTopics(t *testing.T) {
 }
 
 func TestHandleJoin_LeftTopicTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleJoin(ctx, makeToolRequest(map[string]any{
@@ -1377,6 +1485,7 @@ func TestHandleJoin_LeftTopicTooLong(t *testing.T) {
 }
 
 func TestHandleJoin_DefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleJoin(ctx, makeToolRequest(map[string]any{
@@ -1392,6 +1501,7 @@ func TestHandleJoin_DefaultDeny(t *testing.T) {
 // ===================== handleNaturalLanguageQuery =====================
 
 func TestHandleNaturalLanguageQuery_MissingQuery(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleNaturalLanguageQuery(ctx, makeToolRequest(nil))
@@ -1402,6 +1512,7 @@ func TestHandleNaturalLanguageQuery_MissingQuery(t *testing.T) {
 }
 
 func TestHandleNaturalLanguageQuery_DefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleNaturalLanguageQuery(ctx, makeToolRequest(map[string]any{
@@ -1416,6 +1527,7 @@ func TestHandleNaturalLanguageQuery_DefaultDeny(t *testing.T) {
 // ===================== handleSuggestSchemaEvolution =====================
 
 func TestHandleSuggestSchemaEvolution_MissingFields(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleSuggestSchemaEvolution(ctx, makeToolRequest(nil))
@@ -1426,6 +1538,7 @@ func TestHandleSuggestSchemaEvolution_MissingFields(t *testing.T) {
 }
 
 func TestHandleSuggestSchemaEvolution_SubjectTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleSuggestSchemaEvolution(ctx, makeToolRequest(map[string]any{
@@ -1439,6 +1552,7 @@ func TestHandleSuggestSchemaEvolution_SubjectTooLong(t *testing.T) {
 }
 
 func TestHandleSuggestSchemaEvolution_DefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleSuggestSchemaEvolution(ctx, makeToolRequest(map[string]any{
@@ -1454,6 +1568,7 @@ func TestHandleSuggestSchemaEvolution_DefaultDeny(t *testing.T) {
 // ===================== handleConsume =====================
 
 func TestHandleConsume_DefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleConsume(ctx, makeToolRequest(map[string]any{
@@ -1468,6 +1583,7 @@ func TestHandleConsume_DefaultDeny(t *testing.T) {
 // ===================== handleDescribeTopic =====================
 
 func TestHandleDescribeTopic_DefaultDeny(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t, withDefaultDeny)
 	ctx := context.Background()
 	result, err := s.handleDescribeTopic(ctx, makeToolRequest(map[string]any{
@@ -1482,6 +1598,7 @@ func TestHandleDescribeTopic_DefaultDeny(t *testing.T) {
 // ===================== handleCreateTopic =====================
 
 func TestHandleCreateTopic_NameTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleCreateTopic(ctx, makeToolRequest(map[string]any{
@@ -1500,6 +1617,7 @@ func TestHandleCreateTopic_NameTooLong(t *testing.T) {
 // ===================== handleStream start with groupId too long =====================
 
 func TestHandleStream_StartGroupIDTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleStream(ctx, makeToolRequest(map[string]any{
@@ -1516,6 +1634,7 @@ func TestHandleStream_StartGroupIDTooLong(t *testing.T) {
 // ===================== handleConsume offset too long =====================
 
 func TestHandleConsume_OffsetTooLong(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	ctx := context.Background()
 	result, err := s.handleConsume(ctx, makeToolRequest(map[string]any{

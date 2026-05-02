@@ -13,6 +13,7 @@ import (
 // ===================== handleCostWaste =====================
 
 func TestHandleCostWaste_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return []kafka.TopicSummary{
@@ -39,6 +40,7 @@ func TestHandleCostWaste_Success(t *testing.T) {
 }
 
 func TestHandleCostWaste_EmptyCluster(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return nil, nil
@@ -54,6 +56,7 @@ func TestHandleCostWaste_EmptyCluster(t *testing.T) {
 }
 
 func TestHandleCostWaste_ListTopicsError(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return nil, fmt.Errorf("broker unavailable")
@@ -74,6 +77,7 @@ func TestHandleCostWaste_ListTopicsError(t *testing.T) {
 // ===================== handleCostWhatIf =====================
 
 func TestHandleCostWhatIf_RetentionChange(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		DescribeTopicFn: func(ctx context.Context, cluster, topicName string) (*kafka.TopicDetail, error) {
 			return &kafka.TopicDetail{
@@ -105,6 +109,7 @@ func TestHandleCostWhatIf_RetentionChange(t *testing.T) {
 }
 
 func TestHandleCostWhatIf_CompressionChange(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		DescribeTopicFn: func(ctx context.Context, cluster, topicName string) (*kafka.TopicDetail, error) {
 			return &kafka.TopicDetail{
@@ -130,6 +135,7 @@ func TestHandleCostWhatIf_CompressionChange(t *testing.T) {
 }
 
 func TestHandleCostWhatIf_PartitionCountChange(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		DescribeTopicFn: func(ctx context.Context, cluster, topicName string) (*kafka.TopicDetail, error) {
 			return &kafka.TopicDetail{
@@ -155,6 +161,7 @@ func TestHandleCostWhatIf_PartitionCountChange(t *testing.T) {
 }
 
 func TestHandleCostWhatIf_TopicRequired(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithMock(t, &kafka.MockKafkaManager{})
 
 	result, err := s.handleCostWhatIf(context.Background(), makeToolRequest(map[string]any{}))
@@ -168,6 +175,7 @@ func TestHandleCostWhatIf_TopicRequired(t *testing.T) {
 }
 
 func TestHandleCostWhatIf_DescribeError(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		DescribeTopicFn: func(ctx context.Context, cluster, topicName string) (*kafka.TopicDetail, error) {
 			return nil, fmt.Errorf("topic not found")

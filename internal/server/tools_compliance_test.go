@@ -20,6 +20,7 @@ func newTestServerWithCompliance(t *testing.T, mock *kafka.MockKafkaManager) *Se
 // ===================== handleComplianceScan =====================
 
 func TestHandleComplianceScan_WithFramework(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, internal bool) ([]kafka.TopicSummary, error) {
 			return []kafka.TopicSummary{
@@ -41,6 +42,7 @@ func TestHandleComplianceScan_WithFramework(t *testing.T) {
 }
 
 func TestHandleComplianceScan_EmptyCluster(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, internal bool) ([]kafka.TopicSummary, error) {
 			return []kafka.TopicSummary{}, nil
@@ -59,6 +61,7 @@ func TestHandleComplianceScan_EmptyCluster(t *testing.T) {
 // ===================== handleComplianceReport =====================
 
 func TestHandleComplianceReport_MissingRegulation(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, internal bool) ([]kafka.TopicSummary, error) {
 			return []kafka.TopicSummary{}, nil
@@ -77,6 +80,7 @@ func TestHandleComplianceReport_MissingRegulation(t *testing.T) {
 }
 
 func TestHandleComplianceReport_ValidRegulation(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, internal bool) ([]kafka.TopicSummary, error) {
 			return []kafka.TopicSummary{
@@ -113,6 +117,7 @@ func TestHandleComplianceReport_ValidRegulation(t *testing.T) {
 // ===================== handleComplianceViolations =====================
 
 func TestHandleComplianceViolations_ReturnsViolations(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithCompliance(t, &kafka.MockKafkaManager{})
 	result, err := s.handleComplianceViolations(context.Background(), makeToolRequest(map[string]any{
 		"regulation": "GDPR",
@@ -133,6 +138,7 @@ func TestHandleComplianceViolations_ReturnsViolations(t *testing.T) {
 }
 
 func TestHandleComplianceViolations_NoRegulationFilter(t *testing.T) {
+	t.Parallel()
 	s := newTestServerWithCompliance(t, &kafka.MockKafkaManager{})
 	result, err := s.handleComplianceViolations(context.Background(), makeToolRequest(nil))
 	if err != nil {
@@ -144,6 +150,7 @@ func TestHandleComplianceViolations_NoRegulationFilter(t *testing.T) {
 // ===================== collectComplianceData =====================
 
 func TestCollectComplianceData_SkipsInternalTopics(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, internal bool) ([]kafka.TopicSummary, error) {
 			return []kafka.TopicSummary{
@@ -170,6 +177,7 @@ func TestCollectComplianceData_SkipsInternalTopics(t *testing.T) {
 }
 
 func TestCollectComplianceData_EmptyCluster(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, internal bool) ([]kafka.TopicSummary, error) {
 			return []kafka.TopicSummary{}, nil
@@ -187,6 +195,7 @@ func TestCollectComplianceData_EmptyCluster(t *testing.T) {
 }
 
 func TestCollectComplianceData_TopicFilter(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, internal bool) ([]kafka.TopicSummary, error) {
 			return []kafka.TopicSummary{

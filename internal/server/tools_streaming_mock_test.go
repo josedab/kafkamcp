@@ -12,6 +12,7 @@ import (
 // ===================== handleStreamList =====================
 
 func TestHandleStreamList_Empty(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListStreamsFn: func() []kafka.StreamSession {
 			return nil
@@ -30,6 +31,7 @@ func TestHandleStreamList_Empty(t *testing.T) {
 }
 
 func TestHandleStreamList_MultipleSessions(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListStreamsFn: func() []kafka.StreamSession {
 			return []kafka.StreamSession{
@@ -53,6 +55,7 @@ func TestHandleStreamList_MultipleSessions(t *testing.T) {
 // ===================== handleStreamPoll =====================
 
 func TestHandleStreamPoll_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		GetStreamSessionFn: func(sessionID string) (*kafka.StreamSession, bool) {
 			return &kafka.StreamSession{ID: sessionID, AgentID: ""}, true
@@ -79,6 +82,7 @@ func TestHandleStreamPoll_Success(t *testing.T) {
 }
 
 func TestHandleStreamPoll_InvalidSession(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		PollStreamFn: func(sessionID string, timeoutMs int) (*kafka.StreamResult, error) {
 			return nil, fmt.Errorf("session %q not found", sessionID)
@@ -95,6 +99,7 @@ func TestHandleStreamPoll_InvalidSession(t *testing.T) {
 }
 
 func TestHandleStreamPoll_MissingSessionID(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleStream(context.Background(), makeToolRequest(map[string]any{
@@ -109,6 +114,7 @@ func TestHandleStreamPoll_MissingSessionID(t *testing.T) {
 // ===================== handleStreamControl =====================
 
 func TestHandleStreamControl_Pause(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		GetStreamSessionFn: func(sessionID string) (*kafka.StreamSession, bool) {
 			return &kafka.StreamSession{ID: sessionID, AgentID: ""}, true
@@ -128,6 +134,7 @@ func TestHandleStreamControl_Pause(t *testing.T) {
 }
 
 func TestHandleStreamControl_Resume(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		GetStreamSessionFn: func(sessionID string) (*kafka.StreamSession, bool) {
 			return &kafka.StreamSession{ID: sessionID, AgentID: ""}, true
@@ -147,6 +154,7 @@ func TestHandleStreamControl_Resume(t *testing.T) {
 }
 
 func TestHandleStreamControl_Stop(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		GetStreamSessionFn: func(sessionID string) (*kafka.StreamSession, bool) {
 			return &kafka.StreamSession{ID: sessionID, AgentID: ""}, true
@@ -166,6 +174,7 @@ func TestHandleStreamControl_Stop(t *testing.T) {
 }
 
 func TestHandleStreamControl_InvalidSession(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ControlStreamFn: func(sessionID, action string) (*kafka.StreamResult, error) {
 			return nil, fmt.Errorf("session not found")
@@ -182,6 +191,7 @@ func TestHandleStreamControl_InvalidSession(t *testing.T) {
 }
 
 func TestHandleStreamControl_MissingSessionID(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleStream(context.Background(), makeToolRequest(map[string]any{
@@ -194,6 +204,7 @@ func TestHandleStreamControl_MissingSessionID(t *testing.T) {
 }
 
 func TestHandleStream_UnknownAction_Mock(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	result, err := s.handleStream(context.Background(), makeToolRequest(map[string]any{

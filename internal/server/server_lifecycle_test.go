@@ -14,6 +14,7 @@ import (
 // ===================== HealthCheck =====================
 
 func TestHealthCheck_PingSuccess(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		PingFn: func(ctx context.Context) error {
 			return nil
@@ -30,6 +31,7 @@ func TestHealthCheck_PingSuccess(t *testing.T) {
 }
 
 func TestHealthCheck_PingFailure(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		PingFn: func(ctx context.Context) error {
 			return fmt.Errorf("connection refused")
@@ -45,6 +47,7 @@ func TestHealthCheck_PingFailure(t *testing.T) {
 // ===================== Close =====================
 
 func TestClose_AllManagersClosed(t *testing.T) {
+	t.Parallel()
 	closeCalled := false
 	mock := &kafka.MockKafkaManager{
 		CloseFn: func() {
@@ -65,6 +68,7 @@ func TestClose_AllManagersClosed(t *testing.T) {
 }
 
 func TestClose_NilWatchManager(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	s.watchManager = nil
@@ -77,6 +81,7 @@ func TestClose_NilWatchManager(t *testing.T) {
 // ===================== getConnectClient =====================
 
 func TestGetConnectClient_EmptyURL(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	cfg := &config.ClusterConfig{Name: "test", ConnectURL: ""}
@@ -91,6 +96,7 @@ func TestGetConnectClient_EmptyURL(t *testing.T) {
 }
 
 func TestGetConnectClient_Caching(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	cfg := &config.ClusterConfig{Name: "test-cluster", ConnectURL: "http://localhost:8083"}
@@ -116,6 +122,7 @@ func TestGetConnectClient_Caching(t *testing.T) {
 // ===================== checkResourceRateLimit =====================
 
 func TestCheckResourceRateLimit_Allowed(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 
@@ -128,6 +135,7 @@ func TestCheckResourceRateLimit_Allowed(t *testing.T) {
 // ===================== resolveClusterName =====================
 
 func TestResolveClusterName_ValidCluster(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		GetClusterConfigFn: func(name string) (*config.ClusterConfig, error) {
 			if name == "staging" {
@@ -144,6 +152,7 @@ func TestResolveClusterName_ValidCluster(t *testing.T) {
 }
 
 func TestResolveClusterName_EmptyFallsToDefault(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		DefaultClusterNameFn: func() string { return "prod" },
 	}
@@ -155,6 +164,7 @@ func TestResolveClusterName_EmptyFallsToDefault(t *testing.T) {
 }
 
 func TestResolveClusterName_InvalidFallsToDefault(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		GetClusterConfigFn: func(name string) (*config.ClusterConfig, error) {
 			return nil, fmt.Errorf("not found")
@@ -171,6 +181,7 @@ func TestResolveClusterName_InvalidFallsToDefault(t *testing.T) {
 // ===================== marshalResult =====================
 
 func TestMarshalResult_Success(t *testing.T) {
+	t.Parallel()
 	result, err := marshalResult(map[string]string{"status": "ok"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -198,6 +209,7 @@ func TestMarshalResult_Success(t *testing.T) {
 }
 
 func TestMarshalResult_MarshalError(t *testing.T) {
+	t.Parallel()
 	// Channels cannot be marshaled to JSON
 	result, err := marshalResult(make(chan int))
 	if err != nil {
@@ -211,6 +223,7 @@ func TestMarshalResult_MarshalError(t *testing.T) {
 // ===================== marshalResourceJSON =====================
 
 func TestMarshalResourceJSON_Success(t *testing.T) {
+	t.Parallel()
 	contents, err := marshalResourceJSON("kafka://topics", map[string]string{"name": "orders"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -235,6 +248,7 @@ func TestMarshalResourceJSON_Success(t *testing.T) {
 }
 
 func TestMarshalResourceJSON_MarshalError(t *testing.T) {
+	t.Parallel()
 	_, err := marshalResourceJSON("kafka://test", make(chan int))
 	if err == nil {
 		t.Fatal("expected error for unmarshalable value")
@@ -244,6 +258,7 @@ func TestMarshalResourceJSON_MarshalError(t *testing.T) {
 // ===================== getSchemaClient =====================
 
 func TestGetSchemaClient_NilClients(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 	// schemaClients is empty by default
@@ -254,6 +269,7 @@ func TestGetSchemaClient_NilClients(t *testing.T) {
 }
 
 func TestGetSchemaClient_EmptyClusterFallback(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		DefaultClusterNameFn: func() string { return "default" },
 	}
@@ -267,6 +283,7 @@ func TestGetSchemaClient_EmptyClusterFallback(t *testing.T) {
 // ===================== hasSchemaRegistry =====================
 
 func TestHasSchemaRegistry_False(t *testing.T) {
+	t.Parallel()
 	s := newTestServer(t)
 	if s.hasSchemaRegistry() {
 		t.Error("expected false when no schema clients configured")

@@ -44,6 +44,7 @@ func parseResourceJSON(t *testing.T, contents []mcp.ResourceContents) map[string
 // ===================== handleAnomalyResource =====================
 
 func TestHandleAnomalyResource_NilDetector(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMockForResource(t, mock)
 	s.anomalyDetector = nil
@@ -81,6 +82,7 @@ func TestHandleAnomalyResource_NilDetector(t *testing.T) {
 }
 
 func TestHandleAnomalyResource_WithDetector(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMockForResource(t, mock)
 	ctx := context.Background()
@@ -103,6 +105,7 @@ func TestHandleAnomalyResource_WithDetector(t *testing.T) {
 }
 
 func TestHandleAnomalyResource_AuthDenied(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServer(t, withDefaultDeny)
 	s.kafkaManager = mock
@@ -118,6 +121,7 @@ func TestHandleAnomalyResource_AuthDenied(t *testing.T) {
 // ===================== handleWorkflowsResource =====================
 
 func TestHandleWorkflowsResource_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMockForResource(t, mock)
 	ctx := context.Background()
@@ -143,6 +147,7 @@ func TestHandleWorkflowsResource_Success(t *testing.T) {
 }
 
 func TestHandleWorkflowsResource_AuthDenied(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServer(t, withDefaultDeny)
 	s.kafkaManager = mock
@@ -158,6 +163,7 @@ func TestHandleWorkflowsResource_AuthDenied(t *testing.T) {
 // ===================== handleKnowledgeGraphResource =====================
 
 func TestHandleKnowledgeGraphResource_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return []kafka.TopicSummary{
@@ -192,6 +198,7 @@ func TestHandleKnowledgeGraphResource_Success(t *testing.T) {
 }
 
 func TestHandleKnowledgeGraphResource_AuthDenied(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServer(t, withDefaultDeny)
 	s.kafkaManager = mock
@@ -206,6 +213,7 @@ func TestHandleKnowledgeGraphResource_AuthDenied(t *testing.T) {
 // ===================== handleFlowGraphResource =====================
 
 func TestHandleFlowGraphResource_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return []kafka.TopicSummary{
@@ -298,6 +306,7 @@ func TestHandleFlowGraphResource_Success(t *testing.T) {
 }
 
 func TestHandleFlowGraphResource_EmptyCluster(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error) {
 			return nil, nil
@@ -324,6 +333,7 @@ func TestHandleFlowGraphResource_EmptyCluster(t *testing.T) {
 }
 
 func TestHandleFlowGraphResource_AuthDenied(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServer(t, withDefaultDeny)
 	s.kafkaManager = mock
@@ -338,6 +348,7 @@ func TestHandleFlowGraphResource_AuthDenied(t *testing.T) {
 // ===================== handlePlatformResource =====================
 
 func TestHandlePlatformResource_Success(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{
 		ClusterNamesFn: func() []string {
 			return []string{"prod", "staging"}
@@ -381,6 +392,7 @@ func TestHandlePlatformResource_Success(t *testing.T) {
 }
 
 func TestHandlePlatformResource_SingleCluster(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{} // defaults to returning ["default"]
 	s := newTestServerWithMockForResource(t, mock)
 	ctx := context.Background()
@@ -411,6 +423,7 @@ func TestHandlePlatformResource_SingleCluster(t *testing.T) {
 }
 
 func TestHandlePlatformResource_AuthDenied(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServer(t, withDefaultDeny)
 	s.kafkaManager = mock

@@ -11,6 +11,7 @@ import (
 // ===================== handleCheckSchemaCompatibility =====================
 
 func TestHandleCheckSchemaCompatibility_MissingSubject_Mock(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 
@@ -27,6 +28,7 @@ func TestHandleCheckSchemaCompatibility_MissingSubject_Mock(t *testing.T) {
 }
 
 func TestHandleCheckSchemaCompatibility_MissingSchema(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 
@@ -43,6 +45,7 @@ func TestHandleCheckSchemaCompatibility_MissingSchema(t *testing.T) {
 }
 
 func TestHandleCheckSchemaCompatibility_SubjectMaxLength(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 
@@ -58,6 +61,7 @@ func TestHandleCheckSchemaCompatibility_SubjectMaxLength(t *testing.T) {
 }
 
 func TestHandleCheckSchemaCompatibility_SchemaExceedsMaxSize(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServerWithMock(t, mock)
 
@@ -76,6 +80,7 @@ func TestHandleCheckSchemaCompatibility_SchemaExceedsMaxSize(t *testing.T) {
 }
 
 func TestHandleCheckSchemaCompatibility_NoSchemaRegistry(t *testing.T) {
+	t.Parallel()
 	// NOTE: This test documents a known nil-pointer issue in handleCheckSchemaCompatibility
 	// when no schema registry is configured. getSchemaClient("") returns nil but
 	// the handler calls .CheckCompatibility() on it without a nil check.
@@ -83,6 +88,7 @@ func TestHandleCheckSchemaCompatibility_NoSchemaRegistry(t *testing.T) {
 }
 
 func TestHandleCheckSchemaCompatibility_AuthDenied(t *testing.T) {
+	t.Parallel()
 	mock := &kafka.MockKafkaManager{}
 	s := newTestServer(t, withDefaultDeny)
 	s.kafkaManager = mock
@@ -98,6 +104,7 @@ func TestHandleCheckSchemaCompatibility_AuthDenied(t *testing.T) {
 }
 
 func TestHandleCheckSchemaCompatibility_DefaultSchemaTypeAndVersion(t *testing.T) {
+	t.Parallel()
 	// With no schema client configured, this would panic (same nil-pointer issue).
 	t.Skip("skipping: requires configured schema registry client")
 }
