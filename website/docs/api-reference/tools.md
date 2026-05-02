@@ -6,7 +6,7 @@ toc_max_heading_level: 3
 
 # API Reference: Tools
 
-KafkaMCP exposes 155 MCP tools across the following categories:
+KafkaMCP exposes 154 MCP tools across the following categories:
 
 - **Core (P0)** — discovery, read, write, schemas, consumer groups
 - **Advanced (P1)** — subscriptions, admin operations, search, offset resets, DLQ analysis
