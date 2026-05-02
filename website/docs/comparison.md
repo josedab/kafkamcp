@@ -24,7 +24,7 @@ The table below is the feature matrix from the PRD.
 | Agent access control | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Agent audit logging | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Multi-cluster | ✅ | ❌ | ⚠️ | ❌ | ⚠️ | ❌ |
-| Zero-config setup | ✅ (single binary / Homebrew) | ⚠️ (deploy) | ❌ (build) | ⚠️ | ❌ (deploy) | ❌ (deploy) |
+| Zero-config setup | ✅ (single binary) | ⚠️ (deploy) | ❌ (build) | ⚠️ | ❌ (deploy) | ❌ (deploy) |
 | Maintained OSS | ✅ | ✅ (Confluent) | ❌ (in-house) | ⚠️ (community) | ✅ (Confluent) | ✅ (Confluent) |
 | Streaming subscriptions | ✅ (P1) | ✅ | ✅ | ❌ | ❌ | ✅ |
 | Message search/filter | ✅ (P1) | ❌ | ⚠️ | ❌ | ❌ | ✅ |
