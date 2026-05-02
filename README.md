@@ -741,11 +741,20 @@ sasl_password: "${KAFKA_PASSWORD:-changeme}"
 |----------|-------------|
 | `KAFKAMCP_TRANSPORT` | Overrides `server.transport` from the config file at runtime. Valid values: `stdio`, `sse`, `streamable-http`. |
 | `KAFKAMCP_ALLOW_INSECURE` | Set to `true` to allow `insecure_skip_verify` in `connect_tls` settings. Required as an explicit opt-in for skipping TLS certificate verification. **Not recommended for production.** |
+| `KAFKAMCP_LOG_LEVEL` | Overrides `server.log_level` from the config file at runtime. Valid values: `debug`, `info`, `warn`, `error`. The `--log-level` CLI flag takes precedence over this variable. |
 
 ```bash
 KAFKAMCP_TRANSPORT=sse ./bin/kafkamcp --config kafkamcp.yaml
 KAFKAMCP_ALLOW_INSECURE=true ./bin/kafkamcp --config kafkamcp.yaml
 ```
+
+### CLI Flags
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--config`, `-c` | `kafkamcp.yaml` | Path to configuration file. |
+| `--log-level` | — | Override log level (`debug`, `info`, `warn`, `error`). Takes precedence over `server.log_level` in the config file and the `KAFKAMCP_LOG_LEVEL` environment variable. |
+| `--debug` | `false` | Enable debug logging (shorthand for `--log-level debug`). |
 
 ### Config Validation
 

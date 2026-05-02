@@ -274,12 +274,23 @@ Setting `KAFKAMCP_ALLOW_INSECURE=true` disables TLS certificate verification for
 KAFKAMCP_ALLOW_INSECURE=true ./bin/kafkamcp --config kafkamcp.yaml
 ```
 
+### Log level override
+
+The `KAFKAMCP_LOG_LEVEL` environment variable overrides `server.log_level` from the config file at runtime. Valid values: `debug`, `info`, `warn`, `error`.
+
+The `--log-level` CLI flag takes precedence over this environment variable.
+
+```bash
+KAFKAMCP_LOG_LEVEL=debug ./bin/kafkamcp --config kafkamcp.yaml
+```
+
 ### Environment variables reference
 
 | Variable | Description |
 |----------|-------------|
 | `KAFKAMCP_TRANSPORT` | Overrides `server.transport` from the config file at runtime. Valid values: `stdio`, `sse`, `streamable-http`. |
 | `KAFKAMCP_ALLOW_INSECURE` | Set to `true` to allow `insecure_skip_verify` in `connect_tls` settings. Required as an explicit opt-in for skipping TLS certificate verification. |
+| `KAFKAMCP_LOG_LEVEL` | Overrides `server.log_level` from the config file at runtime. Valid values: `debug`, `info`, `warn`, `error`. The `--log-level` CLI flag takes precedence over this variable. |
 
 ## Config validation
 
