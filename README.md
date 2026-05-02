@@ -6,6 +6,7 @@
 [![CI](https://github.com/kafkamcp/kafkamcp/actions/workflows/ci.yml/badge.svg)](https://github.com/kafkamcp/kafkamcp/actions/workflows/ci.yml)
 [![Coverage](https://codecov.io/gh/kafkamcp/kafkamcp/branch/main/graph/badge.svg)](https://codecov.io/gh/kafkamcp/kafkamcp)
 [![Coverage Threshold](https://img.shields.io/badge/coverage%20threshold-70%25-brightgreen)](https://github.com/kafkamcp/kafkamcp/blob/main/.github/workflows/ci.yml)
+[![GoDoc](https://pkg.go.dev/badge/github.com/kafkamcp/kafkamcp)](https://pkg.go.dev/github.com/kafkamcp/kafkamcp)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 KafkaMCP is an MCP (Model Context Protocol) server that transforms Apache Kafka into a first-class, agent-accessible data layer. It exposes Kafka topics, consumer groups, schemas, and cluster metadata as MCP tools and resources — enabling any MCP-compatible AI agent to discover, read from, write to, and reason about Kafka data with zero custom integration code.
@@ -59,7 +60,7 @@ go install github.com/kafkamcp/kafkamcp/cmd/kafkamcp@latest
 kafkamcp version
 ```
 
-**From binary** ([all platforms](https://github.com/kafkamcp/kafkamcp/releases)):
+**From binary** ([all platforms](https://github.com/kafkamcp/kafkamcp/releases) — Linux, macOS, Windows on amd64/arm64):
 ```bash
 # Download from GitHub Releases
 curl -sSL https://github.com/kafkamcp/kafkamcp/releases/latest/download/kafkamcp_$(uname -s)_$(uname -m).tar.gz | tar xz
@@ -82,7 +83,7 @@ Generate a starter configuration:
 kafkamcp init
 ```
 
-This creates a `kafkamcp.yaml` in the current directory. Edit it to match your environment, or create one manually:
+This creates a `kafkamcp.yaml` in the current directory. Edit it to match your environment, or create one manually. See [`.env.example`](.env.example) for environment variable templates used by the example configs.
 
 ```yaml
 server:
@@ -173,7 +174,7 @@ Once connected, your AI agent can:
 
 ## MCP Tools
 
-> **Full reference:** The auto-generated [Tool Reference](docs/tool-reference.md) lists all **154 tools** with complete parameter details.
+> **Full reference:** The auto-generated [Tool Reference](docs/tool-reference.md) lists all **155 tools** with complete parameter details.
 
 ### P0 — Core Tools
 | Tool | Description |
@@ -652,6 +653,15 @@ The [`examples/`](examples/) directory contains ready-to-use configurations and 
 | [`crewai-agent/`](examples/crewai-agent/) | CrewAI multi-agent crew with Kafka tools |
 | [`langchain-agent/`](examples/langchain-agent/) | LangChain agent with KafkaMCP toolkit integration |
 
+### Deployment
+
+| Resource | Description |
+|----------|-------------|
+| [`deploy/helm/kafkamcp/`](deploy/helm/kafkamcp/) | Production-ready Helm chart (Deployment, Service, HPA, PDB, NetworkPolicy, ServiceMonitor) |
+| [`deploy/grafana/`](deploy/grafana/) | Grafana dashboard JSON for KafkaMCP monitoring |
+| [Kubernetes Guide](https://kafkamcp.dev/docs/deployment/kubernetes) | Full Kubernetes deployment walkthrough |
+| [Docker Guide](https://kafkamcp.dev/docs/deployment/docker) | Docker and Docker Compose deployment |
+
 ## Configuration Reference
 
 ### Server
@@ -1038,7 +1048,7 @@ For additional troubleshooting guides, see the [full troubleshooting documentati
 
 ## Documentation & Community
 
-- 📖 **Website & Docs** — [kafkamcp.dev](https://kafkamcp.dev)
+- 📖 **Website & Docs** — [kafkamcp.dev](https://kafkamcp.dev) · [docs.kafkamcp.dev](https://docs.kafkamcp.dev)
 - 📋 **Changelog** — [CHANGELOG.md](CHANGELOG.md)
 - 💬 **Discord** — [discord.gg/kafkamcp](https://discord.gg/kafkamcp)
 - 📝 **Blog**:
