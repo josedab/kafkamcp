@@ -91,6 +91,8 @@ Implement this interface to connect to a KafkaMCP server via stdio, SSE, or HTTP
 
 ### Methods
 
+#### Core
+
 | Method | Description |
 |--------|-------------|
 | `ListTopics(ctx, filter)` | List topics matching an optional glob filter |
@@ -100,11 +102,45 @@ Implement this interface to connect to a KafkaMCP server via stdio, SSE, or HTTP
 | `Watch(ctx, topicPattern, keyFilter, webhookURL)` | Register event-driven watch subscription |
 | `Close()` | Close the client connection |
 
+#### Consumer Groups
+
+| Method | Description |
+|--------|-------------|
+| `ListConsumerGroups(ctx, cluster)` | List all consumer groups, optionally filtered by cluster |
+| `DescribeConsumerGroup(ctx, groupID)` | Get detailed info about a consumer group |
+
+#### Topic Management
+
+| Method | Description |
+|--------|-------------|
+| `DescribeTopic(ctx, topic)` | Get detailed information about a topic |
+| `CreateTopic(ctx, topic, partitions, replicationFactor, configs)` | Create a new Kafka topic |
+| `DeleteTopic(ctx, topic)` | Delete a Kafka topic |
+
+#### Schema Registry
+
+| Method | Description |
+|--------|-------------|
+| `ListSchemas(ctx)` | List all schema subjects |
+| `GetSchema(ctx, subject)` | Get a schema by subject name |
+
+#### Admin Operations
+
+| Method | Description |
+|--------|-------------|
+| `ResetOffsets(ctx, groupID, topic, strategy)` | Reset consumer group offsets (earliest, latest, timestamp) |
+| `NaturalLanguageQuery(ctx, query)` | Execute a natural language query against Kafka |
+| `DiagnoseLag(ctx, groupID)` | Diagnose consumer lag for a group |
+| `GetAnomalies(ctx, severity, limit)` | Get detected anomalies, optionally filtered by severity |
+| `AdvisorScan(ctx, cluster)` | Run a cluster health advisory scan |
+
 ### Types
 
 - `TopicSummary` — Topic name, partitions, replication factor, message count estimate
 - `Message` — Partition, offset, timestamp, key, value, headers
 - `DeliveryResult` — Partition, offset, timestamp, status
+- `ConsumerGroupSummary` — Group ID, state, member count, total lag
+- `SchemaInfo` — Subject, version, schema type, schema content
 
 ## Links
 
