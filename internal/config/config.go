@@ -23,13 +23,19 @@ type Config struct {
 
 // ServerConfig holds network transport and TLS settings for the MCP server.
 type ServerConfig struct {
-	Transport      string `yaml:"transport" json:"transport"`             // Protocol: "stdio", "sse", or "streamable-http"
-	Host           string `yaml:"host" json:"host"`                       // Bind address (default "0.0.0.0")
-	Port           int    `yaml:"port" json:"port"`                       // Listen port (default 3100)
-	LogLevel       string `yaml:"log_level" json:"log_level"`             // Log verbosity: "debug", "info", "warn", "error"
-	MaxMessageSize int    `yaml:"max_message_size" json:"max_message_size"` // Max MCP message size in bytes (default 1 MB)
-	TLSCert        string `yaml:"tls_cert,omitempty" json:"tls_cert,omitempty"` // Path to TLS certificate file
-	TLSKey         string `yaml:"tls_key,omitempty" json:"tls_key,omitempty"`   // Path to TLS private key file
+	Transport      string          `yaml:"transport" json:"transport"`             // Protocol: "stdio", "sse", or "streamable-http"
+	Host           string          `yaml:"host" json:"host"`                       // Bind address (default "0.0.0.0")
+	Port           int             `yaml:"port" json:"port"`                       // Listen port (default 3100)
+	LogLevel       string          `yaml:"log_level" json:"log_level"`             // Log verbosity: "debug", "info", "warn", "error"
+	MaxMessageSize int             `yaml:"max_message_size" json:"max_message_size"` // Max MCP message size in bytes (default 1 MB)
+	TLSCert        string          `yaml:"tls_cert,omitempty" json:"tls_cert,omitempty"` // Path to TLS certificate file
+	TLSKey         string          `yaml:"tls_key,omitempty" json:"tls_key,omitempty"`   // Path to TLS private key file
+	Dashboard      DashboardConfig `yaml:"dashboard,omitempty" json:"dashboard,omitempty"` // Dashboard settings
+}
+
+// DashboardConfig holds settings for the embedded web dashboard.
+type DashboardConfig struct {
+	APIKey string `yaml:"api_key,omitempty" json:"-"` // API key for dashboard authentication
 }
 
 // Address returns the "host:port" listen address, using defaults if not set.
