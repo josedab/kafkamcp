@@ -12,6 +12,7 @@ ADRs document significant architectural decisions made during the project's deve
 | [ADR-002](002-multi-cluster-support.md) | Multi-Cluster Architecture | Accepted |
 | [ADR-003](003-policy-engine.md) | YAML-Based Policy Engine | Accepted |
 | [ADR-004](004-subsystem-grouping.md) | Subsystem Grouping Architecture | Accepted |
+| [ADR-005](005-engine-pattern.md) | Shared Engine Store Pattern | Accepted |
 
 ## Format
 
