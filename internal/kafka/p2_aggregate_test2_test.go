@@ -8,6 +8,7 @@ import (
 // Tests for p2_aggregate.go: extractNumericField and mock-based aggregate/graph tests.
 
 func TestExtractNumericField_EmptyField(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name  string
 		value any
@@ -34,6 +35,7 @@ func TestExtractNumericField_EmptyField(t *testing.T) {
 }
 
 func TestExtractNumericField_NestedDotNotation(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name  string
 		value any
@@ -120,6 +122,7 @@ func TestExtractNumericField_NestedDotNotation(t *testing.T) {
 }
 
 func TestAggregate_MinMaxValues(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		AggregateFn: func(ctx context.Context, cluster string, req AggregateRequest) (*AggregateResult, error) {
 			return &AggregateResult{
@@ -144,6 +147,7 @@ func TestAggregate_MinMaxValues(t *testing.T) {
 }
 
 func TestAggregate_MinValue(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		AggregateFn: func(ctx context.Context, cluster string, req AggregateRequest) (*AggregateResult, error) {
 			return &AggregateResult{
@@ -168,6 +172,7 @@ func TestAggregate_MinValue(t *testing.T) {
 }
 
 func TestGetTopicGraph_WithConsumerEdges(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		GetTopicGraphFn: func(ctx context.Context, cluster string) (*TopicGraph, error) {
 			return &TopicGraph{
@@ -214,6 +219,7 @@ func TestGetTopicGraph_WithConsumerEdges(t *testing.T) {
 }
 
 func TestGetTopicGraph_NoConsumers(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		GetTopicGraphFn: func(ctx context.Context, cluster string) (*TopicGraph, error) {
 			return &TopicGraph{
@@ -234,6 +240,7 @@ func TestGetTopicGraph_NoConsumers(t *testing.T) {
 }
 
 func TestSuggestSchemaEvolution_AddField(t *testing.T) {
+	t.Parallel()
 	suggestions := SuggestSchemaEvolution(nil, "add a new field for user preferences")
 	if len(suggestions) == 0 {
 		t.Fatal("expected suggestions for 'add field'")
@@ -253,6 +260,7 @@ func TestSuggestSchemaEvolution_AddField(t *testing.T) {
 }
 
 func TestSuggestSchemaEvolution_RemoveField(t *testing.T) {
+	t.Parallel()
 	suggestions := SuggestSchemaEvolution(nil, "remove the legacy status field")
 	if len(suggestions) == 0 {
 		t.Fatal("expected suggestions for 'remove field'")
@@ -269,6 +277,7 @@ func TestSuggestSchemaEvolution_RemoveField(t *testing.T) {
 }
 
 func TestSuggestSchemaEvolution_RenameField(t *testing.T) {
+	t.Parallel()
 	suggestions := SuggestSchemaEvolution(nil, "rename userId to user_id")
 	if len(suggestions) == 0 {
 		t.Fatal("expected suggestions for 'rename'")
@@ -286,6 +295,7 @@ func TestSuggestSchemaEvolution_RenameField(t *testing.T) {
 }
 
 func TestSuggestSchemaEvolution_TypeChange(t *testing.T) {
+	t.Parallel()
 	suggestions := SuggestSchemaEvolution(nil, "change amount type from int to long")
 	found := false
 	for _, s := range suggestions {
@@ -299,6 +309,7 @@ func TestSuggestSchemaEvolution_TypeChange(t *testing.T) {
 }
 
 func TestSuggestSchemaEvolution_UnknownChange(t *testing.T) {
+	t.Parallel()
 	suggestions := SuggestSchemaEvolution(nil, "do something unusual")
 	if len(suggestions) == 0 {
 		t.Fatal("expected fallback suggestion")

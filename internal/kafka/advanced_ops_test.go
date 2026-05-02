@@ -5,6 +5,7 @@ import (
 )
 
 func TestGenerateSampleDataEcommerce(t *testing.T) {
+	t.Parallel()
 	msgs := generateSampleData("ecommerce", 5)
 	if len(msgs) != 5 {
 		t.Errorf("expected 5 messages, got %d", len(msgs))
@@ -20,6 +21,7 @@ func TestGenerateSampleDataEcommerce(t *testing.T) {
 }
 
 func TestGenerateSampleDataIOT(t *testing.T) {
+	t.Parallel()
 	msgs := generateSampleData("iot", 3)
 	if len(msgs) != 3 {
 		t.Errorf("expected 3 messages, got %d", len(msgs))
@@ -32,6 +34,7 @@ func TestGenerateSampleDataIOT(t *testing.T) {
 }
 
 func TestGenerateSampleDataUserActivity(t *testing.T) {
+	t.Parallel()
 	msgs := generateSampleData("user_activity", 4)
 	if len(msgs) != 4 {
 		t.Errorf("expected 4 messages, got %d", len(msgs))
@@ -39,6 +42,7 @@ func TestGenerateSampleDataUserActivity(t *testing.T) {
 }
 
 func TestGenerateSampleDataLogs(t *testing.T) {
+	t.Parallel()
 	msgs := generateSampleData("logs", 2)
 	if len(msgs) != 2 {
 		t.Errorf("expected 2 messages, got %d", len(msgs))
@@ -46,6 +50,7 @@ func TestGenerateSampleDataLogs(t *testing.T) {
 }
 
 func TestGenerateSampleDataDefault(t *testing.T) {
+	t.Parallel()
 	msgs := generateSampleData("unknown_pattern", 3)
 	if len(msgs) != 3 {
 		t.Errorf("expected 3 messages (default=ecommerce), got %d", len(msgs))
@@ -53,6 +58,7 @@ func TestGenerateSampleDataDefault(t *testing.T) {
 }
 
 func TestGenerateSampleDataZero(t *testing.T) {
+	t.Parallel()
 	msgs := generateSampleData("iot", 0)
 	if len(msgs) != 0 {
 		t.Errorf("expected 0 messages, got %d", len(msgs))
@@ -60,12 +66,14 @@ func TestGenerateSampleDataZero(t *testing.T) {
 }
 
 func TestPlaygroundPrefix(t *testing.T) {
+	t.Parallel()
 	if playgroundPrefix != "_playground_" {
 		t.Errorf("expected '_playground_', got %q", playgroundPrefix)
 	}
 }
 
 func TestAnalyzeACLSecurity(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name             string
 		acls             []ACLEntry
@@ -128,6 +136,7 @@ func TestAnalyzeACLSecurity(t *testing.T) {
 }
 
 func TestTopicMatchScoreExact(t *testing.T) {
+	t.Parallel()
 	score := topicMatchScore("show me orders", "orders")
 	if score < 100 {
 		t.Errorf("expected score >= 100 for exact match, got %d", score)
@@ -135,6 +144,7 @@ func TestTopicMatchScoreExact(t *testing.T) {
 }
 
 func TestTopicMatchScorePartial(t *testing.T) {
+	t.Parallel()
 	score := topicMatchScore("show me recent payments", "payments.created")
 	if score <= 0 {
 		t.Errorf("expected positive score for partial match, got %d", score)
@@ -142,6 +152,7 @@ func TestTopicMatchScorePartial(t *testing.T) {
 }
 
 func TestTopicMatchScoreNoMatch(t *testing.T) {
+	t.Parallel()
 	score := topicMatchScore("hello world", "orders.created")
 	if score != 0 {
 		t.Errorf("expected 0 score for no match, got %d", score)
@@ -149,6 +160,7 @@ func TestTopicMatchScoreNoMatch(t *testing.T) {
 }
 
 func TestTopicMatchScoreAssociations(t *testing.T) {
+	t.Parallel()
 	score := topicMatchScore("show me purchase history", "order-events")
 	if score <= 0 {
 		t.Errorf("expected positive score for keyword association, got %d", score)
@@ -156,6 +168,7 @@ func TestTopicMatchScoreAssociations(t *testing.T) {
 }
 
 func TestExtractJoinKeyFromValue(t *testing.T) {
+	t.Parallel()
 	msg := Message{
 		Value: map[string]any{
 			"user": map[string]any{
@@ -170,6 +183,7 @@ func TestExtractJoinKeyFromValue(t *testing.T) {
 }
 
 func TestExtractJoinKeyFromMessageKey(t *testing.T) {
+	t.Parallel()
 	msg := Message{Key: "msg-key-123"}
 	key := extractJoinKey(msg, "")
 	if key != "msg-key-123" {
@@ -178,6 +192,7 @@ func TestExtractJoinKeyFromMessageKey(t *testing.T) {
 }
 
 func TestExtractJoinKeyMissing(t *testing.T) {
+	t.Parallel()
 	msg := Message{Value: map[string]any{"a": "b"}}
 	key := extractJoinKey(msg, "nonexistent.path")
 	if key != "" {
@@ -186,6 +201,7 @@ func TestExtractJoinKeyMissing(t *testing.T) {
 }
 
 func TestExtractJoinKeyNonMapValue(t *testing.T) {
+	t.Parallel()
 	msg := Message{Value: "string-value"}
 	key := extractJoinKey(msg, "some.field")
 	if key != "" {
@@ -194,6 +210,7 @@ func TestExtractJoinKeyNonMapValue(t *testing.T) {
 }
 
 func TestExtractNumericFieldEmpty(t *testing.T) {
+	t.Parallel()
 	val, ok := extractNumericField(42.5, "")
 	if !ok || val != 42.5 {
 		t.Errorf("expected 42.5, got %v (ok=%v)", val, ok)
@@ -201,6 +218,7 @@ func TestExtractNumericFieldEmpty(t *testing.T) {
 }
 
 func TestExtractNumericFieldEmptyString(t *testing.T) {
+	t.Parallel()
 	val, ok := extractNumericField("3.14", "")
 	if !ok || val != 3.14 {
 		t.Errorf("expected 3.14, got %v (ok=%v)", val, ok)
@@ -208,6 +226,7 @@ func TestExtractNumericFieldEmptyString(t *testing.T) {
 }
 
 func TestExtractNumericFieldEmptyNonNumeric(t *testing.T) {
+	t.Parallel()
 	_, ok := extractNumericField("not-a-number", "")
 	if ok {
 		t.Error("expected false for non-numeric string")
@@ -215,6 +234,7 @@ func TestExtractNumericFieldEmptyNonNumeric(t *testing.T) {
 }
 
 func TestSuggestSchemaEvolutionAddField(t *testing.T) {
+	t.Parallel()
 	suggestions := SuggestSchemaEvolution(nil, "add a new field for email")
 	if len(suggestions) < 2 {
 		t.Errorf("expected at least 2 suggestions for add field, got %d", len(suggestions))
@@ -231,6 +251,7 @@ func TestSuggestSchemaEvolutionAddField(t *testing.T) {
 }
 
 func TestSuggestSchemaEvolutionRemove(t *testing.T) {
+	t.Parallel()
 	suggestions := SuggestSchemaEvolution(nil, "remove the old status field")
 	found := false
 	for _, s := range suggestions {
@@ -244,6 +265,7 @@ func TestSuggestSchemaEvolutionRemove(t *testing.T) {
 }
 
 func TestSuggestSchemaEvolutionRename(t *testing.T) {
+	t.Parallel()
 	suggestions := SuggestSchemaEvolution(nil, "rename user_id to customer_id")
 	if len(suggestions) < 2 {
 		t.Errorf("expected at least 2 suggestions for rename, got %d", len(suggestions))
@@ -251,6 +273,7 @@ func TestSuggestSchemaEvolutionRename(t *testing.T) {
 }
 
 func TestSuggestSchemaEvolutionTypeChange(t *testing.T) {
+	t.Parallel()
 	suggestions := SuggestSchemaEvolution(nil, "change the type of amount from int to long")
 	found := false
 	for _, s := range suggestions {
@@ -264,6 +287,7 @@ func TestSuggestSchemaEvolutionTypeChange(t *testing.T) {
 }
 
 func TestSuggestSchemaEvolutionGeneric(t *testing.T) {
+	t.Parallel()
 	suggestions := SuggestSchemaEvolution(nil, "do something unrecognized")
 	if len(suggestions) == 0 {
 		t.Error("expected at least 1 generic suggestion")
@@ -274,12 +298,14 @@ func TestSuggestSchemaEvolutionGeneric(t *testing.T) {
 }
 
 func TestDangerousConfigKeys(t *testing.T) {
+	t.Parallel()
 	if len(dangerousConfigKeys) < 3 {
 		t.Errorf("expected at least 3 dangerous config keys, got %d", len(dangerousConfigKeys))
 	}
 }
 
 func TestCorrelationHeaders(t *testing.T) {
+	t.Parallel()
 	if len(correlationHeaders) < 10 {
 		t.Errorf("expected at least 10 correlation header variants, got %d", len(correlationHeaders))
 	}

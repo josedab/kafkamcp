@@ -5,6 +5,7 @@ import (
 )
 
 func TestExtractNumericField(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name  string
 		value any
@@ -44,6 +45,7 @@ func TestExtractNumericField(t *testing.T) {
 }
 
 func TestExtractJoinKey(t *testing.T) {
+	t.Parallel()
 	msg := Message{
 		Key:   "order-123",
 		Value: map[string]any{"customer": map[string]any{"id": "cust-456"}},
@@ -84,6 +86,7 @@ func TestExtractJoinKey(t *testing.T) {
 }
 
 func TestTopicMatchScore(t *testing.T) {
+	t.Parallel()
 	// Exact match should score highest
 	exact := topicMatchScore("show me orders.created", "orders.created")
 	partial := topicMatchScore("show me orders.created", "orders.deleted")
@@ -116,6 +119,7 @@ func TestTopicMatchScore(t *testing.T) {
 }
 
 func TestSuggestSchemaEvolution(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		change string
 		minLen int
@@ -143,6 +147,7 @@ func TestSuggestSchemaEvolution(t *testing.T) {
 }
 
 func TestNewConnectClient(t *testing.T) {
+	t.Parallel()
 	c, err := NewConnectClient("")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

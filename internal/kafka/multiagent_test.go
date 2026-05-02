@@ -5,6 +5,7 @@ import (
 )
 
 func TestNewAgentRegistry(t *testing.T) {
+	t.Parallel()
 	reg := NewAgentRegistry()
 	if reg == nil {
 		t.Fatal("expected non-nil registry")
@@ -16,6 +17,7 @@ func TestNewAgentRegistry(t *testing.T) {
 }
 
 func TestRegisterAgent(t *testing.T) {
+	t.Parallel()
 	reg := NewAgentRegistry()
 	agent := reg.RegisterAgent("agent-1", "Test Agent")
 	if agent.ID != "agent-1" {
@@ -30,6 +32,7 @@ func TestRegisterAgent(t *testing.T) {
 }
 
 func TestListAgents(t *testing.T) {
+	t.Parallel()
 	reg := NewAgentRegistry()
 	reg.RegisterAgent("a1", "Agent 1")
 	reg.RegisterAgent("a2", "Agent 2")
@@ -41,6 +44,7 @@ func TestListAgents(t *testing.T) {
 }
 
 func TestHeartbeat(t *testing.T) {
+	t.Parallel()
 	reg := NewAgentRegistry()
 	reg.RegisterAgent("a1", "Agent 1")
 
@@ -51,6 +55,7 @@ func TestHeartbeat(t *testing.T) {
 }
 
 func TestHeartbeatUnregistered(t *testing.T) {
+	t.Parallel()
 	reg := NewAgentRegistry()
 	err := reg.Heartbeat("nonexistent")
 	if err == nil {
@@ -59,6 +64,7 @@ func TestHeartbeatUnregistered(t *testing.T) {
 }
 
 func TestClaimPartition(t *testing.T) {
+	t.Parallel()
 	reg := NewAgentRegistry()
 	reg.RegisterAgent("a1", "Agent 1")
 
@@ -79,6 +85,7 @@ func TestClaimPartition(t *testing.T) {
 }
 
 func TestClaimPartitionUnregistered(t *testing.T) {
+	t.Parallel()
 	reg := NewAgentRegistry()
 	err := reg.ClaimPartition("nonexistent", "orders", 0)
 	if err == nil {
@@ -87,6 +94,7 @@ func TestClaimPartitionUnregistered(t *testing.T) {
 }
 
 func TestClaimPartitionConflict(t *testing.T) {
+	t.Parallel()
 	reg := NewAgentRegistry()
 	reg.RegisterAgent("a1", "Agent 1")
 	reg.RegisterAgent("a2", "Agent 2")
@@ -99,6 +107,7 @@ func TestClaimPartitionConflict(t *testing.T) {
 }
 
 func TestClaimPartitionSameAgent(t *testing.T) {
+	t.Parallel()
 	reg := NewAgentRegistry()
 	reg.RegisterAgent("a1", "Agent 1")
 
@@ -110,6 +119,7 @@ func TestClaimPartitionSameAgent(t *testing.T) {
 }
 
 func TestReleasePartition(t *testing.T) {
+	t.Parallel()
 	reg := NewAgentRegistry()
 	reg.RegisterAgent("a1", "Agent 1")
 	reg.ClaimPartition("a1", "orders", 0)
@@ -121,6 +131,7 @@ func TestReleasePartition(t *testing.T) {
 }
 
 func TestReleasePartitionWrongOwner(t *testing.T) {
+	t.Parallel()
 	reg := NewAgentRegistry()
 	reg.RegisterAgent("a1", "Agent 1")
 	reg.RegisterAgent("a2", "Agent 2")
@@ -133,6 +144,7 @@ func TestReleasePartitionWrongOwner(t *testing.T) {
 }
 
 func TestShareCursor(t *testing.T) {
+	t.Parallel()
 	reg := NewAgentRegistry()
 	cursor := reg.ShareCursor("a1", "orders", 0, 42)
 	if cursor == nil {
@@ -144,6 +156,7 @@ func TestShareCursor(t *testing.T) {
 }
 
 func TestGetCursors(t *testing.T) {
+	t.Parallel()
 	reg := NewAgentRegistry()
 	reg.ShareCursor("a1", "orders", 0, 10)
 	reg.ShareCursor("a1", "orders", 1, 20)
@@ -155,6 +168,7 @@ func TestGetCursors(t *testing.T) {
 }
 
 func TestGetCursorsEmpty(t *testing.T) {
+	t.Parallel()
 	reg := NewAgentRegistry()
 	cursors := reg.GetCursors()
 	if len(cursors) != 0 {
@@ -163,6 +177,7 @@ func TestGetCursorsEmpty(t *testing.T) {
 }
 
 func TestQueueHandoff(t *testing.T) {
+	t.Parallel()
 	reg := NewAgentRegistry()
 	reg.RegisterAgent("a1", "Agent 1")
 	reg.RegisterAgent("a2", "Agent 2")
@@ -180,6 +195,7 @@ func TestQueueHandoff(t *testing.T) {
 }
 
 func TestQueueHandoffUnregisteredTarget(t *testing.T) {
+	t.Parallel()
 	reg := NewAgentRegistry()
 	reg.RegisterAgent("a1", "Agent 1")
 
@@ -190,6 +206,7 @@ func TestQueueHandoffUnregisteredTarget(t *testing.T) {
 }
 
 func TestPendingHandoffs(t *testing.T) {
+	t.Parallel()
 	reg := NewAgentRegistry()
 	reg.RegisterAgent("a1", "Agent 1")
 	reg.RegisterAgent("a2", "Agent 2")
@@ -210,6 +227,7 @@ func TestPendingHandoffs(t *testing.T) {
 }
 
 func TestPendingHandoffsNoMessages(t *testing.T) {
+	t.Parallel()
 	reg := NewAgentRegistry()
 	reg.RegisterAgent("a1", "Agent 1")
 
@@ -220,6 +238,7 @@ func TestPendingHandoffsNoMessages(t *testing.T) {
 }
 
 func TestAppendUnique(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		slice    []int32
@@ -242,6 +261,7 @@ func TestAppendUnique(t *testing.T) {
 }
 
 func TestRemovePartition(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		slice   []int32

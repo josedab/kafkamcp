@@ -13,6 +13,7 @@ import (
 // ===================== RestartConnector: specific task =====================
 
 func TestRestartConnector_SpecificTask(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -41,6 +42,7 @@ func TestRestartConnector_SpecificTask(t *testing.T) {
 // ===================== RestartConnector: failed-only =====================
 
 func TestRestartConnector_FailedOnly(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		switch {
@@ -82,6 +84,7 @@ func TestRestartConnector_FailedOnly(t *testing.T) {
 // ===================== RestartConnector: no failed tasks =====================
 
 func TestRestartConnector_NoFailedTasks(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		switch {
@@ -116,6 +119,7 @@ func TestRestartConnector_NoFailedTasks(t *testing.T) {
 // ===================== RestartConnector: full restart =====================
 
 func TestRestartConnector_FullRestart(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost && strings.HasSuffix(r.URL.Path, "/restart") {
 			w.WriteHeader(http.StatusNoContent)
@@ -141,6 +145,7 @@ func TestRestartConnector_FullRestart(t *testing.T) {
 // ===================== httpPostRaw: HTTP 400+ errors =====================
 
 func TestHTTPPostRaw_HTTP400Error(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"error":"invalid request"}`))
@@ -158,6 +163,7 @@ func TestHTTPPostRaw_HTTP400Error(t *testing.T) {
 }
 
 func TestHTTPPostRaw_HTTP500Error(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("internal error"))
@@ -177,6 +183,7 @@ func TestHTTPPostRaw_HTTP500Error(t *testing.T) {
 // ===================== httpPostRaw: context deadline =====================
 
 func TestHTTPPostRaw_ContextDeadline(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(2 * time.Second)
 		w.WriteHeader(http.StatusOK)
@@ -196,6 +203,7 @@ func TestHTTPPostRaw_ContextDeadline(t *testing.T) {
 // ===================== httpPostRaw: success =====================
 
 func TestHTTPPostRaw_Success(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Content-Type") != "application/json" {
 			t.Error("expected Content-Type application/json")
@@ -218,6 +226,7 @@ func TestHTTPPostRaw_Success(t *testing.T) {
 // ===================== httpPostRaw: nil body =====================
 
 func TestHTTPPostRaw_NilBody(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}))
@@ -233,6 +242,7 @@ func TestHTTPPostRaw_NilBody(t *testing.T) {
 // ===================== httpPut =====================
 
 func TestHTTPPut_Success(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPut {
 			t.Errorf("expected PUT, got %s", r.Method)
@@ -254,6 +264,7 @@ func TestHTTPPut_Success(t *testing.T) {
 }
 
 func TestHTTPPut_Non2xx(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusConflict)
 		w.Write([]byte("conflict"))
@@ -273,6 +284,7 @@ func TestHTTPPut_Non2xx(t *testing.T) {
 // ===================== httpPost =====================
 
 func TestHTTPPost_Success(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			t.Errorf("expected POST, got %s", r.Method)
@@ -293,6 +305,7 @@ func TestHTTPPost_Success(t *testing.T) {
 }
 
 func TestHTTPPost_MarshalError(t *testing.T) {
+	t.Parallel()
 	client, _ := NewConnectClient("http://localhost:8083")
 	_, err := client.httpPost(context.Background(), "http://localhost:8083/test", make(chan int))
 	if err == nil {

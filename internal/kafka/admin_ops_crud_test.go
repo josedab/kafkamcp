@@ -10,6 +10,7 @@ import (
 // ===================== CreateTopic via MockKafkaManager =====================
 
 func TestCreateTopic_DefaultPartitionsAndRF(t *testing.T) {
+	t.Parallel()
 	var captured CreateTopicRequest
 	mock := &MockKafkaManager{
 		CreateTopicFn: func(ctx context.Context, cluster string, req CreateTopicRequest) error {
@@ -34,6 +35,7 @@ func TestCreateTopic_DefaultPartitionsAndRF(t *testing.T) {
 }
 
 func TestCreateTopic_WithConfigs(t *testing.T) {
+	t.Parallel()
 	var captured CreateTopicRequest
 	mock := &MockKafkaManager{
 		CreateTopicFn: func(ctx context.Context, cluster string, req CreateTopicRequest) error {
@@ -60,6 +62,7 @@ func TestCreateTopic_WithConfigs(t *testing.T) {
 }
 
 func TestCreateTopic_RestrictedConfigRejected(t *testing.T) {
+	t.Parallel()
 	configs := map[string]string{
 		"min.insync.replicas": "2",
 		"retention.ms":        "86400000",
@@ -74,6 +77,7 @@ func TestCreateTopic_RestrictedConfigRejected(t *testing.T) {
 }
 
 func TestCreateTopic_CaseInsensitiveRestriction(t *testing.T) {
+	t.Parallel()
 	configs := map[string]string{
 		"Min.Insync.Replicas": "2",
 	}
@@ -84,6 +88,7 @@ func TestCreateTopic_CaseInsensitiveRestriction(t *testing.T) {
 }
 
 func TestCreateTopic_ErrorPropagation(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		CreateTopicFn: func(ctx context.Context, cluster string, req CreateTopicRequest) error {
 			return context.DeadlineExceeded
@@ -96,6 +101,7 @@ func TestCreateTopic_ErrorPropagation(t *testing.T) {
 }
 
 func TestCreateTopic_EmptyConfigs(t *testing.T) {
+	t.Parallel()
 	err := validateTopicConfigs(nil)
 	if err != nil {
 		t.Errorf("expected no error for nil configs, got: %v", err)
@@ -107,6 +113,7 @@ func TestCreateTopic_EmptyConfigs(t *testing.T) {
 }
 
 func TestCreateTopic_AllDangerousKeys(t *testing.T) {
+	t.Parallel()
 	for _, key := range dangerousConfigKeys {
 		err := validateTopicConfigs(map[string]string{key: "val"})
 		if err == nil {
@@ -118,6 +125,7 @@ func TestCreateTopic_AllDangerousKeys(t *testing.T) {
 // ===================== AlterTopic =====================
 
 func TestAlterTopic_Success(t *testing.T) {
+	t.Parallel()
 	var captured AlterTopicRequest
 	mock := &MockKafkaManager{
 		AlterTopicFn: func(ctx context.Context, cluster string, req AlterTopicRequest) error {
@@ -141,6 +149,7 @@ func TestAlterTopic_Success(t *testing.T) {
 }
 
 func TestAlterTopic_RestrictedConfigRejected(t *testing.T) {
+	t.Parallel()
 	err := validateTopicConfigs(map[string]string{
 		"unclean.leader.election.enable": "true",
 	})
@@ -150,6 +159,7 @@ func TestAlterTopic_RestrictedConfigRejected(t *testing.T) {
 }
 
 func TestAlterTopic_ErrorPropagation(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		AlterTopicFn: func(ctx context.Context, cluster string, req AlterTopicRequest) error {
 			return context.Canceled
@@ -167,6 +177,7 @@ func TestAlterTopic_ErrorPropagation(t *testing.T) {
 // ===================== DeleteTopic =====================
 
 func TestDeleteTopic_Success(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		DeleteTopicFn: func(ctx context.Context, cluster, topicName string) error {
 			return nil
@@ -186,6 +197,7 @@ func TestDeleteTopic_Success(t *testing.T) {
 }
 
 func TestDeleteTopic_ErrorPropagation(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		DeleteTopicFn: func(ctx context.Context, cluster, topicName string) error {
 			return context.DeadlineExceeded
@@ -198,6 +210,7 @@ func TestDeleteTopic_ErrorPropagation(t *testing.T) {
 }
 
 func TestDeleteTopic_EmptyTopicName(t *testing.T) {
+	t.Parallel()
 	var capturedName string
 	mock := &MockKafkaManager{
 		DeleteTopicFn: func(ctx context.Context, cluster, topicName string) error {
@@ -215,6 +228,7 @@ func TestDeleteTopic_EmptyTopicName(t *testing.T) {
 }
 
 func TestDeleteTopic_DefaultCluster(t *testing.T) {
+	t.Parallel()
 	var capturedCluster string
 	mock := &MockKafkaManager{
 		DeleteTopicFn: func(ctx context.Context, cluster, topicName string) error {
@@ -232,6 +246,7 @@ func TestDeleteTopic_DefaultCluster(t *testing.T) {
 }
 
 func TestDeleteTopic_ContextCancelled(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		DeleteTopicFn: func(ctx context.Context, cluster, topicName string) error {
 			return ctx.Err()
@@ -246,6 +261,7 @@ func TestDeleteTopic_ContextCancelled(t *testing.T) {
 }
 
 func TestDeleteTopic_NotFoundError(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		DeleteTopicFn: func(ctx context.Context, cluster, topicName string) error {
 			return fmt.Errorf("topic %q not found", topicName)
@@ -261,6 +277,7 @@ func TestDeleteTopic_NotFoundError(t *testing.T) {
 }
 
 func TestDeleteTopic_NilFnReturnsNil(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{}
 	err := mock.DeleteTopic(context.Background(), "default", "topic")
 	if err != nil {
@@ -269,6 +286,7 @@ func TestDeleteTopic_NilFnReturnsNil(t *testing.T) {
 }
 
 func TestDeleteTopic_MultipleCalls(t *testing.T) {
+	t.Parallel()
 	callCount := 0
 	mock := &MockKafkaManager{
 		DeleteTopicFn: func(ctx context.Context, cluster, topicName string) error {
@@ -293,6 +311,7 @@ func TestDeleteTopic_MultipleCalls(t *testing.T) {
 // ===================== ResetOffsets =====================
 
 func TestResetOffsets_EarliestStrategy(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		ResetOffsetsFn: func(ctx context.Context, cluster string, req ResetOffsetsRequest) (*ResetOffsetsResult, error) {
 			if req.Strategy != "earliest" {
@@ -318,6 +337,7 @@ func TestResetOffsets_EarliestStrategy(t *testing.T) {
 }
 
 func TestResetOffsets_LatestStrategy(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		ResetOffsetsFn: func(ctx context.Context, cluster string, req ResetOffsetsRequest) (*ResetOffsetsResult, error) {
 			if req.Strategy != "latest" {
@@ -342,6 +362,7 @@ func TestResetOffsets_LatestStrategy(t *testing.T) {
 }
 
 func TestResetOffsets_TimestampStrategy(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		ResetOffsetsFn: func(ctx context.Context, cluster string, req ResetOffsetsRequest) (*ResetOffsetsResult, error) {
 			if req.Strategy != "timestamp" {
@@ -370,6 +391,7 @@ func TestResetOffsets_TimestampStrategy(t *testing.T) {
 }
 
 func TestResetOffsets_DryRunMode(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		ResetOffsetsFn: func(ctx context.Context, cluster string, req ResetOffsetsRequest) (*ResetOffsetsResult, error) {
 			if !req.DryRun {
@@ -396,6 +418,7 @@ func TestResetOffsets_DryRunMode(t *testing.T) {
 }
 
 func TestResetOffsets_InvalidStrategy(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	_, err := m.ResetOffsets(context.Background(), "prod", ResetOffsetsRequest{
 		GroupID:  "my-group",
@@ -410,6 +433,7 @@ func TestResetOffsets_InvalidStrategy(t *testing.T) {
 }
 
 func TestResetOffsets_ErrorPropagation(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		ResetOffsetsFn: func(ctx context.Context, cluster string, req ResetOffsetsRequest) (*ResetOffsetsResult, error) {
 			return nil, context.DeadlineExceeded
@@ -426,6 +450,7 @@ func TestResetOffsets_ErrorPropagation(t *testing.T) {
 }
 
 func TestResetOffsets_MultiplePartitions(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		ResetOffsetsFn: func(ctx context.Context, cluster string, req ResetOffsetsRequest) (*ResetOffsetsResult, error) {
 			return &ResetOffsetsResult{
@@ -451,6 +476,7 @@ func TestResetOffsets_MultiplePartitions(t *testing.T) {
 // ===================== validateTopicConfigs edge cases =====================
 
 func TestValidateTopicConfigs_MixedSafeAndDangerous(t *testing.T) {
+	t.Parallel()
 	configs := map[string]string{
 		"retention.ms":                   "86400000",
 		"cleanup.policy":                 "compact",
@@ -463,6 +489,7 @@ func TestValidateTopicConfigs_MixedSafeAndDangerous(t *testing.T) {
 }
 
 func TestValidateTopicConfigs_UpperCaseDangerous(t *testing.T) {
+	t.Parallel()
 	configs := map[string]string{
 		"MIN.INSYNC.REPLICAS": "1",
 	}

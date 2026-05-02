@@ -10,6 +10,7 @@ import (
 )
 
 func TestRestartConnector_NilClient(t *testing.T) {
+	t.Parallel()
 	var client *ConnectClient
 	_, err := client.RestartConnector(context.Background(), "conn", -1, false)
 	if err == nil {
@@ -21,6 +22,7 @@ func TestRestartConnector_NilClient(t *testing.T) {
 }
 
 func TestRestartConnector_HTTPError(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(`{"error_code":404,"message":"Connector not found"}`))
@@ -38,6 +40,7 @@ func TestRestartConnector_HTTPError(t *testing.T) {
 }
 
 func TestRestartConnector_TaskHTTPError(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte(`{"error":"unauthorized"}`))
@@ -55,6 +58,7 @@ func TestRestartConnector_TaskHTTPError(t *testing.T) {
 }
 
 func TestGetConnectorConfig_Success(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !strings.HasSuffix(r.URL.Path, "/config") {
 			w.WriteHeader(http.StatusNotFound)
@@ -88,6 +92,7 @@ func TestGetConnectorConfig_Success(t *testing.T) {
 }
 
 func TestUpdateConnectorConfig_Roundtrip(t *testing.T) {
+	t.Parallel()
 	var receivedConfig map[string]string
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPut {
@@ -119,6 +124,7 @@ func TestUpdateConnectorConfig_Roundtrip(t *testing.T) {
 }
 
 func TestUpdateConnector_NilClient(t *testing.T) {
+	t.Parallel()
 	var client *ConnectClient
 	_, err := client.UpdateConnector(context.Background(), "conn", map[string]string{"k": "v"})
 	if err == nil {
@@ -127,6 +133,7 @@ func TestUpdateConnector_NilClient(t *testing.T) {
 }
 
 func TestCreateConnector_Success(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -157,6 +164,7 @@ func TestCreateConnector_Success(t *testing.T) {
 }
 
 func TestCreateConnector_NilClient(t *testing.T) {
+	t.Parallel()
 	var client *ConnectClient
 	_, err := client.CreateConnector(context.Background(), "conn", map[string]string{})
 	if err == nil {
@@ -165,6 +173,7 @@ func TestCreateConnector_NilClient(t *testing.T) {
 }
 
 func TestDeleteConnector_Success(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodDelete {
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -182,6 +191,7 @@ func TestDeleteConnector_Success(t *testing.T) {
 }
 
 func TestDeleteConnector_NotFound(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(`{"error_code":404,"message":"Connector not found"}`))
@@ -199,6 +209,7 @@ func TestDeleteConnector_NotFound(t *testing.T) {
 }
 
 func TestDeleteConnector_NilClient(t *testing.T) {
+	t.Parallel()
 	var client *ConnectClient
 	err := client.DeleteConnector(context.Background(), "conn")
 	if err == nil {
@@ -207,6 +218,7 @@ func TestDeleteConnector_NilClient(t *testing.T) {
 }
 
 func TestConnectorHealth_NilClient(t *testing.T) {
+	t.Parallel()
 	var client *ConnectClient
 	_, err := client.ConnectorHealth(context.Background(), "conn")
 	if err == nil {
@@ -215,6 +227,7 @@ func TestConnectorHealth_NilClient(t *testing.T) {
 }
 
 func TestHTTPDelete_AuthFailure(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte(`{"error":"unauthorized"}`))

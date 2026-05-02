@@ -8,6 +8,7 @@ import (
 // --------------- Type serialization tests ---------------
 
 func TestCreateTopicRequest_JSON(t *testing.T) {
+	t.Parallel()
 	req := CreateTopicRequest{
 		Name:              "orders",
 		Partitions:        6,
@@ -31,6 +32,7 @@ func TestCreateTopicRequest_JSON(t *testing.T) {
 }
 
 func TestCreateTopicRequest_OmitEmptyConfigs(t *testing.T) {
+	t.Parallel()
 	req := CreateTopicRequest{Name: "t", Partitions: 1, ReplicationFactor: 1}
 	data, _ := json.Marshal(req)
 	var raw map[string]json.RawMessage
@@ -43,6 +45,7 @@ func TestCreateTopicRequest_OmitEmptyConfigs(t *testing.T) {
 }
 
 func TestSearchRequest_JSON(t *testing.T) {
+	t.Parallel()
 	req := SearchRequest{
 		Topic:         "events",
 		KeyFilter:     "user-123",
@@ -69,6 +72,7 @@ func TestSearchRequest_JSON(t *testing.T) {
 }
 
 func TestAggregateRequest_JSON(t *testing.T) {
+	t.Parallel()
 	req := AggregateRequest{
 		Topic:    "metrics",
 		Field:    "cpu_usage",
@@ -89,6 +93,7 @@ func TestAggregateRequest_JSON(t *testing.T) {
 }
 
 func TestAggregateResult_JSON(t *testing.T) {
+	t.Parallel()
 	res := AggregateResult{
 		Topic:        "metrics",
 		Field:        "cpu_usage",
@@ -113,6 +118,7 @@ func TestAggregateResult_JSON(t *testing.T) {
 }
 
 func TestJoinRequest_JSON(t *testing.T) {
+	t.Parallel()
 	req := JoinRequest{
 		LeftTopic:  "orders",
 		RightTopic: "payments",
@@ -134,6 +140,7 @@ func TestJoinRequest_JSON(t *testing.T) {
 }
 
 func TestJoinResult_JSON(t *testing.T) {
+	t.Parallel()
 	res := JoinResult{
 		LeftCount:  10,
 		RightCount: 8,
@@ -164,6 +171,7 @@ func TestJoinResult_JSON(t *testing.T) {
 }
 
 func TestRecommendation_JSON(t *testing.T) {
+	t.Parallel()
 	rec := Recommendation{
 		Type:       "partition_hotspot",
 		Severity:   "warning",
@@ -186,6 +194,7 @@ func TestRecommendation_JSON(t *testing.T) {
 }
 
 func TestRecommendationResult_JSON(t *testing.T) {
+	t.Parallel()
 	res := RecommendationResult{
 		Recommendations: []Recommendation{
 			{Type: "idle_topic", Severity: "info", Topic: "stale", Message: "No messages", Suggestion: "Remove topic", Confidence: 0.8},
@@ -207,6 +216,7 @@ func TestRecommendationResult_JSON(t *testing.T) {
 }
 
 func TestTraceResult_JSON(t *testing.T) {
+	t.Parallel()
 	res := TraceResult{
 		CorrelationID:  "abc-123",
 		TopicsSearched: 5,
@@ -233,6 +243,7 @@ func TestTraceResult_JSON(t *testing.T) {
 }
 
 func TestTraceHop_OmitEmpty(t *testing.T) {
+	t.Parallel()
 	hop := TraceHop{Topic: "t", Partition: 0, Offset: 0, Timestamp: "now"}
 	data, _ := json.Marshal(hop)
 	var raw map[string]json.RawMessage
@@ -246,6 +257,7 @@ func TestTraceHop_OmitEmpty(t *testing.T) {
 }
 
 func TestFlowEdge_JSON(t *testing.T) {
+	t.Parallel()
 	edge := FlowEdge{FromTopic: "a", ToTopic: "b", LatencyMs: 500}
 	data, _ := json.Marshal(edge)
 	var out FlowEdge
@@ -256,6 +268,7 @@ func TestFlowEdge_JSON(t *testing.T) {
 }
 
 func TestConfigCompareResult_JSON(t *testing.T) {
+	t.Parallel()
 	res := ConfigCompareResult{
 		SourceCluster: "prod",
 		TargetCluster: "staging",
@@ -280,6 +293,7 @@ func TestConfigCompareResult_JSON(t *testing.T) {
 }
 
 func TestConfigDiff_OnlyIn(t *testing.T) {
+	t.Parallel()
 	diff := ConfigDiff{Topic: "orphan", OnlyIn: "target"}
 	data, _ := json.Marshal(diff)
 	var out ConfigDiff
@@ -290,6 +304,7 @@ func TestConfigDiff_OnlyIn(t *testing.T) {
 }
 
 func TestConfigValueDiff_JSON(t *testing.T) {
+	t.Parallel()
 	d := ConfigValueDiff{Key: "retention.ms", SourceValue: "100", TargetValue: "200"}
 	data, _ := json.Marshal(d)
 	var out ConfigValueDiff
@@ -300,6 +315,7 @@ func TestConfigValueDiff_JSON(t *testing.T) {
 }
 
 func TestConfigAuditResult_JSON(t *testing.T) {
+	t.Parallel()
 	res := ConfigAuditResult{
 		Cluster:      "prod",
 		Compliant:    8,
@@ -323,6 +339,7 @@ func TestConfigAuditResult_JSON(t *testing.T) {
 }
 
 func TestTimeTravelSnapshot_JSON(t *testing.T) {
+	t.Parallel()
 	snap := TimeTravelSnapshot{
 		Topic:     "orders",
 		Timestamp: "2024-01-01T00:00:00Z",
@@ -347,6 +364,7 @@ func TestTimeTravelSnapshot_JSON(t *testing.T) {
 }
 
 func TestTimeTravelDiffResult_JSON(t *testing.T) {
+	t.Parallel()
 	diff := TimeTravelDiffResult{
 		Topic:        "orders",
 		From:         "2024-01-01T00:00:00Z",
@@ -370,6 +388,7 @@ func TestTimeTravelDiffResult_JSON(t *testing.T) {
 }
 
 func TestNaturalLanguageQueryResult_JSON(t *testing.T) {
+	t.Parallel()
 	res := NaturalLanguageQueryResult{
 		InterpretedAs: "Consume 10 messages from 'orders'",
 		Topic:         "orders",
@@ -393,6 +412,7 @@ func TestNaturalLanguageQueryResult_JSON(t *testing.T) {
 // --------------- AnalyzeDLQResult type ---------------
 
 func TestAnalyzeDLQResult_JSON(t *testing.T) {
+	t.Parallel()
 	res := AnalyzeDLQResult{
 		Topic:         "orders-dlq",
 		TotalMessages: 50,
@@ -417,6 +437,7 @@ func TestAnalyzeDLQResult_JSON(t *testing.T) {
 // --------------- StreamConfig and StreamResult types ---------------
 
 func TestStreamConfig_JSONRoundTrip(t *testing.T) {
+	t.Parallel()
 	cfg := StreamConfig{
 		Topic:        "events",
 		GroupID:      "my-group",
@@ -443,6 +464,7 @@ func TestStreamConfig_JSONRoundTrip(t *testing.T) {
 // --------------- correlationHeaders ---------------
 
 func TestCorrelationHeadersList(t *testing.T) {
+	t.Parallel()
 	if len(correlationHeaders) == 0 {
 		t.Fatal("correlationHeaders should not be empty")
 	}
@@ -461,6 +483,7 @@ func TestCorrelationHeadersList(t *testing.T) {
 // --------------- dangerousConfigKeys ---------------
 
 func TestDangerousConfigKeysNotEmpty(t *testing.T) {
+	t.Parallel()
 	if len(dangerousConfigKeys) == 0 {
 		t.Fatal("dangerousConfigKeys should not be empty")
 	}
@@ -474,6 +497,7 @@ func TestDangerousConfigKeysNotEmpty(t *testing.T) {
 // --------------- ProduceMessage / ProduceOptions ---------------
 
 func TestProduceMessage_JSONRoundTrip(t *testing.T) {
+	t.Parallel()
 	msg := ProduceMessage{
 		Key:     "user-123",
 		Value:   map[string]any{"action": "click"},
@@ -493,6 +517,7 @@ func TestProduceMessage_JSONRoundTrip(t *testing.T) {
 }
 
 func TestProduceOptions_JSONRoundTrip(t *testing.T) {
+	t.Parallel()
 	opts := ProduceOptions{
 		Acks:       "all",
 		Serializer: "json",

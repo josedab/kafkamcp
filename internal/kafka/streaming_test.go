@@ -6,6 +6,7 @@ import (
 )
 
 func TestNewStreamManager(t *testing.T) {
+	t.Parallel()
 	sm := newStreamSessionManager()
 	if sm == nil {
 		t.Fatal("expected non-nil stream manager")
@@ -16,6 +17,7 @@ func TestNewStreamManager(t *testing.T) {
 }
 
 func TestGenerateSessionID(t *testing.T) {
+	t.Parallel()
 	id, err := generateSessionID()
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -38,6 +40,7 @@ func TestGenerateSessionID(t *testing.T) {
 }
 
 func TestStreamConfigDefaults(t *testing.T) {
+	t.Parallel()
 	cfg := StreamConfig{}
 	if cfg.BatchSize != 0 {
 		t.Errorf("expected default BatchSize 0, got %d", cfg.BatchSize)
@@ -48,6 +51,7 @@ func TestStreamConfigDefaults(t *testing.T) {
 }
 
 func TestResolveCluster(t *testing.T) {
+	t.Parallel()
 	// Test the pure resolveCluster function on Manager
 	m := &Manager{defClust: "default-cluster"}
 

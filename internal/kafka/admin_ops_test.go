@@ -3,6 +3,7 @@ package kafka
 import "testing"
 
 func TestValidateTopicConfigs(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		configs map[string]string
@@ -29,6 +30,7 @@ func TestValidateTopicConfigs(t *testing.T) {
 }
 
 func TestRedactSensitiveConfig(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name string
 		cfg  map[string]string

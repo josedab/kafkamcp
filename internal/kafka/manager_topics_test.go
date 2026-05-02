@@ -9,6 +9,7 @@ import (
 // --------------- MockKafkaManager: ListTopics ---------------
 
 func TestMock_ListTopics_Default(t *testing.T) {
+	t.Parallel()
 	m := &MockKafkaManager{}
 	topics, err := m.ListTopics(context.Background(), "default", false)
 	if err != nil {
@@ -23,6 +24,7 @@ func TestMock_ListTopics_Default(t *testing.T) {
 }
 
 func TestMock_ListTopics_CustomFn(t *testing.T) {
+	t.Parallel()
 	m := &MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]TopicSummary, error) {
 			return []TopicSummary{
@@ -48,6 +50,7 @@ func TestMock_ListTopics_CustomFn(t *testing.T) {
 }
 
 func TestMock_ListTopics_Error(t *testing.T) {
+	t.Parallel()
 	m := &MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]TopicSummary, error) {
 			return nil, fmt.Errorf("cluster %q not found", cluster)
@@ -61,6 +64,7 @@ func TestMock_ListTopics_Error(t *testing.T) {
 }
 
 func TestMock_ListTopics_IncludeInternal(t *testing.T) {
+	t.Parallel()
 	m := &MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]TopicSummary, error) {
 			topics := []TopicSummary{
@@ -93,6 +97,7 @@ func TestMock_ListTopics_IncludeInternal(t *testing.T) {
 // --------------- MockKafkaManager: DescribeTopic ---------------
 
 func TestMock_DescribeTopic_Default(t *testing.T) {
+	t.Parallel()
 	m := &MockKafkaManager{}
 	detail, err := m.DescribeTopic(context.Background(), "default", "orders")
 	if err != nil {
@@ -107,6 +112,7 @@ func TestMock_DescribeTopic_Default(t *testing.T) {
 }
 
 func TestMock_DescribeTopic_CustomFn(t *testing.T) {
+	t.Parallel()
 	m := &MockKafkaManager{
 		DescribeTopicFn: func(ctx context.Context, cluster, topicName string) (*TopicDetail, error) {
 			if topicName == "orders" {
@@ -151,6 +157,7 @@ func TestMock_DescribeTopic_CustomFn(t *testing.T) {
 }
 
 func TestMock_DescribeTopic_NotFound(t *testing.T) {
+	t.Parallel()
 	m := &MockKafkaManager{
 		DescribeTopicFn: func(ctx context.Context, cluster, topicName string) (*TopicDetail, error) {
 			return nil, fmt.Errorf("topic %q not found", topicName)
@@ -164,6 +171,7 @@ func TestMock_DescribeTopic_NotFound(t *testing.T) {
 }
 
 func TestMock_DescribeTopic_CallRecording(t *testing.T) {
+	t.Parallel()
 	m := &MockKafkaManager{
 		DescribeTopicFn: func(ctx context.Context, cluster, topicName string) (*TopicDetail, error) {
 			return &TopicDetail{Name: topicName}, nil
@@ -189,6 +197,7 @@ func TestMock_DescribeTopic_CallRecording(t *testing.T) {
 // --------------- Manager: ListTopics/DescribeTopic with nonexistent cluster ---------------
 
 func TestManager_ListTopics_NonexistentCluster(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	_, err := m.ListTopics(context.Background(), "nonexistent", false)
 	if err == nil {
@@ -197,6 +206,7 @@ func TestManager_ListTopics_NonexistentCluster(t *testing.T) {
 }
 
 func TestManager_DescribeTopic_NonexistentCluster(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	_, err := m.DescribeTopic(context.Background(), "nonexistent", "orders")
 	if err == nil {

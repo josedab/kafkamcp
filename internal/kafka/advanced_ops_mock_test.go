@@ -9,6 +9,7 @@ import (
 // ===================== TimeTravelSnapshot (mock-based) =====================
 
 func TestTimeTravelSnapshot_Success(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		TimeTravelSnapshotFn: func(ctx context.Context, cluster, topic, timestamp string, maxKeys int) (*TimeTravelSnapshot, error) {
 			return &TimeTravelSnapshot{
@@ -33,6 +34,7 @@ func TestTimeTravelSnapshot_Success(t *testing.T) {
 }
 
 func TestTimeTravelSnapshot_TombstoneDeletesKey(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		TimeTravelSnapshotFn: func(ctx context.Context, cluster, topic, timestamp string, maxKeys int) (*TimeTravelSnapshot, error) {
 			return &TimeTravelSnapshot{
@@ -55,6 +57,7 @@ func TestTimeTravelSnapshot_TombstoneDeletesKey(t *testing.T) {
 }
 
 func TestTimeTravelSnapshot_MaxKeysLimit(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		TimeTravelSnapshotFn: func(ctx context.Context, cluster, topic, timestamp string, maxKeys int) (*TimeTravelSnapshot, error) {
 			state := make(map[string]any)
@@ -78,6 +81,7 @@ func TestTimeTravelSnapshot_MaxKeysLimit(t *testing.T) {
 }
 
 func TestTimeTravelSnapshot_NoMessagesBeforeTimestamp(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		TimeTravelSnapshotFn: func(ctx context.Context, cluster, topic, timestamp string, maxKeys int) (*TimeTravelSnapshot, error) {
 			return &TimeTravelSnapshot{
@@ -98,6 +102,7 @@ func TestTimeTravelSnapshot_NoMessagesBeforeTimestamp(t *testing.T) {
 }
 
 func TestTimeTravelSnapshot_ConsumeError(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		TimeTravelSnapshotFn: func(ctx context.Context, cluster, topic, timestamp string, maxKeys int) (*TimeTravelSnapshot, error) {
 			return nil, fmt.Errorf("consuming for snapshot: connection refused")
@@ -112,6 +117,7 @@ func TestTimeTravelSnapshot_ConsumeError(t *testing.T) {
 // ===================== TimeTravelDiff (mock-based) =====================
 
 func TestTimeTravelDiff_AddedModifiedDeleted(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		TimeTravelDiffFn: func(ctx context.Context, cluster, topic, tsFrom, tsTo string, maxKeys int) (*TimeTravelDiffResult, error) {
 			return &TimeTravelDiffResult{
@@ -147,6 +153,7 @@ func TestTimeTravelDiff_AddedModifiedDeleted(t *testing.T) {
 }
 
 func TestTimeTravelDiff_IdenticalSnapshots(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		TimeTravelDiffFn: func(ctx context.Context, cluster, topic, tsFrom, tsTo string, maxKeys int) (*TimeTravelDiffResult, error) {
 			return &TimeTravelDiffResult{
@@ -169,6 +176,7 @@ func TestTimeTravelDiff_IdenticalSnapshots(t *testing.T) {
 }
 
 func TestTimeTravelDiff_Error(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		TimeTravelDiffFn: func(ctx context.Context, cluster, topic, tsFrom, tsTo string, maxKeys int) (*TimeTravelDiffResult, error) {
 			return nil, fmt.Errorf("building from-snapshot: connection refused")
@@ -184,6 +192,7 @@ func TestTimeTravelDiff_Error(t *testing.T) {
 // ===================== TraceMessage (mock-based) =====================
 
 func TestTraceMessage_AcrossTopics(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		TraceMessageFn: func(ctx context.Context, cluster, correlationID, headerName string, topics []string, maxScan int) (*TraceResult, error) {
 			return &TraceResult{
@@ -219,6 +228,7 @@ func TestTraceMessage_AcrossTopics(t *testing.T) {
 }
 
 func TestTraceMessage_NoMatchingMessages(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		TraceMessageFn: func(ctx context.Context, cluster, correlationID, headerName string, topics []string, maxScan int) (*TraceResult, error) {
 			return &TraceResult{
@@ -239,6 +249,7 @@ func TestTraceMessage_NoMatchingMessages(t *testing.T) {
 }
 
 func TestTraceMessage_CustomHeaderName(t *testing.T) {
+	t.Parallel()
 	var capturedHeaderName string
 	mock := &MockKafkaManager{
 		TraceMessageFn: func(ctx context.Context, cluster, correlationID, headerName string, topics []string, maxScan int) (*TraceResult, error) {
@@ -256,6 +267,7 @@ func TestTraceMessage_CustomHeaderName(t *testing.T) {
 // ===================== ListACLs (mock-based) =====================
 
 func TestListACLs_WithAnalysis(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		ListACLsFn: func(ctx context.Context, cluster, principal, resourceType string, includeAnalysis bool) (*ACLResult, error) {
 			acls := []ACLEntry{
@@ -285,6 +297,7 @@ func TestListACLs_WithAnalysis(t *testing.T) {
 }
 
 func TestListACLs_FilterByPrincipal(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		ListACLsFn: func(ctx context.Context, cluster, principal, resourceType string, includeAnalysis bool) (*ACLResult, error) {
 			allACLs := []ACLEntry{
@@ -310,6 +323,7 @@ func TestListACLs_FilterByPrincipal(t *testing.T) {
 }
 
 func TestListACLs_EmptyACLs(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		ListACLsFn: func(ctx context.Context, cluster, principal, resourceType string, includeAnalysis bool) (*ACLResult, error) {
 			return &ACLResult{ACLs: nil, TotalACLs: 0}, nil
@@ -325,6 +339,7 @@ func TestListACLs_EmptyACLs(t *testing.T) {
 }
 
 func TestListACLs_FilterByResourceType(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		ListACLsFn: func(ctx context.Context, cluster, principal, resourceType string, includeAnalysis bool) (*ACLResult, error) {
 			allACLs := []ACLEntry{
@@ -350,6 +365,7 @@ func TestListACLs_FilterByResourceType(t *testing.T) {
 }
 
 func TestListACLs_Error(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		ListACLsFn: func(ctx context.Context, cluster, principal, resourceType string, includeAnalysis bool) (*ACLResult, error) {
 			return nil, fmt.Errorf("describing ACLs: unauthorized")

@@ -9,6 +9,7 @@ import (
 // --------------- SearchMessages via MockKafkaManager ---------------
 
 func TestSearchMessages_KeyFilterMatch(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		SearchMessagesFn: func(ctx context.Context, cluster string, req SearchRequest) ([]SearchMessage, int, error) {
 			// Simulate filtering by key
@@ -49,6 +50,7 @@ func TestSearchMessages_KeyFilterMatch(t *testing.T) {
 }
 
 func TestSearchMessages_KeyFilterMiss(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		SearchMessagesFn: func(ctx context.Context, cluster string, req SearchRequest) ([]SearchMessage, int, error) {
 			return nil, 5, nil
@@ -72,6 +74,7 @@ func TestSearchMessages_KeyFilterMiss(t *testing.T) {
 }
 
 func TestSearchMessages_HeaderFilterKeyAndValue(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		SearchMessagesFn: func(ctx context.Context, cluster string, req SearchRequest) ([]SearchMessage, int, error) {
 			msgs := []Message{
@@ -110,6 +113,7 @@ func TestSearchMessages_HeaderFilterKeyAndValue(t *testing.T) {
 }
 
 func TestSearchMessages_HeaderFilterKeyOnly(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		SearchMessagesFn: func(ctx context.Context, cluster string, req SearchRequest) ([]SearchMessage, int, error) {
 			msgs := []Message{
@@ -146,6 +150,7 @@ func TestSearchMessages_HeaderFilterKeyOnly(t *testing.T) {
 }
 
 func TestSearchMessages_ValueFilter(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		SearchMessagesFn: func(ctx context.Context, cluster string, req SearchRequest) ([]SearchMessage, int, error) {
 			msgs := []Message{
@@ -180,6 +185,7 @@ func TestSearchMessages_ValueFilter(t *testing.T) {
 }
 
 func TestSearchMessages_TimeRangeFiltering(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		SearchMessagesFn: func(ctx context.Context, cluster string, req SearchRequest) ([]SearchMessage, int, error) {
 			msgs := []Message{
@@ -208,6 +214,7 @@ func TestSearchMessages_TimeRangeFiltering(t *testing.T) {
 }
 
 func TestSearchMessages_CombinedFilters(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		SearchMessagesFn: func(ctx context.Context, cluster string, req SearchRequest) ([]SearchMessage, int, error) {
 			return []Message{
@@ -239,6 +246,7 @@ func TestSearchMessages_CombinedFilters(t *testing.T) {
 }
 
 func TestSearchMessages_MaxScanLimit(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		SearchMessagesFn: func(ctx context.Context, cluster string, req SearchRequest) ([]SearchMessage, int, error) {
 			if req.MaxScan != 50 {
@@ -261,6 +269,7 @@ func TestSearchMessages_MaxScanLimit(t *testing.T) {
 }
 
 func TestSearchMessages_EmptyResults(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		SearchMessagesFn: func(ctx context.Context, cluster string, req SearchRequest) ([]SearchMessage, int, error) {
 			return nil, 0, nil
@@ -283,6 +292,7 @@ func TestSearchMessages_EmptyResults(t *testing.T) {
 }
 
 func TestSearchMessages_Error(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		SearchMessagesFn: func(ctx context.Context, cluster string, req SearchRequest) ([]SearchMessage, int, error) {
 			return nil, 0, fmt.Errorf("connection refused")
@@ -301,6 +311,7 @@ func TestSearchMessages_Error(t *testing.T) {
 // --------------- AnalyzeDLQ via MockKafkaManager ---------------
 
 func TestAnalyzeDLQ_ErrorTypeHeader(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		AnalyzeDLQFn: func(ctx context.Context, cluster, topic string, limit int) (*AnalyzeDLQResult, error) {
 			return &AnalyzeDLQResult{
@@ -331,6 +342,7 @@ func TestAnalyzeDLQ_ErrorTypeHeader(t *testing.T) {
 }
 
 func TestAnalyzeDLQ_FallbackToXErrorType(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		AnalyzeDLQFn: func(ctx context.Context, cluster, topic string, limit int) (*AnalyzeDLQResult, error) {
 			return &AnalyzeDLQResult{
@@ -354,6 +366,7 @@ func TestAnalyzeDLQ_FallbackToXErrorType(t *testing.T) {
 }
 
 func TestAnalyzeDLQ_ErrorMessageFallbackToProcessingError(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		AnalyzeDLQFn: func(ctx context.Context, cluster, topic string, limit int) (*AnalyzeDLQResult, error) {
 			return &AnalyzeDLQResult{
@@ -377,6 +390,7 @@ func TestAnalyzeDLQ_ErrorMessageFallbackToProcessingError(t *testing.T) {
 }
 
 func TestAnalyzeDLQ_UnknownFallback(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		AnalyzeDLQFn: func(ctx context.Context, cluster, topic string, limit int) (*AnalyzeDLQResult, error) {
 			return &AnalyzeDLQResult{
@@ -401,6 +415,7 @@ func TestAnalyzeDLQ_UnknownFallback(t *testing.T) {
 }
 
 func TestAnalyzeDLQ_TimestampRange(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		AnalyzeDLQFn: func(ctx context.Context, cluster, topic string, limit int) (*AnalyzeDLQResult, error) {
 			return &AnalyzeDLQResult{
@@ -425,6 +440,7 @@ func TestAnalyzeDLQ_TimestampRange(t *testing.T) {
 }
 
 func TestAnalyzeDLQ_SampleCapping(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		AnalyzeDLQFn: func(ctx context.Context, cluster, topic string, limit int) (*AnalyzeDLQResult, error) {
 			samples := make([]Message, 5)
@@ -450,6 +466,7 @@ func TestAnalyzeDLQ_SampleCapping(t *testing.T) {
 }
 
 func TestAnalyzeDLQ_Error(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		AnalyzeDLQFn: func(ctx context.Context, cluster, topic string, limit int) (*AnalyzeDLQResult, error) {
 			return nil, fmt.Errorf("topic not found")
@@ -463,6 +480,7 @@ func TestAnalyzeDLQ_Error(t *testing.T) {
 }
 
 func TestAnalyzeDLQ_CallRecording(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		AnalyzeDLQFn: func(ctx context.Context, cluster, topic string, limit int) (*AnalyzeDLQResult, error) {
 			return &AnalyzeDLQResult{Topic: topic, ErrorTypes: map[string]int{}}, nil

@@ -10,6 +10,7 @@ import (
 // --------------- generateSampleData ---------------
 
 func TestGenerateSampleData_Count(t *testing.T) {
+	t.Parallel()
 	for _, count := range []int{0, 1, 5, 20} {
 		msgs := generateSampleData("ecommerce", count)
 		if len(msgs) != count {
@@ -19,6 +20,7 @@ func TestGenerateSampleData_Count(t *testing.T) {
 }
 
 func TestGenerateSampleData_Ecommerce(t *testing.T) {
+	t.Parallel()
 	msgs := generateSampleData("ecommerce", 10)
 	for i, msg := range msgs {
 		assertKeyNotEmpty(t, msg, i)
@@ -32,6 +34,7 @@ func TestGenerateSampleData_Ecommerce(t *testing.T) {
 }
 
 func TestGenerateSampleData_IOT(t *testing.T) {
+	t.Parallel()
 	msgs := generateSampleData("iot", 10)
 	for i, msg := range msgs {
 		assertKeyNotEmpty(t, msg, i)
@@ -45,6 +48,7 @@ func TestGenerateSampleData_IOT(t *testing.T) {
 }
 
 func TestGenerateSampleData_UserActivity(t *testing.T) {
+	t.Parallel()
 	msgs := generateSampleData("user_activity", 10)
 	for i, msg := range msgs {
 		assertKeyNotEmpty(t, msg, i)
@@ -58,6 +62,7 @@ func TestGenerateSampleData_UserActivity(t *testing.T) {
 }
 
 func TestGenerateSampleData_Logs(t *testing.T) {
+	t.Parallel()
 	msgs := generateSampleData("logs", 10)
 	for i, msg := range msgs {
 		assertKeyNotEmpty(t, msg, i)
@@ -71,6 +76,7 @@ func TestGenerateSampleData_Logs(t *testing.T) {
 }
 
 func TestGenerateSampleData_DefaultIsEcommerce(t *testing.T) {
+	t.Parallel()
 	msgs := generateSampleData("unknown_pattern", 5)
 	for i, msg := range msgs {
 		m := unmarshalValue(t, msg, i)
@@ -83,6 +89,7 @@ func TestGenerateSampleData_DefaultIsEcommerce(t *testing.T) {
 // --------------- Playground topic naming ---------------
 
 func TestPlaygroundTopicNaming(t *testing.T) {
+	t.Parallel()
 	expected := fmt.Sprintf("%s%s_%s", playgroundPrefix, "agent1", "test-topic")
 	want := "_playground_agent1_test-topic"
 	if expected != want {
@@ -93,6 +100,7 @@ func TestPlaygroundTopicNaming(t *testing.T) {
 // --------------- PlaygroundCreate error path ---------------
 
 func TestPlaygroundCreate_ClusterNotFound(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	_, err := m.PlaygroundCreate(context.Background(), "nonexistent", "agent1", "test", 3)
 	if err == nil {
@@ -101,6 +109,7 @@ func TestPlaygroundCreate_ClusterNotFound(t *testing.T) {
 }
 
 func TestPlaygroundCreate_DefaultPartitions(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	// Even though it will fail (no real broker), partitions <= 0 path is exercised.
 	_, err := m.PlaygroundCreate(context.Background(), "prod", "agent1", "test", 0)
@@ -112,6 +121,7 @@ func TestPlaygroundCreate_DefaultPartitions(t *testing.T) {
 // --------------- PlaygroundList error path ---------------
 
 func TestPlaygroundList_ClusterNotFound(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	_, err := m.PlaygroundList(context.Background(), "nonexistent", "agent1")
 	if err == nil {
@@ -120,6 +130,7 @@ func TestPlaygroundList_ClusterNotFound(t *testing.T) {
 }
 
 func TestPlaygroundList_NoBroker(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	_, err := m.PlaygroundList(context.Background(), "prod", "agent1")
 	if err == nil {
@@ -130,6 +141,7 @@ func TestPlaygroundList_NoBroker(t *testing.T) {
 // --------------- PlaygroundCleanup error path ---------------
 
 func TestPlaygroundCleanup_ClusterNotFound(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	_, err := m.PlaygroundCleanup(context.Background(), "nonexistent", "agent1")
 	if err == nil {
@@ -138,6 +150,7 @@ func TestPlaygroundCleanup_ClusterNotFound(t *testing.T) {
 }
 
 func TestPlaygroundCleanup_NoBroker(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	_, err := m.PlaygroundCleanup(context.Background(), "prod", "agent1")
 	if err == nil {

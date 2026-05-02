@@ -9,6 +9,7 @@ import (
 // Tests for TimeTravelSnapshot via mock — additional coverage beyond existing tests.
 
 func TestTimeTravelSnapshot_LargeStateWithTombstones(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		TimeTravelSnapshotFn: func(ctx context.Context, cluster, topic, timestamp string, maxKeys int) (*TimeTravelSnapshot, error) {
 			// Simulates a compacted topic where some keys were tombstoned
@@ -42,6 +43,7 @@ func TestTimeTravelSnapshot_LargeStateWithTombstones(t *testing.T) {
 }
 
 func TestTimeTravelSnapshot_NilKeySkipped(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		TimeTravelSnapshotFn: func(ctx context.Context, cluster, topic, timestamp string, maxKeys int) (*TimeTravelSnapshot, error) {
 			return &TimeTravelSnapshot{
@@ -63,6 +65,7 @@ func TestTimeTravelSnapshot_NilKeySkipped(t *testing.T) {
 }
 
 func TestTimeTravelDiff_OnlyDeletedKeys(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		TimeTravelDiffFn: func(ctx context.Context, cluster, topic, tsFrom, tsTo string, maxKeys int) (*TimeTravelDiffResult, error) {
 			return &TimeTravelDiffResult{
@@ -94,6 +97,7 @@ func TestTimeTravelDiff_OnlyDeletedKeys(t *testing.T) {
 }
 
 func TestTimeTravelDiff_OnlyAddedKeys(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		TimeTravelDiffFn: func(ctx context.Context, cluster, topic, tsFrom, tsTo string, maxKeys int) (*TimeTravelDiffResult, error) {
 			return &TimeTravelDiffResult{
@@ -119,6 +123,7 @@ func TestTimeTravelDiff_OnlyAddedKeys(t *testing.T) {
 }
 
 func TestTimeTravelSnapshot_InvalidTimestampFormat(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		TimeTravelSnapshotFn: func(ctx context.Context, cluster, topic, timestamp string, maxKeys int) (*TimeTravelSnapshot, error) {
 			return nil, fmt.Errorf("invalid timestamp: cannot parse %q as timestamp", timestamp)
@@ -132,6 +137,7 @@ func TestTimeTravelSnapshot_InvalidTimestampFormat(t *testing.T) {
 }
 
 func TestGetRecommendations_MultipleIssuesPerTopic(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		GetRecommendationsFn: func(ctx context.Context, cluster, topic string) (*RecommendationResult, error) {
 			return &RecommendationResult{
@@ -166,6 +172,7 @@ func TestGetRecommendations_MultipleIssuesPerTopic(t *testing.T) {
 }
 
 func TestGetRecommendations_ProducerCompressionSuggestion(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		GetRecommendationsFn: func(ctx context.Context, cluster, topic string) (*RecommendationResult, error) {
 			return &RecommendationResult{
@@ -194,6 +201,7 @@ func TestGetRecommendations_ProducerCompressionSuggestion(t *testing.T) {
 }
 
 func TestResolveCluster_Advanced(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		cluster  string

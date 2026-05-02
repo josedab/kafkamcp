@@ -30,6 +30,7 @@ func testManager() *Manager {
 // --------------- DefaultClusterName ---------------
 
 func TestDefaultClusterName(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	if got := m.DefaultClusterName(); got != "prod" {
 		t.Errorf("DefaultClusterName() = %q, want %q", got, "prod")
@@ -37,6 +38,7 @@ func TestDefaultClusterName(t *testing.T) {
 }
 
 func TestDefaultClusterName_Empty(t *testing.T) {
+	t.Parallel()
 	m := &Manager{
 		clients:  make(map[string]*kgo.Client),
 		admins:   make(map[string]*kadm.Client),
@@ -52,6 +54,7 @@ func TestDefaultClusterName_Empty(t *testing.T) {
 // --------------- ClusterNames ---------------
 
 func TestClusterNames(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	names := m.ClusterNames()
 	sort.Strings(names)
@@ -67,6 +70,7 @@ func TestClusterNames(t *testing.T) {
 }
 
 func TestClusterNames_Empty(t *testing.T) {
+	t.Parallel()
 	m := &Manager{
 		clients: make(map[string]*kgo.Client),
 		admins:  make(map[string]*kadm.Client),
@@ -81,6 +85,7 @@ func TestClusterNames_Empty(t *testing.T) {
 // --------------- GetClusterConfig ---------------
 
 func TestGetClusterConfig_Exists(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	cfg, err := m.GetClusterConfig("staging")
 	if err != nil {
@@ -95,6 +100,7 @@ func TestGetClusterConfig_Exists(t *testing.T) {
 }
 
 func TestGetClusterConfig_Default(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	cfg, err := m.GetClusterConfig("")
 	if err != nil {
@@ -106,6 +112,7 @@ func TestGetClusterConfig_Default(t *testing.T) {
 }
 
 func TestGetClusterConfig_NotFound(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	_, err := m.GetClusterConfig("nonexistent")
 	if err == nil {
@@ -116,6 +123,7 @@ func TestGetClusterConfig_NotFound(t *testing.T) {
 // --------------- resolveCluster ---------------
 
 func TestResolveCluster_WithName(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	if got := m.resolveCluster("staging"); got != "staging" {
 		t.Errorf("resolveCluster(%q) = %q, want %q", "staging", got, "staging")
@@ -123,6 +131,7 @@ func TestResolveCluster_WithName(t *testing.T) {
 }
 
 func TestResolveCluster_Empty(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	if got := m.resolveCluster(""); got != "prod" {
 		t.Errorf("resolveCluster(%q) = %q, want %q", "", got, "prod")
@@ -132,6 +141,7 @@ func TestResolveCluster_Empty(t *testing.T) {
 // --------------- Close ---------------
 
 func TestClose_EmptyManager(t *testing.T) {
+	t.Parallel()
 	m := &Manager{
 		clients: make(map[string]*kgo.Client),
 		admins:  make(map[string]*kadm.Client),
@@ -145,6 +155,7 @@ func TestClose_EmptyManager(t *testing.T) {
 // --------------- GetClient / GetAdmin errors ---------------
 
 func TestGetClient_NotFound(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	_, err := m.GetClient("nonexistent")
 	if err == nil {
@@ -153,6 +164,7 @@ func TestGetClient_NotFound(t *testing.T) {
 }
 
 func TestGetAdmin_NotFound(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	_, err := m.GetAdmin("nonexistent")
 	if err == nil {
@@ -161,6 +173,7 @@ func TestGetAdmin_NotFound(t *testing.T) {
 }
 
 func TestGetClient_Default(t *testing.T) {
+	t.Parallel()
 	// No clients registered, but default cluster name is set → still "not found"
 	m := testManager()
 	_, err := m.GetClient("")
@@ -170,6 +183,7 @@ func TestGetClient_Default(t *testing.T) {
 }
 
 func TestGetAdmin_Default(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	_, err := m.GetAdmin("")
 	if err == nil {
@@ -180,6 +194,7 @@ func TestGetAdmin_Default(t *testing.T) {
 // --------------- ProduceMessage JSON ---------------
 
 func TestProduceMessage_JSON(t *testing.T) {
+	t.Parallel()
 	p := int32(3)
 	msg := ProduceMessage{
 		Key:       "k1",
@@ -208,6 +223,7 @@ func TestProduceMessage_JSON(t *testing.T) {
 }
 
 func TestProduceMessage_OmitEmpty(t *testing.T) {
+	t.Parallel()
 	msg := ProduceMessage{Key: "k", Value: "v"}
 	data, err := json.Marshal(msg)
 	if err != nil {
@@ -228,6 +244,7 @@ func TestProduceMessage_OmitEmpty(t *testing.T) {
 // --------------- ProduceOptions JSON ---------------
 
 func TestProduceOptions_JSON(t *testing.T) {
+	t.Parallel()
 	opts := ProduceOptions{Acks: "all", Serializer: "json", SchemaID: -1}
 	data, err := json.Marshal(opts)
 	if err != nil {
@@ -248,6 +265,7 @@ func TestProduceOptions_JSON(t *testing.T) {
 // --------------- SubscribeRequest defaults ---------------
 
 func TestSubscribeRequest_Defaults(t *testing.T) {
+	t.Parallel()
 	raw := `{"topic":"events"}`
 	var req SubscribeRequest
 	if err := json.Unmarshal([]byte(raw), &req); err != nil {
@@ -265,6 +283,7 @@ func TestSubscribeRequest_Defaults(t *testing.T) {
 }
 
 func TestSubscribeRequest_FullRoundTrip(t *testing.T) {
+	t.Parallel()
 	req := SubscribeRequest{
 		Topic:        "orders",
 		GroupID:      "grp-1",
@@ -289,6 +308,7 @@ func TestSubscribeRequest_FullRoundTrip(t *testing.T) {
 // --------------- SubscribeResult ---------------
 
 func TestSubscribeResult_JSON(t *testing.T) {
+	t.Parallel()
 	res := SubscribeResult{
 		Messages:   []Message{{Partition: 0, Offset: 10, Timestamp: "2024-01-01T00:00:00.000Z", Key: "k", Value: "v"}},
 		Count:      1,
@@ -312,6 +332,7 @@ func TestSubscribeResult_JSON(t *testing.T) {
 // --------------- Core I/O error paths ---------------
 
 func TestConsume_ClusterNotFound(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	_, err := m.Consume(t.Context(), "nonexistent", "topic", -1, "earliest", 10, 5000, "auto")
 	if err == nil {
@@ -320,6 +341,7 @@ func TestConsume_ClusterNotFound(t *testing.T) {
 }
 
 func TestProduce_ClusterNotFound(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	_, err := m.Produce(t.Context(), "nonexistent", "topic", []ProduceMessage{{Value: "v"}}, ProduceOptions{})
 	if err == nil {
@@ -328,6 +350,7 @@ func TestProduce_ClusterNotFound(t *testing.T) {
 }
 
 func TestProduce_ClusterNotFound_Acks0(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	_, err := m.Produce(t.Context(), "nonexistent", "topic", []ProduceMessage{{Value: "v"}}, ProduceOptions{Acks: "0"})
 	if err == nil {
@@ -336,6 +359,7 @@ func TestProduce_ClusterNotFound_Acks0(t *testing.T) {
 }
 
 func TestListTopics_ClusterNotFound(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	_, err := m.ListTopics(t.Context(), "nonexistent", false)
 	if err == nil {
@@ -344,6 +368,7 @@ func TestListTopics_ClusterNotFound(t *testing.T) {
 }
 
 func TestDescribeTopic_ClusterNotFound(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	_, err := m.DescribeTopic(t.Context(), "nonexistent", "my-topic")
 	if err == nil {
@@ -352,6 +377,7 @@ func TestDescribeTopic_ClusterNotFound(t *testing.T) {
 }
 
 func TestListConsumerGroups_ClusterNotFound(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	_, err := m.ListConsumerGroups(t.Context(), "nonexistent")
 	if err == nil {
@@ -360,6 +386,7 @@ func TestListConsumerGroups_ClusterNotFound(t *testing.T) {
 }
 
 func TestDescribeConsumerGroup_ClusterNotFound(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	_, err := m.DescribeConsumerGroup(t.Context(), "nonexistent", "my-group")
 	if err == nil {
@@ -368,6 +395,7 @@ func TestDescribeConsumerGroup_ClusterNotFound(t *testing.T) {
 }
 
 func TestGetClusterMetadata_ClusterNotFound(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	_, err := m.GetClusterMetadata(t.Context(), "nonexistent")
 	if err == nil {
@@ -376,6 +404,7 @@ func TestGetClusterMetadata_ClusterNotFound(t *testing.T) {
 }
 
 func TestPing_NoAdminClient(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	err := m.Ping(t.Context())
 	if err == nil {
@@ -384,6 +413,7 @@ func TestPing_NoAdminClient(t *testing.T) {
 }
 
 func TestSubscribe_ClusterNotFound(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	_, err := m.Subscribe(t.Context(), "nonexistent", SubscribeRequest{Topic: "test"})
 	if err == nil {
@@ -394,6 +424,7 @@ func TestSubscribe_ClusterNotFound(t *testing.T) {
 // --------------- resolveCluster ---------------
 
 func TestResolveCluster_DefaultFallback(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	if got := m.resolveCluster(""); got != "prod" {
 		t.Errorf("expected 'prod', got %q", got)
@@ -403,6 +434,7 @@ func TestResolveCluster_DefaultFallback(t *testing.T) {
 // --------------- MockKafkaManager ---------------
 
 func TestMockKafkaManager_DefaultBehavior(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{}
 	if got := mock.DefaultClusterName(); got != "default" {
 		t.Errorf("DefaultClusterName() = %q, want %q", got, "default")
@@ -425,6 +457,7 @@ func TestMockKafkaManager_DefaultBehavior(t *testing.T) {
 }
 
 func TestMockKafkaManager_CustomFunctions(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		ListTopicsFn: func(ctx context.Context, cluster string, includeInternal bool) ([]TopicSummary, error) {
 			return []TopicSummary{
@@ -461,6 +494,7 @@ func TestMockKafkaManager_CustomFunctions(t *testing.T) {
 }
 
 func TestMockKafkaManager_CallRecording(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{}
 	mock.ListTopics(t.Context(), "prod", true)
 	mock.ListTopics(t.Context(), "staging", false)
@@ -476,6 +510,7 @@ func TestMockKafkaManager_CallRecording(t *testing.T) {
 }
 
 func TestMockKafkaManager_ConcurrentSafety(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{}
 	done := make(chan bool, 10)
 	for i := 0; i < 10; i++ {

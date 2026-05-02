@@ -9,6 +9,7 @@ import (
 // ===================== CompareConfigs =====================
 
 func TestCompareConfigs_TopicOnlyInSource(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		CompareConfigsFn: func(ctx context.Context, sourceCluster, targetCluster, topic string) (*ConfigCompareResult, error) {
 			return &ConfigCompareResult{
@@ -36,6 +37,7 @@ func TestCompareConfigs_TopicOnlyInSource(t *testing.T) {
 }
 
 func TestCompareConfigs_TopicOnlyInTarget(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		CompareConfigsFn: func(ctx context.Context, sourceCluster, targetCluster, topic string) (*ConfigCompareResult, error) {
 			return &ConfigCompareResult{
@@ -61,6 +63,7 @@ func TestCompareConfigs_TopicOnlyInTarget(t *testing.T) {
 }
 
 func TestCompareConfigs_MatchingTopics(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		CompareConfigsFn: func(ctx context.Context, sourceCluster, targetCluster, topic string) (*ConfigCompareResult, error) {
 			return &ConfigCompareResult{
@@ -86,6 +89,7 @@ func TestCompareConfigs_MatchingTopics(t *testing.T) {
 }
 
 func TestCompareConfigs_TopicsWithConfigDiffs(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		CompareConfigsFn: func(ctx context.Context, sourceCluster, targetCluster, topic string) (*ConfigCompareResult, error) {
 			return &ConfigCompareResult{
@@ -122,6 +126,7 @@ func TestCompareConfigs_TopicsWithConfigDiffs(t *testing.T) {
 }
 
 func TestCompareConfigs_EmptyClusters(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		CompareConfigsFn: func(ctx context.Context, sourceCluster, targetCluster, topic string) (*ConfigCompareResult, error) {
 			return &ConfigCompareResult{
@@ -141,6 +146,7 @@ func TestCompareConfigs_EmptyClusters(t *testing.T) {
 }
 
 func TestCompareConfigs_SpecificTopic(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		CompareConfigsFn: func(ctx context.Context, sourceCluster, targetCluster, topic string) (*ConfigCompareResult, error) {
 			if topic != "orders" {
@@ -161,6 +167,7 @@ func TestCompareConfigs_SpecificTopic(t *testing.T) {
 }
 
 func TestCompareConfigs_Error(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		CompareConfigsFn: func(ctx context.Context, sourceCluster, targetCluster, topic string) (*ConfigCompareResult, error) {
 			return nil, fmt.Errorf("listing source topics: connection refused")
@@ -174,6 +181,7 @@ func TestCompareConfigs_Error(t *testing.T) {
 }
 
 func TestCompareConfigs_CallRecording(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		CompareConfigsFn: func(ctx context.Context, sourceCluster, targetCluster, topic string) (*ConfigCompareResult, error) {
 			return &ConfigCompareResult{}, nil
@@ -196,6 +204,7 @@ func TestCompareConfigs_CallRecording(t *testing.T) {
 // ===================== AuditConfigs =====================
 
 func TestAuditConfigs_AllCompliant(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		AuditConfigsFn: func(ctx context.Context, cluster, topic string, template map[string]string) (*ConfigAuditResult, error) {
 			return &ConfigAuditResult{
@@ -226,6 +235,7 @@ func TestAuditConfigs_AllCompliant(t *testing.T) {
 }
 
 func TestAuditConfigs_TopicsDeviating(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		AuditConfigsFn: func(ctx context.Context, cluster, topic string, template map[string]string) (*ConfigAuditResult, error) {
 			return &ConfigAuditResult{
@@ -268,6 +278,7 @@ func TestAuditConfigs_TopicsDeviating(t *testing.T) {
 }
 
 func TestAuditConfigs_RemediationCommand(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		AuditConfigsFn: func(ctx context.Context, cluster, topic string, template map[string]string) (*ConfigAuditResult, error) {
 			return &ConfigAuditResult{
@@ -306,6 +317,7 @@ func TestAuditConfigs_RemediationCommand(t *testing.T) {
 }
 
 func TestAuditConfigs_MixedCompliance(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		AuditConfigsFn: func(ctx context.Context, cluster, topic string, template map[string]string) (*ConfigAuditResult, error) {
 			return &ConfigAuditResult{
@@ -332,6 +344,7 @@ func TestAuditConfigs_MixedCompliance(t *testing.T) {
 }
 
 func TestAuditConfigs_Error(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		AuditConfigsFn: func(ctx context.Context, cluster, topic string, template map[string]string) (*ConfigAuditResult, error) {
 			return nil, fmt.Errorf("cluster unavailable")
@@ -345,6 +358,7 @@ func TestAuditConfigs_Error(t *testing.T) {
 }
 
 func TestAuditConfigs_CallRecording(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		AuditConfigsFn: func(ctx context.Context, cluster, topic string, template map[string]string) (*ConfigAuditResult, error) {
 			return &ConfigAuditResult{}, nil

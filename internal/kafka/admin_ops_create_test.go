@@ -8,6 +8,7 @@ import (
 )
 
 func TestCreateTopic_DuplicateTopicError(t *testing.T) {
+	t.Parallel()
 	callCount := 0
 	mock := &MockKafkaManager{
 		CreateTopicFn: func(ctx context.Context, cluster string, req CreateTopicRequest) error {
@@ -35,6 +36,7 @@ func TestCreateTopic_DuplicateTopicError(t *testing.T) {
 }
 
 func TestCreateTopic_CustomRetentionAndCompression(t *testing.T) {
+	t.Parallel()
 	var captured CreateTopicRequest
 	mock := &MockKafkaManager{
 		CreateTopicFn: func(ctx context.Context, cluster string, req CreateTopicRequest) error {
@@ -65,6 +67,7 @@ func TestCreateTopic_CustomRetentionAndCompression(t *testing.T) {
 }
 
 func TestCreateTopic_SpecialCharsInName(t *testing.T) {
+	t.Parallel()
 	var capturedName string
 	mock := &MockKafkaManager{
 		CreateTopicFn: func(ctx context.Context, cluster string, req CreateTopicRequest) error {
@@ -93,6 +96,7 @@ func TestCreateTopic_SpecialCharsInName(t *testing.T) {
 }
 
 func TestCreateTopic_ZeroPartitionsAndRF(t *testing.T) {
+	t.Parallel()
 	var captured CreateTopicRequest
 	mock := &MockKafkaManager{
 		CreateTopicFn: func(ctx context.Context, cluster string, req CreateTopicRequest) error {
@@ -116,6 +120,7 @@ func TestCreateTopic_ZeroPartitionsAndRF(t *testing.T) {
 }
 
 func TestValidateTopicConfigs_SingleSafeConfig(t *testing.T) {
+	t.Parallel()
 	configs := map[string]string{
 		"retention.ms": "3600000",
 	}
@@ -126,6 +131,7 @@ func TestValidateTopicConfigs_SingleSafeConfig(t *testing.T) {
 }
 
 func TestValidateTopicConfigs_MultipleUnsafe(t *testing.T) {
+	t.Parallel()
 	configs := map[string]string{
 		"min.insync.replicas":            "1",
 		"unclean.leader.election.enable": "true",
@@ -137,6 +143,7 @@ func TestValidateTopicConfigs_MultipleUnsafe(t *testing.T) {
 }
 
 func TestCreateTopicRequest_FieldValues(t *testing.T) {
+	t.Parallel()
 	req := CreateTopicRequest{
 		Name:              "test-topic",
 		Partitions:        6,

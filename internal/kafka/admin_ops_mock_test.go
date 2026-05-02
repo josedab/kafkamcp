@@ -9,6 +9,7 @@ import (
 // --------------- validateTopicConfigs ---------------
 
 func TestValidateTopicConfigs_DangerousKeys(t *testing.T) {
+	t.Parallel()
 	dangerous := []string{
 		"min.insync.replicas",
 		"unclean.leader.election.enable",
@@ -26,6 +27,7 @@ func TestValidateTopicConfigs_DangerousKeys(t *testing.T) {
 }
 
 func TestValidateTopicConfigs_SafeKeys(t *testing.T) {
+	t.Parallel()
 	safe := map[string]string{
 		"retention.ms":   "86400000",
 		"cleanup.policy": "compact",
@@ -39,6 +41,7 @@ func TestValidateTopicConfigs_SafeKeys(t *testing.T) {
 // --------------- SearchMessages ---------------
 
 func TestSearchMessages_NonexistentCluster(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	_, _, err := m.SearchMessages(context.Background(), "nonexistent", SearchRequest{
 		Topic: "test-topic",
@@ -52,6 +55,7 @@ func TestSearchMessages_NonexistentCluster(t *testing.T) {
 // --------------- AnalyzeDLQ ---------------
 
 func TestAnalyzeDLQ_NonexistentCluster(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	_, err := m.AnalyzeDLQ(context.Background(), "nonexistent", "dlq-topic", 100)
 	if err == nil {
@@ -62,6 +66,7 @@ func TestAnalyzeDLQ_NonexistentCluster(t *testing.T) {
 // --------------- ResetOffsets ---------------
 
 func TestResetOffsets_NonexistentCluster(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	_, err := m.ResetOffsets(context.Background(), "nonexistent", ResetOffsetsRequest{
 		GroupID:  "test-group",
@@ -76,6 +81,7 @@ func TestResetOffsets_NonexistentCluster(t *testing.T) {
 // --------------- CreateTopic ---------------
 
 func TestCreateTopic_NonexistentCluster(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	err := m.CreateTopic(context.Background(), "nonexistent", CreateTopicRequest{
 		Name:       "new-topic",
@@ -87,6 +93,7 @@ func TestCreateTopic_NonexistentCluster(t *testing.T) {
 }
 
 func TestCreateTopic_DangerousConfig(t *testing.T) {
+	t.Parallel()
 	err := validateTopicConfigs(map[string]string{"min.insync.replicas": "1"})
 	if err == nil {
 		t.Fatal("expected error for dangerous config key")
@@ -96,6 +103,7 @@ func TestCreateTopic_DangerousConfig(t *testing.T) {
 // --------------- AlterTopic ---------------
 
 func TestAlterTopic_NonexistentCluster(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	err := m.AlterTopic(context.Background(), "nonexistent", AlterTopicRequest{
 		Name:    "my-topic",
@@ -109,6 +117,7 @@ func TestAlterTopic_NonexistentCluster(t *testing.T) {
 // --------------- DeleteTopic ---------------
 
 func TestDeleteTopic_NonexistentCluster(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	err := m.DeleteTopic(context.Background(), "nonexistent", "my-topic")
 	if err == nil {

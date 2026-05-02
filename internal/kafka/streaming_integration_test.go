@@ -13,6 +13,7 @@ import (
 // ===================== StartStream config defaults =====================
 
 func TestStartStream_NonexistentCluster(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	_, err := m.StartStream(context.Background(), "nonexistent", StreamConfig{
 		Topic: "test-topic",
@@ -23,6 +24,7 @@ func TestStartStream_NonexistentCluster(t *testing.T) {
 }
 
 func TestStartStream_MockDefaultBatchSize(t *testing.T) {
+	t.Parallel()
 	var captured StreamConfig
 	mock := &MockKafkaManager{
 		StartStreamFn: func(ctx context.Context, cluster string, cfg StreamConfig) (*StreamResult, error) {
@@ -46,6 +48,7 @@ func TestStartStream_MockDefaultBatchSize(t *testing.T) {
 }
 
 func TestStartStream_MockRateLimitDefault(t *testing.T) {
+	t.Parallel()
 	var captured StreamConfig
 	mock := &MockKafkaManager{
 		StartStreamFn: func(ctx context.Context, cluster string, cfg StreamConfig) (*StreamResult, error) {
@@ -71,6 +74,7 @@ func TestStartStream_MockRateLimitDefault(t *testing.T) {
 }
 
 func TestStartStream_MockError(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		StartStreamFn: func(ctx context.Context, cluster string, cfg StreamConfig) (*StreamResult, error) {
 			return nil, context.DeadlineExceeded
@@ -86,6 +90,7 @@ func TestStartStream_MockError(t *testing.T) {
 // ===================== ControlStream pause/resume/stop =====================
 
 func TestControlStream_PauseResumeStop(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	// Create a session directly for testing
 	session := &StreamSession{
@@ -143,6 +148,7 @@ func TestControlStream_PauseResumeStop(t *testing.T) {
 // ===================== PollStream timeout =====================
 
 func TestPollStream_DefaultTimeout(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	session := &StreamSession{
 		ID:      "poll-test",
@@ -172,6 +178,7 @@ func TestPollStream_DefaultTimeout(t *testing.T) {
 }
 
 func TestPollStream_WithMessages(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	session := &StreamSession{
 		ID:        "poll-msg-test",
@@ -203,6 +210,7 @@ func TestPollStream_WithMessages(t *testing.T) {
 // ===================== ListStreams with active sessions =====================
 
 func TestListStreams_WithSessions(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	m.streamMgr.sessions["s1"] = &StreamSession{
 		ID: "s1", Topic: "orders", Status: "running", BatchSize: 10,
@@ -228,6 +236,7 @@ func TestListStreams_WithSessions(t *testing.T) {
 // ===================== Concurrent stream operations =====================
 
 func TestStreamSession_AtomicMsgCount(t *testing.T) {
+	t.Parallel()
 	session := &StreamSession{}
 	atomic.AddInt64(&session.MsgCount, 10)
 	atomic.AddInt64(&session.MsgCount, 5)
@@ -237,6 +246,7 @@ func TestStreamSession_AtomicMsgCount(t *testing.T) {
 }
 
 func TestControlStream_StopSetsFlags(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	session := &StreamSession{
 		ID:     "flag-test",
@@ -253,6 +263,7 @@ func TestControlStream_StopSetsFlags(t *testing.T) {
 }
 
 func TestPollStream_NegativeTimeout(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	session := &StreamSession{
 		ID:        "neg-timeout",

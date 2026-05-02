@@ -8,6 +8,7 @@ import (
 // --------------- TopicSummary ---------------
 
 func TestTopicSummary_JSON(t *testing.T) {
+	t.Parallel()
 	ts := TopicSummary{
 		Name:              "orders",
 		Partitions:        6,
@@ -31,6 +32,7 @@ func TestTopicSummary_JSON(t *testing.T) {
 }
 
 func TestTopicSummary_OmitEmpty(t *testing.T) {
+	t.Parallel()
 	ts := TopicSummary{Name: "t", Partitions: 1}
 	data, err := json.Marshal(ts)
 	if err != nil {
@@ -51,6 +53,7 @@ func TestTopicSummary_OmitEmpty(t *testing.T) {
 // --------------- TopicDetail ---------------
 
 func TestTopicDetail_JSON(t *testing.T) {
+	t.Parallel()
 	td := TopicDetail{
 		Name: "events",
 		Partitions: []PartitionDetail{
@@ -83,6 +86,7 @@ func TestTopicDetail_JSON(t *testing.T) {
 // --------------- PartitionDetail ---------------
 
 func TestPartitionDetail_JSON(t *testing.T) {
+	t.Parallel()
 	pd := PartitionDetail{
 		ID: 2, Leader: 1, Replicas: []int32{1, 2, 3}, ISR: []int32{1, 2},
 		EarliestOffset: 50, LatestOffset: 200,
@@ -103,6 +107,7 @@ func TestPartitionDetail_JSON(t *testing.T) {
 // --------------- ConsumerGroupSummary ---------------
 
 func TestConsumerGroupSummary_JSON(t *testing.T) {
+	t.Parallel()
 	cg := ConsumerGroupSummary{
 		GroupID:     "my-group",
 		State:       "Stable",
@@ -126,6 +131,7 @@ func TestConsumerGroupSummary_JSON(t *testing.T) {
 // --------------- ConsumerGroupDetail ---------------
 
 func TestConsumerGroupDetail_JSON(t *testing.T) {
+	t.Parallel()
 	detail := ConsumerGroupDetail{
 		GroupID:      "grp",
 		State:        "Stable",
@@ -160,6 +166,7 @@ func TestConsumerGroupDetail_JSON(t *testing.T) {
 // --------------- BrokerInfo ---------------
 
 func TestBrokerInfo_JSON(t *testing.T) {
+	t.Parallel()
 	bi := BrokerInfo{ID: 0, Host: "kafka-0", Port: 9092, Rack: "us-east-1a"}
 	data, err := json.Marshal(bi)
 	if err != nil {
@@ -175,6 +182,7 @@ func TestBrokerInfo_JSON(t *testing.T) {
 }
 
 func TestBrokerInfo_OmitRack(t *testing.T) {
+	t.Parallel()
 	bi := BrokerInfo{ID: 1, Host: "kafka-1", Port: 9092}
 	data, err := json.Marshal(bi)
 	if err != nil {
@@ -192,6 +200,7 @@ func TestBrokerInfo_OmitRack(t *testing.T) {
 // --------------- GroupMemberDetail ---------------
 
 func TestGroupMemberDetail_JSON(t *testing.T) {
+	t.Parallel()
 	md := GroupMemberDetail{
 		MemberID: "m1", ClientID: "c1", Host: "/10.0.0.1",
 		Assignment: []TopicPartitions{{Topic: "t", Partitions: []int32{0}}},
@@ -212,6 +221,7 @@ func TestGroupMemberDetail_JSON(t *testing.T) {
 // --------------- TopicPartitions ---------------
 
 func TestTopicPartitions_JSON(t *testing.T) {
+	t.Parallel()
 	tp := TopicPartitions{Topic: "events", Partitions: []int32{0, 1, 2}}
 	data, err := json.Marshal(tp)
 	if err != nil {
@@ -229,6 +239,7 @@ func TestTopicPartitions_JSON(t *testing.T) {
 // --------------- GroupOffsetDetail ---------------
 
 func TestGroupOffsetDetail_JSON(t *testing.T) {
+	t.Parallel()
 	god := GroupOffsetDetail{
 		Topic: "t1", Partition: 2, CurrentOffset: 100, LogEndOffset: 200, Lag: 100,
 	}
@@ -248,6 +259,7 @@ func TestGroupOffsetDetail_JSON(t *testing.T) {
 // --------------- ClusterMetadata ---------------
 
 func TestClusterMetadata_JSON(t *testing.T) {
+	t.Parallel()
 	cm := ClusterMetadata{
 		ClusterID:      "abc-123",
 		Controller:     BrokerInfo{ID: 0, Host: "ctrl", Port: 9092},
@@ -273,6 +285,7 @@ func TestClusterMetadata_JSON(t *testing.T) {
 // --------------- Message ---------------
 
 func TestMessage_JSON(t *testing.T) {
+	t.Parallel()
 	msg := Message{
 		Partition: 0,
 		Offset:    42,
@@ -298,6 +311,7 @@ func TestMessage_JSON(t *testing.T) {
 }
 
 func TestMessage_OmitHeaders(t *testing.T) {
+	t.Parallel()
 	msg := Message{Partition: 0, Offset: 0, Timestamp: "t", Key: nil, Value: nil}
 	data, err := json.Marshal(msg)
 	if err != nil {
@@ -313,6 +327,7 @@ func TestMessage_OmitHeaders(t *testing.T) {
 }
 
 func TestMessage_NullKeyValue(t *testing.T) {
+	t.Parallel()
 	raw := `{"partition":0,"offset":0,"timestamp":"t","key":null,"value":null}`
 	var msg Message
 	if err := json.Unmarshal([]byte(raw), &msg); err != nil {
@@ -329,6 +344,7 @@ func TestMessage_NullKeyValue(t *testing.T) {
 // --------------- DeliveryResult ---------------
 
 func TestDeliveryResult_JSON(t *testing.T) {
+	t.Parallel()
 	dr := DeliveryResult{
 		Partition: 1,
 		Offset:    999,
@@ -349,6 +365,7 @@ func TestDeliveryResult_JSON(t *testing.T) {
 }
 
 func TestDeliveryResult_ErrorStatus(t *testing.T) {
+	t.Parallel()
 	dr := DeliveryResult{Status: "error: delivery failed"}
 	data, err := json.Marshal(dr)
 	if err != nil {
@@ -366,6 +383,7 @@ func TestDeliveryResult_ErrorStatus(t *testing.T) {
 // --------------- StreamConfig ---------------
 
 func TestStreamConfig_JSON(t *testing.T) {
+	t.Parallel()
 	sc := StreamConfig{
 		Topic:        "logs",
 		GroupID:      "g1",
@@ -392,6 +410,7 @@ func TestStreamConfig_JSON(t *testing.T) {
 // --------------- StreamResult ---------------
 
 func TestStreamResult_JSON(t *testing.T) {
+	t.Parallel()
 	sr := StreamResult{
 		SessionID: "stream-abc",
 		Messages:  []Message{{Partition: 0, Offset: 1, Timestamp: "t", Key: "k", Value: "v"}},

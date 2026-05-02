@@ -12,6 +12,7 @@ import (
 // --------------- streamSessionManager ---------------
 
 func TestNewStreamManager_EmptySessions(t *testing.T) {
+	t.Parallel()
 	sm := newStreamSessionManager()
 	if sm == nil {
 		t.Fatal("expected non-nil streamSessionManager")
@@ -24,6 +25,7 @@ func TestNewStreamManager_EmptySessions(t *testing.T) {
 // --------------- PollStream ---------------
 
 func TestPollStream_NilStreamMgr(t *testing.T) {
+	t.Parallel()
 	m := &Manager{
 		clients:   make(map[string]*kgo.Client),
 		admins:    make(map[string]*kadm.Client),
@@ -40,6 +42,7 @@ func TestPollStream_NilStreamMgr(t *testing.T) {
 }
 
 func TestPollStream_NonexistentSession(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	_, err := m.PollStream("nonexistent-session", 1000)
 	if err == nil {
@@ -53,6 +56,7 @@ func TestPollStream_NonexistentSession(t *testing.T) {
 // --------------- ControlStream ---------------
 
 func TestControlStream_NilStreamMgr(t *testing.T) {
+	t.Parallel()
 	m := &Manager{
 		clients:   make(map[string]*kgo.Client),
 		admins:    make(map[string]*kadm.Client),
@@ -69,6 +73,7 @@ func TestControlStream_NilStreamMgr(t *testing.T) {
 }
 
 func TestControlStream_NonexistentSession(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	_, err := m.ControlStream("nonexistent-session", "pause")
 	if err == nil {
@@ -80,6 +85,7 @@ func TestControlStream_NonexistentSession(t *testing.T) {
 }
 
 func TestControlStream_UnknownAction(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	// Add a fake session so we get past the lookup
 	m.streamMgr.sessions["test-session"] = &StreamSession{
@@ -98,6 +104,7 @@ func TestControlStream_UnknownAction(t *testing.T) {
 // --------------- ListStreams ---------------
 
 func TestListStreams_NilStreamMgr(t *testing.T) {
+	t.Parallel()
 	m := &Manager{
 		clients:   make(map[string]*kgo.Client),
 		admins:    make(map[string]*kadm.Client),
@@ -111,6 +118,7 @@ func TestListStreams_NilStreamMgr(t *testing.T) {
 }
 
 func TestListStreams_EmptyStreamMgr(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	result := m.ListStreams()
 	if result != nil {
@@ -121,6 +129,7 @@ func TestListStreams_EmptyStreamMgr(t *testing.T) {
 // --------------- generateSessionID ---------------
 
 func TestGenerateSessionID_Prefix(t *testing.T) {
+	t.Parallel()
 	id, err := generateSessionID()
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -131,6 +140,7 @@ func TestGenerateSessionID_Prefix(t *testing.T) {
 }
 
 func TestGenerateSessionID_Unique(t *testing.T) {
+	t.Parallel()
 	seen := make(map[string]bool)
 	for i := 0; i < 100; i++ {
 		id, err := generateSessionID()

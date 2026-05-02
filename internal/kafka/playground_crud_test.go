@@ -9,6 +9,7 @@ import (
 )
 
 func TestPlaygroundCreate_TopicNameFormat(t *testing.T) {
+	t.Parallel()
 	var createdTopic string
 	mock := &MockKafkaManager{
 		PlaygroundCreateFn: func(ctx context.Context, cluster, agentID, name string, partitions int32) (*PlaygroundTopicResult, error) {
@@ -38,6 +39,7 @@ func TestPlaygroundCreate_TopicNameFormat(t *testing.T) {
 }
 
 func TestPlaygroundCreate_RetentionConfig(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		PlaygroundCreateFn: func(ctx context.Context, cluster, agentID, name string, partitions int32) (*PlaygroundTopicResult, error) {
 			return &PlaygroundTopicResult{
@@ -62,6 +64,7 @@ func TestPlaygroundCreate_RetentionConfig(t *testing.T) {
 }
 
 func TestPlaygroundCreate_Error(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		PlaygroundCreateFn: func(ctx context.Context, cluster, agentID, name string, partitions int32) (*PlaygroundTopicResult, error) {
 			return nil, fmt.Errorf("creating playground topic: topic already exists")
@@ -75,6 +78,7 @@ func TestPlaygroundCreate_Error(t *testing.T) {
 }
 
 func TestPlaygroundCreate_CallArgs(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		PlaygroundCreateFn: func(ctx context.Context, cluster, agentID, name string, partitions int32) (*PlaygroundTopicResult, error) {
 			return &PlaygroundTopicResult{TopicName: "_playground_a_t", Partitions: partitions, Status: "created"}, nil
@@ -95,6 +99,7 @@ func TestPlaygroundCreate_CallArgs(t *testing.T) {
 }
 
 func TestPlaygroundProduceSample_MessageCount(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		PlaygroundProduceSampleFn: func(ctx context.Context, cluster, agentID, name, pattern string, count int) (map[string]any, error) {
 			return map[string]any{
@@ -116,6 +121,7 @@ func TestPlaygroundProduceSample_MessageCount(t *testing.T) {
 }
 
 func TestPlaygroundProduceSample_Patterns(t *testing.T) {
+	t.Parallel()
 	patterns := []string{"ecommerce", "iot", "logs", "user_activity"}
 	for _, pattern := range patterns {
 		t.Run(pattern, func(t *testing.T) {
@@ -146,6 +152,7 @@ func TestPlaygroundProduceSample_Patterns(t *testing.T) {
 }
 
 func TestPlaygroundList_FiltersPlaygroundPrefix(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		PlaygroundListFn: func(ctx context.Context, cluster, agentID string) ([]TopicSummary, error) {
 			return []TopicSummary{
@@ -170,6 +177,7 @@ func TestPlaygroundList_FiltersPlaygroundPrefix(t *testing.T) {
 }
 
 func TestPlaygroundList_EmptyResult(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		PlaygroundListFn: func(ctx context.Context, cluster, agentID string) ([]TopicSummary, error) {
 			return nil, nil
@@ -186,6 +194,7 @@ func TestPlaygroundList_EmptyResult(t *testing.T) {
 }
 
 func TestPlaygroundList_Error(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		PlaygroundListFn: func(ctx context.Context, cluster, agentID string) ([]TopicSummary, error) {
 			return nil, fmt.Errorf("cluster unavailable")
@@ -199,6 +208,7 @@ func TestPlaygroundList_Error(t *testing.T) {
 }
 
 func TestPlaygroundCleanup_Success(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		PlaygroundCleanupFn: func(ctx context.Context, cluster, agentID string) (int, error) {
 			return 3, nil
@@ -215,6 +225,7 @@ func TestPlaygroundCleanup_Success(t *testing.T) {
 }
 
 func TestPlaygroundCleanup_PartialFailures(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		PlaygroundCleanupFn: func(ctx context.Context, cluster, agentID string) (int, error) {
 			// 2 out of 3 deleted (1 failed)
@@ -232,6 +243,7 @@ func TestPlaygroundCleanup_PartialFailures(t *testing.T) {
 }
 
 func TestPlaygroundCleanup_EmptyList(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		PlaygroundCleanupFn: func(ctx context.Context, cluster, agentID string) (int, error) {
 			return 0, nil
@@ -248,6 +260,7 @@ func TestPlaygroundCleanup_EmptyList(t *testing.T) {
 }
 
 func TestPlaygroundCleanup_Error(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		PlaygroundCleanupFn: func(ctx context.Context, cluster, agentID string) (int, error) {
 			return 0, fmt.Errorf("list failed")

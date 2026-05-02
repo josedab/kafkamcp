@@ -9,6 +9,7 @@ import (
 // --- GetRecommendations: specificTopic filtering ---
 
 func TestGetRecommendations_SpecificTopicFilter(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		GetRecommendationsFn: func(ctx context.Context, cluster, topic string) (*RecommendationResult, error) {
 			if topic != "orders" {
@@ -36,6 +37,7 @@ func TestGetRecommendations_SpecificTopicFilter(t *testing.T) {
 // --- GetRecommendations: DescribeTopic error skips topic gracefully ---
 
 func TestGetRecommendations_DescribeTopicErrorGraceful(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		GetRecommendationsFn: func(ctx context.Context, cluster, topic string) (*RecommendationResult, error) {
 			// Simulates that describe failures are handled gracefully
@@ -59,6 +61,7 @@ func TestGetRecommendations_DescribeTopicErrorGraceful(t *testing.T) {
 // --- GetRecommendations: consumer group lag error is handled ---
 
 func TestGetRecommendations_ConsumerGroupsErrorHandled(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		GetRecommendationsFn: func(ctx context.Context, cluster, topic string) (*RecommendationResult, error) {
 			return &RecommendationResult{
@@ -80,6 +83,7 @@ func TestGetRecommendations_ConsumerGroupsErrorHandled(t *testing.T) {
 // --- CompareConfigs: specificTopic filtering on target-only check ---
 
 func TestCompareConfigs_SpecificTopicFilterTargetOnly(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		CompareConfigsFn: func(ctx context.Context, sourceCluster, targetCluster, specificTopic string) (*ConfigCompareResult, error) {
 			if specificTopic != "orders" {
@@ -105,6 +109,7 @@ func TestCompareConfigs_SpecificTopicFilterTargetOnly(t *testing.T) {
 // --- CompareConfigs: DescribeTopic partial failure ---
 
 func TestCompareConfigs_DescribeTopicPartialFailure(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		CompareConfigsFn: func(ctx context.Context, sourceCluster, targetCluster, specificTopic string) (*ConfigCompareResult, error) {
 			return &ConfigCompareResult{
@@ -130,6 +135,7 @@ func TestCompareConfigs_DescribeTopicPartialFailure(t *testing.T) {
 // --- AuditConfigs: specificTopic filtering ---
 
 func TestAuditConfigs_SpecificTopicFilter(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		AuditConfigsFn: func(ctx context.Context, cluster, specificTopic string, template map[string]string) (*ConfigAuditResult, error) {
 			if specificTopic != "orders" {
@@ -156,6 +162,7 @@ func TestAuditConfigs_SpecificTopicFilter(t *testing.T) {
 // --- AuditConfigs: DescribeTopic error is silently skipped ---
 
 func TestAuditConfigs_DescribeTopicErrorSkipped(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		AuditConfigsFn: func(ctx context.Context, cluster, specificTopic string, template map[string]string) (*ConfigAuditResult, error) {
 			return &ConfigAuditResult{
@@ -179,6 +186,7 @@ func TestAuditConfigs_DescribeTopicErrorSkipped(t *testing.T) {
 // --- analyzeACLSecurity edge cases ---
 
 func TestAnalyzeACLSecurity_EmptyACLs(t *testing.T) {
+	t.Parallel()
 	analysis := analyzeACLSecurity(nil)
 	if analysis.Findings != 0 {
 		t.Errorf("expected 0 findings for empty ACLs, got %d", analysis.Findings)
@@ -186,6 +194,7 @@ func TestAnalyzeACLSecurity_EmptyACLs(t *testing.T) {
 }
 
 func TestAnalyzeACLSecurity_WildcardDetection(t *testing.T) {
+	t.Parallel()
 	acls := []ACLEntry{
 		{Principal: "User:admin", ResourceName: "*", Operation: "All", ResourceType: "Topic"},
 	}
@@ -196,6 +205,7 @@ func TestAnalyzeACLSecurity_WildcardDetection(t *testing.T) {
 }
 
 func TestAnalyzeACLSecurity_OverPermissioned(t *testing.T) {
+	t.Parallel()
 	acls := make([]ACLEntry, 15)
 	for i := range acls {
 		acls[i] = ACLEntry{

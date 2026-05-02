@@ -9,6 +9,7 @@ import (
 // --------------- MockKafkaManager: Consume ---------------
 
 func TestMock_Consume_Default(t *testing.T) {
+	t.Parallel()
 	m := &MockKafkaManager{}
 	msgs, err := m.Consume(context.Background(), "default", "orders", 0, "earliest", 10, 5000, "auto")
 	if err != nil {
@@ -23,6 +24,7 @@ func TestMock_Consume_Default(t *testing.T) {
 }
 
 func TestMock_Consume_CustomFn(t *testing.T) {
+	t.Parallel()
 	m := &MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]Message, error) {
 			return []Message{
@@ -49,6 +51,7 @@ func TestMock_Consume_CustomFn(t *testing.T) {
 }
 
 func TestMock_Consume_Error(t *testing.T) {
+	t.Parallel()
 	m := &MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]Message, error) {
 			return nil, fmt.Errorf("cluster %q not found", cluster)
@@ -62,6 +65,7 @@ func TestMock_Consume_Error(t *testing.T) {
 }
 
 func TestMock_Consume_PartitionFiltering(t *testing.T) {
+	t.Parallel()
 	m := &MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]Message, error) {
 			if partition == -1 {
@@ -90,6 +94,7 @@ func TestMock_Consume_PartitionFiltering(t *testing.T) {
 }
 
 func TestMock_Consume_CallRecording(t *testing.T) {
+	t.Parallel()
 	m := &MockKafkaManager{}
 	_, _ = m.Consume(context.Background(), "prod", "orders", 0, "earliest", 10, 5000, "auto")
 	_, _ = m.Consume(context.Background(), "prod", "events", 1, "latest", 50, 3000, "json")
@@ -110,6 +115,7 @@ func TestMock_Consume_CallRecording(t *testing.T) {
 // --------------- MockKafkaManager: Produce ---------------
 
 func TestMock_Produce_Default(t *testing.T) {
+	t.Parallel()
 	m := &MockKafkaManager{}
 	results, err := m.Produce(context.Background(), "default", "orders", nil, ProduceOptions{})
 	if err != nil {
@@ -124,6 +130,7 @@ func TestMock_Produce_Default(t *testing.T) {
 }
 
 func TestMock_Produce_CustomFn(t *testing.T) {
+	t.Parallel()
 	m := &MockKafkaManager{
 		ProduceFn: func(ctx context.Context, cluster, topic string, messages []ProduceMessage, opts ProduceOptions) ([]DeliveryResult, error) {
 			results := make([]DeliveryResult, len(messages))
@@ -158,6 +165,7 @@ func TestMock_Produce_CustomFn(t *testing.T) {
 }
 
 func TestMock_Produce_Error(t *testing.T) {
+	t.Parallel()
 	m := &MockKafkaManager{
 		ProduceFn: func(ctx context.Context, cluster, topic string, messages []ProduceMessage, opts ProduceOptions) ([]DeliveryResult, error) {
 			return nil, fmt.Errorf("produce failed: topic %q not found", topic)
@@ -171,6 +179,7 @@ func TestMock_Produce_Error(t *testing.T) {
 }
 
 func TestMock_Produce_EmptyMessages(t *testing.T) {
+	t.Parallel()
 	m := &MockKafkaManager{
 		ProduceFn: func(ctx context.Context, cluster, topic string, messages []ProduceMessage, opts ProduceOptions) ([]DeliveryResult, error) {
 			return []DeliveryResult{}, nil
@@ -187,6 +196,7 @@ func TestMock_Produce_EmptyMessages(t *testing.T) {
 }
 
 func TestMock_Produce_AcksOptions(t *testing.T) {
+	t.Parallel()
 	var capturedOpts ProduceOptions
 	m := &MockKafkaManager{
 		ProduceFn: func(ctx context.Context, cluster, topic string, messages []ProduceMessage, opts ProduceOptions) ([]DeliveryResult, error) {
@@ -207,6 +217,7 @@ func TestMock_Produce_AcksOptions(t *testing.T) {
 // --------------- Manager: Consume/Produce with nonexistent cluster ---------------
 
 func TestManager_Consume_NonexistentCluster(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	_, err := m.Consume(context.Background(), "nonexistent", "orders", 0, "earliest", 10, 5000, "auto")
 	if err == nil {
@@ -215,6 +226,7 @@ func TestManager_Consume_NonexistentCluster(t *testing.T) {
 }
 
 func TestManager_Produce_NonexistentCluster(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	_, err := m.Produce(context.Background(), "nonexistent", "orders", []ProduceMessage{{Key: "k", Value: "v"}}, ProduceOptions{})
 	if err == nil {

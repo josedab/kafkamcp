@@ -10,6 +10,7 @@ import (
 // ===================== PollStream =====================
 
 func TestPollStream_ValidSession(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		PollStreamFn: func(sessionID string, timeoutMs int) (*StreamResult, error) {
 			return &StreamResult{
@@ -49,6 +50,7 @@ func TestPollStream_ValidSession(t *testing.T) {
 }
 
 func TestPollStream_InvalidSession(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		PollStreamFn: func(sessionID string, timeoutMs int) (*StreamResult, error) {
 			return nil, fmt.Errorf("stream session %q not found", sessionID)
@@ -65,6 +67,7 @@ func TestPollStream_InvalidSession(t *testing.T) {
 }
 
 func TestPollStream_TimeoutNoMessages(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		PollStreamFn: func(sessionID string, timeoutMs int) (*StreamResult, error) {
 			return &StreamResult{
@@ -87,6 +90,7 @@ func TestPollStream_TimeoutNoMessages(t *testing.T) {
 }
 
 func TestPollStream_CallRecording(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		PollStreamFn: func(sessionID string, timeoutMs int) (*StreamResult, error) {
 			return &StreamResult{SessionID: sessionID}, nil
@@ -109,6 +113,7 @@ func TestPollStream_CallRecording(t *testing.T) {
 // ===================== ControlStream =====================
 
 func TestControlStream_Pause(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	session := &StreamSession{
 		ID:     "test-session",
@@ -131,6 +136,7 @@ func TestControlStream_Pause(t *testing.T) {
 }
 
 func TestControlStream_Resume(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	session := &StreamSession{
 		ID:     "test-session",
@@ -154,6 +160,7 @@ func TestControlStream_Resume(t *testing.T) {
 }
 
 func TestControlStream_Stop(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	var cancelCalled atomic.Bool
 	session := &StreamSession{
@@ -184,6 +191,7 @@ func TestControlStream_Stop(t *testing.T) {
 }
 
 func TestControlStream_InvalidAction(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	m.streamMgr.sessions["test-session"] = &StreamSession{
 		ID:     "test-session",
@@ -200,6 +208,7 @@ func TestControlStream_InvalidAction(t *testing.T) {
 }
 
 func TestControlStream_InvalidSession(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 
 	_, err := m.ControlStream("nonexistent", "pause")
@@ -214,6 +223,7 @@ func TestControlStream_InvalidSession(t *testing.T) {
 // ===================== ListStreams =====================
 
 func TestListStreams_EmptySessions(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	sessions := m.ListStreams()
 	if sessions != nil {
@@ -222,6 +232,7 @@ func TestListStreams_EmptySessions(t *testing.T) {
 }
 
 func TestListStreams_MultipleActiveSessions(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	now := time.Now().UTC().Format(time.RFC3339)
 
@@ -268,6 +279,7 @@ func TestListStreams_MultipleActiveSessions(t *testing.T) {
 }
 
 func TestListStreams_MessageCountAtomic(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	session := &StreamSession{
 		ID:        "session-1",
@@ -291,6 +303,7 @@ func TestListStreams_MessageCountAtomic(t *testing.T) {
 // ===================== PollStream on Manager directly =====================
 
 func TestPollStream_WithChannelMessages(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	session := &StreamSession{
 		ID:        "test-session",
@@ -321,6 +334,7 @@ func TestPollStream_WithChannelMessages(t *testing.T) {
 }
 
 func TestPollStream_TimeoutOnEmptyChannel(t *testing.T) {
+	t.Parallel()
 	m := testManager()
 	session := &StreamSession{
 		ID:        "test-session",

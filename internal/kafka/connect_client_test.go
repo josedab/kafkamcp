@@ -12,6 +12,7 @@ import (
 // ---------- NewConnectClient ----------
 
 func TestNewConnectClient_EmptyURL(t *testing.T) {
+	t.Parallel()
 	client, err := NewConnectClient("")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -22,6 +23,7 @@ func TestNewConnectClient_EmptyURL(t *testing.T) {
 }
 
 func TestNewConnectClient_ValidURL(t *testing.T) {
+	t.Parallel()
 	client, err := NewConnectClient("http://localhost:8083")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -35,6 +37,7 @@ func TestNewConnectClient_ValidURL(t *testing.T) {
 }
 
 func TestNewConnectClient_TrailingSlash(t *testing.T) {
+	t.Parallel()
 	client, err := NewConnectClient("http://localhost:8083/")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -45,6 +48,7 @@ func TestNewConnectClient_TrailingSlash(t *testing.T) {
 }
 
 func TestNewConnectClient_WithTLSOptions(t *testing.T) {
+	t.Parallel()
 	// WithConnectCA with empty file should be a no-op
 	client, err := NewConnectClient("https://localhost:8083", WithConnectCA(""))
 	if err != nil {
@@ -56,6 +60,7 @@ func TestNewConnectClient_WithTLSOptions(t *testing.T) {
 }
 
 func TestNewConnectClient_WithBadCA(t *testing.T) {
+	t.Parallel()
 	_, err := NewConnectClient("https://localhost:8083", WithConnectCA("/nonexistent/ca.pem"))
 	if err == nil {
 		t.Error("expected error for nonexistent CA file")
@@ -63,6 +68,7 @@ func TestNewConnectClient_WithBadCA(t *testing.T) {
 }
 
 func TestNewConnectClient_InsecureSkipVerifyFalse(t *testing.T) {
+	t.Parallel()
 	client, err := NewConnectClient("https://localhost:8083", WithConnectInsecureSkipVerify(false))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -75,6 +81,7 @@ func TestNewConnectClient_InsecureSkipVerifyFalse(t *testing.T) {
 // ---------- ListConnectors ----------
 
 func TestListConnectors_NilClient(t *testing.T) {
+	t.Parallel()
 	var c *ConnectClient
 	_, err := c.ListConnectors(context.Background())
 	if err == nil {
@@ -83,6 +90,7 @@ func TestListConnectors_NilClient(t *testing.T) {
 }
 
 func TestListConnectors_ExpandedFormat(t *testing.T) {
+	t.Parallel()
 	expanded := map[string]any{
 		"my-source": map[string]any{
 			"status": map[string]any{
@@ -134,6 +142,7 @@ func TestListConnectors_ExpandedFormat(t *testing.T) {
 }
 
 func TestListConnectors_SimpleFormat(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode([]string{"connector-a", "connector-b"})
@@ -158,6 +167,7 @@ func TestListConnectors_SimpleFormat(t *testing.T) {
 }
 
 func TestListConnectors_HTTPError(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}))
@@ -175,6 +185,7 @@ func TestListConnectors_HTTPError(t *testing.T) {
 }
 
 func TestListConnectors_InvalidJSON(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("not json"))
 	}))
@@ -194,6 +205,7 @@ func TestListConnectors_InvalidJSON(t *testing.T) {
 // ---------- DescribeConnector ----------
 
 func TestDescribeConnector_NilClient(t *testing.T) {
+	t.Parallel()
 	var c *ConnectClient
 	_, err := c.DescribeConnector(context.Background(), "test")
 	if err == nil {
@@ -202,6 +214,7 @@ func TestDescribeConnector_NilClient(t *testing.T) {
 }
 
 func TestDescribeConnector_Success(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		switch {
@@ -262,6 +275,7 @@ func TestDescribeConnector_Success(t *testing.T) {
 }
 
 func TestDescribeConnector_ConfigError(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	}))
@@ -281,6 +295,7 @@ func TestDescribeConnector_ConfigError(t *testing.T) {
 // ---------- httpGet ----------
 
 func TestHttpGet_ContextCancelled(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(5 * time.Second)
 	}))

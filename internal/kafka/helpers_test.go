@@ -7,6 +7,7 @@ import (
 )
 
 func TestDecodeValueAuto(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name string
 		data []byte
@@ -36,6 +37,7 @@ func TestDecodeValueAuto(t *testing.T) {
 }
 
 func TestDecodeValueBytes(t *testing.T) {
+	t.Parallel()
 	data := []byte{0x00, 0x01, 0xFF}
 	got := decodeValue(data, "bytes")
 	want := base64.StdEncoding.EncodeToString(data)
@@ -45,6 +47,7 @@ func TestDecodeValueBytes(t *testing.T) {
 }
 
 func TestDecodeValueString(t *testing.T) {
+	t.Parallel()
 	data := []byte(`{"key":"value"}`)
 	got := decodeValue(data, "string")
 	if got != `{"key":"value"}` {
@@ -53,6 +56,7 @@ func TestDecodeValueString(t *testing.T) {
 }
 
 func TestDecodeValueJSON(t *testing.T) {
+	t.Parallel()
 	data := []byte(`{"key":"value"}`)
 	got := decodeValue(data, "json")
 	m, ok := got.(map[string]any)
@@ -65,6 +69,7 @@ func TestDecodeValueJSON(t *testing.T) {
 }
 
 func TestSerializeValue(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name string
 		val  any
@@ -87,6 +92,7 @@ func TestSerializeValue(t *testing.T) {
 }
 
 func TestJavaTimeout(t *testing.T) {
+	t.Parallel()
 	if parseDurationMs(0) != 5*time.Second {
 		t.Error("expected default 5s for 0")
 	}
@@ -99,6 +105,7 @@ func TestJavaTimeout(t *testing.T) {
 }
 
 func TestParseTimestamp(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		input   string
 		wantErr bool

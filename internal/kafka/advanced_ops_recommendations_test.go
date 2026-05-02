@@ -7,6 +7,7 @@ import (
 )
 
 func TestGetRecommendations_UnderReplicated(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		GetRecommendationsFn: func(ctx context.Context, cluster, topic string) (*RecommendationResult, error) {
 			return &RecommendationResult{
@@ -46,6 +47,7 @@ func TestGetRecommendations_UnderReplicated(t *testing.T) {
 }
 
 func TestGetRecommendations_IdleTopic(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		GetRecommendationsFn: func(ctx context.Context, cluster, topic string) (*RecommendationResult, error) {
 			return &RecommendationResult{
@@ -78,6 +80,7 @@ func TestGetRecommendations_IdleTopic(t *testing.T) {
 }
 
 func TestGetRecommendations_PartitionHotspot(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		GetRecommendationsFn: func(ctx context.Context, cluster, topic string) (*RecommendationResult, error) {
 			return &RecommendationResult{
@@ -110,6 +113,7 @@ func TestGetRecommendations_PartitionHotspot(t *testing.T) {
 }
 
 func TestGetRecommendations_InfiniteRetention(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		GetRecommendationsFn: func(ctx context.Context, cluster, topic string) (*RecommendationResult, error) {
 			return &RecommendationResult{
@@ -145,6 +149,7 @@ func TestGetRecommendations_InfiniteRetention(t *testing.T) {
 }
 
 func TestGetRecommendations_NoCompression(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		GetRecommendationsFn: func(ctx context.Context, cluster, topic string) (*RecommendationResult, error) {
 			return &RecommendationResult{
@@ -178,6 +183,7 @@ func TestGetRecommendations_NoCompression(t *testing.T) {
 }
 
 func TestGetRecommendations_SinglePartitionHighVolume(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		GetRecommendationsFn: func(ctx context.Context, cluster, topic string) (*RecommendationResult, error) {
 			return &RecommendationResult{
@@ -210,6 +216,7 @@ func TestGetRecommendations_SinglePartitionHighVolume(t *testing.T) {
 }
 
 func TestGetRecommendations_ConsumerLagWarning(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		GetRecommendationsFn: func(ctx context.Context, cluster, topic string) (*RecommendationResult, error) {
 			return &RecommendationResult{
@@ -246,6 +253,7 @@ func TestGetRecommendations_ConsumerLagWarning(t *testing.T) {
 }
 
 func TestGetRecommendations_HealthyCluster(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		GetRecommendationsFn: func(ctx context.Context, cluster, topic string) (*RecommendationResult, error) {
 			return &RecommendationResult{
@@ -269,6 +277,7 @@ func TestGetRecommendations_HealthyCluster(t *testing.T) {
 }
 
 func TestGetRecommendations_Error(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		GetRecommendationsFn: func(ctx context.Context, cluster, topic string) (*RecommendationResult, error) {
 			return nil, fmt.Errorf("cluster unavailable")
@@ -282,6 +291,7 @@ func TestGetRecommendations_Error(t *testing.T) {
 }
 
 func TestGetRecommendations_CallRecording(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		GetRecommendationsFn: func(ctx context.Context, cluster, topic string) (*RecommendationResult, error) {
 			return &RecommendationResult{}, nil

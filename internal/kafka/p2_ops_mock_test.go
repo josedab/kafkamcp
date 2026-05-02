@@ -9,6 +9,7 @@ import (
 // ===================== Aggregate (mock-based) =====================
 
 func TestAggregate_Count(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		AggregateFn: func(ctx context.Context, cluster string, req AggregateRequest) (*AggregateResult, error) {
 			return &AggregateResult{
@@ -32,6 +33,7 @@ func TestAggregate_Count(t *testing.T) {
 }
 
 func TestAggregate_InvalidFunction(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		AggregateFn: func(ctx context.Context, cluster string, req AggregateRequest) (*AggregateResult, error) {
 			return nil, fmt.Errorf("unsupported function %q", req.Function)
@@ -46,6 +48,7 @@ func TestAggregate_InvalidFunction(t *testing.T) {
 }
 
 func TestAggregate_EmptyTopic(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		AggregateFn: func(ctx context.Context, cluster string, req AggregateRequest) (*AggregateResult, error) {
 			return &AggregateResult{
@@ -69,6 +72,7 @@ func TestAggregate_EmptyTopic(t *testing.T) {
 }
 
 func TestAggregate_Sum(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		AggregateFn: func(ctx context.Context, cluster string, req AggregateRequest) (*AggregateResult, error) {
 			return &AggregateResult{
@@ -89,6 +93,7 @@ func TestAggregate_Sum(t *testing.T) {
 }
 
 func TestAggregate_Avg(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		AggregateFn: func(ctx context.Context, cluster string, req AggregateRequest) (*AggregateResult, error) {
 			return &AggregateResult{
@@ -108,6 +113,7 @@ func TestAggregate_Avg(t *testing.T) {
 }
 
 func TestAggregate_MinMax(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		AggregateFn: func(ctx context.Context, cluster string, req AggregateRequest) (*AggregateResult, error) {
 			switch req.Function {
@@ -144,6 +150,7 @@ func TestAggregate_MinMax(t *testing.T) {
 // ===================== GetTopicGraph (mock-based) =====================
 
 func TestGetTopicGraph_Success(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		GetTopicGraphFn: func(ctx context.Context, cluster string) (*TopicGraph, error) {
 			return &TopicGraph{
@@ -171,6 +178,7 @@ func TestGetTopicGraph_Success(t *testing.T) {
 }
 
 func TestGetTopicGraph_EmptyCluster(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		GetTopicGraphFn: func(ctx context.Context, cluster string) (*TopicGraph, error) {
 			return &TopicGraph{}, nil
@@ -186,6 +194,7 @@ func TestGetTopicGraph_EmptyCluster(t *testing.T) {
 }
 
 func TestGetTopicGraph_Error(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		GetTopicGraphFn: func(ctx context.Context, cluster string) (*TopicGraph, error) {
 			return nil, fmt.Errorf("cluster unavailable")
@@ -200,6 +209,7 @@ func TestGetTopicGraph_Error(t *testing.T) {
 // ===================== JoinTopics (mock-based) =====================
 
 func TestJoinTopics_Success(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		JoinTopicsFn: func(ctx context.Context, cluster string, req JoinRequest) (*JoinResult, error) {
 			return &JoinResult{
@@ -225,6 +235,7 @@ func TestJoinTopics_Success(t *testing.T) {
 }
 
 func TestJoinTopics_NoMatchingKeys(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		JoinTopicsFn: func(ctx context.Context, cluster string, req JoinRequest) (*JoinResult, error) {
 			return &JoinResult{
@@ -244,6 +255,7 @@ func TestJoinTopics_NoMatchingKeys(t *testing.T) {
 }
 
 func TestJoinTopics_EmptyTopics(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		JoinTopicsFn: func(ctx context.Context, cluster string, req JoinRequest) (*JoinResult, error) {
 			return &JoinResult{LeftCount: 0, RightCount: 0, MatchCount: 0}, nil
@@ -261,6 +273,7 @@ func TestJoinTopics_EmptyTopics(t *testing.T) {
 }
 
 func TestJoinTopics_ConsumeError(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		JoinTopicsFn: func(ctx context.Context, cluster string, req JoinRequest) (*JoinResult, error) {
 			return nil, fmt.Errorf("consuming left topic: connection refused")
@@ -277,6 +290,7 @@ func TestJoinTopics_ConsumeError(t *testing.T) {
 // ===================== NaturalLanguageQuery (mock-based) =====================
 
 func TestNaturalLanguageQuery_Success(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		NaturalLanguageQueryFn: func(ctx context.Context, cluster, query string, topics []TopicSummary) (*NaturalLanguageQueryResult, error) {
 			return &NaturalLanguageQueryResult{
@@ -304,6 +318,7 @@ func TestNaturalLanguageQuery_Success(t *testing.T) {
 }
 
 func TestNaturalLanguageQuery_NoMatchingTopic(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		NaturalLanguageQueryFn: func(ctx context.Context, cluster, query string, topics []TopicSummary) (*NaturalLanguageQueryResult, error) {
 			return nil, fmt.Errorf("could not determine topic from query")
@@ -316,6 +331,7 @@ func TestNaturalLanguageQuery_NoMatchingTopic(t *testing.T) {
 }
 
 func TestNaturalLanguageQuery_WithFilter(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		NaturalLanguageQueryFn: func(ctx context.Context, cluster, query string, topics []TopicSummary) (*NaturalLanguageQueryResult, error) {
 			return &NaturalLanguageQueryResult{
@@ -339,6 +355,7 @@ func TestNaturalLanguageQuery_WithFilter(t *testing.T) {
 }
 
 func TestNaturalLanguageQuery_LimitEnforcement(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		NaturalLanguageQueryFn: func(ctx context.Context, cluster, query string, topics []TopicSummary) (*NaturalLanguageQueryResult, error) {
 			return &NaturalLanguageQueryResult{
@@ -361,6 +378,7 @@ func TestNaturalLanguageQuery_LimitEnforcement(t *testing.T) {
 // ===================== MockKafkaManager call recording =====================
 
 func TestMockCallRecording(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{}
 	mock.Aggregate(context.Background(), "c1", AggregateRequest{Topic: "t1"})
 	mock.Aggregate(context.Background(), "c2", AggregateRequest{Topic: "t2"})

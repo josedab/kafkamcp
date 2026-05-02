@@ -9,6 +9,7 @@ import (
 )
 
 func TestRedactSensitiveConfigConnect(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name   string
 		config map[string]string
@@ -37,6 +38,7 @@ func TestRedactSensitiveConfigConnect(t *testing.T) {
 }
 
 func TestRedactSensitiveConfigPreservesAll(t *testing.T) {
+	t.Parallel()
 	cfg := map[string]string{
 		"connector.class":       "FileStreamSource",
 		"topic":                 "test-topic",
@@ -56,6 +58,7 @@ func TestRedactSensitiveConfigPreservesAll(t *testing.T) {
 }
 
 func TestNewConnectClientEmptyURL(t *testing.T) {
+	t.Parallel()
 	client, err := NewConnectClient("")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -66,6 +69,7 @@ func TestNewConnectClientEmptyURL(t *testing.T) {
 }
 
 func TestNewConnectClientValidURL(t *testing.T) {
+	t.Parallel()
 	client, err := NewConnectClient("http://localhost:8083")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -79,6 +83,7 @@ func TestNewConnectClientValidURL(t *testing.T) {
 }
 
 func TestNewConnectClientTrimsSlash(t *testing.T) {
+	t.Parallel()
 	client, err := NewConnectClient("http://localhost:8083/")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -89,6 +94,7 @@ func TestNewConnectClientTrimsSlash(t *testing.T) {
 }
 
 func TestConnectClientNilMethods(t *testing.T) {
+	t.Parallel()
 	var c *ConnectClient
 
 	_, err := c.ListConnectors(context.Background())
@@ -128,6 +134,7 @@ func TestConnectClientNilMethods(t *testing.T) {
 }
 
 func TestConnectClientListConnectorsExpanded(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/connectors" {
 			w.Header().Set("Content-Type", "application/json")
@@ -164,6 +171,7 @@ func TestConnectClientListConnectorsExpanded(t *testing.T) {
 }
 
 func TestConnectClientListConnectorsSimple(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode([]string{"connector-a", "connector-b"})
@@ -184,6 +192,7 @@ func TestConnectClientListConnectorsSimple(t *testing.T) {
 }
 
 func TestConnectClientListConnectorsHTTPError(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}))
@@ -197,6 +206,7 @@ func TestConnectClientListConnectorsHTTPError(t *testing.T) {
 }
 
 func TestConnectClientDescribeConnector(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		switch {
@@ -245,6 +255,7 @@ func TestConnectClientDescribeConnector(t *testing.T) {
 }
 
 func TestConnectClientCreateConnector(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -274,6 +285,7 @@ func TestConnectClientCreateConnector(t *testing.T) {
 }
 
 func TestConnectClientUpdateConnector(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPut {
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -300,6 +312,7 @@ func TestConnectClientUpdateConnector(t *testing.T) {
 }
 
 func TestConnectClientDeleteConnector(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodDelete {
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -317,6 +330,7 @@ func TestConnectClientDeleteConnector(t *testing.T) {
 }
 
 func TestConnectClientDeleteConnectorError(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(`{"error_code":404,"message":"Connector not found"}`))
@@ -331,6 +345,7 @@ func TestConnectClientDeleteConnectorError(t *testing.T) {
 }
 
 func TestConnectClientRestartConnectorFull(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}))
@@ -347,6 +362,7 @@ func TestConnectClientRestartConnectorFull(t *testing.T) {
 }
 
 func TestConnectClientRestartSpecificTask(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}))
@@ -366,6 +382,7 @@ func TestConnectClientRestartSpecificTask(t *testing.T) {
 }
 
 func TestConnectorHealthAllRunning(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		switch {
@@ -405,6 +422,7 @@ func TestConnectorHealthAllRunning(t *testing.T) {
 }
 
 func TestConnectorHealthWithFailedTasks(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		switch {
@@ -444,6 +462,7 @@ func TestConnectorHealthWithFailedTasks(t *testing.T) {
 }
 
 func TestConnectorHealthPaused(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		switch {
@@ -485,6 +504,7 @@ func TestConnectorHealthPaused(t *testing.T) {
 }
 
 func TestConnectorHealthNoTasks(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		switch {
@@ -515,6 +535,7 @@ func TestConnectorHealthNoTasks(t *testing.T) {
 }
 
 func TestWithConnectInsecureSkipVerify(t *testing.T) {
+	t.Parallel()
 	client, err := NewConnectClient("https://localhost:8083", WithConnectInsecureSkipVerify(true))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -525,6 +546,7 @@ func TestWithConnectInsecureSkipVerify(t *testing.T) {
 }
 
 func TestWithConnectInsecureSkipVerifyFalse(t *testing.T) {
+	t.Parallel()
 	client, err := NewConnectClient("https://localhost:8083", WithConnectInsecureSkipVerify(false))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -535,6 +557,7 @@ func TestWithConnectInsecureSkipVerifyFalse(t *testing.T) {
 }
 
 func TestWithConnectCAEmpty(t *testing.T) {
+	t.Parallel()
 	client, err := NewConnectClient("https://localhost:8083", WithConnectCA(""))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -545,6 +568,7 @@ func TestWithConnectCAEmpty(t *testing.T) {
 }
 
 func TestWithConnectCAInvalidFile(t *testing.T) {
+	t.Parallel()
 	_, err := NewConnectClient("https://localhost:8083", WithConnectCA("/nonexistent/ca.pem"))
 	if err == nil {
 		t.Error("expected error for invalid CA file")

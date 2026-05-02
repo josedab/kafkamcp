@@ -9,6 +9,7 @@ import (
 // Tests for governance_ops.go: CompareConfigs, AuditConfigs, TraceMessage edge cases.
 
 func TestCompareConfigs_BothClustersEmptyGov(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		CompareConfigsFn: func(ctx context.Context, sourceCluster, targetCluster, specificTopic string) (*ConfigCompareResult, error) {
 			return &ConfigCompareResult{
@@ -33,6 +34,7 @@ func TestCompareConfigs_BothClustersEmptyGov(t *testing.T) {
 }
 
 func TestCompareConfigs_TopicOnlyInSourceGov(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		CompareConfigsFn: func(ctx context.Context, sourceCluster, targetCluster, specificTopic string) (*ConfigCompareResult, error) {
 			return &ConfigCompareResult{
@@ -57,6 +59,7 @@ func TestCompareConfigs_TopicOnlyInSourceGov(t *testing.T) {
 }
 
 func TestCompareConfigs_TopicOnlyInTargetGov(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		CompareConfigsFn: func(ctx context.Context, sourceCluster, targetCluster, specificTopic string) (*ConfigCompareResult, error) {
 			return &ConfigCompareResult{
@@ -77,6 +80,7 @@ func TestCompareConfigs_TopicOnlyInTargetGov(t *testing.T) {
 }
 
 func TestCompareConfigs_ConfigValueDifferencesGov(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		CompareConfigsFn: func(ctx context.Context, sourceCluster, targetCluster, specificTopic string) (*ConfigCompareResult, error) {
 			return &ConfigCompareResult{
@@ -109,6 +113,7 @@ func TestCompareConfigs_ConfigValueDifferencesGov(t *testing.T) {
 }
 
 func TestCompareConfigs_SourceListErrorGov(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		CompareConfigsFn: func(ctx context.Context, sourceCluster, targetCluster, specificTopic string) (*ConfigCompareResult, error) {
 			return nil, fmt.Errorf("listing source topics: connection refused")
@@ -122,6 +127,7 @@ func TestCompareConfigs_SourceListErrorGov(t *testing.T) {
 }
 
 func TestAuditConfigs_AllCompliantGov(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		AuditConfigsFn: func(ctx context.Context, cluster, specificTopic string, template map[string]string) (*ConfigAuditResult, error) {
 			return &ConfigAuditResult{
@@ -146,6 +152,7 @@ func TestAuditConfigs_AllCompliantGov(t *testing.T) {
 }
 
 func TestAuditConfigs_DeviationsWithRemediation(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		AuditConfigsFn: func(ctx context.Context, cluster, specificTopic string, template map[string]string) (*ConfigAuditResult, error) {
 			return &ConfigAuditResult{
@@ -186,6 +193,7 @@ func TestAuditConfigs_DeviationsWithRemediation(t *testing.T) {
 }
 
 func TestAuditConfigs_ListTopicsError(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		AuditConfigsFn: func(ctx context.Context, cluster, specificTopic string, template map[string]string) (*ConfigAuditResult, error) {
 			return nil, fmt.Errorf("connection refused")
@@ -199,6 +207,7 @@ func TestAuditConfigs_ListTopicsError(t *testing.T) {
 }
 
 func TestTraceMessage_SortedByTimestamp(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		TraceMessageFn: func(ctx context.Context, cluster, correlationID, headerName string, topics []string, maxScan int) (*TraceResult, error) {
 			return &TraceResult{
@@ -228,6 +237,7 @@ func TestTraceMessage_SortedByTimestamp(t *testing.T) {
 }
 
 func TestTraceMessage_ErrorOnOneTopic(t *testing.T) {
+	t.Parallel()
 	mock := &MockKafkaManager{
 		TraceMessageFn: func(ctx context.Context, cluster, correlationID, headerName string, topics []string, maxScan int) (*TraceResult, error) {
 			// Simulates: one topic errors out but others succeed
@@ -253,6 +263,7 @@ func TestTraceMessage_ErrorOnOneTopic(t *testing.T) {
 }
 
 func TestListACLs_SecurityAnalysisOverPermissioned(t *testing.T) {
+	t.Parallel()
 	// Build a principal with >10 ACL entries to trigger over-permissioned detection
 	acls := make([]ACLEntry, 11)
 	for i := range acls {
@@ -275,6 +286,7 @@ func TestListACLs_SecurityAnalysisOverPermissioned(t *testing.T) {
 }
 
 func TestListACLs_SecurityAnalysisNoFindings(t *testing.T) {
+	t.Parallel()
 	acls := []ACLEntry{
 		{Principal: "User:app1", ResourceName: "orders", ResourceType: "Topic", Operation: "Read"},
 	}
