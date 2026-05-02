@@ -24,6 +24,7 @@ func setupEnforcementEngine(t *testing.T) *Engine {
 }
 
 func TestSetEnforcementMode(t *testing.T) {
+	t.Parallel()
 	t.Run("set mode on existing contract", func(t *testing.T) {
 		e := setupEnforcementEngine(t)
 		err := e.SetEnforcementMode("test.topic", ModeReject)
@@ -58,6 +59,7 @@ func TestSetEnforcementMode(t *testing.T) {
 }
 
 func TestEnforceContract(t *testing.T) {
+	t.Parallel()
 	t.Run("warn mode allows invalid message", func(t *testing.T) {
 		e := setupEnforcementEngine(t)
 		_ = e.SetEnforcementMode("test.topic", ModeWarn)
@@ -141,6 +143,7 @@ func TestEnforceContract(t *testing.T) {
 }
 
 func TestGetViolationSummary(t *testing.T) {
+	t.Parallel()
 	t.Run("with violations", func(t *testing.T) {
 		e := setupEnforcementEngine(t)
 		// Generate violations
@@ -193,6 +196,7 @@ func TestGetViolationSummary(t *testing.T) {
 }
 
 func TestInferContract(t *testing.T) {
+	t.Parallel()
 	t.Run("infer from samples with not_null and enum rules", func(t *testing.T) {
 		samples := make([]map[string]any, 20)
 		for i := 0; i < 20; i++ {
@@ -344,6 +348,7 @@ func TestInferContract(t *testing.T) {
 }
 
 func TestSetEnforcementMode_AllModes(t *testing.T) {
+	t.Parallel()
 	modes := []EnforcementMode{ModeWarn, ModeReject, ModeQuarantine}
 	for _, mode := range modes {
 		t.Run(string(mode), func(t *testing.T) {
@@ -361,6 +366,7 @@ func TestSetEnforcementMode_AllModes(t *testing.T) {
 }
 
 func TestGetEnforcementMode_DefaultIsWarn(t *testing.T) {
+	t.Parallel()
 	e := setupEnforcementEngine(t)
 	mode := e.getEnforcementMode("test.topic")
 	if mode != ModeWarn {
@@ -369,6 +375,7 @@ func TestGetEnforcementMode_DefaultIsWarn(t *testing.T) {
 }
 
 func TestEnforceContract_NilPayload(t *testing.T) {
+	t.Parallel()
 	e := setupEnforcementEngine(t)
 	_ = e.SetEnforcementMode("test.topic", ModeReject)
 
@@ -382,6 +389,7 @@ func TestEnforceContract_NilPayload(t *testing.T) {
 }
 
 func TestEnforceContract_NonExistentContract(t *testing.T) {
+	t.Parallel()
 	e := NewEngine()
 	r := e.EnforceContract("no.such.topic", map[string]any{"key": "val"})
 	if r != nil {
@@ -390,6 +398,7 @@ func TestEnforceContract_NonExistentContract(t *testing.T) {
 }
 
 func TestRecordViolation_DuplicateDetection(t *testing.T) {
+	t.Parallel()
 	e := setupEnforcementEngine(t)
 	// Validate same bad message twice
 	msg := map[string]any{"status": "unknown"}
@@ -410,6 +419,7 @@ func TestRecordViolation_DuplicateDetection(t *testing.T) {
 }
 
 func TestGetViolationSummary_AcrossTopics(t *testing.T) {
+	t.Parallel()
 	e := NewEngine()
 	_ = e.RegisterContract(Contract{
 		Name: "c1", Version: "1.0", Topic: "topic.a", Owner: "team",
@@ -441,6 +451,7 @@ func TestGetViolationSummary_AcrossTopics(t *testing.T) {
 }
 
 func TestEnforceContract_ConcurrentAccess(t *testing.T) {
+	t.Parallel()
 	e := setupEnforcementEngine(t)
 	_ = e.SetEnforcementMode("test.topic", ModeWarn)
 
@@ -467,6 +478,7 @@ func TestEnforceContract_ConcurrentAccess(t *testing.T) {
 }
 
 func TestRecordViolation_NoStats(t *testing.T) {
+	t.Parallel()
 	e := setupEnforcementEngine(t)
 	// Call recordViolation when no stats exist (before any validation)
 	result := &ValidationResult{

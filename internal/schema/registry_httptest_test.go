@@ -10,6 +10,7 @@ import (
 )
 
 func TestListSubjects_Success(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/subjects" {
 			http.NotFound(w, r)
@@ -34,6 +35,7 @@ func TestListSubjects_Success(t *testing.T) {
 }
 
 func TestListSubjects_EmptyRegistry(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode([]string{})
@@ -51,6 +53,7 @@ func TestListSubjects_EmptyRegistry(t *testing.T) {
 }
 
 func TestListSubjects_NetworkError(t *testing.T) {
+	t.Parallel()
 	c, _ := NewClient("http://127.0.0.1:1", "", "", 100, 300)
 	_, err := c.ListSubjects(context.Background())
 	if err == nil {
@@ -59,6 +62,7 @@ func TestListSubjects_NetworkError(t *testing.T) {
 }
 
 func TestListSubjects_Unauthorized(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte(`{"error_code":401,"message":"Unauthorized"}`))
@@ -75,6 +79,7 @@ func TestListSubjects_Unauthorized(t *testing.T) {
 }
 
 func TestGetSchema_CacheMiss(t *testing.T) {
+	t.Parallel()
 	avroSchema := `{"type":"record","name":"User","fields":[{"name":"id","type":"int"},{"name":"name","type":"string"}]}`
 	var reqCount atomic.Int32
 
@@ -119,6 +124,7 @@ func TestGetSchema_CacheMiss(t *testing.T) {
 }
 
 func TestGetSchema_NotFound(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(`{"error_code":40401,"message":"Subject not found"}`))
@@ -133,6 +139,7 @@ func TestGetSchema_NotFound(t *testing.T) {
 }
 
 func TestGetSchema_CacheHit(t *testing.T) {
+	t.Parallel()
 	avroSchema := `{"type":"record","name":"Order","fields":[{"name":"id","type":"int"}]}`
 	var schemaReqCount atomic.Int32
 
@@ -182,6 +189,7 @@ func TestGetSchema_CacheHit(t *testing.T) {
 }
 
 func TestCheckCompatibility_Compatible(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]any{"is_compatible": true})
@@ -200,6 +208,7 @@ func TestCheckCompatibility_Compatible(t *testing.T) {
 }
 
 func TestCheckCompatibility_Incompatible(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]any{
@@ -224,6 +233,7 @@ func TestCheckCompatibility_Incompatible(t *testing.T) {
 }
 
 func TestCheckCompatibility_MalformedJSON(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(`{not valid json`))
@@ -239,6 +249,7 @@ func TestCheckCompatibility_MalformedJSON(t *testing.T) {
 }
 
 func TestHTTPErrors_400(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"error_code":400,"message":"Bad Request"}`))
@@ -253,6 +264,7 @@ func TestHTTPErrors_400(t *testing.T) {
 }
 
 func TestHTTPErrors_404(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(`{"error_code":404,"message":"Not Found"}`))
@@ -267,6 +279,7 @@ func TestHTTPErrors_404(t *testing.T) {
 }
 
 func TestHTTPErrors_500(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{"error_code":500,"message":"Internal Server Error"}`))
@@ -281,6 +294,7 @@ func TestHTTPErrors_500(t *testing.T) {
 }
 
 func TestDoRequest_BasicAuth(t *testing.T) {
+	t.Parallel()
 	var gotUser, gotPass string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotUser, gotPass, _ = r.BasicAuth()
@@ -300,6 +314,7 @@ func TestDoRequest_BasicAuth(t *testing.T) {
 }
 
 func TestDoRequest_AcceptHeader(t *testing.T) {
+	t.Parallel()
 	var gotAccept string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotAccept = r.Header.Get("Accept")
@@ -318,6 +333,7 @@ func TestDoRequest_AcceptHeader(t *testing.T) {
 }
 
 func TestGetSchema_InvalidVersion(t *testing.T) {
+	t.Parallel()
 	c, _ := NewClient("http://localhost:1", "", "", 100, 300)
 	_, err := c.GetSchema(context.Background(), "test", "abc")
 	if err == nil {
@@ -326,6 +342,7 @@ func TestGetSchema_InvalidVersion(t *testing.T) {
 }
 
 func TestCheckCompatibility_InvalidVersion(t *testing.T) {
+	t.Parallel()
 	c, _ := NewClient("http://localhost:1", "", "", 100, 300)
 	_, err := c.CheckCompatibility(context.Background(), "test", "abc", `{}`, "AVRO")
 	if err == nil {
@@ -334,6 +351,7 @@ func TestCheckCompatibility_InvalidVersion(t *testing.T) {
 }
 
 func TestCheckCompatibility_DefaultVersionAndType(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Verify the path uses "latest" when version is empty
 		expectedPath := "/compatibility/subjects/user-value/versions/latest"
@@ -356,6 +374,7 @@ func TestCheckCompatibility_DefaultVersionAndType(t *testing.T) {
 }
 
 func TestCheckCompatibility_HTTPError(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{"error_code":500}`))

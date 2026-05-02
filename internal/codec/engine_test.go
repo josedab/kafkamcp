@@ -8,6 +8,7 @@ import (
 )
 
 func TestDetectFormat(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name   string
 		data   []byte
@@ -30,6 +31,7 @@ func TestDetectFormat(t *testing.T) {
 }
 
 func TestEngineDecodeJSON(t *testing.T) {
+	t.Parallel()
 	engine := NewEngine(nil)
 
 	data := []byte(`{"name":"test","value":42}`)
@@ -50,6 +52,7 @@ func TestEngineDecodeJSON(t *testing.T) {
 }
 
 func TestEngineDecodeRaw(t *testing.T) {
+	t.Parallel()
 	engine := NewEngine(nil)
 	data := []byte("plain text message")
 	result, err := engine.Decode(data)
@@ -62,6 +65,7 @@ func TestEngineDecodeRaw(t *testing.T) {
 }
 
 func TestEngineDecodeEmpty(t *testing.T) {
+	t.Parallel()
 	engine := NewEngine(nil)
 	_, err := engine.Decode([]byte{})
 	if err == nil {
@@ -70,6 +74,7 @@ func TestEngineDecodeEmpty(t *testing.T) {
 }
 
 func TestEngineEncodeJSON(t *testing.T) {
+	t.Parallel()
 	engine := NewEngine(nil)
 	msg, err := engine.Encode(map[string]string{"key": "val"}, 1, FormatJSON)
 	if err != nil {
@@ -88,6 +93,7 @@ func TestEngineEncodeJSON(t *testing.T) {
 }
 
 func TestEngineEncodeNilValue(t *testing.T) {
+	t.Parallel()
 	engine := NewEngine(nil)
 	_, err := engine.Encode(nil, 1, FormatJSON)
 	if err == nil {
@@ -96,6 +102,7 @@ func TestEngineEncodeNilValue(t *testing.T) {
 }
 
 func TestEngineEncodeAvro(t *testing.T) {
+	t.Parallel()
 	engine := NewEngine(nil)
 	msg, err := engine.Encode(map[string]string{"name": "test"}, 1, FormatAvro)
 	if err != nil {
@@ -114,6 +121,7 @@ func TestEngineEncodeAvro(t *testing.T) {
 }
 
 func TestEngineDecodeConfluentWireFormat(t *testing.T) {
+	t.Parallel()
 	engine := NewEngine(nil)
 
 	// Encode first
@@ -136,6 +144,7 @@ func TestEngineDecodeConfluentWireFormat(t *testing.T) {
 }
 
 func TestEngineEncodeUnsupportedFormat(t *testing.T) {
+	t.Parallel()
 	engine := NewEngine(nil)
 	_, err := engine.Encode("test", 1, "xml")
 	if err == nil {
@@ -181,6 +190,7 @@ func newMockProvider(entries map[int]Format) *mockProvider {
 // --- encodeProtobuf tests ---
 
 func TestEncodeProtobuf_VarintPrefix(t *testing.T) {
+	t.Parallel()
 	engine := NewEngine(nil) // nil provider returns default "{}" schema
 	msg, err := engine.Encode(map[string]string{"key": "val"}, 1, FormatProtobuf)
 	if err != nil {
@@ -200,6 +210,7 @@ func TestEncodeProtobuf_VarintPrefix(t *testing.T) {
 }
 
 func TestEncodeProtobuf_NilValue(t *testing.T) {
+	t.Parallel()
 	engine := NewEngine(nil)
 	_, err := engine.Encode(nil, 1, FormatProtobuf)
 	if err == nil {
@@ -208,6 +219,7 @@ func TestEncodeProtobuf_NilValue(t *testing.T) {
 }
 
 func TestEncodeProtobuf_NoSchemaClient(t *testing.T) {
+	t.Parallel()
 	// nil provider returns default "{}" schema, so encoding should succeed
 	engine := NewEngine(nil)
 	_, err := engine.Encode(map[string]string{"k": "v"}, 1, FormatProtobuf)
@@ -219,6 +231,7 @@ func TestEncodeProtobuf_NoSchemaClient(t *testing.T) {
 // --- decodeProtobuf tests ---
 
 func TestDecodeProtobuf_VarintStripping(t *testing.T) {
+	t.Parallel()
 	provider := newMockProvider(map[int]Format{1: FormatProtobuf})
 	engine := NewEngine(provider)
 
@@ -247,6 +260,7 @@ func TestDecodeProtobuf_VarintStripping(t *testing.T) {
 }
 
 func TestDecodeProtobuf_TruncatedData(t *testing.T) {
+	t.Parallel()
 	provider := newMockProvider(map[int]Format{1: FormatProtobuf})
 	engine := NewEngine(provider)
 
@@ -263,6 +277,7 @@ func TestDecodeProtobuf_TruncatedData(t *testing.T) {
 }
 
 func TestDecodeProtobuf_InvalidJSONAfterPrefix(t *testing.T) {
+	t.Parallel()
 	provider := newMockProvider(map[int]Format{1: FormatProtobuf})
 	engine := NewEngine(provider)
 
@@ -281,6 +296,7 @@ func TestDecodeProtobuf_InvalidJSONAfterPrefix(t *testing.T) {
 // --- resolveFormat tests ---
 
 func TestResolveFormat_WithProvider(t *testing.T) {
+	t.Parallel()
 	provider := newMockProvider(map[int]Format{42: FormatProtobuf})
 	engine := NewEngine(provider)
 
@@ -294,6 +310,7 @@ func TestResolveFormat_WithProvider(t *testing.T) {
 }
 
 func TestResolveFormat_DefaultsToAvroWithoutProvider(t *testing.T) {
+	t.Parallel()
 	engine := NewEngine(nil)
 	format, err := engine.resolveFormat(1)
 	if err != nil {
@@ -305,6 +322,7 @@ func TestResolveFormat_DefaultsToAvroWithoutProvider(t *testing.T) {
 }
 
 func TestResolveFormat_CachesResult(t *testing.T) {
+	t.Parallel()
 	callCount := 0
 	provider := &countingProvider{
 		calls:  &callCount,
@@ -335,6 +353,7 @@ func (p *countingProvider) GetLatestSchema(subject string) (int, string, Format,
 }
 
 func TestResolveFormat_ProviderError(t *testing.T) {
+	t.Parallel()
 	provider := &errorProvider{}
 	engine := NewEngine(provider)
 
@@ -357,6 +376,7 @@ func (p *errorProvider) GetLatestSchema(subject string) (int, string, Format, er
 // --- Round-trip test ---
 
 func TestRoundTrip_EncodeDecodeProtobuf(t *testing.T) {
+	t.Parallel()
 	provider := newMockProvider(map[int]Format{10: FormatProtobuf})
 	engine := NewEngine(provider)
 
@@ -384,6 +404,7 @@ func TestRoundTrip_EncodeDecodeProtobuf(t *testing.T) {
 }
 
 func TestRoundTrip_EncodeDecodeAvro(t *testing.T) {
+	t.Parallel()
 	engine := NewEngine(nil)
 
 	original := map[string]string{"key": "value"}

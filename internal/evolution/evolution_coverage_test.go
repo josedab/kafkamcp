@@ -5,6 +5,7 @@ import (
 )
 
 func TestExtractFieldsFromAvro(t *testing.T) {
+	t.Parallel()
 	schema := map[string]any{
 		"type": "record",
 		"name": "Order",
@@ -23,6 +24,7 @@ func TestExtractFieldsFromAvro(t *testing.T) {
 }
 
 func TestExtractFieldsFromJSONSchema(t *testing.T) {
+	t.Parallel()
 	schema := map[string]any{
 		"type": "object",
 		"properties": map[string]any{
@@ -37,6 +39,7 @@ func TestExtractFieldsFromJSONSchema(t *testing.T) {
 }
 
 func TestExtractFieldsFromString(t *testing.T) {
+	t.Parallel()
 	schema := `{"fields": [{"name": "id", "type": "string"}]}`
 	fields := extractFields(schema)
 	if len(fields) != 1 {
@@ -45,6 +48,7 @@ func TestExtractFieldsFromString(t *testing.T) {
 }
 
 func TestExtractFieldsInvalidString(t *testing.T) {
+	t.Parallel()
 	fields := extractFields("not valid json")
 	if len(fields) != 0 {
 		t.Errorf("expected 0 fields for invalid JSON, got %d", len(fields))
@@ -52,6 +56,7 @@ func TestExtractFieldsInvalidString(t *testing.T) {
 }
 
 func TestExtractFieldsEmpty(t *testing.T) {
+	t.Parallel()
 	fields := extractFields(map[string]any{})
 	if len(fields) != 0 {
 		t.Errorf("expected 0 fields, got %d", len(fields))
@@ -59,6 +64,7 @@ func TestExtractFieldsEmpty(t *testing.T) {
 }
 
 func TestHasDefault(t *testing.T) {
+	t.Parallel()
 	schema := map[string]any{
 		"fields": []any{
 			map[string]any{"name": "id", "type": "string"},
@@ -77,18 +83,21 @@ func TestHasDefault(t *testing.T) {
 }
 
 func TestHasDefaultNotMap(t *testing.T) {
+	t.Parallel()
 	if hasDefault("not a map", "field") {
 		t.Error("expected false for non-map schema")
 	}
 }
 
 func TestHasDefaultNoFields(t *testing.T) {
+	t.Parallel()
 	if hasDefault(map[string]any{"type": "record"}, "field") {
 		t.Error("expected false when no fields key")
 	}
 }
 
 func TestCountBreaking(t *testing.T) {
+	t.Parallel()
 	fields := []FieldDiff{
 		{Field: "new_field", Action: "added", Breaking: false},
 		{Field: "old_field", Action: "removed", Breaking: true},
@@ -101,6 +110,7 @@ func TestCountBreaking(t *testing.T) {
 }
 
 func TestCountBreakingEmpty(t *testing.T) {
+	t.Parallel()
 	breaking := countBreaking(nil)
 	if breaking != 0 {
 		t.Errorf("expected 0 breaking changes, got %d", breaking)

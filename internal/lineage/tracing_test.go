@@ -7,6 +7,7 @@ import (
 )
 
 func TestGenerateTraceContext(t *testing.T) {
+	t.Parallel()
 	ctx, err := GenerateTraceContext()
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -48,6 +49,7 @@ func TestGenerateTraceContext(t *testing.T) {
 }
 
 func TestCreateChildContext(t *testing.T) {
+	t.Parallel()
 	parent, err := GenerateTraceContext()
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -75,6 +77,7 @@ func TestCreateChildContext(t *testing.T) {
 }
 
 func TestFormatTraceparent(t *testing.T) {
+	t.Parallel()
 	ctx := &TraceContext{
 		TraceID: "0af7651916cd43dd8448eb211c80319c",
 		SpanID:  "b7ad6b7169203331",
@@ -97,6 +100,7 @@ func TestFormatTraceparent(t *testing.T) {
 }
 
 func TestMessageTracerRecordAndGet(t *testing.T) {
+	t.Parallel()
 	mt := NewMessageTracer()
 	traceID := "abc123def456"
 
@@ -165,6 +169,7 @@ func TestMessageTracerRecordAndGet(t *testing.T) {
 }
 
 func TestMessageTracerGetTrace_NotFound(t *testing.T) {
+	t.Parallel()
 	mt := NewMessageTracer()
 	_, err := mt.GetTrace("nonexistent-trace")
 	if err == nil {
@@ -176,6 +181,7 @@ func TestMessageTracerGetTrace_NotFound(t *testing.T) {
 }
 
 func TestMessageTracerListTraces(t *testing.T) {
+	t.Parallel()
 	mt := NewMessageTracer()
 
 	// Empty tracer

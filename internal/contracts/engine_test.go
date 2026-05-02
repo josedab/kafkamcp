@@ -5,6 +5,7 @@ import (
 )
 
 func TestNewEngine(t *testing.T) {
+	t.Parallel()
 	e := NewEngine()
 	if e == nil {
 		t.Fatal("expected non-nil engine")
@@ -18,6 +19,7 @@ func TestNewEngine(t *testing.T) {
 }
 
 func TestRegisterContract(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		contract Contract
@@ -83,6 +85,7 @@ func TestRegisterContract(t *testing.T) {
 }
 
 func TestRegisterContractSetsTimestamps(t *testing.T) {
+	t.Parallel()
 	e := NewEngine()
 	c := Contract{
 		Name:    "test",
@@ -104,6 +107,7 @@ func TestRegisterContractSetsTimestamps(t *testing.T) {
 }
 
 func TestGetContract(t *testing.T) {
+	t.Parallel()
 	e := NewEngine()
 	_ = e.RegisterContract(Contract{
 		Name:    "orders",
@@ -134,6 +138,7 @@ func TestGetContract(t *testing.T) {
 }
 
 func TestListContracts(t *testing.T) {
+	t.Parallel()
 	e := NewEngine()
 
 	t.Run("empty", func(t *testing.T) {
@@ -155,6 +160,7 @@ func TestListContracts(t *testing.T) {
 }
 
 func TestValidateMessage_NoContract(t *testing.T) {
+	t.Parallel()
 	e := NewEngine()
 	result := e.ValidateMessage("unknown.topic", map[string]any{"key": "value"})
 	if result != nil {
@@ -163,6 +169,7 @@ func TestValidateMessage_NoContract(t *testing.T) {
 }
 
 func TestValidateMessage_NotNull(t *testing.T) {
+	t.Parallel()
 	e := NewEngine()
 	_ = e.RegisterContract(Contract{
 		Name:    "test",
@@ -196,6 +203,7 @@ func TestValidateMessage_NotNull(t *testing.T) {
 }
 
 func TestValidateMessage_Enum(t *testing.T) {
+	t.Parallel()
 	e := NewEngine()
 	_ = e.RegisterContract(Contract{
 		Name:    "test",
@@ -230,6 +238,7 @@ func TestValidateMessage_Enum(t *testing.T) {
 }
 
 func TestValidateMessage_Regex(t *testing.T) {
+	t.Parallel()
 	e := NewEngine()
 	_ = e.RegisterContract(Contract{
 		Name:    "test",
@@ -262,6 +271,7 @@ func TestValidateMessage_Regex(t *testing.T) {
 }
 
 func TestValidateMessage_MinLength(t *testing.T) {
+	t.Parallel()
 	e := NewEngine()
 	_ = e.RegisterContract(Contract{
 		Name:    "test",
@@ -295,6 +305,7 @@ func TestValidateMessage_MinLength(t *testing.T) {
 }
 
 func TestValidateMessage_MaxLength(t *testing.T) {
+	t.Parallel()
 	e := NewEngine()
 	_ = e.RegisterContract(Contract{
 		Name:    "test",
@@ -328,6 +339,7 @@ func TestValidateMessage_MaxLength(t *testing.T) {
 }
 
 func TestValidateMessage_MultipleRules(t *testing.T) {
+	t.Parallel()
 	e := NewEngine()
 	_ = e.RegisterContract(Contract{
 		Name:    "multi",
@@ -351,6 +363,7 @@ func TestValidateMessage_MultipleRules(t *testing.T) {
 }
 
 func TestValidateMessage_ResultFields(t *testing.T) {
+	t.Parallel()
 	e := NewEngine()
 	_ = e.RegisterContract(Contract{
 		Name:    "events",
@@ -378,6 +391,7 @@ func TestValidateMessage_ResultFields(t *testing.T) {
 }
 
 func TestGetComplianceReport(t *testing.T) {
+	t.Parallel()
 	e := NewEngine()
 	_ = e.RegisterContract(Contract{
 		Name:    "test",
@@ -436,6 +450,7 @@ func TestGetComplianceReport(t *testing.T) {
 }
 
 func TestValidateMessage_InvalidRegex(t *testing.T) {
+	t.Parallel()
 	e := NewEngine()
 	_ = e.RegisterContract(Contract{
 		Name:    "test",
@@ -454,6 +469,7 @@ func TestValidateMessage_InvalidRegex(t *testing.T) {
 }
 
 func TestValidateMessage_InvalidMinLengthValue(t *testing.T) {
+	t.Parallel()
 	e := NewEngine()
 	_ = e.RegisterContract(Contract{
 		Name:    "test",
@@ -472,6 +488,7 @@ func TestValidateMessage_InvalidMinLengthValue(t *testing.T) {
 }
 
 func TestValidateMessage_InvalidMaxLengthValue(t *testing.T) {
+	t.Parallel()
 	e := NewEngine()
 	_ = e.RegisterContract(Contract{
 		Name:    "test",
@@ -490,6 +507,7 @@ func TestValidateMessage_InvalidMaxLengthValue(t *testing.T) {
 }
 
 func TestRegisterContractOverwrite(t *testing.T) {
+	t.Parallel()
 	e := NewEngine()
 	_ = e.RegisterContract(Contract{Name: "v1", Version: "1.0", Topic: "t", Owner: "o"})
 	_ = e.RegisterContract(Contract{Name: "v2", Version: "2.0", Topic: "t", Owner: "o"})
@@ -501,6 +519,7 @@ func TestRegisterContractOverwrite(t *testing.T) {
 }
 
 func TestSplitCSV(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		input string
 		want  int

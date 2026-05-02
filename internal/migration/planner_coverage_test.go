@@ -7,6 +7,7 @@ import (
 // --- ExecutePlan ---
 
 func TestExecutePlanDryRun(t *testing.T) {
+	t.Parallel()
 	p := NewPlanner()
 	plan := p.CreatePlan("src", "tgt",
 		[]TopicInfo{{Name: "t1", Partitions: 3, ReplicationFactor: 1}},
@@ -31,6 +32,7 @@ func TestExecutePlanDryRun(t *testing.T) {
 }
 
 func TestExecutePlanActual(t *testing.T) {
+	t.Parallel()
 	p := NewPlanner()
 	plan := p.CreatePlan("src", "tgt",
 		[]TopicInfo{{Name: "t1", Partitions: 3, ReplicationFactor: 1}},
@@ -51,6 +53,7 @@ func TestExecutePlanActual(t *testing.T) {
 }
 
 func TestExecutePlanAlreadyCompleted(t *testing.T) {
+	t.Parallel()
 	p := NewPlanner()
 	plan := p.CreatePlan("src", "tgt",
 		[]TopicInfo{{Name: "t1", Partitions: 3, ReplicationFactor: 1}},
@@ -65,6 +68,7 @@ func TestExecutePlanAlreadyCompleted(t *testing.T) {
 }
 
 func TestExecutePlanNotFound(t *testing.T) {
+	t.Parallel()
 	p := NewPlanner()
 	_, err := p.ExecutePlan("nonexistent", false)
 	if err == nil {
@@ -73,6 +77,7 @@ func TestExecutePlanNotFound(t *testing.T) {
 }
 
 func TestExecutePlanWithConsumerGroups(t *testing.T) {
+	t.Parallel()
 	p := NewPlanner()
 	plan := p.CreatePlan("src", "tgt", []TopicInfo{}, []TopicInfo{})
 	plan.ConsumerGroups = []GroupMigration{
@@ -90,6 +95,7 @@ func TestExecutePlanWithConsumerGroups(t *testing.T) {
 }
 
 func TestExecutePlanWithSchemas(t *testing.T) {
+	t.Parallel()
 	p := NewPlanner()
 	plan := p.CreatePlan("src", "tgt", []TopicInfo{}, []TopicInfo{})
 	plan.SchemaSubjects = []SchemaMigration{
@@ -109,6 +115,7 @@ func TestExecutePlanWithSchemas(t *testing.T) {
 // --- Rollback ---
 
 func TestRollbackCompleted(t *testing.T) {
+	t.Parallel()
 	p := NewPlanner()
 	plan := p.CreatePlan("src", "tgt",
 		[]TopicInfo{{Name: "t1", Partitions: 3, ReplicationFactor: 1}},
@@ -130,6 +137,7 @@ func TestRollbackCompleted(t *testing.T) {
 }
 
 func TestRollbackPendingError(t *testing.T) {
+	t.Parallel()
 	p := NewPlanner()
 	plan := p.CreatePlan("src", "tgt",
 		[]TopicInfo{{Name: "t1", Partitions: 3, ReplicationFactor: 1}},
@@ -145,6 +153,7 @@ func TestRollbackPendingError(t *testing.T) {
 }
 
 func TestRollbackAlreadyRolledBack(t *testing.T) {
+	t.Parallel()
 	p := NewPlanner()
 	plan := p.CreatePlan("src", "tgt",
 		[]TopicInfo{{Name: "t1", Partitions: 3, ReplicationFactor: 1}},
@@ -160,6 +169,7 @@ func TestRollbackAlreadyRolledBack(t *testing.T) {
 }
 
 func TestRollbackNoRecord(t *testing.T) {
+	t.Parallel()
 	p := NewPlanner()
 	_, err := p.Rollback("nonexistent")
 	if err == nil {
@@ -170,6 +180,7 @@ func TestRollbackNoRecord(t *testing.T) {
 // --- MapOffsets ---
 
 func TestMapOffsetsEarliest(t *testing.T) {
+	t.Parallel()
 	p := NewPlanner()
 	plan := p.CreatePlan("src", "tgt", []TopicInfo{{Name: "t1", Partitions: 1, ReplicationFactor: 1}}, nil)
 
@@ -186,6 +197,7 @@ func TestMapOffsetsEarliest(t *testing.T) {
 }
 
 func TestMapOffsetsLatest(t *testing.T) {
+	t.Parallel()
 	p := NewPlanner()
 	plan := p.CreatePlan("src", "tgt", []TopicInfo{{Name: "t1", Partitions: 1, ReplicationFactor: 1}}, nil)
 
@@ -200,6 +212,7 @@ func TestMapOffsetsLatest(t *testing.T) {
 }
 
 func TestMapOffsetsTranslate(t *testing.T) {
+	t.Parallel()
 	p := NewPlanner()
 	plan := p.CreatePlan("src", "tgt", []TopicInfo{{Name: "t1", Partitions: 1, ReplicationFactor: 1}}, nil)
 
@@ -214,6 +227,7 @@ func TestMapOffsetsTranslate(t *testing.T) {
 }
 
 func TestMapOffsetsUnknownStrategy(t *testing.T) {
+	t.Parallel()
 	p := NewPlanner()
 	plan := p.CreatePlan("src", "tgt", []TopicInfo{{Name: "t1", Partitions: 1, ReplicationFactor: 1}}, nil)
 
@@ -224,6 +238,7 @@ func TestMapOffsetsUnknownStrategy(t *testing.T) {
 }
 
 func TestMapOffsetsNonexistentPlan(t *testing.T) {
+	t.Parallel()
 	p := NewPlanner()
 	_, err := p.MapOffsets("nonexistent", "t1", map[int32]int64{0: 1}, "earliest")
 	if err == nil {
@@ -232,6 +247,7 @@ func TestMapOffsetsNonexistentPlan(t *testing.T) {
 }
 
 func TestMapOffsetsEmptyOffsets(t *testing.T) {
+	t.Parallel()
 	p := NewPlanner()
 	plan := p.CreatePlan("src", "tgt", []TopicInfo{{Name: "t1", Partitions: 1, ReplicationFactor: 1}}, nil)
 
@@ -247,6 +263,7 @@ func TestMapOffsetsEmptyOffsets(t *testing.T) {
 // --- GetProgress ---
 
 func TestGetProgressValid(t *testing.T) {
+	t.Parallel()
 	p := NewPlanner()
 	plan := p.CreatePlan("src", "tgt",
 		[]TopicInfo{{Name: "t1", Partitions: 3, ReplicationFactor: 1}},
@@ -264,6 +281,7 @@ func TestGetProgressValid(t *testing.T) {
 }
 
 func TestGetProgressNotFound(t *testing.T) {
+	t.Parallel()
 	p := NewPlanner()
 	_, err := p.GetProgress("nonexistent")
 	if err == nil {
@@ -274,6 +292,7 @@ func TestGetProgressNotFound(t *testing.T) {
 // --- GetReport ---
 
 func TestGetReportValid(t *testing.T) {
+	t.Parallel()
 	p := NewPlanner()
 	plan := p.CreatePlan("src", "tgt",
 		[]TopicInfo{{Name: "t1", Partitions: 3, ReplicationFactor: 1}},
@@ -291,6 +310,7 @@ func TestGetReportValid(t *testing.T) {
 }
 
 func TestGetReportNotFound(t *testing.T) {
+	t.Parallel()
 	p := NewPlanner()
 	_, err := p.GetReport("nonexistent")
 	if err == nil {
@@ -301,12 +321,14 @@ func TestGetReportNotFound(t *testing.T) {
 // --- countNonSkipped helpers ---
 
 func TestCountNonSkippedEmpty(t *testing.T) {
+	t.Parallel()
 	if countNonSkipped(nil) != 0 {
 		t.Error("expected 0 for nil topics")
 	}
 }
 
 func TestCountNonSkippedAllSkipped(t *testing.T) {
+	t.Parallel()
 	topics := []TopicMigration{
 		{Action: "skip"}, {Action: "skip"},
 	}
@@ -316,6 +338,7 @@ func TestCountNonSkippedAllSkipped(t *testing.T) {
 }
 
 func TestCountNonSkippedMixed(t *testing.T) {
+	t.Parallel()
 	topics := []TopicMigration{
 		{Action: "create"}, {Action: "skip"}, {Action: "update"},
 	}
@@ -325,12 +348,14 @@ func TestCountNonSkippedMixed(t *testing.T) {
 }
 
 func TestCountNonSkippedGroupsEmpty(t *testing.T) {
+	t.Parallel()
 	if countNonSkippedGroups(nil) != 0 {
 		t.Error("expected 0")
 	}
 }
 
 func TestCountNonSkippedGroupsMixed(t *testing.T) {
+	t.Parallel()
 	groups := []GroupMigration{
 		{Action: "recreate"}, {Action: "skip"},
 	}
@@ -340,12 +365,14 @@ func TestCountNonSkippedGroupsMixed(t *testing.T) {
 }
 
 func TestCountNonSkippedSchemasEmpty(t *testing.T) {
+	t.Parallel()
 	if countNonSkippedSchemas(nil) != 0 {
 		t.Error("expected 0")
 	}
 }
 
 func TestCountNonSkippedSchemasMixed(t *testing.T) {
+	t.Parallel()
 	schemas := []SchemaMigration{
 		{Action: "migrate"}, {Action: "skip"}, {Action: "migrate"},
 	}
@@ -357,6 +384,7 @@ func TestCountNonSkippedSchemasMixed(t *testing.T) {
 // --- Edge cases ---
 
 func TestExecutePlanSkippedTopics(t *testing.T) {
+	t.Parallel()
 	p := NewPlanner()
 	// Create plan where source and target match → skip
 	plan := p.CreatePlan("src", "tgt",
@@ -374,6 +402,7 @@ func TestExecutePlanSkippedTopics(t *testing.T) {
 }
 
 func TestNegativePartitionWarning(t *testing.T) {
+	t.Parallel()
 	p := NewPlanner()
 	plan := p.CreatePlan("src", "tgt",
 		[]TopicInfo{{Name: "bad", Partitions: -1, ReplicationFactor: 0}},
@@ -385,6 +414,7 @@ func TestNegativePartitionWarning(t *testing.T) {
 }
 
 func TestNilPlan(t *testing.T) {
+	t.Parallel()
 	warnings := ValidatePlan(&MigrationPlan{})
 	if len(warnings) < 2 {
 		t.Error("expected warnings for empty source and target clusters")

@@ -19,6 +19,7 @@ func newTestTracker() *Tracker {
 }
 
 func TestNewTracker(t *testing.T) {
+	t.Parallel()
 	tr := NewTracker()
 	if tr == nil {
 		t.Fatal("expected non-nil tracker")
@@ -29,6 +30,7 @@ func TestNewTracker(t *testing.T) {
 }
 
 func TestAddNode(t *testing.T) {
+	t.Parallel()
 	tr := NewTracker()
 	tr.AddNode(LineageNode{ID: "n1", Name: "node1", Type: "topic", Metadata: map[string]any{"key": "val"}})
 	if len(tr.nodes) != 1 {
@@ -41,6 +43,7 @@ func TestAddNode(t *testing.T) {
 }
 
 func TestAddEdge(t *testing.T) {
+	t.Parallel()
 	tr := NewTracker()
 	tr.AddEdge(LineageEdge{Source: "a", Target: "b", Type: "produces", Latency: "10ms"})
 	if len(tr.edges) != 1 {
@@ -52,6 +55,7 @@ func TestAddEdge(t *testing.T) {
 }
 
 func TestAnnotatePII(t *testing.T) {
+	t.Parallel()
 	tr := NewTracker()
 	tr.AnnotatePII(PIIAnnotation{Topic: "users", Field: "email", PIIType: "email", DetectedBy: "annotation"})
 	if len(tr.piiFields) != 1 {
@@ -60,6 +64,7 @@ func TestAnnotatePII(t *testing.T) {
 }
 
 func TestGetUpstream(t *testing.T) {
+	t.Parallel()
 	tr := newTestTracker()
 	upstream := tr.GetUpstream("topic-users")
 	if len(upstream) != 1 {
@@ -71,6 +76,7 @@ func TestGetUpstream(t *testing.T) {
 }
 
 func TestGetUpstream_NoResults(t *testing.T) {
+	t.Parallel()
 	tr := newTestTracker()
 	upstream := tr.GetUpstream("producer-1")
 	if len(upstream) != 0 {
@@ -79,6 +85,7 @@ func TestGetUpstream_NoResults(t *testing.T) {
 }
 
 func TestGetDownstream(t *testing.T) {
+	t.Parallel()
 	tr := newTestTracker()
 	downstream := tr.GetDownstream("topic-users")
 	if len(downstream) != 2 {
@@ -94,6 +101,7 @@ func TestGetDownstream(t *testing.T) {
 }
 
 func TestGetDownstream_NoResults(t *testing.T) {
+	t.Parallel()
 	tr := newTestTracker()
 	downstream := tr.GetDownstream("consumer-1")
 	if len(downstream) != 0 {
@@ -102,6 +110,7 @@ func TestGetDownstream_NoResults(t *testing.T) {
 }
 
 func TestTraceLineage(t *testing.T) {
+	t.Parallel()
 	tr := newTestTracker()
 	tr.AnnotatePII(PIIAnnotation{Topic: "topic-users", Field: "email", PIIType: "email", DetectedBy: "annotation"})
 
@@ -118,6 +127,7 @@ func TestTraceLineage(t *testing.T) {
 }
 
 func TestTraceLineage_Isolated(t *testing.T) {
+	t.Parallel()
 	tr := NewTracker()
 	tr.AddNode(LineageNode{ID: "isolated", Name: "isolated-topic", Type: "topic"})
 	graph := tr.TraceLineage("isolated")
@@ -130,6 +140,7 @@ func TestTraceLineage_Isolated(t *testing.T) {
 }
 
 func TestTraceLineage_UnknownTopic(t *testing.T) {
+	t.Parallel()
 	tr := NewTracker()
 	graph := tr.TraceLineage("nonexistent")
 	if len(graph.Nodes) != 0 {
@@ -138,6 +149,7 @@ func TestTraceLineage_UnknownTopic(t *testing.T) {
 }
 
 func TestGenerateComplianceReport(t *testing.T) {
+	t.Parallel()
 	tr := newTestTracker()
 	tr.AnnotatePII(PIIAnnotation{Topic: "topic-users", Field: "email", PIIType: "email", DetectedBy: "pattern"})
 	tr.AnnotatePII(PIIAnnotation{Topic: "topic-users", Field: "phone", PIIType: "phone", DetectedBy: "annotation"})
@@ -168,6 +180,7 @@ func TestGenerateComplianceReport(t *testing.T) {
 }
 
 func TestGenerateComplianceReport_NoPII(t *testing.T) {
+	t.Parallel()
 	tr := newTestTracker()
 	report := tr.GenerateComplianceReport("CCPA")
 	if report.Framework != "CCPA" {
@@ -179,6 +192,7 @@ func TestGenerateComplianceReport_NoPII(t *testing.T) {
 }
 
 func TestDetectPIIPatterns_FieldName(t *testing.T) {
+	t.Parallel()
 	tr := NewTracker()
 	samples := map[string][]string{
 		"email_address": {"not-an-email"},
@@ -207,6 +221,7 @@ func TestDetectPIIPatterns_FieldName(t *testing.T) {
 }
 
 func TestDetectPIIPatterns_ValueMatch(t *testing.T) {
+	t.Parallel()
 	tr := NewTracker()
 	samples := map[string][]string{
 		"contact":    {"user@example.com"},
@@ -227,6 +242,7 @@ func TestDetectPIIPatterns_ValueMatch(t *testing.T) {
 }
 
 func TestDetectPIIPatterns_NoMatch(t *testing.T) {
+	t.Parallel()
 	tr := NewTracker()
 	samples := map[string][]string{
 		"count":  {"42"},
@@ -239,6 +255,7 @@ func TestDetectPIIPatterns_NoMatch(t *testing.T) {
 }
 
 func TestBuildDeletionPath(t *testing.T) {
+	t.Parallel()
 	path := buildDeletionPath("topic-users", []string{"AnalyticsService", "NotificationService"})
 	if !strings.Contains(path, "topic-users") {
 		t.Fatal("expected deletion path to contain topic")
@@ -249,6 +266,7 @@ func TestBuildDeletionPath(t *testing.T) {
 }
 
 func TestBuildDeletionPath_NoConsumers(t *testing.T) {
+	t.Parallel()
 	path := buildDeletionPath("topic-orphan", nil)
 	if path != "topic-orphan" {
 		t.Fatalf("expected 'topic-orphan', got %s", path)
@@ -256,6 +274,7 @@ func TestBuildDeletionPath_NoConsumers(t *testing.T) {
 }
 
 func TestDuplicateEdgesInTraceLineage(t *testing.T) {
+	t.Parallel()
 	tr := NewTracker()
 	tr.AddNode(LineageNode{ID: "a", Name: "a", Type: "topic"})
 	tr.AddNode(LineageNode{ID: "b", Name: "b", Type: "consumer"})
@@ -269,6 +288,7 @@ func TestDuplicateEdgesInTraceLineage(t *testing.T) {
 }
 
 func TestGetUpstream_Deduplication(t *testing.T) {
+	t.Parallel()
 	tr := NewTracker()
 	tr.AddNode(LineageNode{ID: "p", Name: "Producer", Type: "producer"})
 	tr.AddNode(LineageNode{ID: "t", Name: "Topic", Type: "topic"})

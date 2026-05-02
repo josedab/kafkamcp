@@ -10,6 +10,7 @@ func newTestAdvisor() *Advisor {
 }
 
 func TestRecordAndGetHistory(t *testing.T) {
+	t.Parallel()
 	a := newTestAdvisor()
 	a.RecordVersion("user-value", 1, `{"name":"user","type":"record","fields":[]}`, "AVRO")
 	a.RecordVersion("user-value", 2, `{"name":"user","type":"record","fields":[]}`, "AVRO")
@@ -27,6 +28,7 @@ func TestRecordAndGetHistory(t *testing.T) {
 }
 
 func TestPredictCompatibilityNoHistory(t *testing.T) {
+	t.Parallel()
 	a := newTestAdvisor()
 	pred := a.PredictCompatibility("new-subject", `{}`, "AVRO", CompatBackward)
 	if !pred.IsCompatible {
@@ -38,6 +40,7 @@ func TestPredictCompatibilityNoHistory(t *testing.T) {
 }
 
 func TestPredictCompatibilityBreaking(t *testing.T) {
+	t.Parallel()
 	a := newTestAdvisor()
 
 	v1 := `{"name":"user","type":"record","fields":[
@@ -64,6 +67,7 @@ func TestPredictCompatibilityBreaking(t *testing.T) {
 }
 
 func TestPredictCompatibilityAddOptionalField(t *testing.T) {
+	t.Parallel()
 	a := newTestAdvisor()
 
 	v1 := `{"name":"user","type":"record","fields":[
@@ -82,6 +86,7 @@ func TestPredictCompatibilityAddOptionalField(t *testing.T) {
 }
 
 func TestGenerateMigrationPlan(t *testing.T) {
+	t.Parallel()
 	a := newTestAdvisor()
 	a.RecordVersion("user-value", 1, `{}`, "AVRO")
 	a.RecordVersion("user-value", 2, `{}`, "AVRO")
@@ -111,6 +116,7 @@ func TestGenerateMigrationPlan(t *testing.T) {
 }
 
 func TestAnalyzeEvolution(t *testing.T) {
+	t.Parallel()
 	a := newTestAdvisor()
 
 	v1 := `{"name":"user","type":"record","fields":[
@@ -150,6 +156,7 @@ func TestAnalyzeEvolution(t *testing.T) {
 }
 
 func TestListSubjects(t *testing.T) {
+	t.Parallel()
 	a := newTestAdvisor()
 	a.RecordVersion("subject-a", 1, `{}`, "AVRO")
 	a.RecordVersion("subject-b", 1, `{}`, "AVRO")

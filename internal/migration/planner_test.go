@@ -5,6 +5,7 @@ import (
 )
 
 func TestNewPlanner(t *testing.T) {
+	t.Parallel()
 	p := NewPlanner()
 	if p == nil {
 		t.Fatal("expected non-nil planner")
@@ -15,6 +16,7 @@ func TestNewPlanner(t *testing.T) {
 }
 
 func TestCreatePlan_NewTopics(t *testing.T) {
+	t.Parallel()
 	p := NewPlanner()
 	source := []TopicInfo{
 		{Name: "orders", Partitions: 6, ReplicationFactor: 3, Configs: map[string]string{"retention.ms": "86400000"}},
@@ -40,6 +42,7 @@ func TestCreatePlan_NewTopics(t *testing.T) {
 }
 
 func TestCreatePlan_SkipMatchingTopics(t *testing.T) {
+	t.Parallel()
 	p := NewPlanner()
 	topics := []TopicInfo{
 		{Name: "events", Partitions: 3, ReplicationFactor: 2, Configs: map[string]string{"cleanup.policy": "compact"}},
@@ -56,6 +59,7 @@ func TestCreatePlan_SkipMatchingTopics(t *testing.T) {
 }
 
 func TestCreatePlan_UpdateDifferingTopics(t *testing.T) {
+	t.Parallel()
 	p := NewPlanner()
 	source := []TopicInfo{
 		{Name: "logs", Partitions: 12, ReplicationFactor: 3, Configs: map[string]string{"retention.ms": "604800000"}},
@@ -75,6 +79,7 @@ func TestCreatePlan_UpdateDifferingTopics(t *testing.T) {
 }
 
 func TestCreatePlan_ConfigDiff(t *testing.T) {
+	t.Parallel()
 	p := NewPlanner()
 	source := []TopicInfo{
 		{Name: "metrics", Partitions: 3, ReplicationFactor: 1, Configs: map[string]string{"retention.ms": "3600000"}},
@@ -91,6 +96,7 @@ func TestCreatePlan_ConfigDiff(t *testing.T) {
 }
 
 func TestCreatePlan_MultipleTopics(t *testing.T) {
+	t.Parallel()
 	p := NewPlanner()
 	source := []TopicInfo{
 		{Name: "new-topic", Partitions: 4, ReplicationFactor: 2},
@@ -124,6 +130,7 @@ func TestCreatePlan_MultipleTopics(t *testing.T) {
 }
 
 func TestGetPlan(t *testing.T) {
+	t.Parallel()
 	p := NewPlanner()
 	plan := p.CreatePlan("a", "b", nil, nil)
 
@@ -137,6 +144,7 @@ func TestGetPlan(t *testing.T) {
 }
 
 func TestGetPlan_NotFound(t *testing.T) {
+	t.Parallel()
 	p := NewPlanner()
 
 	_, err := p.GetPlan("nonexistent")
@@ -146,6 +154,7 @@ func TestGetPlan_NotFound(t *testing.T) {
 }
 
 func TestListPlans(t *testing.T) {
+	t.Parallel()
 	p := NewPlanner()
 	p.CreatePlan("a", "b", nil, nil)
 	p.CreatePlan("c", "d", nil, nil)
@@ -157,6 +166,7 @@ func TestListPlans(t *testing.T) {
 }
 
 func TestValidatePlan_EmptySource(t *testing.T) {
+	t.Parallel()
 	warnings := ValidatePlan(&MigrationPlan{TargetCluster: "tgt"})
 
 	found := false
@@ -171,6 +181,7 @@ func TestValidatePlan_EmptySource(t *testing.T) {
 }
 
 func TestValidatePlan_SameCluster(t *testing.T) {
+	t.Parallel()
 	warnings := ValidatePlan(&MigrationPlan{SourceCluster: "same", TargetCluster: "same"})
 
 	found := false
@@ -185,6 +196,7 @@ func TestValidatePlan_SameCluster(t *testing.T) {
 }
 
 func TestValidatePlan_InvalidPartitions(t *testing.T) {
+	t.Parallel()
 	plan := &MigrationPlan{
 		SourceCluster: "src",
 		TargetCluster: "tgt",
@@ -200,6 +212,7 @@ func TestValidatePlan_InvalidPartitions(t *testing.T) {
 }
 
 func TestValidatePlan_InvalidReplicationFactor(t *testing.T) {
+	t.Parallel()
 	plan := &MigrationPlan{
 		SourceCluster: "src",
 		TargetCluster: "tgt",
@@ -215,6 +228,7 @@ func TestValidatePlan_InvalidReplicationFactor(t *testing.T) {
 }
 
 func TestValidatePlan_NoWarnings(t *testing.T) {
+	t.Parallel()
 	plan := &MigrationPlan{
 		SourceCluster: "src",
 		TargetCluster: "tgt",
@@ -230,6 +244,7 @@ func TestValidatePlan_NoWarnings(t *testing.T) {
 }
 
 func TestMapsEqual(t *testing.T) {
+	t.Parallel()
 	if !mapsEqual(nil, nil) {
 		t.Error("nil maps should be equal")
 	}

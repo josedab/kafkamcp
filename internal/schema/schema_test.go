@@ -6,6 +6,7 @@ import (
 )
 
 func TestCacheSetAndGet(t *testing.T) {
+	t.Parallel()
 	c := NewCache(100, 5*time.Minute)
 	info := &SchemaInfo{Subject: "test", Version: 1, SchemaID: 42, SchemaType: "AVRO"}
 
@@ -20,6 +21,7 @@ func TestCacheSetAndGet(t *testing.T) {
 }
 
 func TestCacheMiss(t *testing.T) {
+	t.Parallel()
 	c := NewCache(100, 5*time.Minute)
 	_, ok := c.Get("nonexistent")
 	if ok {
@@ -28,6 +30,7 @@ func TestCacheMiss(t *testing.T) {
 }
 
 func TestCacheTTLExpiry(t *testing.T) {
+	t.Parallel()
 	c := NewCache(100, 1*time.Millisecond)
 	info := &SchemaInfo{Subject: "test", Version: 1}
 	c.Set("test:1", info)
@@ -40,6 +43,7 @@ func TestCacheTTLExpiry(t *testing.T) {
 }
 
 func TestCacheEviction(t *testing.T) {
+	t.Parallel()
 	c := NewCache(2, 5*time.Minute)
 	c.Set("a", &SchemaInfo{Subject: "a"})
 	c.Set("b", &SchemaInfo{Subject: "b"})
@@ -52,6 +56,7 @@ func TestCacheEviction(t *testing.T) {
 }
 
 func TestGenerateFieldSummary(t *testing.T) {
+	t.Parallel()
 	schema := map[string]any{
 		"type": "record",
 		"name": "Order",
@@ -72,6 +77,7 @@ func TestGenerateFieldSummary(t *testing.T) {
 }
 
 func TestGenerateFieldSummaryNonAvro(t *testing.T) {
+	t.Parallel()
 	summary := generateFieldSummary(map[string]any{}, "PROTOBUF")
 	if summary != "(PROTOBUF schema)" {
 		t.Errorf("unexpected summary for protobuf: %s", summary)
@@ -79,6 +85,7 @@ func TestGenerateFieldSummaryNonAvro(t *testing.T) {
 }
 
 func TestFormatAvroType(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name string
 		typ  any

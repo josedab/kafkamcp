@@ -8,6 +8,7 @@ import (
 // ---------- Propose ----------
 
 func TestWorkflowEnginePropose(t *testing.T) {
+	t.Parallel()
 	t.Run("valid proposal without current schema", func(t *testing.T) {
 		w := NewWorkflowEngine()
 		p, err := w.Propose("user-value", `{"fields":[]}`, "AVRO", "alice", nil, 0, nil, nil)
@@ -116,6 +117,7 @@ func TestWorkflowEnginePropose(t *testing.T) {
 // ---------- Review ----------
 
 func TestWorkflowEngineReview(t *testing.T) {
+	t.Parallel()
 	setup := func(t *testing.T) (*WorkflowEngine, string) {
 		t.Helper()
 		w := NewWorkflowEngine()
@@ -198,6 +200,7 @@ func TestWorkflowEngineReview(t *testing.T) {
 // ---------- MarkApplied ----------
 
 func TestWorkflowEngineApply(t *testing.T) {
+	t.Parallel()
 	t.Run("mark approved proposal as applied", func(t *testing.T) {
 		w := NewWorkflowEngine()
 		p, _ := w.Propose("test-value", `{}`, "AVRO", "alice", nil, 0, nil, nil)
@@ -244,6 +247,7 @@ func TestWorkflowEngineApply(t *testing.T) {
 // ---------- MarkRolledBack ----------
 
 func TestWorkflowEngineRollback(t *testing.T) {
+	t.Parallel()
 	t.Run("roll back applied proposal", func(t *testing.T) {
 		w := NewWorkflowEngine()
 		p, _ := w.Propose("test-value", `{}`, "AVRO", "alice", nil, 0, nil, nil)
@@ -296,6 +300,7 @@ func TestWorkflowEngineRollback(t *testing.T) {
 // ---------- ListProposals ----------
 
 func TestWorkflowEngineListProposals(t *testing.T) {
+	t.Parallel()
 	t.Run("list all proposals", func(t *testing.T) {
 		w := NewWorkflowEngine()
 		w.Propose("a-value", `{}`, "AVRO", "alice", nil, 0, nil, nil)
@@ -346,6 +351,7 @@ func TestWorkflowEngineListProposals(t *testing.T) {
 // ---------- Additional Edge Cases ----------
 
 func TestWorkflowEnginePropose_ConcurrentSameSubject(t *testing.T) {
+	t.Parallel()
 	w := NewWorkflowEngine()
 	p1, err := w.Propose("user-value", `{"fields":[]}`, "AVRO", "alice", nil, 0, nil, nil)
 	if err != nil {
@@ -365,6 +371,7 @@ func TestWorkflowEnginePropose_ConcurrentSameSubject(t *testing.T) {
 }
 
 func TestWorkflowEnginePropose_EmptyDiff(t *testing.T) {
+	t.Parallel()
 	w := NewWorkflowEngine()
 	currentSchema := map[string]any{
 		"fields": []any{
@@ -385,6 +392,7 @@ func TestWorkflowEnginePropose_EmptyDiff(t *testing.T) {
 }
 
 func TestWorkflowEngineReview_RejectAfterApply(t *testing.T) {
+	t.Parallel()
 	w := NewWorkflowEngine()
 	p, _ := w.Propose("test-value", `{}`, "AVRO", "alice", nil, 0, nil, nil)
 	w.Review(p.ID, "bob", "approve", "")
@@ -400,6 +408,7 @@ func TestWorkflowEngineReview_RejectAfterApply(t *testing.T) {
 }
 
 func TestWorkflowEngineGetProposal_NotFound(t *testing.T) {
+	t.Parallel()
 	w := NewWorkflowEngine()
 	_, err := w.GetProposal("nonexistent")
 	if err == nil {
@@ -411,6 +420,7 @@ func TestWorkflowEngineGetProposal_NotFound(t *testing.T) {
 }
 
 func TestWorkflowEngine_FullLifecycle(t *testing.T) {
+	t.Parallel()
 	w := NewWorkflowEngine()
 
 	// propose → approve → apply → rollback
@@ -444,6 +454,7 @@ func TestWorkflowEngine_FullLifecycle(t *testing.T) {
 }
 
 func TestWorkflowEngineApply_AlreadyApplied(t *testing.T) {
+	t.Parallel()
 	w := NewWorkflowEngine()
 	p, _ := w.Propose("test-value", `{}`, "AVRO", "alice", nil, 0, nil, nil)
 	w.Review(p.ID, "bob", "approve", "")
@@ -459,6 +470,7 @@ func TestWorkflowEngineApply_AlreadyApplied(t *testing.T) {
 }
 
 func TestWorkflowEngineRollback_AlreadyRolledBack(t *testing.T) {
+	t.Parallel()
 	w := NewWorkflowEngine()
 	p, _ := w.Propose("test-value", `{}`, "AVRO", "alice", nil, 0, nil, nil)
 	w.Review(p.ID, "bob", "approve", "")
@@ -475,6 +487,7 @@ func TestWorkflowEngineRollback_AlreadyRolledBack(t *testing.T) {
 }
 
 func TestWorkflowEngineListProposals_SortedByTime(t *testing.T) {
+	t.Parallel()
 	w := NewWorkflowEngine()
 	w.Propose("a-value", `{}`, "AVRO", "alice", nil, 0, nil, nil)
 	w.Propose("b-value", `{}`, "AVRO", "bob", nil, 0, nil, nil)
@@ -493,6 +506,7 @@ func TestWorkflowEngineListProposals_SortedByTime(t *testing.T) {
 }
 
 func TestWorkflowEnginePropose_BreakingChange(t *testing.T) {
+	t.Parallel()
 	w := NewWorkflowEngine()
 	currentSchema := map[string]any{
 		"fields": []any{

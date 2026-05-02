@@ -12,6 +12,7 @@ import (
 )
 
 func TestListSubjectsDetailed_AllSucceed(t *testing.T) {
+	t.Parallel()
 	avroSchema := `{"type":"record","name":"User","fields":[{"name":"id","type":"int"}]}`
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -92,6 +93,7 @@ func TestListSubjectsDetailed_AllSucceed(t *testing.T) {
 }
 
 func TestListSubjectsDetailed_PartialFailure(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
@@ -145,6 +147,7 @@ func TestListSubjectsDetailed_PartialFailure(t *testing.T) {
 }
 
 func TestListSubjectsDetailed_EmptySubjects(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode([]string{})
@@ -162,6 +165,7 @@ func TestListSubjectsDetailed_EmptySubjects(t *testing.T) {
 }
 
 func TestListSubjectsDetailed_SemaphoreLimiting(t *testing.T) {
+	t.Parallel()
 	// Create 15 subjects to test the semaphore (limit: 10 concurrent)
 	numSubjects := 15
 	subjectNames := make([]string, numSubjects)
@@ -222,6 +226,7 @@ func TestListSubjectsDetailed_SemaphoreLimiting(t *testing.T) {
 }
 
 func TestListSubjectsDetailed_CompatibilityParsing(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
@@ -267,6 +272,7 @@ func TestListSubjectsDetailed_CompatibilityParsing(t *testing.T) {
 }
 
 func TestListSubjectsDetailed_ListError(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}))

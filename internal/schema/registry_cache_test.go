@@ -12,6 +12,7 @@ import (
 // ---------- NewClient ----------
 
 func TestNewClient_HTTPSWarning(t *testing.T) {
+	t.Parallel()
 	// Non-HTTPS with credentials should still create a client (just logs warning)
 	c, _ := NewClient("http://localhost:8081", "", "", 100, 60)
 	if c == nil {
@@ -23,6 +24,7 @@ func TestNewClient_HTTPSWarning(t *testing.T) {
 }
 
 func TestNewClient_TrailingSlash(t *testing.T) {
+	t.Parallel()
 	c, _ := NewClient("http://localhost:8081/", "", "", 0, 0)
 	if c.baseURL != "http://localhost:8081" {
 		t.Errorf("baseURL = %q, want trailing slash trimmed", c.baseURL)
@@ -30,6 +32,7 @@ func TestNewClient_TrailingSlash(t *testing.T) {
 }
 
 func TestNewClient_DefaultCacheParams(t *testing.T) {
+	t.Parallel()
 	c, _ := NewClient("http://localhost:8081", "", "", 0, 0)
 	stats := c.cache.Stats()
 	if stats.MaxEntries != 10000 {
@@ -40,6 +43,7 @@ func TestNewClient_DefaultCacheParams(t *testing.T) {
 // ---------- GetSubjectVersions ----------
 
 func TestGetSubjectVersions_Success(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/subjects/orders-value/versions" {
 			json.NewEncoder(w).Encode([]int{1, 2, 3})
@@ -63,6 +67,7 @@ func TestGetSubjectVersions_Success(t *testing.T) {
 }
 
 func TestGetSubjectVersions_NotFound(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	}))
@@ -78,6 +83,7 @@ func TestGetSubjectVersions_NotFound(t *testing.T) {
 // ---------- GetLatestSchema ----------
 
 func TestGetLatestSchema_Success(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/subjects/orders-value/versions/latest":
@@ -118,6 +124,7 @@ func TestGetLatestSchema_Success(t *testing.T) {
 // ---------- IsAvailable ----------
 
 func TestIsAvailable_True(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode([]string{"subject-a"})
 	}))
@@ -130,6 +137,7 @@ func TestIsAvailable_True(t *testing.T) {
 }
 
 func TestIsAvailable_False(t *testing.T) {
+	t.Parallel()
 	c, _ := NewClient("http://127.0.0.1:1", "", "", 100, 60)
 	c.httpClient.Timeout = 100 * time.Millisecond
 	if c.IsAvailable(context.Background()) {
@@ -138,6 +146,7 @@ func TestIsAvailable_False(t *testing.T) {
 }
 
 func TestIsAvailable_EmptyURL(t *testing.T) {
+	t.Parallel()
 	c := &Client{baseURL: ""}
 	if c.IsAvailable(context.Background()) {
 		t.Error("expected IsAvailable to return false for empty URL")
@@ -147,6 +156,7 @@ func TestIsAvailable_EmptyURL(t *testing.T) {
 // ---------- generateFieldSummary ----------
 
 func TestGenerateFieldSummary_Avro(t *testing.T) {
+	t.Parallel()
 	schema := map[string]any{
 		"type": "record",
 		"name": "Order",
@@ -171,6 +181,7 @@ func TestGenerateFieldSummary_Avro(t *testing.T) {
 }
 
 func TestGenerateFieldSummary_NonAvro(t *testing.T) {
+	t.Parallel()
 	result := generateFieldSummary("some schema", "PROTOBUF")
 	if result != "(PROTOBUF schema)" {
 		t.Errorf("result = %q, want %q", result, "(PROTOBUF schema)")
@@ -178,6 +189,7 @@ func TestGenerateFieldSummary_NonAvro(t *testing.T) {
 }
 
 func TestGenerateFieldSummary_NoFields(t *testing.T) {
+	t.Parallel()
 	schema := map[string]any{"name": "Empty"}
 	result := generateFieldSummary(schema, "AVRO")
 	if result != "Empty" {
@@ -186,6 +198,7 @@ func TestGenerateFieldSummary_NoFields(t *testing.T) {
 }
 
 func TestGenerateFieldSummary_NotMap(t *testing.T) {
+	t.Parallel()
 	result := generateFieldSummary("not a map", "AVRO")
 	if result != "" {
 		t.Errorf("result = %q, want empty", result)
@@ -195,6 +208,7 @@ func TestGenerateFieldSummary_NotMap(t *testing.T) {
 // ---------- formatAvroType ----------
 
 func TestFormatAvroType_String(t *testing.T) {
+	t.Parallel()
 	result := formatAvroType("string", 0)
 	if result != "string" {
 		t.Errorf("result = %q, want %q", result, "string")
@@ -202,6 +216,7 @@ func TestFormatAvroType_String(t *testing.T) {
 }
 
 func TestFormatAvroType_Array(t *testing.T) {
+	t.Parallel()
 	result := formatAvroType(map[string]any{
 		"type":  "array",
 		"items": "string",
@@ -212,6 +227,7 @@ func TestFormatAvroType_Array(t *testing.T) {
 }
 
 func TestFormatAvroType_Map(t *testing.T) {
+	t.Parallel()
 	result := formatAvroType(map[string]any{
 		"type":   "map",
 		"values": "int",
@@ -222,6 +238,7 @@ func TestFormatAvroType_Map(t *testing.T) {
 }
 
 func TestFormatAvroType_LogicalType(t *testing.T) {
+	t.Parallel()
 	result := formatAvroType(map[string]any{
 		"type":        "long",
 		"logicalType": "timestamp-millis",
@@ -232,6 +249,7 @@ func TestFormatAvroType_LogicalType(t *testing.T) {
 }
 
 func TestFormatAvroType_NullableUnion(t *testing.T) {
+	t.Parallel()
 	result := formatAvroType([]any{"null", "string"}, 0)
 	if result != "string?" {
 		t.Errorf("result = %q, want %q", result, "string?")
@@ -239,6 +257,7 @@ func TestFormatAvroType_NullableUnion(t *testing.T) {
 }
 
 func TestFormatAvroType_MultiUnion(t *testing.T) {
+	t.Parallel()
 	result := formatAvroType([]any{"null", "string", "int"}, 0)
 	if result != "union<null, string, int>" {
 		t.Errorf("result = %q, want %q", result, "union<null, string, int>")
@@ -246,6 +265,7 @@ func TestFormatAvroType_MultiUnion(t *testing.T) {
 }
 
 func TestFormatAvroType_MaxDepth(t *testing.T) {
+	t.Parallel()
 	result := formatAvroType("string", maxAvroTypeDepth)
 	if result != "..." {
 		t.Errorf("result = %q, want %q", result, "...")
@@ -253,6 +273,7 @@ func TestFormatAvroType_MaxDepth(t *testing.T) {
 }
 
 func TestFormatAvroType_ComplexMap(t *testing.T) {
+	t.Parallel()
 	result := formatAvroType(map[string]any{"no_type_key": "value"}, 0)
 	if result != "complex" {
 		t.Errorf("result = %q, want %q", result, "complex")
@@ -262,6 +283,7 @@ func TestFormatAvroType_ComplexMap(t *testing.T) {
 // ---------- jsonEscapeString ----------
 
 func TestJsonEscapeString_Variants(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		input string
 		want  string
@@ -281,6 +303,7 @@ func TestJsonEscapeString_Variants(t *testing.T) {
 // ---------- Cache integration ----------
 
 func TestCacheGetSet(t *testing.T) {
+	t.Parallel()
 	c := NewCache(10, 5*time.Minute)
 	info := &SchemaInfo{Subject: "test", Version: 1, SchemaID: 1}
 
@@ -301,6 +324,7 @@ func TestCacheGetSet(t *testing.T) {
 }
 
 func TestCacheEviction_LRU(t *testing.T) {
+	t.Parallel()
 	c := NewCache(2, 5*time.Minute)
 	c.Set("a", &SchemaInfo{Subject: "a"})
 	c.Set("b", &SchemaInfo{Subject: "b"})
@@ -318,6 +342,7 @@ func TestCacheEviction_LRU(t *testing.T) {
 }
 
 func TestCacheStats(t *testing.T) {
+	t.Parallel()
 	c := NewCache(100, 5*time.Minute)
 	c.Set("a", &SchemaInfo{Subject: "a"})
 	c.Set("b", &SchemaInfo{Subject: "b"})
@@ -332,6 +357,7 @@ func TestCacheStats(t *testing.T) {
 }
 
 func TestCacheUpdate(t *testing.T) {
+	t.Parallel()
 	c := NewCache(10, 5*time.Minute)
 	c.Set("key", &SchemaInfo{Subject: "v1"})
 	c.Set("key", &SchemaInfo{Subject: "v2"})

@@ -11,6 +11,7 @@ type testItem struct {
 }
 
 func TestNewStore(t *testing.T) {
+	t.Parallel()
 	s := NewStore[testItem]()
 	if s.Count() != 0 {
 		t.Errorf("expected empty store, got %d items", s.Count())
@@ -18,6 +19,7 @@ func TestNewStore(t *testing.T) {
 }
 
 func TestSetAndGet(t *testing.T) {
+	t.Parallel()
 	s := NewStore[testItem]()
 	item := &testItem{Name: "a", Value: 1}
 	s.Set("a", item)
@@ -32,6 +34,7 @@ func TestSetAndGet(t *testing.T) {
 }
 
 func TestGetMissing(t *testing.T) {
+	t.Parallel()
 	s := NewStore[testItem]()
 	_, ok := s.Get("missing")
 	if ok {
@@ -40,6 +43,7 @@ func TestGetMissing(t *testing.T) {
 }
 
 func TestMustGet(t *testing.T) {
+	t.Parallel()
 	s := NewStore[testItem]()
 	s.Set("a", &testItem{Name: "a"})
 
@@ -52,6 +56,7 @@ func TestMustGet(t *testing.T) {
 }
 
 func TestCreate(t *testing.T) {
+	t.Parallel()
 	s := NewStore[testItem]()
 	if err := s.Create("a", &testItem{Name: "a"}); err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -62,6 +67,7 @@ func TestCreate(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
+	t.Parallel()
 	s := NewStore[testItem]()
 	s.Set("a", &testItem{Name: "a"})
 
@@ -74,6 +80,7 @@ func TestDelete(t *testing.T) {
 }
 
 func TestMustDelete(t *testing.T) {
+	t.Parallel()
 	s := NewStore[testItem]()
 	s.Set("a", &testItem{Name: "a"})
 
@@ -86,6 +93,7 @@ func TestMustDelete(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
+	t.Parallel()
 	s := NewStore[testItem]()
 	s.Set("a", &testItem{Name: "a"})
 	s.Set("b", &testItem{Name: "b"})
@@ -97,6 +105,7 @@ func TestList(t *testing.T) {
 }
 
 func TestKeys(t *testing.T) {
+	t.Parallel()
 	s := NewStore[testItem]()
 	s.Set("b", &testItem{Name: "b"})
 	s.Set("a", &testItem{Name: "a"})
@@ -109,6 +118,7 @@ func TestKeys(t *testing.T) {
 }
 
 func TestHas(t *testing.T) {
+	t.Parallel()
 	s := NewStore[testItem]()
 	s.Set("a", &testItem{Name: "a"})
 
@@ -121,6 +131,7 @@ func TestHas(t *testing.T) {
 }
 
 func TestUpdate(t *testing.T) {
+	t.Parallel()
 	s := NewStore[testItem]()
 	s.Set("a", &testItem{Name: "a", Value: 1})
 
@@ -143,6 +154,7 @@ func TestUpdate(t *testing.T) {
 }
 
 func TestForEach(t *testing.T) {
+	t.Parallel()
 	s := NewStore[testItem]()
 	s.Set("a", &testItem{Name: "a", Value: 1})
 	s.Set("b", &testItem{Name: "b", Value: 2})
@@ -159,6 +171,7 @@ func TestForEach(t *testing.T) {
 }
 
 func TestForEachEarlyStop(t *testing.T) {
+	t.Parallel()
 	s := NewStore[testItem]()
 	s.Set("a", &testItem{Name: "a"})
 	s.Set("b", &testItem{Name: "b"})
@@ -174,6 +187,7 @@ func TestForEachEarlyStop(t *testing.T) {
 }
 
 func TestFilter(t *testing.T) {
+	t.Parallel()
 	s := NewStore[testItem]()
 	s.Set("a", &testItem{Name: "a", Value: 10})
 	s.Set("b", &testItem{Name: "b", Value: 20})
@@ -188,6 +202,7 @@ func TestFilter(t *testing.T) {
 }
 
 func TestClear(t *testing.T) {
+	t.Parallel()
 	s := NewStore[testItem]()
 	s.Set("a", &testItem{Name: "a"})
 	s.Set("b", &testItem{Name: "b"})
@@ -199,6 +214,7 @@ func TestClear(t *testing.T) {
 }
 
 func TestSetOverwrite(t *testing.T) {
+	t.Parallel()
 	s := NewStore[testItem]()
 	s.Set("a", &testItem{Name: "a", Value: 1})
 	s.Set("a", &testItem{Name: "a", Value: 2})

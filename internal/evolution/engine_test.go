@@ -5,6 +5,7 @@ import (
 )
 
 func TestComputeDiffAddedField(t *testing.T) {
+	t.Parallel()
 	schemaFrom := map[string]any{
 		"fields": []any{
 			map[string]any{"name": "id", "type": "string"},
@@ -29,6 +30,7 @@ func TestComputeDiffAddedField(t *testing.T) {
 }
 
 func TestComputeDiffRemovedField(t *testing.T) {
+	t.Parallel()
 	schemaFrom := map[string]any{
 		"fields": []any{
 			map[string]any{"name": "id", "type": "string"},
@@ -48,6 +50,7 @@ func TestComputeDiffRemovedField(t *testing.T) {
 }
 
 func TestComputeDiffModifiedField(t *testing.T) {
+	t.Parallel()
 	schemaFrom := map[string]any{
 		"fields": []any{
 			map[string]any{"name": "count", "type": "int"},
@@ -70,6 +73,7 @@ func TestComputeDiffModifiedField(t *testing.T) {
 }
 
 func TestBreakingTypeChange(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		old, new string
 		breaking bool
@@ -89,6 +93,7 @@ func TestBreakingTypeChange(t *testing.T) {
 }
 
 func TestAnalyzeConsumerImpact(t *testing.T) {
+	t.Parallel()
 	diff := &SchemaDiff{
 		Subject:     "orders-value",
 		VersionFrom: 1,
@@ -119,6 +124,7 @@ func TestAnalyzeConsumerImpact(t *testing.T) {
 }
 
 func TestCreateRolloutPlan(t *testing.T) {
+	t.Parallel()
 	diff := &SchemaDiff{
 		Subject:     "orders-value",
 		Compatible:  false,
@@ -139,6 +145,7 @@ func TestCreateRolloutPlan(t *testing.T) {
 }
 
 func TestExtractTopicFromSubject(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		subject  string
 		expected string

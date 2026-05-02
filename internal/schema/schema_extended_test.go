@@ -10,6 +10,7 @@ import (
 )
 
 func TestNewClient(t *testing.T) {
+	t.Parallel()
 	client, _ := NewClient("http://localhost:8081", "", "", 100, 300)
 	if client == nil {
 		t.Fatal("expected non-nil client")
@@ -20,6 +21,7 @@ func TestNewClient(t *testing.T) {
 }
 
 func TestNewClientTrimsSlash(t *testing.T) {
+	t.Parallel()
 	client, _ := NewClient("http://localhost:8081/", "", "", 100, 300)
 	if client.baseURL != "http://localhost:8081" {
 		t.Errorf("expected trailing slash trimmed, got %s", client.baseURL)
@@ -27,6 +29,7 @@ func TestNewClientTrimsSlash(t *testing.T) {
 }
 
 func TestIsAvailableNoURL(t *testing.T) {
+	t.Parallel()
 	client, _ := NewClient("", "", "", 100, 300)
 	if client.IsAvailable(context.Background()) {
 		t.Error("expected IsAvailable=false for empty URL")
@@ -34,6 +37,7 @@ func TestIsAvailableNoURL(t *testing.T) {
 }
 
 func TestIsAvailableUnreachable(t *testing.T) {
+	t.Parallel()
 	client, _ := NewClient("http://localhost:1", "", "", 100, 300)
 	if client.IsAvailable(context.Background()) {
 		t.Error("expected IsAvailable=false for unreachable server")
@@ -41,6 +45,7 @@ func TestIsAvailableUnreachable(t *testing.T) {
 }
 
 func TestIsAvailableReachable(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode([]string{})
 	}))
@@ -53,6 +58,7 @@ func TestIsAvailableReachable(t *testing.T) {
 }
 
 func TestListSubjects(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/subjects" {
 			http.Error(w, "not found", http.StatusNotFound)
@@ -73,6 +79,7 @@ func TestListSubjects(t *testing.T) {
 }
 
 func TestListSubjectsWithAuth(t *testing.T) {
+	t.Parallel()
 	var gotAuth string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotAuth = r.Header.Get("Authorization")
@@ -93,6 +100,7 @@ func TestListSubjectsWithAuth(t *testing.T) {
 }
 
 func TestListSubjectsHTTPError(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}))
@@ -106,6 +114,7 @@ func TestListSubjectsHTTPError(t *testing.T) {
 }
 
 func TestGetSubjectVersions(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode([]int{1, 2, 3})
 	}))
@@ -122,6 +131,7 @@ func TestGetSubjectVersions(t *testing.T) {
 }
 
 func TestGetSchemaVersionValidation(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]any{})
@@ -138,6 +148,7 @@ func TestGetSchemaVersionValidation(t *testing.T) {
 }
 
 func TestGetSchemaLatest(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case r.URL.Path == "/subjects/test-value/versions/latest":
@@ -176,6 +187,7 @@ func TestGetSchemaLatest(t *testing.T) {
 }
 
 func TestGetSchemaDefaultType(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case r.URL.Path == "/subjects/test/versions/1":
@@ -202,6 +214,7 @@ func TestGetSchemaDefaultType(t *testing.T) {
 }
 
 func TestGetSchemaCaching(t *testing.T) {
+	t.Parallel()
 	callCount := 0
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
@@ -226,6 +239,7 @@ func TestGetSchemaCaching(t *testing.T) {
 }
 
 func TestCacheStatsMethod(t *testing.T) {
+	t.Parallel()
 	cache := NewCache(10, time.Minute)
 	cache.Set("key1", &SchemaInfo{Subject: "test"})
 	cache.Get("key1")
@@ -241,6 +255,7 @@ func TestCacheStatsMethod(t *testing.T) {
 }
 
 func TestCacheEvictionBySize(t *testing.T) {
+	t.Parallel()
 	cache := NewCache(2, time.Minute)
 	cache.Set("a", &SchemaInfo{Subject: "a"})
 	cache.Set("b", &SchemaInfo{Subject: "b"})
@@ -259,6 +274,7 @@ func TestCacheEvictionBySize(t *testing.T) {
 }
 
 func TestCacheTTL(t *testing.T) {
+	t.Parallel()
 	cache := NewCache(10, 1*time.Millisecond)
 	cache.Set("key", &SchemaInfo{Subject: "test"})
 	time.Sleep(5 * time.Millisecond)
@@ -269,6 +285,7 @@ func TestCacheTTL(t *testing.T) {
 }
 
 func TestFormatAvroTypeString(t *testing.T) {
+	t.Parallel()
 	result := formatAvroType("string", 0)
 	if result != "string" {
 		t.Errorf("expected 'string', got %q", result)
@@ -276,6 +293,7 @@ func TestFormatAvroTypeString(t *testing.T) {
 }
 
 func TestFormatAvroTypeNullable(t *testing.T) {
+	t.Parallel()
 	result := formatAvroType([]any{"null", "string"}, 0)
 	if result != "string?" {
 		t.Errorf("expected 'string?', got %q", result)
@@ -283,6 +301,7 @@ func TestFormatAvroTypeNullable(t *testing.T) {
 }
 
 func TestFormatAvroTypeArray(t *testing.T) {
+	t.Parallel()
 	result := formatAvroType(map[string]any{"type": "array", "items": "string"}, 0)
 	if result != "array<string>" {
 		t.Errorf("expected 'array<string>', got %q", result)
@@ -290,6 +309,7 @@ func TestFormatAvroTypeArray(t *testing.T) {
 }
 
 func TestFormatAvroTypeMap(t *testing.T) {
+	t.Parallel()
 	result := formatAvroType(map[string]any{"type": "map", "values": "int"}, 0)
 	if result != "map<string, int>" {
 		t.Errorf("expected 'map<string, int>', got %q", result)
@@ -297,6 +317,7 @@ func TestFormatAvroTypeMap(t *testing.T) {
 }
 
 func TestFormatAvroTypeLogical(t *testing.T) {
+	t.Parallel()
 	result := formatAvroType(map[string]any{"type": "long", "logicalType": "timestamp-millis"}, 0)
 	if result != "timestamp-millis" {
 		t.Errorf("expected 'timestamp-millis', got %q", result)
@@ -304,6 +325,7 @@ func TestFormatAvroTypeLogical(t *testing.T) {
 }
 
 func TestFormatAvroTypeUnion(t *testing.T) {
+	t.Parallel()
 	result := formatAvroType([]any{"string", "int", "long"}, 0)
 	if result != "union<string, int, long>" {
 		t.Errorf("expected 'union<string, int, long>', got %q", result)
@@ -311,6 +333,7 @@ func TestFormatAvroTypeUnion(t *testing.T) {
 }
 
 func TestFormatAvroTypeMaxDepth(t *testing.T) {
+	t.Parallel()
 	result := formatAvroType("string", maxAvroTypeDepth)
 	if result != "..." {
 		t.Errorf("expected '...' at max depth, got %q", result)
@@ -318,6 +341,7 @@ func TestFormatAvroTypeMaxDepth(t *testing.T) {
 }
 
 func TestFormatAvroTypeComplex(t *testing.T) {
+	t.Parallel()
 	result := formatAvroType(map[string]any{"notType": "value"}, 0)
 	if result != "complex" {
 		t.Errorf("expected 'complex', got %q", result)
@@ -325,6 +349,7 @@ func TestFormatAvroTypeComplex(t *testing.T) {
 }
 
 func TestFormatAvroTypeOther(t *testing.T) {
+	t.Parallel()
 	result := formatAvroType(42, 0)
 	if result != "42" {
 		t.Errorf("expected '42', got %q", result)
@@ -332,6 +357,7 @@ func TestFormatAvroTypeOther(t *testing.T) {
 }
 
 func TestGenerateFieldSummaryAvro(t *testing.T) {
+	t.Parallel()
 	schema := map[string]any{
 		"type": "record",
 		"name": "User",
@@ -354,6 +380,7 @@ func TestGenerateFieldSummaryAvro(t *testing.T) {
 }
 
 func TestGenerateFieldSummaryNonAvroExtended(t *testing.T) {
+	t.Parallel()
 	result := generateFieldSummary(nil, "PROTOBUF")
 	if result != "(PROTOBUF schema)" {
 		t.Errorf("expected '(PROTOBUF schema)', got %q", result)
@@ -365,6 +392,7 @@ func TestGenerateFieldSummaryNonAvroExtended(t *testing.T) {
 }
 
 func TestGenerateFieldSummaryNotMap(t *testing.T) {
+	t.Parallel()
 	result := generateFieldSummary("string-schema", "AVRO")
 	if result != "" {
 		t.Errorf("expected empty string for non-map schema, got %q", result)
@@ -372,6 +400,7 @@ func TestGenerateFieldSummaryNotMap(t *testing.T) {
 }
 
 func TestGenerateFieldSummaryNoFields(t *testing.T) {
+	t.Parallel()
 	schema := map[string]any{"type": "record", "name": "Simple"}
 	result := generateFieldSummary(schema, "AVRO")
 	if result != "Simple" {
@@ -380,6 +409,7 @@ func TestGenerateFieldSummaryNoFields(t *testing.T) {
 }
 
 func TestJsonEscapeString(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		input string
 		want  string
@@ -400,6 +430,7 @@ func TestJsonEscapeString(t *testing.T) {
 }
 
 func TestCheckCompatibilityInvalidVersion(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
 	defer srv.Close()
 
@@ -411,6 +442,7 @@ func TestCheckCompatibilityInvalidVersion(t *testing.T) {
 }
 
 func TestCheckCompatibilityDefaultVersion(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]any{"is_compatible": true})
 	}))
@@ -427,6 +459,7 @@ func TestCheckCompatibilityDefaultVersion(t *testing.T) {
 }
 
 func TestCheckCompatibilityNotCompatible(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]any{
 			"is_compatible": false,

@@ -28,6 +28,7 @@ const testAvroSchemaV2 = `{
 }`
 
 func TestDraftLifecycle(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 
 	draft, err := e.CreateDraft("orders-value", SchemaAvro, testAvroSchema, "agent-1")
@@ -58,6 +59,7 @@ func TestDraftLifecycle(t *testing.T) {
 }
 
 func TestCompatibilityValidation(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 
 	draft, _ := e.CreateDraft("orders-value", SchemaAvro, testAvroSchemaV2, "agent-1")
@@ -73,6 +75,7 @@ func TestCompatibilityValidation(t *testing.T) {
 }
 
 func TestEvolutionSimulation(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 
 	draft, _ := e.CreateDraft("orders-value", SchemaAvro, testAvroSchemaV2, "agent-1")
@@ -94,6 +97,7 @@ func TestEvolutionSimulation(t *testing.T) {
 }
 
 func TestPromoteDraft(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 
 	draft, _ := e.CreateDraft("test", SchemaAvro, testAvroSchema, "agent-1")
@@ -118,6 +122,7 @@ func TestPromoteDraft(t *testing.T) {
 }
 
 func TestExtraFieldsDetected(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 
 	draft, _ := e.CreateDraft("test", SchemaAvro, testAvroSchema, "agent-1")
@@ -136,6 +141,7 @@ func TestExtraFieldsDetected(t *testing.T) {
 }
 
 func TestUpdateDraft_ModifySchema(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	draft, _ := e.CreateDraft("test", SchemaAvro, testAvroSchema, "agent-1")
 	origVersion := draft.Version
@@ -153,6 +159,7 @@ func TestUpdateDraft_ModifySchema(t *testing.T) {
 }
 
 func TestUpdateDraft_IncrementsVersion(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	draft, _ := e.CreateDraft("test", SchemaAvro, testAvroSchema, "agent-1")
 
@@ -164,6 +171,7 @@ func TestUpdateDraft_IncrementsVersion(t *testing.T) {
 }
 
 func TestUpdateDraft_BlocksPromotedDraft(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	draft, _ := e.CreateDraft("test", SchemaAvro, testAvroSchema, "agent-1")
 
@@ -178,6 +186,7 @@ func TestUpdateDraft_BlocksPromotedDraft(t *testing.T) {
 }
 
 func TestUpdateDraft_ResetsStatus(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	draft, _ := e.CreateDraft("test", SchemaAvro, testAvroSchema, "agent-1")
 
@@ -191,6 +200,7 @@ func TestUpdateDraft_ResetsStatus(t *testing.T) {
 }
 
 func TestUpdateDraft_NotFound(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	_, err := e.UpdateDraft("nonexistent", "{}")
 	if err == nil {
@@ -199,6 +209,7 @@ func TestUpdateDraft_NotFound(t *testing.T) {
 }
 
 func TestGetDraft_Exists(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	draft, _ := e.CreateDraft("test", SchemaAvro, testAvroSchema, "agent-1")
 
@@ -212,6 +223,7 @@ func TestGetDraft_Exists(t *testing.T) {
 }
 
 func TestGetDraft_NotFound(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	_, err := e.GetDraft("nonexistent")
 	if err == nil {
@@ -220,6 +232,7 @@ func TestGetDraft_NotFound(t *testing.T) {
 }
 
 func TestListDrafts_FilterByStatus(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	e.CreateDraft("s1", SchemaAvro, testAvroSchema, "agent-1")
 	d2, _ := e.CreateDraft("s2", SchemaAvro, testAvroSchema, "agent-1")
@@ -243,6 +256,7 @@ func TestListDrafts_FilterByStatus(t *testing.T) {
 }
 
 func TestListDrafts_AllWhenEmpty(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	e.CreateDraft("s1", SchemaAvro, testAvroSchema, "agent-1")
 	e.CreateDraft("s2", SchemaAvro, testAvroSchema, "agent-1")
@@ -254,6 +268,7 @@ func TestListDrafts_AllWhenEmpty(t *testing.T) {
 }
 
 func TestListDrafts_EmptyEngine(t *testing.T) {
+	t.Parallel()
 	e := NewEngine(slog.Default())
 	drafts := e.ListDrafts("")
 	if len(drafts) != 0 {
@@ -272,6 +287,7 @@ const testJSONSchema = `{
 }`
 
 func TestExtractJSONSchemaFields_ValidSchema(t *testing.T) {
+	t.Parallel()
 	fields := extractJSONSchemaFields(testJSONSchema)
 	if len(fields) != 3 {
 		t.Fatalf("expected 3 fields, got %d", len(fields))
@@ -294,6 +310,7 @@ func TestExtractJSONSchemaFields_ValidSchema(t *testing.T) {
 }
 
 func TestExtractJSONSchemaFields_MissingProperties(t *testing.T) {
+	t.Parallel()
 	fields := extractJSONSchemaFields(`{"type": "object"}`)
 	if fields != nil {
 		t.Error("expected nil for schema without properties")
@@ -301,6 +318,7 @@ func TestExtractJSONSchemaFields_MissingProperties(t *testing.T) {
 }
 
 func TestExtractJSONSchemaFields_InvalidJSON(t *testing.T) {
+	t.Parallel()
 	fields := extractJSONSchemaFields(`not json`)
 	if fields != nil {
 		t.Error("expected nil for invalid JSON")
@@ -308,6 +326,7 @@ func TestExtractJSONSchemaFields_InvalidJSON(t *testing.T) {
 }
 
 func TestExtractJSONSchemaFields_EmptySchema(t *testing.T) {
+	t.Parallel()
 	fields := extractJSONSchemaFields(`{}`)
 	if fields != nil {
 		t.Error("expected nil for empty schema")
@@ -315,6 +334,7 @@ func TestExtractJSONSchemaFields_EmptySchema(t *testing.T) {
 }
 
 func TestExtractJSONSchemaFields_NoRequiredArray(t *testing.T) {
+	t.Parallel()
 	fields := extractJSONSchemaFields(`{
 		"type": "object",
 		"properties": {
@@ -330,6 +350,7 @@ func TestExtractJSONSchemaFields_NoRequiredArray(t *testing.T) {
 }
 
 func TestExtractJSONSchemaFields_NestedObject(t *testing.T) {
+	t.Parallel()
 	fields := extractJSONSchemaFields(`{
 		"type": "object",
 		"properties": {
@@ -343,6 +364,7 @@ func TestExtractJSONSchemaFields_NestedObject(t *testing.T) {
 }
 
 func TestExtractJSONSchemaFields_Unicode(t *testing.T) {
+	t.Parallel()
 	fields := extractJSONSchemaFields(`{
 		"type": "object",
 		"properties": {

@@ -6,6 +6,7 @@ import (
 )
 
 func TestNewCacheDefaults(t *testing.T) {
+	t.Parallel()
 	c := NewCache(0, 0)
 	if c.maxEntries != 10000 {
 		t.Errorf("expected maxEntries=10000, got %d", c.maxEntries)
@@ -16,6 +17,7 @@ func TestNewCacheDefaults(t *testing.T) {
 }
 
 func TestNewCacheNegative(t *testing.T) {
+	t.Parallel()
 	c := NewCache(-1, -1)
 	if c.maxEntries != 10000 {
 		t.Errorf("expected maxEntries=10000, got %d", c.maxEntries)
@@ -26,6 +28,7 @@ func TestNewCacheNegative(t *testing.T) {
 }
 
 func TestCacheSetUpdateExisting(t *testing.T) {
+	t.Parallel()
 	c := NewCache(100, time.Hour)
 	info1 := &SchemaInfo{Subject: "test", Version: 1}
 	info2 := &SchemaInfo{Subject: "test", Version: 2}
@@ -47,6 +50,7 @@ func TestCacheSetUpdateExisting(t *testing.T) {
 }
 
 func TestCacheEvictionExtended(t *testing.T) {
+	t.Parallel()
 	c := NewCache(2, time.Hour)
 	c.Set("k1", &SchemaInfo{Subject: "s1"})
 	c.Set("k2", &SchemaInfo{Subject: "s2"})
@@ -63,6 +67,7 @@ func TestCacheEvictionExtended(t *testing.T) {
 }
 
 func TestCacheExpiry(t *testing.T) {
+	t.Parallel()
 	c := NewCache(100, time.Millisecond)
 	c.Set("k1", &SchemaInfo{Subject: "s1"})
 	time.Sleep(5 * time.Millisecond)

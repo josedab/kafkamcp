@@ -7,6 +7,7 @@ import (
 // --- DetectFormat tests ---
 
 func TestDetectFormat_AvroRecord(t *testing.T) {
+	t.Parallel()
 	d := NewMultiFormatDiffer()
 	schema := map[string]any{
 		"type":   "record",
@@ -19,6 +20,7 @@ func TestDetectFormat_AvroRecord(t *testing.T) {
 }
 
 func TestDetectFormat_JSONSchemaWithProperties(t *testing.T) {
+	t.Parallel()
 	d := NewMultiFormatDiffer()
 	schema := map[string]any{
 		"properties": map[string]any{"name": map[string]any{"type": "string"}},
@@ -29,6 +31,7 @@ func TestDetectFormat_JSONSchemaWithProperties(t *testing.T) {
 }
 
 func TestDetectFormat_JSONSchemaWithDollarSchema(t *testing.T) {
+	t.Parallel()
 	d := NewMultiFormatDiffer()
 	schema := map[string]any{
 		"$schema": "http://json-schema.org/draft-07/schema#",
@@ -39,6 +42,7 @@ func TestDetectFormat_JSONSchemaWithDollarSchema(t *testing.T) {
 }
 
 func TestDetectFormat_Protobuf(t *testing.T) {
+	t.Parallel()
 	d := NewMultiFormatDiffer()
 	schema := `syntax = "proto3";
 message User {
@@ -50,6 +54,7 @@ message User {
 }
 
 func TestDetectFormat_StringJSON(t *testing.T) {
+	t.Parallel()
 	d := NewMultiFormatDiffer()
 	schema := `{"type":"record","name":"User","fields":[]}`
 	if f := d.DetectFormat(schema); f != FormatAvro {
@@ -58,6 +63,7 @@ func TestDetectFormat_StringJSON(t *testing.T) {
 }
 
 func TestDetectFormat_Unknown(t *testing.T) {
+	t.Parallel()
 	d := NewMultiFormatDiffer()
 	if f := d.DetectFormat(42); f != FormatUnknown {
 		t.Errorf("expected unknown for int, got %s", f)
@@ -68,6 +74,7 @@ func TestDetectFormat_Unknown(t *testing.T) {
 }
 
 func TestDetectFormat_MapWithoutFields(t *testing.T) {
+	t.Parallel()
 	d := NewMultiFormatDiffer()
 	schema := map[string]any{"type": "record"}
 	if f := d.DetectFormat(schema); f != FormatUnknown {
@@ -78,6 +85,7 @@ func TestDetectFormat_MapWithoutFields(t *testing.T) {
 // --- ExtractFieldsWithFormat tests ---
 
 func TestExtractAvroFields(t *testing.T) {
+	t.Parallel()
 	d := NewMultiFormatDiffer()
 	schema := map[string]any{
 		"type": "record",
@@ -102,6 +110,7 @@ func TestExtractAvroFields(t *testing.T) {
 }
 
 func TestExtractAvroFields_UnionWithNull(t *testing.T) {
+	t.Parallel()
 	d := NewMultiFormatDiffer()
 	schema := map[string]any{
 		"type": "record",
@@ -119,6 +128,7 @@ func TestExtractAvroFields_UnionWithNull(t *testing.T) {
 }
 
 func TestExtractAvroFields_NestedRecord(t *testing.T) {
+	t.Parallel()
 	d := NewMultiFormatDiffer()
 	schema := map[string]any{
 		"type": "record",
@@ -144,6 +154,7 @@ func TestExtractAvroFields_NestedRecord(t *testing.T) {
 }
 
 func TestExtractJSONSchemaFields(t *testing.T) {
+	t.Parallel()
 	d := NewMultiFormatDiffer()
 	schema := map[string]any{
 		"type": "object",
@@ -177,6 +188,7 @@ func TestExtractJSONSchemaFields(t *testing.T) {
 }
 
 func TestExtractProtobufFields(t *testing.T) {
+	t.Parallel()
 	d := NewMultiFormatDiffer()
 	schema := `syntax = "proto3";
 message User {
@@ -204,6 +216,7 @@ message User {
 }
 
 func TestExtractFieldsWithFormat_Unknown(t *testing.T) {
+	t.Parallel()
 	d := NewMultiFormatDiffer()
 	schema := map[string]any{
 		"fields": map[string]any{"x": "int"},
@@ -218,6 +231,7 @@ func TestExtractFieldsWithFormat_Unknown(t *testing.T) {
 // --- ComputeFormatAwareDiff tests ---
 
 func TestComputeFormatAwareDiff_AddedFieldWithDefault(t *testing.T) {
+	t.Parallel()
 	schemaFrom := map[string]any{
 		"type": "record",
 		"name": "User",
@@ -251,6 +265,7 @@ func TestComputeFormatAwareDiff_AddedFieldWithDefault(t *testing.T) {
 }
 
 func TestComputeFormatAwareDiff_RemovedFieldWithDefault(t *testing.T) {
+	t.Parallel()
 	schemaFrom := map[string]any{
 		"type": "record",
 		"name": "User",
@@ -281,6 +296,7 @@ func TestComputeFormatAwareDiff_RemovedFieldWithDefault(t *testing.T) {
 // --- CanaryValidation tests ---
 
 func TestCreateCanaryValidation_NoBreaking(t *testing.T) {
+	t.Parallel()
 	diff := &SchemaDiff{
 		Subject: "orders-value",
 		Summary: DiffSummary{Breaking: 0},
@@ -299,6 +315,7 @@ func TestCreateCanaryValidation_NoBreaking(t *testing.T) {
 }
 
 func TestCreateCanaryValidation_WithBreaking(t *testing.T) {
+	t.Parallel()
 	diff := &SchemaDiff{
 		Subject: "orders-value",
 		Summary: DiffSummary{Breaking: 2},
@@ -316,6 +333,7 @@ func TestCreateCanaryValidation_WithBreaking(t *testing.T) {
 // --- DiffVisualization tests ---
 
 func TestCreateDiffVisualization(t *testing.T) {
+	t.Parallel()
 	diff := &SchemaDiff{
 		Subject: "test-value",
 		Fields: []FieldDiff{
@@ -364,6 +382,7 @@ func TestCreateDiffVisualization(t *testing.T) {
 }
 
 func TestCreateDiffVisualization_AddedBreaking(t *testing.T) {
+	t.Parallel()
 	diff := &SchemaDiff{
 		Fields: []FieldDiff{
 			{Field: "required_field", Action: "added", Breaking: true},
@@ -380,6 +399,7 @@ func TestCreateDiffVisualization_AddedBreaking(t *testing.T) {
 }
 
 func TestCreateDiffVisualization_RemovedNonBreaking(t *testing.T) {
+	t.Parallel()
 	diff := &SchemaDiff{
 		Fields: []FieldDiff{
 			{Field: "optional", Action: "removed", Breaking: false},
@@ -396,6 +416,7 @@ func TestCreateDiffVisualization_RemovedNonBreaking(t *testing.T) {
 }
 
 func TestCreateDiffVisualization_ModifiedNonBreaking(t *testing.T) {
+	t.Parallel()
 	diff := &SchemaDiff{
 		Fields: []FieldDiff{
 			{Field: "name", Action: "modified", Breaking: false},
