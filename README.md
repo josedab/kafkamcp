@@ -174,7 +174,7 @@ Once connected, your AI agent can:
 
 ## MCP Tools
 
-> **Full reference:** The auto-generated [Tool Reference](docs/tool-reference.md) lists all **155 tools** with complete parameter details.
+> **Full reference:** The auto-generated [Tool Reference](docs/tool-reference.md) lists all **251 tools** with complete parameter details.
 
 ### P0 — Core Tools
 | Tool | Description |
