@@ -35,6 +35,12 @@ Controls how KafkaMCP listens for MCP traffic.
 | `tls_cert` | string | No | — | Path to TLS certificate for HTTPS. |
 | `tls_key` | string | No | — | Path to TLS private key for HTTPS. |
 
+### `server.dashboard`
+
+| Field | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `api_key` | string | No | — | API key for dashboard authentication. When set, all dashboard API requests must include `Authorization: Bearer <key>` or `X-API-Key: <key>`. Supports `${ENV_VAR}` expansion. |
+
 ### Notes
 
 - `tls_cert` and `tls_key` must both be set to enable TLS.

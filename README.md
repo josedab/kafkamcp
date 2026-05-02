@@ -665,6 +665,11 @@ The [`examples/`](examples/) directory contains ready-to-use configurations and 
 | `tls_cert` | string | — | Path to TLS certificate for HTTPS |
 | `tls_key` | string | — | Path to TLS private key for HTTPS |
 
+### Dashboard
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `server.dashboard.api_key` | string | — | API key for dashboard authentication. When set, requests must include `Authorization: Bearer <key>` or `X-API-Key: <key>`. |
+
 ### Clusters
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|

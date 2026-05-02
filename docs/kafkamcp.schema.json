@@ -46,6 +46,17 @@
         "tls_key": {
           "type": "string",
           "description": "Path to TLS private key file."
+        },
+        "dashboard": {
+          "type": "object",
+          "description": "Dashboard web UI settings.",
+          "properties": {
+            "api_key": {
+              "type": "string",
+              "description": "API key required for dashboard access. When set, all dashboard requests must include Authorization: Bearer <key> or X-API-Key: <key>."
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false
