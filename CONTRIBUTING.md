@@ -41,6 +41,8 @@ make setup-hooks
 make build
 ```
 
+> **Tip:** Run `make help` to see all available Makefile targets with descriptions.
+
 ### 4. Setup VSCode (optional)
 
 ```bash
@@ -82,6 +84,29 @@ make dev-http     # streamable-http transport
 ```
 
 Run `make doctor` to verify your environment has all required tools installed.
+
+## Available Make Targets
+
+Run `make help` to see all targets. Key targets:
+
+| Target | Description |
+|--------|-------------|
+| `make build` | Build the binary |
+| `make test` | Run unit tests with race detection |
+| `make lint` | Run golangci-lint |
+| `make fmt` | Format code (gofmt + goimports) |
+| `make validate` | Run all checks (fmt-check, vet, lint, test, build) |
+| `make dev` | Run with auto-reload via air |
+| `make docker-dev` | Start local Kafka + KafkaMCP dev stack |
+| `make setup` | Install all dev dependencies |
+| `make doctor` | Check development environment prerequisites |
+| `make generate` | Run all code generation (tool docs, go generate) |
+| `make coverage` | Generate and open HTML coverage report |
+| `make benchmark` | Run Go benchmarks with memory stats |
+| `make sdk-test` | Run tests for all SDKs |
+| `make new-tool NAME=xyz` | Scaffold a new tool |
+| `make quickstart` | One-command setup: install deps, start Kafka, build, run |
+| `make clean` | Remove build artifacts |
 
 ## Local Kafka Environment
 
@@ -398,6 +423,37 @@ Internal packages are grouped into three tiers. Higher tiers may depend on lower
 ## Questions?
 
 Open a [GitHub Discussion](https://github.com/kafkamcp/kafkamcp/discussions) or file an issue.
+
+## Release Process
+
+Releases are automated via [GoReleaser](https://goreleaser.com/) and triggered by pushing a Git tag. Only maintainers with push access can cut releases.
+
+### Cutting a Release
+
+1. Ensure `main` is in a releasable state — all CI checks pass, `make validate` succeeds.
+2. Update `CHANGELOG.md` with the new version's changes under a new `## [x.y.z]` heading.
+3. Create and push a semver tag:
+   ```bash
+   git tag -a v0.2.0 -m "Release v0.2.0"
+   git push origin v0.2.0
+   ```
+4. The `release.yml` GitHub Actions workflow will automatically:
+   - Run tests with race detection
+   - Build cross-platform binaries (Linux, macOS, Windows — amd64/arm64)
+   - Build and push multi-arch Docker images to `ghcr.io/kafkamcp/kafkamcp`
+   - Create a GitHub Release with binary archives and checksums
+
+### Tag Conventions
+
+- Use [Semantic Versioning](https://semver.org/): `vMAJOR.MINOR.PATCH` (e.g., `v0.2.0`, `v1.0.0`)
+- Pre-release tags: `v1.0.0-rc.1`, `v1.0.0-beta.1`
+- Tags **must** start with `v` to trigger the release workflow
+
+### What Gets Published
+
+- **GitHub Release**: tar.gz (Linux/macOS) and zip (Windows) archives for amd64 and arm64
+- **Docker images**: `ghcr.io/kafkamcp/kafkamcp:<version>` and `ghcr.io/kafkamcp/kafkamcp:latest` (multi-arch manifest)
+- **Checksums**: `checksums.txt` attached to the GitHub Release
 
 ## Adding a New Tool
 
