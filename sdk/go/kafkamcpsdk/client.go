@@ -1,5 +1,3 @@
-// Package kafkamcpsdk provides a Go client SDK for interacting with KafkaMCP
-// servers programmatically from Go applications and AI agents.
 package kafkamcpsdk
 
 import (
