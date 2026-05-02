@@ -14,6 +14,35 @@ New to the codebase? Read these five files in order to understand the full reque
 
 After reading these, see [Adding a New Tool](#adding-a-new-tool) for the standard three-file pattern used by every feature.
 
+## Architecture Overview
+
+```mermaid
+graph TD
+    Client[MCP Client<br/>Claude / LangChain / Agent] -->|MCP Protocol| Transport
+
+    subgraph KafkaMCP
+        Transport[Transport Layer<br/>stdio · SSE · HTTP]
+        Transport --> Server[MCP Server]
+        Server --> Auth[Policy Engine<br/>RBAC + Rate Limit]
+        Server --> Audit[Audit Logger]
+        Auth --> Handlers[Tool Handlers<br/>155 tools]
+        Handlers --> KM[KafkaManager<br/>Multi-Cluster]
+        Handlers --> SR[Schema Registry Client]
+        Handlers --> Domain[Domain Packages<br/>~90 internal packages]
+
+        subgraph Subsystems
+            Analytics[Analytics<br/>Anomaly · NL Query · Forecast]
+            Governance[Governance<br/>Policy · Compliance · Masking]
+            Streaming[Streaming<br/>Watch · DLQ · Lineage · Replay]
+            Platform[Platform<br/>Plugins · GitOps · Workflows]
+        end
+        Domain --> Subsystems
+    end
+
+    KM --> Kafka[(Apache Kafka<br/>Clusters)]
+    SR --> SchemaReg[(Schema Registry)]
+```
+
 ## Directory Structure
 
 ```
