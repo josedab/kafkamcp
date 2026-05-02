@@ -1,14 +1,18 @@
 # KafkaMCP Tool Reference
 
-> Auto-generated on 2026-05-03 from `internal/server/register_*.go`.
+> Auto-generated on 2026-05-04 from `internal/server/register_*.go`.
 > Do not edit manually. Run `go generate ./internal/server/` to regenerate.
 
 ## Summary
 
-**154 tools** available.
+**251 tools** available.
 
 | Tool | Description |
 |------|-------------|
+| [`agent_action_analytics`](#agent_action_analytics) | Get tool usage analytics including call counts, error rates, latency percenti... |
+| [`agent_action_export`](#agent_action_export) | Export agent actions as JSONL for LLM fine-tuning on domain-specific Kafka op... |
+| [`agent_action_replay`](#agent_action_replay) | Replay an agent session showing all tool calls, parameters, results, and timing. |
+| [`agent_action_stats`](#agent_action_stats) | Get event sourcing engine statistics. |
 | [`agent_clock_get`](#agent_clock_get) | Get the vector clock for a resource to check causal ordering of operations ac... |
 | [`agent_clock_increment`](#agent_clock_increment) | Increment the vector clock for a resource, recording an operation by this agent. |
 | [`agent_coordinate_list`](#agent_coordinate_list) | List all registered agents with their status, capabilities, and last seen time. |
@@ -18,14 +22,28 @@
 | [`agent_lock_release`](#agent_lock_release) | Release a previously acquired distributed lock on a resource. |
 | [`agent_message_inbox`](#agent_message_inbox) | Read messages sent to this agent. Supports filtering to unread-only. |
 | [`agent_message_send`](#agent_message_send) | Send a message to another agent for coordination. Use '*' as recipient for br... |
+| [`agent_threat_alerts`](#agent_threat_alerts) | List recent behavioral threat alerts detected for agents (data exfiltration, ... |
+| [`agent_threat_profile`](#agent_threat_profile) | Get the behavioral profile for an agent, including access patterns, topic usa... |
+| [`agent_threat_stats`](#agent_threat_stats) | Get threat detection system statistics including profile count and alert totals. |
+| [`codec_decode`](#codec_decode) | Decode a wire-format message (Confluent Schema Registry format with Avro/Prot... |
+| [`codec_detect_format`](#codec_detect_format) | Detect the serialization format of a message (Confluent wire format, JSON, or... |
+| [`codec_encode`](#codec_encode) | Encode a message using Confluent wire format (magic byte + schema ID + Avro/P... |
 | [`gateway_consume`](#gateway_consume) | Consume messages from a named streaming backend (Pulsar, RabbitMQ, NATS). |
 | [`gateway_create_topic`](#gateway_create_topic) | Create a topic/queue/subject on a named streaming backend. |
 | [`gateway_list_backends`](#gateway_list_backends) | List all registered multi-protocol streaming backends (Pulsar, RabbitMQ, NATS... |
 | [`gateway_list_topics`](#gateway_list_topics) | List topics/queues/subjects on a named streaming backend. |
 | [`gateway_produce`](#gateway_produce) | Produce a message through a named streaming backend (Pulsar, RabbitMQ, NATS). |
+| [`gitops_reconcile`](#gitops_reconcile) | Run a GitOps reconciliation against the live cluster state. Defaults to dry-r... |
+| [`gitops_reconcile_history`](#gitops_reconcile_history) | Get recent GitOps reconciliation results. |
+| [`gitops_set_desired_state`](#gitops_set_desired_state) | Set the desired Kafka state for GitOps reconciliation (topics, schemas, ACLs ... |
+| [`gitops_webhook`](#gitops_webhook) | Process a Git webhook event (push or pull_request) for PR-based reconciliatio... |
 | [`k8s_operator_manage`](#k8s_operator_manage) | Manage KafkaMCP Kubernetes operator instances. Actions: create, get, list, up... |
+| [`kafka_acl_manage`](#kafka_acl_manage) | Manage Kafka ACLs — list, audit, diff, and dry-run access control entries f... |
 | [`kafka_advisor_report`](#kafka_advisor_report) | Generate a detailed advisory report with health scores, category breakdowns, ... |
 | [`kafka_advisor_scan`](#kafka_advisor_scan) | Scan topics for best-practice violations, anti-patterns, and improvement oppo... |
+| [`kafka_agent_config_get`](#kafka_agent_config_get) | Get details of a specific agent configuration or tool bundle from the marketp... |
+| [`kafka_agent_config_publish`](#kafka_agent_config_publish) | Publish an agent configuration or tool bundle to the marketplace. |
+| [`kafka_agent_config_search`](#kafka_agent_config_search) | Search the agent configuration marketplace for pre-built agent configs, tool ... |
 | [`kafka_agent_optimize`](#kafka_agent_optimize) | Get optimization suggestions for an agent based on its call patterns. Detects... |
 | [`kafka_agent_profile`](#kafka_agent_profile) | Profile agent performance: latency distributions, tool call patterns, error r... |
 | [`kafka_agent_registry`](#kafka_agent_registry) | Multi-agent collaboration: register agents, claim partitions, share cursors, ... |
@@ -38,15 +56,27 @@
 | [`kafka_analyze_dlq`](#kafka_analyze_dlq) | Analyze a dead-letter queue topic: consume recent messages, parse error heade... |
 | [`kafka_anomalies`](#kafka_anomalies) | Get AI-detected anomalies in consumer lag, throughput, and error rates. Uses ... |
 | [`kafka_anomaly_ingest`](#kafka_anomaly_ingest) | Manually ingest a data point for anomaly detection analysis. |
+| [`kafka_benchmark`](#kafka_benchmark) | Embedded benchmarking and load testing. Measure producer/consumer throughput,... |
+| [`kafka_capability_profile`](#kafka_capability_profile) | View the current agent's capability profile including allowed tools, role, an... |
 | [`kafka_capacity_forecast`](#kafka_capacity_forecast) | Forecast capacity for a specific topic using exponential smoothing and linear... |
 | [`kafka_capacity_plan`](#kafka_capacity_plan) | Generate a comprehensive capacity plan with ML-based forecasting, storage gro... |
 | [`kafka_catalog_search`](#kafka_catalog_search) | Search the data catalog for topics, schemas, connectors by name, description,... |
 | [`kafka_catalog_stats`](#kafka_catalog_stats) | Get catalog statistics: entry counts by type, freshness distribution, quality... |
 | [`kafka_catalog_tag`](#kafka_catalog_tag) | Add tags to a catalog entry, index a new entry, or set lineage information. |
+| [`kafka_cdc_create_bridge`](#kafka_cdc_create_bridge) | Create a CDC bridge that streams changes from a Kafka topic to a target data ... |
+| [`kafka_cdc_list_bridges`](#kafka_cdc_list_bridges) | List all CDC bridges with their status and statistics. |
+| [`kafka_cdc_manage_bridge`](#kafka_cdc_manage_bridge) | Manage a CDC bridge: get status, pause, resume, stop, or delete. |
+| [`kafka_cdc_process`](#kafka_cdc_process) | Process a batch of messages through a CDC bridge, applying transformations an... |
 | [`kafka_chaos_inject`](#kafka_chaos_inject) | Inject controlled chaos into a Kafka environment. Types: broker_outage, netwo... |
 | [`kafka_chaos_status`](#kafka_chaos_status) | Get the status of chaos experiments. Provide experiment_id for a specific exp... |
 | [`kafka_chaos_stop`](#kafka_chaos_stop) | Stop a running chaos experiment and trigger rollback. |
+| [`kafka_chat_context`](#kafka_chat_context) | Get the accumulated context for a chat session, including tracked entities, t... |
+| [`kafka_chat_message`](#kafka_chat_message) | Send a message in a chat session. The engine classifies intent, resolves refe... |
+| [`kafka_chat_session`](#kafka_chat_session) | Manage conversational chat sessions for multi-turn Kafka exploration. Support... |
+| [`kafka_chat_template`](#kafka_chat_template) | Get investigation templates for common scenarios like incident triage, capaci... |
 | [`kafka_check_schema_compatibility`](#kafka_check_schema_compatibility) | Check if a proposed schema is compatible with the subject's compatibility pol... |
+| [`kafka_cloud_deploy_generate`](#kafka_cloud_deploy_generate) | Generate zero-config deployment templates for AWS (MSK), GCP, Azure (Event Hu... |
+| [`kafka_cloud_deploy_list`](#kafka_cloud_deploy_list) | List previously generated deployment templates. |
 | [`kafka_compliance_report`](#kafka_compliance_report) | Generate a comprehensive compliance report with scores, violations, retention... |
 | [`kafka_compliance_scan`](#kafka_compliance_scan) | Scan topics for compliance with GDPR, HIPAA, SOC2, or PCI-DSS. Detects PII ex... |
 | [`kafka_compliance_violations`](#kafka_compliance_violations) | List detected compliance violations with optional filters. |
@@ -54,9 +84,16 @@
 | [`kafka_config_drift`](#kafka_config_drift) | Detect configuration drift across clusters. Compare topic configs between clu... |
 | [`kafka_config_history`](#kafka_config_history) | Get configuration change history for a resource with full diff details. Suppo... |
 | [`kafka_config_rollback`](#kafka_config_rollback) | Rollback a resource configuration to a previous version. |
+| [`kafka_connect_bridge`](#kafka_connect_bridge) | Unified Kafka Connect MCP bridge. Manage connectors through a single tool: li... |
 | [`kafka_connector_health`](#kafka_connector_health) | Get health score and diagnostics for a Kafka Connect connector including task... |
 | [`kafka_consume`](#kafka_consume) | Read messages from a Kafka topic with flexible positioning. Supports earliest... |
 | [`kafka_contract_violations`](#kafka_contract_violations) | View contract violations, enforce contracts on messages, set enforcement mode... |
+| [`kafka_controlplane_instance`](#kafka_controlplane_instance) | Manage KafkaMCP instances across organizations. Provision, start, stop, termi... |
+| [`kafka_controlplane_org`](#kafka_controlplane_org) | Manage organizations in the multi-tenant SaaS control plane. Create, list, or... |
+| [`kafka_controlplane_usage`](#kafka_controlplane_usage) | View usage and billing metrics for an organization including tool calls, mess... |
+| [`kafka_correlation_analyze`](#kafka_correlation_analyze) | Analyze correlations between Kafka metrics and external signals within a time... |
+| [`kafka_correlation_endpoints`](#kafka_correlation_endpoints) | Register or list external observability endpoints for signal ingestion. |
+| [`kafka_correlation_ingest`](#kafka_correlation_ingest) | Ingest external observability signals (from Prometheus, Datadog, PagerDuty, o... |
 | [`kafka_cost_allocate`](#kafka_cost_allocate) | Create or view cost allocation groups that map resources to teams, services, ... |
 | [`kafka_cost_analyze`](#kafka_cost_analyze) | Analyze storage and compute costs for a Kafka topic. Estimates monthly cost b... |
 | [`kafka_cost_budget`](#kafka_cost_budget) | Create spending budgets with alert thresholds or view budget status. |
@@ -65,18 +102,26 @@
 | [`kafka_cost_whatif`](#kafka_cost_whatif) | Simulate configuration changes and see cost impact. What-if analysis for rete... |
 | [`kafka_create_connector`](#kafka_create_connector) | Create a new Kafka Connect connector with the specified configuration. |
 | [`kafka_create_topic`](#kafka_create_topic) | Create a new Kafka topic with specified partitions, replication factor, and c... |
+| [`kafka_cross_lineage`](#kafka_cross_lineage) | Cross-topic data lineage tracking and visualization. Maps how data flows betw... |
 | [`kafka_dashboard_create`](#kafka_dashboard_create) | Auto-provision Kafka monitoring dashboards for Grafana, Datadog, or custom pr... |
 | [`kafka_delete_connector`](#kafka_delete_connector) | Delete a Kafka Connect connector. |
 | [`kafka_delete_topic`](#kafka_delete_topic) | Delete a Kafka topic. This is a destructive operation. |
 | [`kafka_describe_connector`](#kafka_describe_connector) | Get full details for a Kafka Connect connector including config, task status,... |
 | [`kafka_describe_consumer_group`](#kafka_describe_consumer_group) | Get the state, members, partition assignments, and per-partition lag of a con... |
 | [`kafka_describe_topic`](#kafka_describe_topic) | Get detailed metadata for a specific topic including partition details, repli... |
+| [`kafka_dev_environment`](#kafka_dev_environment) | Get the local development environment status, sample topics, quick start guid... |
+| [`kafka_dev_sample_data`](#kafka_dev_sample_data) | Generate sample data for local development. Available generators: ecommerce-o... |
+| [`kafka_dev_tutorial`](#kafka_dev_tutorial) | Interactive guided tutorials for learning KafkaMCP. List tutorials, start one... |
 | [`kafka_diagnose_lag`](#kafka_diagnose_lag) | Deep diagnostic analysis of consumer group lag. Traces root cause: slow consu... |
 | [`kafka_discover_clusters`](#kafka_discover_clusters) | Auto-discover Kafka clusters by scanning common ports, environment variables,... |
+| [`kafka_discover_tools`](#kafka_discover_tools) | Progressive disclosure meta-tool: discover additional tools in a specific cat... |
 | [`kafka_failover_readiness`](#kafka_failover_readiness) | Evaluate failover readiness for a replication link. Provides readiness score ... |
 | [`kafka_federation_join`](#kafka_federation_join) | Manage federation membership. Actions: join (register instance), leave (dereg... |
 | [`kafka_federation_query`](#kafka_federation_query) | Execute a query across all federated instances. Routes tool calls to matching... |
 | [`kafka_federation_status`](#kafka_federation_status) | Get federation status: instances, policies, health. Actions: status (overview... |
+| [`kafka_finops_budget`](#kafka_finops_budget) | Set a budget alert for Kafka infrastructure spend. |
+| [`kafka_finops_record_cost`](#kafka_finops_record_cost) | Record topic cost data for FinOps tracking and analysis. |
+| [`kafka_finops_summary`](#kafka_finops_summary) | Get a cost intelligence summary including total spend, topic costs, optimizat... |
 | [`kafka_flow_bottlenecks`](#kafka_flow_bottlenecks) | Detect bottlenecks in the message flow: high consumer lag, low throughput, hi... |
 | [`kafka_flow_debug`](#kafka_flow_debug) | Live message flow debugging. Builds a real-time graph of producers, topics, a... |
 | [`kafka_forecast`](#kafka_forecast) | ML-based capacity forecasting using linear regression and seasonal decomposit... |
@@ -84,6 +129,11 @@
 | [`kafka_gitops_diff`](#kafka_gitops_diff) | Compare desired Kafka configuration (declarative YAML) against live cluster s... |
 | [`kafka_group_heal`](#kafka_group_heal) | Auto-heal consumer groups: diagnose root cause (stuck partition, slow consume... |
 | [`kafka_group_health`](#kafka_group_health) | Evaluate consumer group health with scoring (0-100), detect zombies, rebalanc... |
+| [`kafka_health_score`](#kafka_health_score) | Get a unified health score for a Kafka cluster by aggregating broker status, ... |
+| [`kafka_incident_ingest`](#kafka_incident_ingest) | Ingest an anomaly event for cross-cluster correlation. |
+| [`kafka_incident_list`](#kafka_incident_list) | List correlated incidents across Kafka clusters with root cause analysis. |
+| [`kafka_incident_report`](#kafka_incident_report) | Generate a structured incident report with timeline, blast radius, root cause... |
+| [`kafka_incident_stats`](#kafka_incident_stats) | Get incident correlation engine statistics. |
 | [`kafka_join`](#kafka_join) | Perform a time-windowed join across two topics on a key field. Returns matche... |
 | [`kafka_knowledge_graph`](#kafka_knowledge_graph) | Query the embedded knowledge graph of topic relationships, consumer group top... |
 | [`kafka_list_acls`](#kafka_list_acls) | List all Kafka ACLs with principal, resource, and operation breakdown. Includ... |
@@ -94,16 +144,29 @@
 | [`kafka_memory_recall`](#kafka_memory_recall) | Recall a specific memory entry by key, or list all entries. Actions: get, lis... |
 | [`kafka_memory_search`](#kafka_memory_search) | Search agent memory using TF-IDF semantic search. Returns ranked results by r... |
 | [`kafka_memory_store`](#kafka_memory_store) | Store a memory entry for the current agent. Supports categories (preference, ... |
+| [`kafka_message_sample`](#kafka_message_sample) | Statistical sampling and profiling of messages on a topic. Provides schema di... |
 | [`kafka_migrate_execute`](#kafka_migrate_execute) | Execute a migration plan. Supports dry-run mode, parallel execution, and prog... |
 | [`kafka_migrate_rollback`](#kafka_migrate_rollback) | Rollback a completed or failed migration. |
 | [`kafka_migrate_status`](#kafka_migrate_status) | Get the status and progress of a migration execution. |
 | [`kafka_migration_plan`](#kafka_migration_plan) | Plan and validate Kafka migrations between clusters. Actions: plan (diff clus... |
+| [`kafka_negotiate_capabilities`](#kafka_negotiate_capabilities) | Negotiate agent capabilities to receive a contextual subset of available tool... |
+| [`kafka_nl_pipeline_build`](#kafka_nl_pipeline_build) | Build a data pipeline from a natural language description. Translates plain E... |
+| [`kafka_nl_pipeline_manage`](#kafka_nl_pipeline_manage) | Manage NL-generated pipelines: list, get, validate, deploy, or delete. |
 | [`kafka_nl_query`](#kafka_nl_query) | Query Kafka with plain English. Semantic parser handles complex boolean filte... |
+| [`kafka_orchestration_agents`](#kafka_orchestration_agents) | Register an agent for orchestration or list available agents. |
+| [`kafka_orchestration_complete_step`](#kafka_orchestration_complete_step) | Complete a step in an orchestration with results, enabling dependent steps to... |
+| [`kafka_orchestration_create`](#kafka_orchestration_create) | Create a multi-agent orchestration that coordinates agents working together o... |
+| [`kafka_orchestration_handoff`](#kafka_orchestration_handoff) | Create a task handoff between agents with context and message for collaborati... |
+| [`kafka_orchestration_status`](#kafka_orchestration_status) | Get status of an orchestration, list all orchestrations, or get ready steps f... |
 | [`kafka_persona`](#kafka_persona) | Manage declarative agent personas. Actions: list (all personas), get (persona... |
 | [`kafka_pipeline_create`](#kafka_pipeline_create) | Create a streaming function pipeline with filter/map/enrich/transform steps. ... |
 | [`kafka_pipeline_execute`](#kafka_pipeline_execute) | Execute a pipeline on messages from the source topic. Consumes, processes thr... |
 | [`kafka_pipeline_manage`](#kafka_pipeline_manage) | Manage streaming function pipelines. Actions: list, get, delete, runs (execut... |
 | [`kafka_platform_info`](#kafka_platform_info) | Get information about configured Kafka-compatible platforms (Apache Kafka, Re... |
+| [`kafka_playbook_execute`](#kafka_playbook_execute) | Execute an anomaly response playbook. Triggers automated remediation steps fo... |
+| [`kafka_playbook_list`](#kafka_playbook_list) | List anomaly response playbooks. Playbooks define automated remediation steps... |
+| [`kafka_playbook_manage`](#kafka_playbook_manage) | Manage playbooks and executions: get status, complete steps, enable/disable, ... |
+| [`kafka_playbook_match`](#kafka_playbook_match) | Find playbooks matching a specific anomaly trigger type and value. |
 | [`kafka_playground`](#kafka_playground) | Sandboxed Kafka environment for safe experimentation. Create temporary topics... |
 | [`kafka_plugin_install`](#kafka_plugin_install) | Install a plugin from the marketplace. Validates dependencies and security ca... |
 | [`kafka_plugin_list`](#kafka_plugin_list) | List installed plugins with their status, version, provided tools, and resour... |
@@ -111,7 +174,10 @@
 | [`kafka_policy_evaluate`](#kafka_policy_evaluate) | Evaluate an OPA Rego policy for an authorization decision. Returns whether th... |
 | [`kafka_policy_manage`](#kafka_policy_manage) | Manage OPA Rego policies. Actions: list (show policies), register (add/update... |
 | [`kafka_policy_simulate`](#kafka_policy_simulate) | Simulate a policy evaluation showing how each policy rule matches, without re... |
+| [`kafka_predict_alert`](#kafka_predict_alert) | Predictive consumer group alerting. Analyzes lag trends, consumption rates, a... |
 | [`kafka_produce`](#kafka_produce) | Publish one or more messages to a Kafka topic. Returns delivery confirmation ... |
+| [`kafka_quality_report`](#kafka_quality_report) | Generate a detailed data quality report for a topic including trends, SLA sta... |
+| [`kafka_quality_score`](#kafka_quality_score) | Get the real-time data quality score for a Kafka topic across freshness, comp... |
 | [`kafka_query`](#kafka_query) | Accept a natural language description of desired data and translate it to a t... |
 | [`kafka_quickstart`](#kafka_quickstart) | Guided onboarding: auto-discovers Kafka clusters, suggests configuration, and... |
 | [`kafka_quota_request`](#kafka_quota_request) | Request a quota adjustment: increase, decrease, reset, or grant burst credits. |
@@ -126,16 +192,30 @@
 | [`kafka_replication_status`](#kafka_replication_status) | Get real-time cross-cluster replication status for MirrorMaker2/Confluent Rep... |
 | [`kafka_reset_offsets`](#kafka_reset_offsets) | Reset consumer group offsets. Supports earliest, latest, or timestamp strateg... |
 | [`kafka_restart_connector`](#kafka_restart_connector) | Restart a Kafka Connect connector or specific tasks. Supports bulk restart of... |
+| [`kafka_retention_approve`](#kafka_retention_approve) | Approve a pending retention change request. |
+| [`kafka_retention_change_request`](#kafka_retention_change_request) | Request a retention change with approval workflow. Reducing retention require... |
+| [`kafka_retention_policy`](#kafka_retention_policy) | Get or set the intelligent retention policy for a topic, including compliance... |
+| [`kafka_retention_recommendations`](#kafka_retention_recommendations) | Get AI-powered retention recommendations based on usage patterns, compliance,... |
+| [`kafka_runbook`](#kafka_runbook) | Automated runbook executor for multi-step operational procedures (partition r... |
 | [`kafka_sandbox_create`](#kafka_sandbox_create) | Create an isolated sandbox environment for safe experimentation with Kafka op... |
 | [`kafka_sandbox_destroy`](#kafka_sandbox_destroy) | Destroy a sandbox, list sandboxes, get details, or generate a promotion report. |
 | [`kafka_sandbox_exec`](#kafka_sandbox_exec) | Execute a Kafka tool within a sandbox. All operations are tracked with resour... |
+| [`kafka_schema_advisor_analyze`](#kafka_schema_advisor_analyze) | Analyze schema evolution history and provide health score, patterns, best pra... |
+| [`kafka_schema_advisor_migrate`](#kafka_schema_advisor_migrate) | Generate a step-by-step migration plan for evolving a schema between versions. |
+| [`kafka_schema_advisor_predict`](#kafka_schema_advisor_predict) | Predict compatibility issues for a proposed schema change. Analyzes breaking ... |
 | [`kafka_schema_apply`](#kafka_schema_apply) | Apply, review, or rollback a schema proposal. Actions: review (approve/reject... |
 | [`kafka_schema_diff`](#kafka_schema_diff) | Compute a field-by-field diff between two schema versions showing additions, ... |
+| [`kafka_schema_playground`](#kafka_schema_playground) | Interactive schema playground for drafting, testing, and validating schemas. ... |
 | [`kafka_schema_propose`](#kafka_schema_propose) | Propose a schema change with auto-generated migration plan, compatibility val... |
 | [`kafka_search`](#kafka_search) | Search/filter messages in a topic by key, header, value content, or time rang... |
 | [`kafka_semantic_index`](#kafka_semantic_index) | Index Kafka messages for semantic search. Consumes recent messages from a top... |
 | [`kafka_semantic_search`](#kafka_semantic_search) | Search indexed Kafka messages by meaning using semantic similarity. Returns t... |
 | [`kafka_semantic_stats`](#kafka_semantic_stats) | Get statistics about the semantic search index including document counts, top... |
+| [`kafka_session_replay`](#kafka_session_replay) | Record and replay AI agent sessions for debugging. Captures tool call traces,... |
+| [`kafka_sla_configure`](#kafka_sla_configure) | Configure a data quality SLA for a topic with threshold alerts. |
+| [`kafka_sla_status`](#kafka_sla_status) | Get the SLA compliance status for a topic or list all configured SLAs. |
+| [`kafka_smart_route`](#kafka_smart_route) | Analyze a high-level request and automatically compose a multi-tool execution... |
+| [`kafka_smart_route_status`](#kafka_smart_route_status) | Get status of a smart route execution plan, list plans, get next executable s... |
 | [`kafka_sql_execute`](#kafka_sql_execute) | Execute a streaming SQL query against Kafka topics. Supports SELECT, WHERE, G... |
 | [`kafka_sql_explain`](#kafka_sql_explain) | Explain a streaming SQL query plan without executing it. Shows execution step... |
 | [`kafka_sql_manage`](#kafka_sql_manage) | Manage SQL queries. Actions: list, get, delete. |
@@ -149,12 +229,26 @@
 | [`kafka_task_status`](#kafka_task_status) | Get task status, queue statistics, or list tasks. Actions: get, stats, list, ... |
 | [`kafka_time_travel`](#kafka_time_travel) | Point-in-time topic queries: snapshot state at a timestamp, reconstruct compa... |
 | [`kafka_timeseries_analyze`](#kafka_timeseries_analyze) | Advanced time-series analysis: Mann-Kendall trend detection, FFT seasonality ... |
+| [`kafka_timeseries_baseline`](#kafka_timeseries_baseline) | Compute a baseline from historical data and compare current metrics against i... |
+| [`kafka_timeseries_compare`](#kafka_timeseries_compare) | Compare time-series metrics between two windows to identify changes, degradat... |
+| [`kafka_timeseries_list`](#kafka_timeseries_list) | List all tracked time-series and available analysis windows. |
+| [`kafka_timeseries_query`](#kafka_timeseries_query) | Query time-series metrics for a topic or consumer group within a configurable... |
+| [`kafka_topic_approve`](#kafka_topic_approve) | Approve a pending topic provisioning request. |
+| [`kafka_topic_reject`](#kafka_topic_reject) | Reject a pending topic provisioning request. |
+| [`kafka_topic_request`](#kafka_topic_request) | Submit a self-service topic provisioning request with justification and appro... |
+| [`kafka_topic_request_status`](#kafka_topic_request_status) | Check the status of topic provisioning requests. |
+| [`kafka_topic_template`](#kafka_topic_template) | Manage declarative topic-as-code templates. Define topic settings (partitions... |
 | [`kafka_trace_flow`](#kafka_trace_flow) | Distributed tracing for Kafka messages: inject W3C Trace Context headers, cor... |
 | [`kafka_trace_lineage`](#kafka_trace_lineage) | Track data lineage through Kafka topics. Shows producer→topic→consumer re... |
 | [`kafka_trace_message`](#kafka_trace_message) | Trace a message across topics using correlation IDs. Auto-detects correlation... |
+| [`kafka_twin_simulate`](#kafka_twin_simulate) | Simulate operations against a cluster digital twin without affecting producti... |
+| [`kafka_twin_snapshot`](#kafka_twin_snapshot) | Capture a snapshot of the current cluster state (topics, consumer groups, bro... |
 | [`kafka_update_connector`](#kafka_update_connector) | Update an existing Kafka Connect connector configuration. |
 | [`kafka_usage_report`](#kafka_usage_report) | Generate usage analytics and chargeback reports. Actions: rollup (usage summa... |
 | [`kafka_validate_contract`](#kafka_validate_contract) | Validate messages against data contracts, register contracts, or get complian... |
+| [`kafka_vector_sync_create`](#kafka_vector_sync_create) | Create a sync bridge that streams Kafka topic data into a vector database (Pi... |
+| [`kafka_vector_sync_manage`](#kafka_vector_sync_manage) | Manage vector sync bridges: list, get, pause, resume, delete. |
+| [`kafka_vector_sync_search`](#kafka_vector_sync_search) | Perform semantic similarity search against synced vector data from Kafka topics. |
 | [`kafka_view_create`](#kafka_view_create) | Create a materialized view over a Kafka topic with projections, aggregations ... |
 | [`kafka_view_query`](#kafka_view_query) | Query a materialized view with point lookups, range scans, or full scans. Ret... |
 | [`kafka_view_status`](#kafka_view_status) | Manage materialized views. Actions: list, get, delete, stats. |
@@ -163,10 +257,46 @@
 | [`kafka_workflow_run`](#kafka_workflow_run) | Start a workflow execution from a template. Returns the run ID and initial re... |
 | [`kafka_workflow_status`](#kafka_workflow_status) | Get workflow status, manage workflows, or advance a running workflow. Actions... |
 | [`kafka_workflows`](#kafka_workflows) | Manage pre-built workflow templates for common Kafka operations. Actions: lis... |
+| [`llm_pipeline_create`](#llm_pipeline_create) | Create an LLM training data export pipeline from Kafka topics with sampling, ... |
+| [`llm_pipeline_list`](#llm_pipeline_list) | List all configured LLM training data export pipelines. |
+| [`llm_pipeline_status`](#llm_pipeline_status) | Get the status and results of an LLM training data pipeline. |
 
 ---
 
 ## Tools
+
+### `agent_action_analytics`
+
+Get tool usage analytics including call counts, error rates, latency percentiles, and unique agent counts.
+
+**Source:** `register_eventsourcing.go`
+
+### `agent_action_export`
+
+Export agent actions as JSONL for LLM fine-tuning on domain-specific Kafka operations.
+
+**Source:** `register_eventsourcing.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `agent_id` | string |  | Filter by agent ID |
+| `tool` | string |  | Filter by tool name |
+| `status` | string |  | Filter by status: success or error |
+| `limit` | number |  | Max events. Default: 10000 |
+
+### `agent_action_replay`
+
+Replay an agent session showing all tool calls, parameters, results, and timing.
+
+**Source:** `register_eventsourcing.go`
+
+### `agent_action_stats`
+
+Get event sourcing engine statistics.
+
+**Source:** `register_eventsourcing.go`
 
 ### `agent_clock_get`
 
@@ -248,6 +378,55 @@ Send a message to another agent for coordination. Use '*' as recipient for broad
 | `type` | string |  | Message type: request, response, broadcast, notification. Default: notification |
 | `body` | string |  | Message body |
 
+### `agent_threat_alerts`
+
+List recent behavioral threat alerts detected for agents (data exfiltration, privilege escalation, bulk reads).
+
+**Source:** `register_threat_detection.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `agent_id` | string |  | Filter by agent ID |
+| `limit` | number |  | Max alerts to return. Default: 50 |
+
+### `agent_threat_profile`
+
+Get the behavioral profile for an agent, including access patterns, topic usage, and baseline status.
+
+**Source:** `register_threat_detection.go`
+
+### `agent_threat_stats`
+
+Get threat detection system statistics including profile count and alert totals.
+
+**Source:** `register_threat_detection.go`
+
+### `codec_decode`
+
+Decode a wire-format message (Confluent Schema Registry format with Avro/Protobuf support, auto-detect with JSON fallback).
+
+**Source:** `register_codec.go`
+
+### `codec_detect_format`
+
+Detect the serialization format of a message (Confluent wire format, JSON, or raw bytes).
+
+**Source:** `register_codec.go`
+
+### `codec_encode`
+
+Encode a message using Confluent wire format (magic byte + schema ID + Avro/Protobuf/JSON payload).
+
+**Source:** `register_codec.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `format` | string |  | Encoding format: avro, protobuf, json. Default: json |
+
 ### `gateway_consume`
 
 Consume messages from a named streaming backend (Pulsar, RabbitMQ, NATS).
@@ -297,6 +476,49 @@ Produce a message through a named streaming backend (Pulsar, RabbitMQ, NATS).
 |------|------|----------|-------------|
 | `key` | string |  | Message key |
 
+### `gitops_reconcile`
+
+Run a GitOps reconciliation against the live cluster state. Defaults to dry-run mode.
+
+**Source:** `register_gitops_reconcile.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `dry_run` | boolean |  | Run in dry-run mode (no changes applied). Default: true |
+
+### `gitops_reconcile_history`
+
+Get recent GitOps reconciliation results.
+
+**Source:** `register_gitops_reconcile.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `limit` | number |  | Max results. Default: 10 |
+
+### `gitops_set_desired_state`
+
+Set the desired Kafka state for GitOps reconciliation (topics, schemas, ACLs in YAML format).
+
+**Source:** `register_gitops_reconcile.go`
+
+### `gitops_webhook`
+
+Process a Git webhook event (push or pull_request) for PR-based reconciliation workflows.
+
+**Source:** `register_gitops_reconcile.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `ref` | string |  | Git ref (e.g., refs/heads/main) |
+| `action` | string |  | PR action: opened, synchronize, closed, merged |
+
 ### `k8s_operator_manage`
 
 Manage KafkaMCP Kubernetes operator instances. Actions: create, get, list, update, delete, scale, manifest, crd.
@@ -314,6 +536,21 @@ Manage KafkaMCP Kubernetes operator instances. Actions: create, get, list, updat
 | `version` | string |  | Image version tag |
 | `transport` | string |  | MCP transport: stdio, sse, streamable-http |
 | `port` | number |  | Service port |
+
+### `kafka_acl_manage`
+
+Manage Kafka ACLs — list, audit, diff, and dry-run access control entries for topics, consumer groups, and cluster resources.
+
+**Source:** `register_aclmgmt.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `principal` | string |  | Principal filter or target (e.g., User:app1) |
+| `resource_type` | string |  | Resource type filter: topic, group, cluster |
+| `cluster` | string |  | Cluster name for multi-cluster setups. |
+| `rules` | object |  | ACL rules array (for set_desired). Each rule: {resource_type, resource_name, operation, permission} |
 
 ### `kafka_advisor_report`
 
@@ -340,6 +577,46 @@ Scan topics for best-practice violations, anti-patterns, and improvement opportu
 | `cluster` | string |  | Cluster name |
 | `severity` | string |  | Filter by severity: info, warning, critical |
 | `category` | string |  | Filter by category: replication, partitioning, retention, naming, hygiene |
+
+### `kafka_agent_config_get`
+
+Get details of a specific agent configuration or tool bundle from the marketplace.
+
+**Source:** `register_agentstore.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `type` | string |  | Type: config or bundle. Default: config |
+
+### `kafka_agent_config_publish`
+
+Publish an agent configuration or tool bundle to the marketplace.
+
+**Source:** `register_agentstore.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `category` | string |  | Category: monitoring, operations, analytics, pipeline, security |
+| `type` | string |  | Type: config or bundle. Default: config |
+
+### `kafka_agent_config_search`
+
+Search the agent configuration marketplace for pre-built agent configs, tool bundles, and integration setups.
+
+**Source:** `register_agentstore.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | string |  | Search query (matches name, description, tags) |
+| `category` | string |  | Filter by category: monitoring, operations, analytics, pipeline, security |
+| `type` | string |  | Type to search: configs, bundles, or all. Default: all |
+| `verified_only` | boolean |  | Only show verified entries. Default: false |
 
 ### `kafka_agent_optimize`
 
@@ -486,6 +763,30 @@ Manually ingest a data point for anomaly detection analysis.
 
 **Source:** `register_features.go`
 
+### `kafka_benchmark`
+
+Embedded benchmarking and load testing. Measure producer/consumer throughput, latency percentiles, and topic performance under configurable synthetic workloads.
+
+**Source:** `register_benchmark.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `topic` | string |  | Topic to benchmark (required for run) |
+| `type` | string |  | Benchmark type: producer, consumer, both (default: producer) |
+| `message_count` | number |  | Number of messages to produce (default: 1000, max: 100000) |
+| `message_size` | number |  | Message size in bytes (default: 100, max: 1MB) |
+| `concurrency` | number |  | Number of concurrent workers (default: 1, max: 20) |
+| `bench_id` | string |  | Benchmark ID (for status action) |
+| `cluster` | string |  | Cluster name for multi-cluster setups. |
+
+### `kafka_capability_profile`
+
+View the current agent's capability profile including allowed tools, role, and context.
+
+**Source:** `register_capability.go`
+
 ### `kafka_capacity_forecast`
 
 Forecast capacity for a specific topic using exponential smoothing and linear regression. Predicts throughput, storage, and lag trends.
@@ -556,6 +857,44 @@ Add tags to a catalog entry, index a new entry, or set lineage information.
 | `owner` | string |  | Owner (for index) |
 | `lineage` | object |  | Lineage info: {upstream, downstream, producers, consumers} |
 
+### `kafka_cdc_create_bridge`
+
+Create a CDC bridge that streams changes from a Kafka topic to a target data store (postgres, mysql, mongodb, elasticsearch, s3, bigquery, snowflake, redis, http).
+
+**Source:** `register_cdc.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `table` | string |  | Target table/collection/index name |
+| `key_field` | string |  | Primary key field for upserts |
+| `cluster` | string |  | Source Kafka cluster name |
+
+### `kafka_cdc_list_bridges`
+
+List all CDC bridges with their status and statistics.
+
+**Source:** `register_cdc.go`
+
+### `kafka_cdc_manage_bridge`
+
+Manage a CDC bridge: get status, pause, resume, stop, or delete.
+
+**Source:** `register_cdc.go`
+
+### `kafka_cdc_process`
+
+Process a batch of messages through a CDC bridge, applying transformations and tracking change operations.
+
+**Source:** `register_cdc.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `cluster` | string |  | Kafka cluster name |
+
 ### `kafka_chaos_inject`
 
 Inject controlled chaos into a Kafka environment. Types: broker_outage, network_partition, slow_consumer, schema_corruption, rebalance_storm, producer_flood. Actions: inject (start experiment), scenario (run pre-built scenario), list_scenarios.
@@ -593,6 +932,43 @@ Stop a running chaos experiment and trigger rollback.
 
 **Source:** `register_chaos.go`
 
+### `kafka_chat_context`
+
+Get the accumulated context for a chat session, including tracked entities, turn count, and session age.
+
+**Source:** `register_chat.go`
+
+### `kafka_chat_message`
+
+Send a message in a chat session. The engine classifies intent, resolves references to previous context (e.g., 'that topic', 'same group'), and tracks entities across turns.
+
+**Source:** `register_chat.go`
+
+### `kafka_chat_session`
+
+Manage conversational chat sessions for multi-turn Kafka exploration. Supports creating, listing, and closing sessions that maintain context across turns.
+
+**Source:** `register_chat.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `session_id` | string |  | Session ID (required for get/close) |
+
+### `kafka_chat_template`
+
+Get investigation templates for common scenarios like incident triage, capacity review, and schema audit. Templates provide step-by-step guided workflows.
+
+**Source:** `register_chat.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `template_id` | string |  | Template ID (required for get) |
+| `category` | string |  | Filter by category: incident, capacity, schema, governance |
+
 ### `kafka_check_schema_compatibility`
 
 Check if a proposed schema is compatible with the subject's compatibility policy.
@@ -605,6 +981,27 @@ Check if a proposed schema is compatible with the subject's compatibility policy
 |------|------|----------|-------------|
 | `schema_type` | string |  | Schema type: AVRO, PROTOBUF, JSON. Default: AVRO |
 | `version` | string |  | Version to check against. Default: 'latest' |
+
+### `kafka_cloud_deploy_generate`
+
+Generate zero-config deployment templates for AWS (MSK), GCP, Azure (Event Hubs), or Confluent Cloud. Produces Docker Compose, Kubernetes manifests, cloud CLI commands, and config files.
+
+**Source:** `register_clouddeploy.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `service` | string |  | Kafka service: aws-msk, confluent-cloud, azure-event-hubs, gcp-managed-kafka |
+| `bootstrap_servers` | string |  | Kafka bootstrap servers |
+| `region` | string |  | Cloud region (defaults to provider's primary region) |
+| `cluster_name` | string |  | Cluster name. Default: kafkamcp |
+
+### `kafka_cloud_deploy_list`
+
+List previously generated deployment templates.
+
+**Source:** `register_clouddeploy.go`
 
 ### `kafka_compliance_report`
 
@@ -693,6 +1090,22 @@ Rollback a resource configuration to a previous version.
 |------|------|----------|-------------|
 | `reason` | string |  | Reason for rollback |
 
+### `kafka_connect_bridge`
+
+Unified Kafka Connect MCP bridge. Manage connectors through a single tool: list, describe, create, update, pause, resume, restart, delete, and health check.
+
+**Source:** `register_connect_bridge.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | string |  | Connector name (required for all actions except list) |
+| `config` | object |  | Connector configuration map (for create/update) |
+| `task_id` | number |  | Specific task ID to restart (-1 for all, default: -1) |
+| `failed_only` | boolean |  | Only restart failed tasks (for restart action) |
+| `cluster` | string |  | Cluster name for multi-cluster setups. |
+
 ### `kafka_connector_health`
 
 Get health score and diagnostics for a Kafka Connect connector including task states, error rates, and recommendations.
@@ -735,6 +1148,90 @@ View contract violations, enforce contracts on messages, set enforcement mode, o
 | `message` | object | ✓ | Message to enforce (for enforce action) |
 | `mode` | string |  | Enforcement mode: warn, reject, quarantine (for set_mode action) |
 | `samples` | object |  | Array of message samples for contract inference (for infer action) |
+
+### `kafka_controlplane_instance`
+
+Manage KafkaMCP instances across organizations. Provision, start, stop, terminate instances with lifecycle management.
+
+**Source:** `register_controlplane.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `instance_id` | string |  | Instance ID (for get/start/stop/terminate) |
+| `org_id` | string |  | Organization ID (for provision/list) |
+| `name` | string |  | Instance name (for provision) |
+| `tier` | string |  | Instance tier: standard, premium, enterprise |
+| `region` | string |  | Deployment region |
+| `bootstrap_servers` | string |  | Kafka bootstrap servers (for provision) |
+
+### `kafka_controlplane_org`
+
+Manage organizations in the multi-tenant SaaS control plane. Create, list, or get organization details including API keys and members.
+
+**Source:** `register_controlplane.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `org_id` | string |  | Organization ID (for get/add_member/create_api_key) |
+| `name` | string |  | Organization name (for create) or API key name |
+| `plan` | string |  | Plan: starter, pro, enterprise (for create) |
+| `email` | string |  | Member email (for add_member) |
+| `role` | string |  | Member role: admin, editor, viewer (for add_member) |
+
+### `kafka_controlplane_usage`
+
+View usage and billing metrics for an organization including tool calls, messages, instance hours, and estimated costs.
+
+**Source:** `register_controlplane.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `period` | string |  | Billing period: current, last_month. Default: current |
+
+### `kafka_correlation_analyze`
+
+Analyze correlations between Kafka metrics and external signals within a time window. Produces temporal correlations, root cause ranking, and unified timeline.
+
+**Source:** `register_correlation.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `window` | string |  | Time window: 1h, 6h, 24h. Default: 1h |
+| `metric` | string |  | Filter by specific metric name |
+
+### `kafka_correlation_endpoints`
+
+Register or list external observability endpoints for signal ingestion.
+
+**Source:** `register_correlation.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `source` | string |  | Source type: prometheus, datadog, pagerduty |
+| `url` | string |  | Endpoint URL (for register) |
+
+### `kafka_correlation_ingest`
+
+Ingest external observability signals (from Prometheus, Datadog, PagerDuty, or custom sources) for correlation with Kafka metrics.
+
+**Source:** `register_correlation.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `severity` | string |  | Signal severity: info, warning, critical |
+| `message` | string |  | Optional message describing the signal |
 
 ### `kafka_cost_allocate`
 
@@ -848,6 +1345,25 @@ Create a new Kafka topic with specified partitions, replication factor, and conf
 | `replication_factor` | number |  | Replication factor. Default: 1 |
 | `cluster` | string |  | Cluster name. |
 
+### `kafka_cross_lineage`
+
+Cross-topic data lineage tracking and visualization. Maps how data flows between topics through streams applications, connectors, and consumers.
+
+**Source:** `register_crosslineage.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | string |  | Node name (for register_node, trace) |
+| `node_type` | string |  | Node type: topic, connector, stream_app, consumer_group, external (for register_node) |
+| `source_id` | string |  | Source node ID (for add_edge) |
+| `target_id` | string |  | Target node ID (for add_edge) |
+| `flow_type` | string |  | Flow type: produces, consumes, transforms, replicates (for add_edge) |
+| `label` | string |  | Edge label (for add_edge) |
+| `id` | string |  | Node or edge ID (for remove_node, remove_edge) |
+| `max_depth` | number |  | Max lineage trace depth (for trace, default: 5) |
+
 ### `kafka_dashboard_create`
 
 Auto-provision Kafka monitoring dashboards for Grafana, Datadog, or custom providers. Creates pre-configured panels for cluster, topic, or consumer group metrics.
@@ -922,6 +1438,37 @@ Get detailed metadata for a specific topic including partition details, replicas
 |------|------|----------|-------------|
 | `cluster` | string | ✓ | Cluster name for multi-cluster setups. |
 
+### `kafka_dev_environment`
+
+Get the local development environment status, sample topics, quick start guide, and setup instructions for offline-first development.
+
+**Source:** `register_devmode.go`
+
+### `kafka_dev_sample_data`
+
+Generate sample data for local development. Available generators: ecommerce-orders, user-events, iot-sensors, click-stream, payment-events.
+
+**Source:** `register_devmode.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `count` | string |  | Number of messages to generate (1-100). Default: 10 |
+
+### `kafka_dev_tutorial`
+
+Interactive guided tutorials for learning KafkaMCP. List tutorials, start one, or get a specific tutorial's steps.
+
+**Source:** `register_devmode.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `tutorial_id` | string |  | Tutorial ID (for get): getting-started, anomaly-detection, schema-management, smart-investigation, digital-twin |
+| `difficulty` | string |  | Filter by difficulty: beginner, intermediate, advanced (for list) |
+
 ### `kafka_diagnose_lag`
 
 Deep diagnostic analysis of consumer group lag. Traces root cause: slow consumers, producer spikes, partition imbalance, or GC pressure.
@@ -939,6 +1486,12 @@ Deep diagnostic analysis of consumer group lag. Traces root cause: slow consumer
 Auto-discover Kafka clusters by scanning common ports, environment variables, and DNS records.
 
 **Source:** `register_onboarding.go`
+
+### `kafka_discover_tools`
+
+Progressive disclosure meta-tool: discover additional tools in a specific category. Categories: discovery, monitoring, admin, streaming, schema, analytics, governance, orchestration, platform.
+
+**Source:** `register_capability.go`
 
 ### `kafka_failover_readiness`
 
@@ -987,6 +1540,39 @@ Get federation status: instances, policies, health. Actions: status (overview), 
 |------|------|----------|-------------|
 | `action` | string |  | Action: status, instances, policies, audit. Default: status |
 | `limit` | number |  | Limit for audit log. Default: 50 |
+
+### `kafka_finops_budget`
+
+Set a budget alert for Kafka infrastructure spend.
+
+**Source:** `register_finops.go`
+
+### `kafka_finops_record_cost`
+
+Record topic cost data for FinOps tracking and analysis.
+
+**Source:** `register_finops.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `storage_gb` | number |  | Storage in GB |
+| `partitions` | number |  | Number of partitions |
+| `msgs_per_sec` | number |  | Messages per second |
+
+### `kafka_finops_summary`
+
+Get a cost intelligence summary including total spend, topic costs, optimization opportunities, and budget alerts.
+
+**Source:** `register_finops.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `action` | string |  | Action: summary, snapshot, recommendations, forecast, budgets. Default: summary |
+| `months` | number |  | Forecast months (for forecast action). Default: 6 |
 
 ### `kafka_flow_bottlenecks`
 
@@ -1080,6 +1666,58 @@ Evaluate consumer group health with scoring (0-100), detect zombies, rebalance s
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `cluster` | string |  | Cluster name. |
+
+### `kafka_health_score`
+
+Get a unified health score for a Kafka cluster by aggregating broker status, under-replicated partitions, ISR shrink rate, and consumer lag into a single score (0-100).
+
+**Source:** `register_healthscore.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `cluster` | string |  | Cluster name for multi-cluster setups. |
+| `action` | string |  | Action: evaluate (default), history |
+| `history_limit` | number |  | Number of historical scores to return (default: 20) |
+
+### `kafka_incident_ingest`
+
+Ingest an anomaly event for cross-cluster correlation.
+
+**Source:** `register_incident.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `topic` | string |  | Affected topic |
+| `severity` | string |  | Severity: info, warning, critical. Default: warning |
+| `value` | number |  | Metric value |
+
+### `kafka_incident_list`
+
+List correlated incidents across Kafka clusters with root cause analysis.
+
+**Source:** `register_incident.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `limit` | number |  | Max incidents. Default: 10 |
+
+### `kafka_incident_report`
+
+Generate a structured incident report with timeline, blast radius, root cause, and remediation steps.
+
+**Source:** `register_incident.go`
+
+### `kafka_incident_stats`
+
+Get incident correlation engine statistics.
+
+**Source:** `register_incident.go`
 
 ### `kafka_join`
 
@@ -1215,6 +1853,20 @@ Store a memory entry for the current agent. Supports categories (preference, sch
 | `ttl_sec` | number |  | Time-to-live in seconds (0 = no expiry) |
 | `metadata` | object |  | Additional metadata key-value pairs |
 
+### `kafka_message_sample`
+
+Statistical sampling and profiling of messages on a topic. Provides schema distribution, message size histograms, key cardinality analysis, and throughput profiling without consuming entire topics.
+
+**Source:** `register_msgsampling.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `topic` | string |  | Topic name to sample (required for sample action) |
+| `sample_size` | number |  | Number of messages to sample (default: 100, max: 1000) |
+| `cluster` | string |  | Cluster name for multi-cluster setups. |
+
 ### `kafka_migrate_execute`
 
 Execute a migration plan. Supports dry-run mode, parallel execution, and progress tracking.
@@ -1258,6 +1910,38 @@ Plan and validate Kafka migrations between clusters. Actions: plan (diff cluster
 | `source_cluster` | string |  | Source cluster name |
 | `target_cluster` | string |  | Target cluster name |
 
+### `kafka_negotiate_capabilities`
+
+Negotiate agent capabilities to receive a contextual subset of available tools based on role, permissions, and conversation context. Reduces the full tool surface to 10-20 relevant tools.
+
+**Source:** `register_capability.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `role` | string |  | Agent role: viewer, operator, admin, analyst, sre, security. Default: viewer |
+| `context` | string |  | Comma-separated context hints (e.g., 'consumer lag,incident triage') |
+
+### `kafka_nl_pipeline_build`
+
+Build a data pipeline from a natural language description. Translates plain English into Kafka Streams/Connect configurations with filter, transform, aggregate, and routing steps.
+
+**Source:** `register_nlpipeline.go`
+
+### `kafka_nl_pipeline_manage`
+
+Manage NL-generated pipelines: list, get, validate, deploy, or delete.
+
+**Source:** `register_nlpipeline.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `pipeline_id` | string |  | Pipeline ID (required for get/validate/deploy/delete) |
+| `description` | string |  | NL description (for parse action) |
+
 ### `kafka_nl_query`
 
 Query Kafka with plain English. Semantic parser handles complex boolean filters, aggregations, time ranges, multi-topic joins. Actions: execute (default), history, suggest. Examples: 'show me all failed orders in the last hour', 'count errors in logs group by service', 'average latency for payments'.
@@ -1272,6 +1956,63 @@ Query Kafka with plain English. Semantic parser handles complex boolean filters,
 | `action` | string |  | Action: execute, history, suggest. Default: execute |
 | `cluster` | string |  | Cluster name. |
 | `limit` | number |  | Max results. Default: 100 |
+
+### `kafka_orchestration_agents`
+
+Register an agent for orchestration or list available agents.
+
+**Source:** `register_orchestration.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `agent_id` | string |  | Agent ID (required for register/heartbeat) |
+| `name` | string |  | Agent name (for register) |
+| `role` | string |  | Agent role: monitor, operator, analyst, security, pipeline, coordinator |
+
+### `kafka_orchestration_complete_step`
+
+Complete a step in an orchestration with results, enabling dependent steps to proceed.
+
+**Source:** `register_orchestration.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `error` | string |  | Error message if failed |
+
+### `kafka_orchestration_create`
+
+Create a multi-agent orchestration that coordinates agents working together on Kafka operations with step dependencies, role-based assignment, and shared context.
+
+**Source:** `register_orchestration.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `description` | string |  | Description of the orchestration |
+
+### `kafka_orchestration_handoff`
+
+Create a task handoff between agents with context and message for collaborative operations.
+
+**Source:** `register_orchestration.go`
+
+### `kafka_orchestration_status`
+
+Get status of an orchestration, list all orchestrations, or get ready steps for execution.
+
+**Source:** `register_orchestration.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `orchestration_id` | string |  | Orchestration ID (omit to list all) |
+| `action` | string |  | Action: status, ready_steps, context. Default: status |
 
 ### `kafka_persona`
 
@@ -1327,6 +2068,48 @@ Manage streaming function pipelines. Actions: list, get, delete, runs (execution
 Get information about configured Kafka-compatible platforms (Apache Kafka, Redpanda, Confluent Cloud, MSK Serverless) and their capabilities.
 
 **Source:** `register_features.go`
+
+### `kafka_playbook_execute`
+
+Execute an anomaly response playbook. Triggers automated remediation steps for a detected anomaly.
+
+**Source:** `register_playbook.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `trigger_info` | string |  | JSON string with trigger context information |
+
+### `kafka_playbook_list`
+
+List anomaly response playbooks. Playbooks define automated remediation steps triggered by specific anomaly patterns like high consumer lag, broker failures, or throughput anomalies.
+
+**Source:** `register_playbook.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `trigger_type` | string |  | Filter by trigger type: high_consumer_lag, broker_down, partition_skew, throughput_drop, throughput_spike, under_replicated, disk_usage_high, schema_error |
+
+### `kafka_playbook_manage`
+
+Manage playbooks and executions: get status, complete steps, enable/disable, list executions.
+
+**Source:** `register_playbook.go`
+
+### `kafka_playbook_match`
+
+Find playbooks matching a specific anomaly trigger type and value.
+
+**Source:** `register_playbook.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `value` | number |  | Anomaly value to match against thresholds |
 
 ### `kafka_playground`
 
@@ -1409,6 +2192,22 @@ Simulate a policy evaluation showing how each policy rule matches, without recor
 |------|------|----------|-------------|
 | `resource_name` | string |  | Specific resource name |
 
+### `kafka_predict_alert`
+
+Predictive consumer group alerting. Analyzes lag trends, consumption rates, and partition assignment patterns to forecast potential issues before they occur.
+
+**Source:** `register_predictalert.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `group_id` | string |  | Consumer group ID (required for analyze/record) |
+| `total_lag` | number |  | Current total lag (for record action) |
+| `member_count` | number |  | Current member count (for record action) |
+| `alert_id` | string |  | Alert ID (for acknowledge action) |
+| `limit` | number |  | Max alerts to return (for alerts action, default: 50) |
+
 ### `kafka_produce`
 
 Publish one or more messages to a Kafka topic. Returns delivery confirmation with partition, offset, and timestamp.
@@ -1423,6 +2222,18 @@ Publish one or more messages to a Kafka topic. Returns delivery confirmation wit
 | `schema_id` | number |  | Explicit Schema Registry schema ID for serialization |
 | `acks` | string |  | Acknowledgment level: 0, 1, all. Default: all |
 | `cluster` | string |  | Cluster name. |
+
+### `kafka_quality_report`
+
+Generate a detailed data quality report for a topic including trends, SLA status, and recommendations.
+
+**Source:** `register_dataquality.go`
+
+### `kafka_quality_score`
+
+Get the real-time data quality score for a Kafka topic across freshness, completeness, conformance, anomaly rate, and volume consistency.
+
+**Source:** `register_dataquality.go`
 
 ### `kafka_query`
 
@@ -1600,6 +2411,57 @@ Restart a Kafka Connect connector or specific tasks. Supports bulk restart of fa
 | `failed_only` | boolean |  | Only restart failed tasks. Default: false |
 | `cluster` | string |  | Cluster name. |
 
+### `kafka_retention_approve`
+
+Approve a pending retention change request.
+
+**Source:** `register_retention.go`
+
+### `kafka_retention_change_request`
+
+Request a retention change with approval workflow. Reducing retention requires approval and grace period.
+
+**Source:** `register_retention.go`
+
+### `kafka_retention_policy`
+
+Get or set the intelligent retention policy for a topic, including compliance constraints (GDPR, HIPAA, SOX).
+
+**Source:** `register_retention.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `retention_ms` | number | ✓ | Current retention in milliseconds (for setting policy) |
+| `compliance` | string |  | Compliance framework: GDPR, HIPAA, SOX, PCI_DSS, none |
+| `criticality` | string |  | Topic criticality: low, medium, high, critical |
+
+### `kafka_retention_recommendations`
+
+Get AI-powered retention recommendations based on usage patterns, compliance, and cost analysis.
+
+**Source:** `register_retention.go`
+
+### `kafka_runbook`
+
+Automated runbook executor for multi-step operational procedures (partition reassignment, rolling restart verification, topic migration). Defines and runs auditable workflows.
+
+**Source:** `register_runbook.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `id` | string |  | Runbook ID or execution ID |
+| `category` | string |  | Filter runbooks by category (for list) |
+| `definition` | string |  | Runbook definition as JSON (for create) |
+| `params` | object |  | Parameters for runbook execution (for execute) |
+| `step_index` | number |  | Step index to complete (for complete_step) |
+| `step_status` | string |  | Step completion status: completed, failed, skipped (for complete_step) |
+| `step_output` | string |  | Step output as JSON string (for complete_step) |
+| `step_error` | string |  | Step error message (for complete_step) |
+
 ### `kafka_sandbox_create`
 
 Create an isolated sandbox environment for safe experimentation with Kafka operations. Sandboxes have resource quotas and auto-expire.
@@ -1638,6 +2500,44 @@ Execute a Kafka tool within a sandbox. All operations are tracked with resource 
 |------|------|----------|-------------|
 | `args` | object |  | Tool arguments |
 
+### `kafka_schema_advisor_analyze`
+
+Analyze schema evolution history and provide health score, patterns, best practices, and antipattern detection.
+
+**Source:** `register_schema_advisor.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `subject` | string |  | Schema subject (omit to list all subjects) |
+
+### `kafka_schema_advisor_migrate`
+
+Generate a step-by-step migration plan for evolving a schema between versions.
+
+**Source:** `register_schema_advisor.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `from_version` | number |  | Source version number |
+| `to_version` | number |  | Target version number |
+
+### `kafka_schema_advisor_predict`
+
+Predict compatibility issues for a proposed schema change. Analyzes breaking changes, risk level, and provides mitigation suggestions.
+
+**Source:** `register_schema_advisor.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema_type` | string |  | Schema type: AVRO, PROTOBUF, JSON. Default: AVRO |
+| `compatibility` | string |  | Compatibility level: BACKWARD, FORWARD, FULL, NONE. Default: BACKWARD |
+
 ### `kafka_schema_apply`
 
 Apply, review, or rollback a schema proposal. Actions: review (approve/reject), apply (register schema), rollback (revert), list (show proposals), get (proposal details), timeline (version history).
@@ -1666,6 +2566,25 @@ Compute a field-by-field diff between two schema versions showing additions, rem
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `version_to` | string |  | Target version number. Default: 'latest' |
+
+### `kafka_schema_playground`
+
+Interactive schema playground for drafting, testing, and validating schemas. Supports draft lifecycle: create → test → validate → promote.
+
+**Source:** `register_schema_playground.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `draft_id` | string |  | Draft ID (for update/test/validate/promote/get/evolve) |
+| `subject` | string |  | Schema subject (for create) |
+| `schema_type` | string |  | Schema type: AVRO, PROTOBUF, JSON (default: AVRO) |
+| `schema` | string |  | Schema definition (for create/update) |
+| `message` | string |  | Sample message JSON to test against schema (for test) |
+| `against_schema` | string |  | Schema to validate compatibility against (for validate/evolve) |
+| `compatibility` | string |  | Compatibility level: BACKWARD, FORWARD, FULL (for validate) |
+| `status_filter` | string |  | Filter drafts by status (for list) |
 
 ### `kafka_schema_propose`
 
@@ -1731,6 +2650,73 @@ Search indexed Kafka messages by meaning using semantic similarity. Returns the 
 Get statistics about the semantic search index including document counts, topic distribution, and vocabulary size.
 
 **Source:** `register_semantic.go`
+
+### `kafka_session_replay`
+
+Record and replay AI agent sessions for debugging. Captures tool call traces, timing, and response payloads.
+
+**Source:** `register_sessionreplay.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `session_id` | string |  | Session ID (for record/end/get/replay/delete) |
+| `agent_id` | string |  | Agent ID filter (for list) or session owner (for start) |
+| `tool` | string |  | Tool name (for record action) |
+| `call_args` | object |  | Tool call arguments (for record action) |
+| `call_response` | object |  | Tool call response (for record action) |
+| `is_error` | boolean |  | Whether the call was an error (for record action) |
+| `error_message` | string |  | Error message if call failed (for record action) |
+| `duration_ms` | number |  | Call duration in milliseconds (for record action) |
+| `limit` | number |  | Max results to return (for list, default: 50) |
+
+### `kafka_sla_configure`
+
+Configure a data quality SLA for a topic with threshold alerts.
+
+**Source:** `register_dataquality.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `min_freshness` | number | ✓ | Minimum freshness score (0-1). Default: 0.8 |
+| `min_completeness` | number |  | Minimum completeness score (0-1). Default: 0.9 |
+| `min_overall` | number |  | Minimum overall score (0-1). Default: 0.7 |
+
+### `kafka_sla_status`
+
+Get the SLA compliance status for a topic or list all configured SLAs.
+
+**Source:** `register_dataquality.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `topic` | string |  | Topic name (omit to list all SLAs) |
+
+### `kafka_smart_route`
+
+Analyze a high-level request and automatically compose a multi-tool execution plan. E.g., 'investigate why orders are delayed' triggers lag diagnosis → anomaly detection → lineage trace.
+
+**Source:** `register_smartroute.go`
+
+### `kafka_smart_route_status`
+
+Get status of a smart route execution plan, list plans, get next executable steps, or record step results.
+
+**Source:** `register_smartroute.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `plan_id` | string |  | Plan ID (required for status/next_steps/complete_step) |
+| `step_id` | string |  | Step ID (required for complete_step) |
+| `step_status` | string |  | Step result status: completed, failed, skipped (for complete_step) |
+| `error` | string |  | Error message if step failed |
 
 ### `kafka_sql_execute`
 
@@ -1901,6 +2887,105 @@ Advanced time-series analysis: Mann-Kendall trend detection, FFT seasonality ana
 | `since_hours` | number |  | Analysis window in hours. Default: 24 |
 | `value` | number |  | Metric value (for ingest action) |
 
+### `kafka_timeseries_baseline`
+
+Compute a baseline from historical data and compare current metrics against it. Detects deviations and scores overall health.
+
+**Source:** `register_timeseries_analytics.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `baseline_window` | string |  | Window for baseline computation. Default: 7d |
+| `current_window` | string |  | Window for current comparison. Default: 1h |
+
+### `kafka_timeseries_compare`
+
+Compare time-series metrics between two windows to identify changes, degradation, or improvements over time.
+
+**Source:** `register_timeseries_analytics.go`
+
+### `kafka_timeseries_list`
+
+List all tracked time-series and available analysis windows.
+
+**Source:** `register_timeseries_analytics.go`
+
+### `kafka_timeseries_query`
+
+Query time-series metrics for a topic or consumer group within a configurable window (1h, 24h, 7d, 30d). Returns statistical summary, trend analysis, and percentile distribution.
+
+**Source:** `register_timeseries_analytics.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `window` | string |  | Time window: 1h, 24h, 7d, 30d. Default: 1h |
+
+### `kafka_topic_approve`
+
+Approve a pending topic provisioning request.
+
+**Source:** `register_topic_portal.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `comment` | string |  | Approval comment |
+
+### `kafka_topic_reject`
+
+Reject a pending topic provisioning request.
+
+**Source:** `register_topic_portal.go`
+
+### `kafka_topic_request`
+
+Submit a self-service topic provisioning request with justification and approval chain.
+
+**Source:** `register_topic_portal.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `owner` | string |  | Team or individual owning this topic |
+| `partitions` | number |  | Number of partitions. Default: 1 |
+| `replication_factor` | number |  | Replication factor. Default: 3 |
+| `retention_ms` | number |  | Retention in milliseconds. Default: 7 days |
+
+### `kafka_topic_request_status`
+
+Check the status of topic provisioning requests.
+
+**Source:** `register_topic_portal.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `request_id` | string |  | Specific request ID (omit to list all) |
+| `status` | string |  | Filter by status: pending, approved, rejected, created |
+| `limit` | number |  | Max results. Default: 50 |
+
+### `kafka_topic_template`
+
+Manage declarative topic-as-code templates. Define topic settings (partitions, replication, retention, cleanup policy) as YAML/JSON templates with apply/diff/plan commands.
+
+**Source:** `register_topictemplate.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `template` | string |  | Template content as YAML or JSON string (for parse/save) |
+| `format` | string |  | Template format: yaml, json (default: json) |
+| `name` | string |  | Template name (for get/delete/diff/plan/export) |
+| `cluster` | string |  | Cluster name for diff/plan operations. |
+
 ### `kafka_trace_flow`
 
 Distributed tracing for Kafka messages: inject W3C Trace Context headers, correlate across topic chains, and visualize message flow graphs. Actions: trace (get trace by ID), record (record a span), create_context (generate trace context), list (recent traces).
@@ -1951,6 +3036,35 @@ Trace a message across topics using correlation IDs. Auto-detects correlation-id
 | `max_scan` | number |  | Max messages to scan per topic. Default: 10000 |
 | `cluster` | string |  | Cluster name. |
 
+### `kafka_twin_simulate`
+
+Simulate operations against a cluster digital twin without affecting production. Supports: create_topic, delete_topic, alter_partitions, alter_config, rebalance.
+
+**Source:** `register_digitaltwin.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `snapshot_id` | string |  | Snapshot ID (for create_twin) |
+| `twin_id` | string |  | Twin ID (for simulate/diff/migrate_plan/get/history) |
+| `op_type` | string |  | Operation type (for simulate): create_topic, delete_topic, alter_partitions, alter_config, rebalance |
+| `topic` | string |  | Topic name (for simulate) |
+| `partitions` | number |  | Partition count (for simulate) |
+| `replication_factor` | number |  | Replication factor (for simulate) |
+
+### `kafka_twin_snapshot`
+
+Capture a snapshot of the current cluster state (topics, consumer groups, brokers) for digital twin simulation. Creates an immutable baseline.
+
+**Source:** `register_digitaltwin.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `cluster` | string |  | Cluster name. Default: default cluster |
+
 ### `kafka_update_connector`
 
 Update an existing Kafka Connect connector configuration.
@@ -1990,6 +3104,43 @@ Validate messages against data contracts, register contracts, or get compliance 
 | `contract` | object |  | Contract definition for register action |
 | `message` | object |  | Message value to validate |
 | `cluster` | string |  | Cluster name. |
+
+### `kafka_vector_sync_create`
+
+Create a sync bridge that streams Kafka topic data into a vector database (Pinecone, Weaviate, Qdrant, Chroma, Milvus) with automatic embedding generation.
+
+**Source:** `register_vectorsync.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `embedding_model` | string |  | Embedding model: simple-hash, tfidf, openai, cohere. Default: simple-hash |
+| `dimension` | number |  | Embedding dimension. Default: 384 |
+
+### `kafka_vector_sync_manage`
+
+Manage vector sync bridges: list, get, pause, resume, delete.
+
+**Source:** `register_vectorsync.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `bridge_id` | string |  | Bridge ID (required for get/pause/resume/stop/delete) |
+
+### `kafka_vector_sync_search`
+
+Perform semantic similarity search against synced vector data from Kafka topics.
+
+**Source:** `register_vectorsync.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `top_k` | number |  | Number of results to return. Default: 10 |
 
 ### `kafka_view_create`
 
@@ -2115,4 +3266,35 @@ Manage pre-built workflow templates for common Kafka operations. Actions: list (
 | `topic` | string |  | Topic parameter for workflow |
 | `group_id` | string |  | Consumer group parameter for workflow |
 | `subject` | string |  | Schema subject parameter for workflow |
+
+### `llm_pipeline_create`
+
+Create an LLM training data export pipeline from Kafka topics with sampling, PII redaction, and deduplication.
+
+**Source:** `register_llm_pipeline.go`
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `format` | string |  | Output format: jsonl, csv, parquet. Default: jsonl |
+| `sampling_strategy` | string |  | Sampling: random, time_based, key_based, stratified. Default: random |
+| `sampling_rate` | number |  | Sampling rate 0.0-1.0. Default: 1.0 |
+| `pii_redaction` | boolean |  | Enable automatic PII redaction. Default: true |
+| `deduplicate` | boolean |  | Enable deduplication. Default: true |
+| `max_messages` | number |  | Max messages to export. Default: 100000 |
+| `destination` | string |  | Destination: local, s3, gcs. Default: local |
+| `destination_path` | string |  | Output path |
+
+### `llm_pipeline_list`
+
+List all configured LLM training data export pipelines.
+
+**Source:** `register_llm_pipeline.go`
+
+### `llm_pipeline_status`
+
+Get the status and results of an LLM training data pipeline.
+
+**Source:** `register_llm_pipeline.go`
 
