@@ -9,7 +9,7 @@ KafkaMCP runs well on Kubernetes when you need a shared, network-accessible MCP 
 
 ## Helm values reference
 
-The repository PRD defines the target Helm values shape below. Use it as the reference contract for chart-based deployments.
+The Helm chart at [`deploy/helm/kafkamcp/`](https://github.com/kafkamcp/kafkamcp/tree/main/deploy/helm/kafkamcp) provides a production-ready chart. The values below show the target shape — see `deploy/helm/kafkamcp/values.yaml` for all defaults.
 
 ```yaml
 replicaCount: 3
@@ -50,7 +50,7 @@ podDisruptionBudget:
 ```
 
 :::info
-That values block comes from the PRD. If you are building your own chart today, keep your chart values aligned with this shape.
+See [`deploy/helm/kafkamcp/`](https://github.com/kafkamcp/kafkamcp/tree/main/deploy/helm/kafkamcp) for the full chart including templates for Deployment, Service, ConfigMap, HPA, NetworkPolicy, PDB, ServiceMonitor, and more.
 :::
 
 ## Basic manifest
