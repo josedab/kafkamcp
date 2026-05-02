@@ -127,8 +127,8 @@ func (m *Manager) StartStream(ctx context.Context, cluster string, cfg StreamCon
 		m.streamMgr = newStreamSessionManager()
 	}
 
-	// Check session capacity before creating the Kafka consumer to avoid
-	// wasted connections when limits are exceeded.
+	// Check session capacity and register placeholder while holding the lock
+	// to prevent TOCTOU races where concurrent requests both pass the capacity check.
 	m.streamMgr.mu.Lock()
 	activeCount := 0
 	agentCount := 0
@@ -148,10 +148,29 @@ func (m *Manager) StartStream(ctx context.Context, cluster string, cfg StreamCon
 		m.streamMgr.mu.Unlock()
 		return nil, fmt.Errorf("per-agent streaming session limit (%d) reached", maxSessionsPerAgent)
 	}
+
+	// Reserve a slot by generating a session ID and inserting a placeholder
+	// before releasing the lock, preventing concurrent over-allocation.
+	sessionID, err := generateSessionID()
+	if err != nil {
+		m.streamMgr.mu.Unlock()
+		return nil, fmt.Errorf("generating session ID: %w", err)
+	}
+	placeholder := &StreamSession{
+		ID:        sessionID,
+		Topic:     cfg.Topic,
+		AgentID:   cfg.AgentID,
+		Status:    "starting",
+		StartedAt: time.Now().UTC().Format(time.RFC3339),
+	}
+	m.streamMgr.sessions[sessionID] = placeholder
 	m.streamMgr.mu.Unlock()
 
 	opts, err := m.clientOpts(clCfg)
 	if err != nil {
+		m.streamMgr.mu.Lock()
+		delete(m.streamMgr.sessions, sessionID)
+		m.streamMgr.mu.Unlock()
 		return nil, fmt.Errorf("building client options: %w", err)
 	}
 
@@ -163,12 +182,10 @@ func (m *Manager) StartStream(ctx context.Context, cluster string, cfg StreamCon
 
 	consumer, err := kgo.NewClient(opts...)
 	if err != nil {
+		m.streamMgr.mu.Lock()
+		delete(m.streamMgr.sessions, sessionID)
+		m.streamMgr.mu.Unlock()
 		return nil, fmt.Errorf("creating stream consumer: %w", err)
-	}
-
-	sessionID, err := generateSessionID()
-	if err != nil {
-		return nil, fmt.Errorf("generating session ID: %w", err)
 	}
 
 	streamCtx, cancel := context.WithTimeout(ctx, time.Duration(cfg.TimeoutMs)*time.Millisecond)
@@ -186,6 +203,7 @@ func (m *Manager) StartStream(ctx context.Context, cluster string, cfg StreamCon
 		errChan:   make(chan error, 1),
 	}
 
+	// Replace the placeholder with the fully initialized session.
 	m.streamMgr.mu.Lock()
 	m.streamMgr.sessions[session.ID] = session
 	m.streamMgr.mu.Unlock()
