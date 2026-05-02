@@ -167,3 +167,33 @@ func (s *Server) handleQuotaRequest(ctx context.Context, request mcp.CallToolReq
 	s.logAudit(agentID, "kafka_quota_request", args, "", "success", 1, nil, start)
 	return marshalResult(resp)
 }
+
+func (s *Server) handleRateIntelligence(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+	intel := s.adaptiveRateEngine.GetIntelligence()
+	s.logAudit(agentID, "kafka_rate_intelligence", args, "", "success", 1, nil, start)
+	return marshalResult(intel)
+}
+
+func (s *Server) handleClusterHealthUpdate(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+	status, _ := args["status"].(string)
+	if status == "" {
+		return mcp.NewToolResultError("status is required"), nil
+	}
+
+	health := adaptiverate.ClusterHealth{Status: status}
+	if cpu, ok := args["cpu_utilization"].(float64); ok {
+		health.CPUUtilization = cpu
+	}
+	if errRate, ok := args["error_rate"].(float64); ok {
+		health.ErrorRate = errRate
+	}
+
+	s.adaptiveRateEngine.UpdateClusterHealth(health)
+
+	s.logAudit(agentID, "kafka_cluster_health_update", args, "", "success", 1, nil, start)
+	return marshalResult(map[string]any{
+		"status":  "applied",
+		"health":  health,
+		"message": "Cluster health updated; agent quotas adjusted accordingly",
+	})
+}

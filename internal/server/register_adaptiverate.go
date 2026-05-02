@@ -31,4 +31,25 @@ func (s *Server) registerAdaptiveRateTools() {
 		resourceType: "topic",
 		action:       "admin",
 	}, s.handleQuotaRequest))
+
+	s.mcpServer.AddTool(mcp.NewTool("kafka_rate_intelligence",
+		withCategory("ops"),
+		mcp.WithDescription("Get intelligent rate analysis: agent behavior patterns (steady, bursty, growing, declining), global utilization, and actionable recommendations for quota tuning."),
+	), s.withToolAuth(toolAuthConfig{
+		tool:         "kafka_rate_intelligence",
+		resourceType: "cluster",
+		action:       "read",
+	}, s.handleRateIntelligence))
+
+	s.mcpServer.AddTool(mcp.NewTool("kafka_cluster_health_update",
+		withCategory("ops"),
+		mcp.WithDescription("Report cluster health metrics to auto-adjust rate limits. When cluster is degraded, quotas are reduced; when healthy, quotas are restored."),
+		mcp.WithString("status", mcp.Required(), mcp.Description("Cluster status: healthy, degraded, critical")),
+		mcp.WithNumber("cpu_utilization", mcp.Description("CPU utilization percentage (0-100)")),
+		mcp.WithNumber("error_rate", mcp.Description("Error rate percentage (0-100)")),
+	), s.withToolAuth(toolAuthConfig{
+		tool:         "kafka_cluster_health_update",
+		resourceType: "cluster",
+		action:       "admin",
+	}, s.handleClusterHealthUpdate))
 }

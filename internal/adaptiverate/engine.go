@@ -367,3 +367,195 @@ func (e *Engine) refillCredits(profile *AgentProfile, now time.Time) {
 		}
 	}
 }
+
+// ClusterHealth represents the health state of a Kafka cluster for rate adjustment.
+type ClusterHealth struct {
+	Status             string  `json:"status"` // healthy, degraded, critical
+	CPUUtilization     float64 `json:"cpu_utilization_pct"`
+	MemoryUtilization  float64 `json:"memory_utilization_pct"`
+	RequestLatencyMs   float64 `json:"request_latency_ms"`
+	ErrorRate          float64 `json:"error_rate_pct"`
+	AvailableBandwidth float64 `json:"available_bandwidth_pct"`
+}
+
+// BehaviorPattern describes detected agent behavior patterns.
+type BehaviorPattern struct {
+	AgentID    string  `json:"agent_id"`
+	Pattern    string  `json:"pattern"`    // steady, bursty, declining, growing, periodic
+	Confidence float64 `json:"confidence"` // 0-1
+	Detail     string  `json:"detail"`
+}
+
+// RateIntelligence provides intelligent rate analysis across all agents.
+type RateIntelligence struct {
+	ClusterHealth       *ClusterHealth    `json:"cluster_health"`
+	AgentBehaviors      []BehaviorPattern `json:"agent_behaviors"`
+	GlobalUtilization   float64           `json:"global_utilization_pct"`
+	TotalActiveAgents   int               `json:"total_active_agents"`
+	TotalRequestsPerMin float64           `json:"total_requests_per_min"`
+	Recommendations     []string          `json:"recommendations"`
+}
+
+// UpdateClusterHealth updates the cluster health state and adjusts all agent quotas accordingly.
+func (e *Engine) UpdateClusterHealth(health ClusterHealth) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	multiplier := 1.0
+	switch {
+	case health.Status == "critical" || health.CPUUtilization > 90 || health.ErrorRate > 10:
+		multiplier = 0.5
+	case health.Status == "degraded" || health.CPUUtilization > 75 || health.ErrorRate > 5:
+		multiplier = 0.75
+	case health.CPUUtilization < 30 && health.ErrorRate < 1:
+		multiplier = 1.2
+	}
+
+	for _, profile := range e.profiles {
+		adjustedQuota := int(float64(profile.BaseQuota) * multiplier)
+		if adjustedQuota < profile.BaseQuota/4 {
+			adjustedQuota = profile.BaseQuota / 4
+		}
+		if adjustedQuota > profile.BaseQuota*3 {
+			adjustedQuota = profile.BaseQuota * 3
+		}
+
+		// Only adjust if significantly different
+		diff := math.Abs(float64(adjustedQuota - profile.DynamicQuota))
+		if diff > float64(profile.BaseQuota)*0.1 {
+			profile.DynamicQuota = adjustedQuota
+			if multiplier < 1.0 {
+				profile.Warnings = append(profile.Warnings, fmt.Sprintf("Quota reduced due to cluster health (%s, CPU: %.0f%%)", health.Status, health.CPUUtilization))
+			}
+		}
+	}
+
+	e.logger.Info("cluster health applied to rate limits", "status", health.Status, "multiplier", multiplier)
+}
+
+// AnalyzeBehavior detects behavior patterns for all agents.
+func (e *Engine) AnalyzeBehavior() []BehaviorPattern {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+
+	var patterns []BehaviorPattern
+	for agentID, profile := range e.profiles {
+		pattern := e.detectPattern(profile)
+		pattern.AgentID = agentID
+		patterns = append(patterns, pattern)
+	}
+	return patterns
+}
+
+func (e *Engine) detectPattern(profile *AgentProfile) BehaviorPattern {
+	if len(profile.Samples) < 5 {
+		return BehaviorPattern{Pattern: "insufficient_data", Confidence: 0.0, Detail: "Need more samples"}
+	}
+
+	// Split samples into halves and compare
+	mid := len(profile.Samples) / 2
+	var firstHalfRate, secondHalfRate float64
+	for _, s := range profile.Samples[:mid] {
+		firstHalfRate += float64(s.Count)
+	}
+	for _, s := range profile.Samples[mid:] {
+		secondHalfRate += float64(s.Count)
+	}
+
+	// Normalize by segment length
+	firstHalfRate /= float64(mid)
+	secondHalfRate /= float64(len(profile.Samples) - mid)
+
+	ratio := 0.0
+	if firstHalfRate > 0 {
+		ratio = secondHalfRate / firstHalfRate
+	}
+
+	// Check for burstiness using coefficient of variation
+	cv := 0.0
+	if profile.AvgRate > 0 {
+		cv = profile.StdDev / (profile.AvgRate / 60)
+	}
+
+	switch {
+	case cv > 2.0:
+		return BehaviorPattern{
+			Pattern:    "bursty",
+			Confidence: math.Min(cv/3.0, 1.0),
+			Detail:     fmt.Sprintf("High variability (CV=%.1f), peak=%.0f/min vs avg=%.0f/min", cv, profile.PeakRate, profile.AvgRate),
+		}
+	case ratio > 1.5:
+		return BehaviorPattern{
+			Pattern:    "growing",
+			Confidence: math.Min((ratio-1.0)/2.0, 1.0),
+			Detail:     fmt.Sprintf("Rate increasing (%.0f%% growth), current=%.0f/min", (ratio-1)*100, profile.CurrentRate),
+		}
+	case ratio < 0.5 && firstHalfRate > 0:
+		return BehaviorPattern{
+			Pattern:    "declining",
+			Confidence: math.Min((1.0-ratio)/1.0, 1.0),
+			Detail:     fmt.Sprintf("Rate decreasing (%.0f%% decline), current=%.0f/min", (1-ratio)*100, profile.CurrentRate),
+		}
+	case cv < 0.5:
+		return BehaviorPattern{
+			Pattern:    "steady",
+			Confidence: 1.0 - cv,
+			Detail:     fmt.Sprintf("Stable rate at ~%.0f/min (CV=%.2f)", profile.AvgRate, cv),
+		}
+	default:
+		return BehaviorPattern{
+			Pattern:    "moderate",
+			Confidence: 0.5,
+			Detail:     fmt.Sprintf("Moderate variability, avg=%.0f/min", profile.AvgRate),
+		}
+	}
+}
+
+// GetIntelligence returns comprehensive rate intelligence for the cluster.
+func (e *Engine) GetIntelligence() *RateIntelligence {
+	behaviors := e.AnalyzeBehavior()
+
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+
+	intel := &RateIntelligence{
+		AgentBehaviors: behaviors,
+	}
+
+	var totalRate float64
+	var totalQuota float64
+	activeCount := 0
+	cutoff := time.Now().Add(-5 * time.Minute)
+
+	for _, profile := range e.profiles {
+		totalRate += profile.CurrentRate
+		totalQuota += float64(profile.DynamicQuota)
+		if profile.LastRequest.After(cutoff) {
+			activeCount++
+		}
+	}
+
+	intel.TotalActiveAgents = activeCount
+	intel.TotalRequestsPerMin = math.Round(totalRate*100) / 100
+	if totalQuota > 0 {
+		intel.GlobalUtilization = math.Round((totalRate/totalQuota)*10000) / 100
+	}
+
+	// Recommendations
+	if intel.GlobalUtilization > 80 {
+		intel.Recommendations = append(intel.Recommendations, "Cluster-wide rate utilization is high — consider scaling out or increasing cluster capacity")
+	}
+	if intel.GlobalUtilization < 20 && activeCount > 0 {
+		intel.Recommendations = append(intel.Recommendations, "Low overall utilization — quotas may be over-provisioned")
+	}
+	for _, b := range behaviors {
+		if b.Pattern == "bursty" && b.Confidence > 0.7 {
+			intel.Recommendations = append(intel.Recommendations, fmt.Sprintf("Agent %q shows bursty behavior — consider granting additional burst credits", b.AgentID))
+		}
+		if b.Pattern == "growing" && b.Confidence > 0.6 {
+			intel.Recommendations = append(intel.Recommendations, fmt.Sprintf("Agent %q has growing request rate — proactively increase quota to prevent throttling", b.AgentID))
+		}
+	}
+
+	return intel
+}
