@@ -204,7 +204,7 @@
                       "type": "array",
                       "items": {
                         "type": "string",
-                        "enum": ["read", "write", "create", "delete"]
+                        "enum": ["read", "write", "create", "delete", "admin"]
                       },
                       "description": "Allowed operations on matching topics."
                     }
