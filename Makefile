@@ -1,4 +1,4 @@
-.PHONY: build test lint lint-fix lint-all lint-changed fmt fmt-check fmt-imports docker clean clean-all validate validate-ci help run run-local dev dev-sse dev-http coverage test-coverage-map test-coverage-report setup-hooks docker-dev docker-dev-down setup test-one setup-vscode setup-goland integration-test test-integration-setup check doctor sdk-test quickstart benchmark docker-compose-full vet sdk-setup deps changelog test-coverage-check test-short test-race-short test-all new-tool check-deps install docs docs-serve test-func security ci deps-outdated pre-push profile generate test-pkg test-verbose check-gen check-codeowners
+.PHONY: build test test-parallel lint lint-fix lint-all lint-changed fmt fmt-check fmt-imports docker clean clean-all validate validate-ci help run run-local dev dev-sse dev-http coverage test-coverage-map test-coverage-report setup-hooks docker-dev docker-dev-down setup test-one setup-vscode setup-goland integration-test test-integration-setup check doctor sdk-test quickstart benchmark docker-compose-full vet sdk-setup deps changelog test-coverage-check test-short test-race-short test-all new-tool check-deps install docs docs-serve test-func security ci deps-outdated pre-push profile generate test-pkg test-verbose check-gen check-codeowners
 
 # Build variables
 BINARY    := kafkamcp
@@ -48,6 +48,9 @@ dev-http: ## Run with streamable-http transport and auto-reload
 
 test: ## Run unit tests with race detection
 	go test -race -coverprofile=coverage.out ./...
+
+test-parallel: ## Run unit tests in parallel with race detection
+	go test -race -parallel 4 -coverprofile=coverage.out ./...
 
 integration-test: ## Run integration tests (requires Kafka cluster)
 	go test -race -tags integration -v ./...
