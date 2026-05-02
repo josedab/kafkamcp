@@ -48,6 +48,8 @@ KafkaMCP is an MCP (Model Context Protocol) server that transforms Apache Kafka 
 - **🏢 Multi-Cluster** — Connect to multiple Kafka clusters with per-cluster configuration
 - **🩺 Self-Healing** — Consumer group health monitoring with automated remediation recommendations
 
+> **How does KafkaMCP compare?** See the [KafkaMCP vs Alternatives](https://kafkamcp.dev/docs/comparison) comparison matrix for a detailed feature breakdown against Kafka REST Proxy, LangChain, Kafka Connect, and ksqlDB.
+
 ## Quick Start
 
 > **One-command quickstart:** If you have Go and Docker installed, run `make quickstart` to install dependencies, start a local Kafka cluster, build KafkaMCP, and run it — all in one step.
