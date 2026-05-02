@@ -36,6 +36,7 @@ func (m *mockTransport) Close() error {
 }
 
 func TestNew(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{}
 	c := New(tr)
 	if c == nil {
@@ -50,6 +51,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestNewWithOptions(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{}
 	c := New(tr, WithAgentID("my-agent"), WithTimeout(10*time.Second))
 	if c.agentID != "my-agent" {
@@ -61,6 +63,7 @@ func TestNewWithOptions(t *testing.T) {
 }
 
 func TestListTopics(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			if name != "kafka_list_topics" {
@@ -88,6 +91,7 @@ func TestListTopics(t *testing.T) {
 }
 
 func TestListTopicsError(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			return nil, errors.New("connection refused")
@@ -101,6 +105,7 @@ func TestListTopicsError(t *testing.T) {
 }
 
 func TestListTopicsInvalidJSON(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			return json.RawMessage(`invalid json`), nil
@@ -114,6 +119,7 @@ func TestListTopicsInvalidJSON(t *testing.T) {
 }
 
 func TestConsume(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			if name != "kafka_consume" {
@@ -138,6 +144,7 @@ func TestConsume(t *testing.T) {
 }
 
 func TestConsumeDefaults(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			if args["limit"].(float64) != 10 {
@@ -154,6 +161,7 @@ func TestConsumeDefaults(t *testing.T) {
 }
 
 func TestConsumeError(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			return nil, errors.New("timeout")
@@ -167,6 +175,7 @@ func TestConsumeError(t *testing.T) {
 }
 
 func TestProduce(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			if name != "kafka_produce" {
@@ -195,6 +204,7 @@ func TestProduce(t *testing.T) {
 }
 
 func TestProduceError(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			return nil, errors.New("auth failed")
@@ -208,6 +218,7 @@ func TestProduceError(t *testing.T) {
 }
 
 func TestSearch(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			return json.Marshal(map[string]any{
@@ -228,6 +239,7 @@ func TestSearch(t *testing.T) {
 }
 
 func TestSearchError(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			return nil, errors.New("failed")
@@ -241,6 +253,7 @@ func TestSearchError(t *testing.T) {
 }
 
 func TestWatch(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			return json.Marshal(map[string]any{
@@ -259,6 +272,7 @@ func TestWatch(t *testing.T) {
 }
 
 func TestWatchError(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			return nil, errors.New("failed")
@@ -272,6 +286,7 @@ func TestWatchError(t *testing.T) {
 }
 
 func TestClose(t *testing.T) {
+	t.Parallel()
 	closed := false
 	tr := &mockTransport{
 		closeFn: func() error {
@@ -290,6 +305,7 @@ func TestClose(t *testing.T) {
 }
 
 func TestCloseError(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		closeFn: func() error {
 			return errors.New("close failed")
@@ -305,6 +321,7 @@ func TestCloseError(t *testing.T) {
 // --- Consumer Group Tests ---
 
 func TestListConsumerGroups(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			if name != "kafka_list_consumer_groups" {
@@ -331,6 +348,7 @@ func TestListConsumerGroups(t *testing.T) {
 }
 
 func TestListConsumerGroupsWithCluster(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			if args["cluster"] != "prod" {
@@ -344,6 +362,7 @@ func TestListConsumerGroupsWithCluster(t *testing.T) {
 }
 
 func TestListConsumerGroupsError(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			return nil, errors.New("timeout")
@@ -357,6 +376,7 @@ func TestListConsumerGroupsError(t *testing.T) {
 }
 
 func TestListConsumerGroupsInvalidJSON(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			return json.RawMessage(`{invalid`), nil
@@ -370,6 +390,7 @@ func TestListConsumerGroupsInvalidJSON(t *testing.T) {
 }
 
 func TestDescribeConsumerGroup(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			if name != "kafka_describe_consumer_group" {
@@ -392,6 +413,7 @@ func TestDescribeConsumerGroup(t *testing.T) {
 }
 
 func TestDescribeConsumerGroupError(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			return nil, errors.New("not found")
@@ -407,6 +429,7 @@ func TestDescribeConsumerGroupError(t *testing.T) {
 // --- Topic Management Tests ---
 
 func TestDescribeTopic(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			if name != "kafka_describe_topic" {
@@ -426,6 +449,7 @@ func TestDescribeTopic(t *testing.T) {
 }
 
 func TestDescribeTopicError(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			return nil, errors.New("failed")
@@ -439,6 +463,7 @@ func TestDescribeTopicError(t *testing.T) {
 }
 
 func TestCreateTopic(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			if name != "kafka_create_topic" {
@@ -461,6 +486,7 @@ func TestCreateTopic(t *testing.T) {
 }
 
 func TestCreateTopicWithConfigs(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			if args["configs"] == nil {
@@ -477,6 +503,7 @@ func TestCreateTopicWithConfigs(t *testing.T) {
 }
 
 func TestCreateTopicError(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			return nil, errors.New("failed")
@@ -490,6 +517,7 @@ func TestCreateTopicError(t *testing.T) {
 }
 
 func TestDeleteTopic(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			if name != "kafka_delete_topic" {
@@ -506,6 +534,7 @@ func TestDeleteTopic(t *testing.T) {
 }
 
 func TestDeleteTopicError(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			return nil, errors.New("permission denied")
@@ -521,6 +550,7 @@ func TestDeleteTopicError(t *testing.T) {
 // --- Schema Registry Tests ---
 
 func TestListSchemas(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			if name != "kafka_list_schemas" {
@@ -542,6 +572,7 @@ func TestListSchemas(t *testing.T) {
 }
 
 func TestListSchemasError(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			return nil, errors.New("registry unavailable")
@@ -555,6 +586,7 @@ func TestListSchemasError(t *testing.T) {
 }
 
 func TestListSchemasInvalidJSON(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			return json.RawMessage(`not json`), nil
@@ -568,6 +600,7 @@ func TestListSchemasInvalidJSON(t *testing.T) {
 }
 
 func TestGetSchema(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			if name != "kafka_describe_schema" {
@@ -592,6 +625,7 @@ func TestGetSchema(t *testing.T) {
 }
 
 func TestGetSchemaError(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			return nil, errors.New("not found")
@@ -605,6 +639,7 @@ func TestGetSchemaError(t *testing.T) {
 }
 
 func TestGetSchemaInvalidJSON(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			return json.RawMessage(`bad`), nil
@@ -620,6 +655,7 @@ func TestGetSchemaInvalidJSON(t *testing.T) {
 // --- Admin Operations Tests ---
 
 func TestResetOffsets(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			if name != "kafka_reset_offsets" {
@@ -639,6 +675,7 @@ func TestResetOffsets(t *testing.T) {
 }
 
 func TestResetOffsetsError(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			return nil, errors.New("failed")
@@ -652,6 +689,7 @@ func TestResetOffsetsError(t *testing.T) {
 }
 
 func TestNaturalLanguageQuery(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			if name != "kafka_nl_query" {
@@ -671,6 +709,7 @@ func TestNaturalLanguageQuery(t *testing.T) {
 }
 
 func TestNaturalLanguageQueryError(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			return nil, errors.New("failed")
@@ -684,6 +723,7 @@ func TestNaturalLanguageQueryError(t *testing.T) {
 }
 
 func TestDiagnoseLag(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			if name != "kafka_diagnose_lag" {
@@ -703,6 +743,7 @@ func TestDiagnoseLag(t *testing.T) {
 }
 
 func TestDiagnoseLagError(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			return nil, errors.New("failed")
@@ -716,6 +757,7 @@ func TestDiagnoseLagError(t *testing.T) {
 }
 
 func TestGetAnomalies(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			if name != "kafka_anomalies" {
@@ -738,6 +780,7 @@ func TestGetAnomalies(t *testing.T) {
 }
 
 func TestGetAnomaliesNoFilters(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			if _, ok := args["severity"]; ok {
@@ -754,6 +797,7 @@ func TestGetAnomaliesNoFilters(t *testing.T) {
 }
 
 func TestGetAnomaliesError(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			return nil, errors.New("failed")
@@ -767,6 +811,7 @@ func TestGetAnomaliesError(t *testing.T) {
 }
 
 func TestAdvisorScan(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			if name != "kafka_advisor_scan" {
@@ -786,6 +831,7 @@ func TestAdvisorScan(t *testing.T) {
 }
 
 func TestAdvisorScanNoCluster(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			if _, ok := args["cluster"]; ok {
@@ -799,6 +845,7 @@ func TestAdvisorScanNoCluster(t *testing.T) {
 }
 
 func TestAdvisorScanError(t *testing.T) {
+	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			return nil, errors.New("failed")
@@ -812,6 +859,7 @@ func TestAdvisorScanError(t *testing.T) {
 }
 
 func TestTopicSummaryJSON(t *testing.T) {
+	t.Parallel()
 	ts := TopicSummary{Name: "test", Partitions: 3, ReplicationFactor: 2, MessageCount: 100}
 	data, err := json.Marshal(ts)
 	if err != nil {
@@ -827,6 +875,7 @@ func TestTopicSummaryJSON(t *testing.T) {
 }
 
 func TestDeliveryResultJSON(t *testing.T) {
+	t.Parallel()
 	dr := DeliveryResult{Partition: 0, Offset: 42, Status: "success"}
 	data, err := json.Marshal(dr)
 	if err != nil {
