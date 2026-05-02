@@ -96,6 +96,25 @@ Configuration /path/to/kafkamcp.yaml is valid.
 Error: configuration validation failed: at least one cluster is required
 ```
 
+### `kafkamcp dev`
+
+Start a local development environment with pre-populated sample data and guided tutorials. Requires a local Kafka broker (or use `make docker-dev`).
+
+```bash
+kafkamcp dev --config kafkamcp.yaml
+```
+
+This mode creates sample topics (`orders`, `user-events`, `iot-sensors`, `click-stream`, `payments`) and provides interactive tutorials for exploring KafkaMCP capabilities.
+
+**Quick Start (dev mode):**
+
+1. Ensure a local Kafka broker is running (`make docker-dev`)
+2. Connect with your MCP client
+3. Call `kafka_dev_environment` for setup info
+4. Call `kafka_dev_tutorial action=list` to see available tutorials
+
+**Available tutorials:** `getting-started`, `anomaly-detection`, `schema-management`
+
 ### `kafkamcp serve`
 
 Start the MCP server. This is an alias for running `kafkamcp` without a subcommand — the behavior is identical.
