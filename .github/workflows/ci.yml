@@ -40,6 +40,17 @@ jobs:
           go run ./cmd/gen-tool-docs
           git diff --exit-code docs/tool-reference.md
 
+      - name: Check website tool count matches generated docs
+        run: |
+          gen_count=$(grep -oP '^\*\*\d+ tools\*\*' docs/tool-reference.md | grep -oP '\d+')
+          web_count=$(grep -oP 'exposes \d+ MCP tools' website/docs/api-reference/tools.md | grep -oP '\d+')
+          if [ "$gen_count" != "$web_count" ]; then
+            echo "ERROR: tool count mismatch — docs/tool-reference.md has $gen_count tools, website/docs/api-reference/tools.md has $web_count tools"
+            echo "Update the tool count in website/docs/api-reference/tools.md to match."
+            exit 1
+          fi
+          echo "Tool counts match: $gen_count"
+
       - name: Test
         run: make test
 
