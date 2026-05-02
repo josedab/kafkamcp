@@ -83,7 +83,7 @@ func (s *Server) handleSessionReplay(ctx context.Context, request mcp.CallToolRe
 
 		case "list":
 			filterAgent := request.GetString("agent_id", "")
-			limit := request.GetInt("limit", 50)
+			limit := int(clampInt64(int64(request.GetInt("limit", 50)), 1, 1000))
 			sessions := s.sessionReplayEngine.ListSessions(filterAgent, limit)
 			s.logAudit(agentID, "kafka_session_replay", args, "", "success", len(sessions), nil, start)
 			return marshalResult(map[string]any{"sessions": sessions, "total": len(sessions)})

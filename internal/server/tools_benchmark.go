@@ -33,9 +33,9 @@ func (s *Server) handleBenchmark(ctx context.Context, request mcp.CallToolReques
 
 			cfg := benchmark.BenchmarkConfig{
 				Topic:            topic,
-				MessageCount:     request.GetInt("message_count", 1000),
-				MessageSizeBytes: request.GetInt("message_size", 100),
-				Concurrency:      request.GetInt("concurrency", 1),
+				MessageCount:     int(clampInt64(int64(request.GetInt("message_count", 1000)), 1, 100000)),
+				MessageSizeBytes: int(clampInt64(int64(request.GetInt("message_size", 100)), 1, 1048576)),
+				Concurrency:      int(clampInt64(int64(request.GetInt("concurrency", 1)), 1, 100)),
 				Type:             request.GetString("type", "producer"),
 			}
 

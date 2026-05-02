@@ -60,7 +60,7 @@ func (s *Server) handleCrossLineage(ctx context.Context, request mcp.CallToolReq
 			if name == "" {
 				return mcp.NewToolResultError("name (topic name) is required"), nil
 			}
-			maxDepth := request.GetInt("max_depth", 5)
+			maxDepth := int(clampInt64(int64(request.GetInt("max_depth", 5)), 1, 50))
 			lineage := s.crossLineageEngine.TraceLineage(name, maxDepth)
 			s.logAudit(agentID, "kafka_cross_lineage", args, "", "success", 1, nil, start)
 			return marshalResult(lineage)

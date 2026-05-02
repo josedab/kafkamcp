@@ -40,7 +40,7 @@ func (s *Server) handleHealthScore(ctx context.Context, request mcp.CallToolRequ
 			return marshalResult(report)
 
 		case "history":
-			limit := request.GetInt("history_limit", 20)
+			limit := int(clampInt64(int64(request.GetInt("history_limit", 20)), 1, 1000))
 			history := s.healthScoreEngine.GetHistory(cluster, limit)
 
 			s.logAudit(agentID, "kafka_health_score", args, cluster, "success", len(history), nil, start)

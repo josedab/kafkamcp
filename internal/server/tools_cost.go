@@ -148,6 +148,7 @@ func (s *Server) handleCostWhatIf(ctx context.Context, request mcp.CallToolReque
 
 		scenario := cost.WhatIfScenario{Topic: topic}
 		if newRet := int64(request.GetInt("new_retention_ms", 0)); newRet > 0 {
+			newRet = clampInt64(newRet, 1000, 365*24*3600*1000) // 1s to 1 year
 			scenario.NewRetentionMs = &newRet
 		}
 		if newComp := request.GetString("new_compression", ""); newComp != "" {
@@ -157,12 +158,11 @@ func (s *Server) handleCostWhatIf(ctx context.Context, request mcp.CallToolReque
 			scenario.NewCompression = newComp
 		}
 		if newPart := request.GetInt("new_partitions", 0); newPart > 0 {
-			if newPart > MaxPartitions {
-				return mcp.NewToolResultError("new_partitions must be <= 10000"), nil
-			}
+			newPart = int(clampInt64(int64(newPart), 1, int64(MaxPartitions)))
 			scenario.NewPartitions = &newPart
 		}
 		if newRF := request.GetInt("new_replication_factor", 0); newRF > 0 {
+			newRF = int(clampInt64(int64(newRF), 1, int64(MaxReplicationFactor)))
 			scenario.NewReplication = &newRF
 		}
 

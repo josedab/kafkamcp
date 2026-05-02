@@ -29,10 +29,7 @@ func (s *Server) handleTraceMessage(ctx context.Context, request mcp.CallToolReq
 		defer s.releaseExpensiveOp()
 
 		headerName := request.GetString("header_name", "")
-		maxScan := request.GetInt("max_scan", 10000)
-		if maxScan > MaxSearchScan {
-			maxScan = MaxSearchScan
-		}
+		maxScan := int(clampInt64(int64(request.GetInt("max_scan", 10000)), 1, int64(MaxSearchScan)))
 
 		// Get topics to scan
 		var topicNames []string

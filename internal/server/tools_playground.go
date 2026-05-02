@@ -24,10 +24,7 @@ func (s *Server) handlePlayground(ctx context.Context, request mcp.CallToolReque
 			if deny := validateStringLength("name", name); deny != nil {
 				return deny, nil
 			}
-			partitions := int32(request.GetInt("partitions", 3))
-			if partitions > 12 {
-				partitions = 12
-			}
+			partitions := int32(clampInt64(int64(request.GetInt("partitions", 3)), 1, 12))
 			result, err := s.kafkaManager.PlaygroundCreate(ctx, cluster, agentID, name, partitions)
 			if err != nil {
 				s.logAudit(agentID, "kafka_playground", args, cluster, "error", 0, err, start)
@@ -39,10 +36,7 @@ func (s *Server) handlePlayground(ctx context.Context, request mcp.CallToolReque
 		case "produce_sample":
 			name := request.GetString("name", "test")
 			pattern := request.GetString("data_pattern", "ecommerce")
-			count := request.GetInt("count", 10)
-			if count > 100 {
-				count = 100
-			}
+			count := int(clampInt64(int64(request.GetInt("count", 10)), 1, 100))
 			result, err := s.kafkaManager.PlaygroundProduceSample(ctx, cluster, agentID, name, pattern, count)
 			if err != nil {
 				s.logAudit(agentID, "kafka_playground", args, cluster, "error", 0, err, start)
