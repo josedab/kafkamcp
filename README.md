@@ -873,63 +873,100 @@ kafkamcp/
 ├── cmd/kafkamcp/          # CLI entrypoint
 │   └── main.go
 ├── internal/
+│   ├── aclmgmt/           # Kafka ACL management tools
 │   ├── adaptiverate/      # Adaptive rate limiting
 │   ├── advisor/           # Cluster health advisor
 │   ├── agentmemory/       # Agent memory persistence
+│   ├── agentprofile/      # ML-based agent behavioral threat detection
 │   ├── anomaly/           # AI-powered anomaly detection (z-score, IQR)
 │   ├── audit/             # Structured JSON audit logger
 │   ├── auth/              # Policy engine (per-agent access control)
+│   ├── benchmark/         # Built-in benchmarking and load testing
+│   ├── capability/        # Dynamic MCP capability negotiation
 │   ├── catalog/           # Data catalog discovery
+│   ├── cdc/               # Change Data Capture bridge
 │   ├── chaos/             # Chaos testing toolkit
+│   ├── chat/              # Conversational chat engine
 │   ├── cloud/             # Cloud provider integrations
+│   ├── clouddeploy/       # Zero-config deployment templates
+│   ├── codec/             # Avro and Protobuf wire-format serialization
 │   ├── collaboration/     # Multi-agent collaboration
 │   ├── compliance/        # Compliance policy enforcement
 │   ├── config/            # YAML config loader with env var expansion
 │   ├── configvcs/         # Configuration version control
 │   ├── contracts/         # Schema-aware data contracts
+│   ├── controlplane/      # Multi-tenant SaaS control plane
+│   ├── correlation/       # Unified observability correlation engine
 │   ├── cost/              # Kafka cost analysis and waste detection
 │   ├── costattribution/   # Cost attribution per team/topic
+│   ├── crosslineage/      # Cross-topic data lineage tracking
 │   ├── dagworkflow/       # DAG-based workflow engine
 │   ├── dashboard/         # Dashboard data aggregation
+│   ├── dataquality/       # Real-time data quality scoring and SLA monitoring
+│   ├── devmode/           # Local development mode with sample data
+│   ├── digitaltwin/       # In-memory Kafka cluster simulation
 │   ├── dlq/               # Dead-letter queue remediation
+│   ├── engine/            # Generic thread-safe in-memory store
+│   ├── eventsourcing/     # Event-sourced agent action recording (CQRS)
 │   ├── evolution/         # Schema evolution advisor
 │   ├── federation/        # Multi-cluster federation
+│   ├── finops/            # FinOps infrastructure cost tracking
 │   ├── flowdebug/         # Message flow debugging
 │   ├── forecast/          # ML-based capacity forecasting
 │   ├── gateway/           # API gateway integration
 │   ├── gitops/            # GitOps configuration management
 │   ├── graph/             # Embedded knowledge graph
+│   ├── healthscore/       # Unified health score aggregation
 │   ├── ide/               # IDE integration utilities
+│   ├── incident/          # AI-assisted incident correlation
 │   ├── kafka/             # Kafka client manager (admin, consume, produce)
 │   ├── lagdiag/           # Consumer lag root cause analysis
 │   ├── lineage/           # Topic data lineage tracking
+│   ├── llmpipeline/       # LLM training data export from Kafka
 │   ├── masking/           # PII redaction and data masking engine
 │   ├── match/             # Topic pattern matching utilities
 │   ├── metrics/           # Prometheus metrics collection
 │   ├── migration/         # Kafka migration planning assistant
+│   ├── msgsampling/       # Statistical message sampling and profiling
+│   ├── nlpipeline/        # Natural language pipeline descriptions
 │   ├── nlquery/           # Natural language query engine
 │   ├── observability/     # Observability pipeline
 │   ├── onboarding/        # Guided onboarding flows
 │   ├── opa/               # Open Policy Agent integration
 │   ├── operator/          # Kubernetes operator support
+│   ├── orchestration/     # Multi-agent orchestration engine
 │   ├── persona/           # Declarative agent personas
 │   ├── pipeline/          # Stream processing pipelines
 │   ├── platform/          # Multi-platform abstraction (Kafka, Redpanda, MSK)
+│   ├── playbook/          # Anomaly detection playbooks
 │   ├── plugin/            # Plugin/extension registry
+│   ├── predictalert/      # Predictive consumer group alerting
 │   ├── profiler/          # Performance profiling
+│   ├── randid/            # Cryptographically random ID generation
 │   ├── ratelimit/         # Per-agent rate limiting
 │   ├── replay/            # Message replay engine
 │   ├── replication/       # Cross-cluster replication monitoring
+│   ├── retention/         # Intelligent data retention policy management
+│   ├── runbook/           # Multi-step operational runbook execution
 │   ├── sandbox/           # Sandboxed execution environment
 │   ├── schema/            # Schema Registry client with LRU cache
+│   ├── schemaadvisor/     # AI-powered schema evolution advisor
+│   ├── schemaplayground/  # Interactive schema testing environment
 │   ├── selfheal/          # Self-healing consumer group monitor
 │   ├── semantic/          # Semantic search over messages
 │   ├── server/            # MCP server, tool/resource handlers
+│   ├── sessionreplay/     # Session recording and replay
+│   ├── sidecar/           # Embeddable in-process MCP server
+│   ├── smartroute/        # Intelligent message routing
 │   ├── streamsql/         # SQL over Kafka streams
 │   ├── taskqueue/         # Background task queue
 │   ├── telemetry/         # OpenTelemetry tracing provider
 │   ├── tenant/            # Multi-tenant isolation
+│   ├── timeseries/        # Time-series metric storage
+│   ├── topicportal/       # Self-service topic provisioning
+│   ├── topictemplate/     # Declarative topic configuration templates
 │   ├── urlutil/           # URL validation utilities
+│   ├── vectorsync/        # Kafka-to-vector-store synchronization
 │   ├── viewstore/         # Materialized view store
 │   ├── watch/             # Event-driven watch subscriptions
 │   └── workflow/          # Agent workflow templates
