@@ -33,6 +33,15 @@ func (s *Server) handleReplicationLag(ctx context.Context, request mcp.CallToolR
 		if source == "" || target == "" {
 			return mcp.NewToolResultError("source_cluster and target_cluster are required"), nil
 		}
+		if deny := validateStringLength("source_cluster", source); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("target_cluster", target); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("topic", topicFilter); deny != nil {
+			return deny, nil
+		}
 
 		topics, err := s.replicationMon.GetLagDetails(source, target)
 		if err != nil {
@@ -67,6 +76,12 @@ func (s *Server) handleFailoverReadiness(ctx context.Context, request mcp.CallTo
 
 		if source == "" || target == "" {
 			return mcp.NewToolResultError("source_cluster and target_cluster are required"), nil
+		}
+		if deny := validateStringLength("source_cluster", source); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("target_cluster", target); deny != nil {
+			return deny, nil
 		}
 
 		readiness, err := s.replicationMon.EvaluateFailoverReadiness(source, target)

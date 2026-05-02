@@ -17,6 +17,10 @@ func (s *Server) handleChatSession(ctx context.Context, request mcp.CallToolRequ
 		action := request.GetString("action", "list")
 		sessionID := request.GetString("session_id", "")
 
+		if deny := validateStringLength("session_id", sessionID); deny != nil {
+			return deny, nil
+		}
+
 		switch action {
 		case "create":
 			session := s.chatEngine.CreateSession(agentID)
@@ -71,6 +75,12 @@ func (s *Server) handleChatMessage(ctx context.Context, request mcp.CallToolRequ
 		if sessionID == "" || message == "" {
 			return mcp.NewToolResultError("session_id and message are required"), nil
 		}
+		if deny := validateStringLength("session_id", sessionID); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("message", message); deny != nil {
+			return deny, nil
+		}
 
 		// Classify intent with context awareness
 		intent := s.chatEngine.ClassifyIntent(sessionID, message)
@@ -117,6 +127,9 @@ func (s *Server) handleChatContext(ctx context.Context, request mcp.CallToolRequ
 		if sessionID == "" {
 			return mcp.NewToolResultError("session_id is required"), nil
 		}
+		if deny := validateStringLength("session_id", sessionID); deny != nil {
+			return deny, nil
+		}
 
 		sessionCtx, err := s.chatEngine.GetSessionContext(sessionID)
 		if err != nil {
@@ -137,6 +150,13 @@ func (s *Server) handleChatTemplate(ctx context.Context, request mcp.CallToolReq
 		action := request.GetString("action", "list")
 		templateID := request.GetString("template_id", "")
 		category := request.GetString("category", "")
+
+		if deny := validateStringLength("template_id", templateID); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("category", category); deny != nil {
+			return deny, nil
+		}
 
 		switch action {
 		case "get":

@@ -17,6 +17,16 @@ func (s *Server) handleAdvisorScan(ctx context.Context, request mcp.CallToolRequ
 		severityFilter := request.GetString("severity", "")
 		categoryFilter := request.GetString("category", "")
 
+		if deny := validateStringLength("cluster", cluster); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("severity", severityFilter); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("category", categoryFilter); deny != nil {
+			return deny, nil
+		}
+
 		metrics, err := s.collectTopicMetrics(ctx, cluster)
 		if err != nil {
 			s.logAudit(agentID, "kafka_advisor_scan", args, cluster, "error", 0, err, start)
@@ -50,6 +60,10 @@ func (s *Server) handleAdvisorReport(ctx context.Context, request mcp.CallToolRe
 		tool: "kafka_advisor_report", resourceType: auth.ResourceCluster, action: auth.ActionRead,
 	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 		cluster := request.GetString("cluster", "")
+
+		if deny := validateStringLength("cluster", cluster); deny != nil {
+			return deny, nil
+		}
 
 		metrics, err := s.collectTopicMetrics(ctx, cluster)
 		if err != nil {

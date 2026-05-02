@@ -24,6 +24,18 @@ func (s *Server) handleVectorSyncCreate(ctx context.Context, request mcp.CallToo
 		if name == "" || sourceTopic == "" || vectorDB == "" || collection == "" {
 			return mcp.NewToolResultError("name, source_topic, vector_db, and collection are required"), nil
 		}
+		if deny := validateStringLength("name", name); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("source_topic", sourceTopic); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("vector_db", vectorDB); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("collection", collection); deny != nil {
+			return deny, nil
+		}
 
 		embModel := request.GetString("embedding_model", "simple-hash")
 		dimension := int(request.GetFloat("dimension", 384))
@@ -64,6 +76,12 @@ func (s *Server) handleVectorSyncSearch(ctx context.Context, request mcp.CallToo
 		if bridgeID == "" || query == "" {
 			return mcp.NewToolResultError("bridge_id and query are required"), nil
 		}
+		if deny := validateStringLength("bridge_id", bridgeID); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("query", query); deny != nil {
+			return deny, nil
+		}
 
 		topK := int(request.GetFloat("top_k", 10))
 
@@ -90,6 +108,10 @@ func (s *Server) handleVectorSyncManage(ctx context.Context, request mcp.CallToo
 	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 		action := request.GetString("action", "list")
 		bridgeID := request.GetString("bridge_id", "")
+
+		if deny := validateStringLength("bridge_id", bridgeID); deny != nil {
+			return deny, nil
+		}
 
 		switch action {
 		case "list":

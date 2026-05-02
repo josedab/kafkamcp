@@ -21,6 +21,9 @@ func (s *Server) handleSessionReplay(ctx context.Context, request mcp.CallToolRe
 		switch action {
 		case "start":
 			targetAgent := request.GetString("agent_id", agentID)
+			if deny := validateStringLength("agent_id", targetAgent); deny != nil {
+				return deny, nil
+			}
 			session := s.sessionReplayEngine.StartSession(targetAgent, map[string]any{"started_by": agentID})
 			s.logAudit(agentID, "kafka_session_replay", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "recording", "session": session})
@@ -30,9 +33,15 @@ func (s *Server) handleSessionReplay(ctx context.Context, request mcp.CallToolRe
 			if sessionID == "" {
 				return mcp.NewToolResultError("session_id is required"), nil
 			}
+			if deny := validateStringLength("session_id", sessionID); deny != nil {
+				return deny, nil
+			}
 			tool := request.GetString("tool", "")
 			if tool == "" {
 				return mcp.NewToolResultError("tool is required for record action"), nil
+			}
+			if deny := validateStringLength("tool", tool); deny != nil {
+				return deny, nil
 			}
 
 			var callArgs map[string]any
@@ -64,6 +73,9 @@ func (s *Server) handleSessionReplay(ctx context.Context, request mcp.CallToolRe
 			if sessionID == "" {
 				return mcp.NewToolResultError("session_id is required"), nil
 			}
+			if deny := validateStringLength("session_id", sessionID); deny != nil {
+				return deny, nil
+			}
 			if err := s.sessionReplayEngine.EndSession(sessionID); err != nil {
 				return s.toolError("Failed to end session", err), nil
 			}
@@ -75,6 +87,9 @@ func (s *Server) handleSessionReplay(ctx context.Context, request mcp.CallToolRe
 			if sessionID == "" {
 				return mcp.NewToolResultError("session_id is required"), nil
 			}
+			if deny := validateStringLength("session_id", sessionID); deny != nil {
+				return deny, nil
+			}
 			session, err := s.sessionReplayEngine.GetSession(sessionID)
 			if err != nil {
 				return s.toolError("Session not found", err), nil
@@ -83,6 +98,9 @@ func (s *Server) handleSessionReplay(ctx context.Context, request mcp.CallToolRe
 
 		case "list":
 			filterAgent := request.GetString("agent_id", "")
+			if deny := validateStringLength("agent_id", filterAgent); deny != nil {
+				return deny, nil
+			}
 			limit := int(clampInt64(int64(request.GetInt("limit", 50)), 1, 1000))
 			sessions := s.sessionReplayEngine.ListSessions(filterAgent, limit)
 			s.logAudit(agentID, "kafka_session_replay", args, "", "success", len(sessions), nil, start)
@@ -92,6 +110,9 @@ func (s *Server) handleSessionReplay(ctx context.Context, request mcp.CallToolRe
 			sessionID := request.GetString("session_id", "")
 			if sessionID == "" {
 				return mcp.NewToolResultError("session_id is required"), nil
+			}
+			if deny := validateStringLength("session_id", sessionID); deny != nil {
+				return deny, nil
 			}
 			result, err := s.sessionReplayEngine.Replay(sessionID)
 			if err != nil {
@@ -104,6 +125,9 @@ func (s *Server) handleSessionReplay(ctx context.Context, request mcp.CallToolRe
 			sessionID := request.GetString("session_id", "")
 			if sessionID == "" {
 				return mcp.NewToolResultError("session_id is required"), nil
+			}
+			if deny := validateStringLength("session_id", sessionID); deny != nil {
+				return deny, nil
 			}
 			if err := s.sessionReplayEngine.DeleteSession(sessionID); err != nil {
 				return s.toolError("Failed to delete session", err), nil

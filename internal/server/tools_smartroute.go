@@ -19,6 +19,9 @@ func (s *Server) handleSmartRoute(ctx context.Context, request mcp.CallToolReque
 		if req == "" {
 			return mcp.NewToolResultError("request is required"), nil
 		}
+		if deny := validateStringLength("request", req); deny != nil {
+			return deny, nil
+		}
 
 		plan, err := s.smartRouter.ClassifyAndPlan(req)
 		if err != nil {
@@ -45,6 +48,10 @@ func (s *Server) handleSmartRouteStatus(ctx context.Context, request mcp.CallToo
 	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 		action := request.GetString("action", "list")
 		planID := request.GetString("plan_id", "")
+
+		if deny := validateStringLength("plan_id", planID); deny != nil {
+			return deny, nil
+		}
 
 		switch action {
 		case "status":
@@ -80,6 +87,15 @@ func (s *Server) handleSmartRouteStatus(ctx context.Context, request mcp.CallToo
 
 			if stepID == "" {
 				return mcp.NewToolResultError("step_id is required"), nil
+			}
+			if deny := validateStringLength("step_id", stepID); deny != nil {
+				return deny, nil
+			}
+			if deny := validateStringLength("step_status", stepStatus); deny != nil {
+				return deny, nil
+			}
+			if deny := validateStringLength("error", errMsg); deny != nil {
+				return deny, nil
 			}
 
 			result := smartroute.StepResult{

@@ -22,6 +22,15 @@ func (s *Server) handleTimeSeriesQuery(ctx context.Context, request mcp.CallTool
 		if metric == "" || source == "" {
 			return mcp.NewToolResultError("metric and source are required"), nil
 		}
+		if deny := validateStringLength("metric", string(metric)); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("source", source); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("window", window); deny != nil {
+			return deny, nil
+		}
 
 		result, err := s.timeseriesEngine.Query(metric, source, window)
 		if err != nil {
@@ -47,6 +56,18 @@ func (s *Server) handleTimeSeriesCompare(ctx context.Context, request mcp.CallTo
 		if metric == "" || source == "" || baseWindow == "" || compWindow == "" {
 			return mcp.NewToolResultError("metric, source, base_window, and compare_window are required"), nil
 		}
+		if deny := validateStringLength("metric", string(metric)); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("source", source); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("base_window", baseWindow); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("compare_window", compWindow); deny != nil {
+			return deny, nil
+		}
 
 		result, err := s.timeseriesEngine.Compare(metric, source, baseWindow, compWindow)
 		if err != nil {
@@ -71,6 +92,18 @@ func (s *Server) handleTimeSeriesBaseline(ctx context.Context, request mcp.CallT
 
 		if metric == "" || source == "" {
 			return mcp.NewToolResultError("metric and source are required"), nil
+		}
+		if deny := validateStringLength("metric", string(metric)); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("source", source); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("baseline_window", baselineWindow); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("current_window", currentWindow); deny != nil {
+			return deny, nil
 		}
 
 		result, err := s.timeseriesEngine.Baseline(metric, source, baselineWindow, currentWindow)

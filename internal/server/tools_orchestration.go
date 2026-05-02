@@ -21,6 +21,12 @@ func (s *Server) handleOrchestrationCreate(ctx context.Context, request mcp.Call
 		if name == "" {
 			return mcp.NewToolResultError("name is required"), nil
 		}
+		if deny := validateStringLength("name", name); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("description", description); deny != nil {
+			return deny, nil
+		}
 
 		// Create a simple single-step orchestration via MCP
 		steps := []orchestration.OrchestrationStep{
@@ -50,6 +56,10 @@ func (s *Server) handleOrchestrationStatus(ctx context.Context, request mcp.Call
 	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 		orchID := request.GetString("orchestration_id", "")
 		action := request.GetString("action", "status")
+
+		if deny := validateStringLength("orchestration_id", orchID); deny != nil {
+			return deny, nil
+		}
 
 		if orchID == "" {
 			orchs := s.orchestrationEngine.ListOrchestrations()
@@ -99,6 +109,18 @@ func (s *Server) handleOrchestrationCompleteStep(ctx context.Context, request mc
 		if orchID == "" || stepID == "" || status == "" {
 			return mcp.NewToolResultError("orchestration_id, step_id, and status are required"), nil
 		}
+		if deny := validateStringLength("orchestration_id", orchID); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("step_id", stepID); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("status", status); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("error", errMsg); deny != nil {
+			return deny, nil
+		}
 
 		err := s.orchestrationEngine.CompleteStep(orchID, stepID, agentID, status, nil, errMsg)
 		if err != nil {
@@ -132,6 +154,15 @@ func (s *Server) handleOrchestrationHandoff(ctx context.Context, request mcp.Cal
 		if fromAgent == "" || toAgent == "" || message == "" {
 			return mcp.NewToolResultError("from_agent, to_agent, and message are required"), nil
 		}
+		if deny := validateStringLength("from_agent", fromAgent); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("to_agent", toAgent); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("message", message); deny != nil {
+			return deny, nil
+		}
 
 		handoff, err := s.orchestrationEngine.CreateHandoff(fromAgent, toAgent, message, nil)
 		if err != nil {
@@ -157,6 +188,16 @@ func (s *Server) handleOrchestrationAgents(ctx context.Context, request mcp.Call
 			id := request.GetString("agent_id", agentID)
 			name := request.GetString("name", id)
 			role := orchestration.AgentRole(request.GetString("role", "operator"))
+
+			if deny := validateStringLength("agent_id", id); deny != nil {
+				return deny, nil
+			}
+			if deny := validateStringLength("name", name); deny != nil {
+				return deny, nil
+			}
+			if deny := validateStringLength("role", string(role)); deny != nil {
+				return deny, nil
+			}
 
 			agent, err := s.orchestrationEngine.RegisterAgent(id, name, role, nil)
 			if err != nil {

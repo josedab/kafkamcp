@@ -16,6 +16,10 @@ func (s *Server) handleHealthScore(ctx context.Context, request mcp.CallToolRequ
 		cluster := request.GetString("cluster", "")
 		action := request.GetString("action", "evaluate")
 
+		if deny := validateStringLength("cluster", cluster); deny != nil {
+			return deny, nil
+		}
+
 		switch action {
 		case "evaluate":
 			input := healthscore.ClusterMetricsInput{}

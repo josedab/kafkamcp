@@ -19,6 +19,9 @@ func (s *Server) handleNLPipelineBuild(ctx context.Context, request mcp.CallTool
 		if description == "" {
 			return mcp.NewToolResultError("description is required"), nil
 		}
+		if deny := validateStringLength("description", description); deny != nil {
+			return deny, nil
+		}
 
 		spec, err := s.nlPipelineBuilder.Generate(description, agentID)
 		if err != nil {
@@ -44,6 +47,13 @@ func (s *Server) handleNLPipelineManage(ctx context.Context, request mcp.CallToo
 		action := request.GetString("action", "list")
 		pipelineID := request.GetString("pipeline_id", "")
 		description := request.GetString("description", "")
+
+		if deny := validateStringLength("pipeline_id", pipelineID); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("description", description); deny != nil {
+			return deny, nil
+		}
 
 		switch action {
 		case "list":

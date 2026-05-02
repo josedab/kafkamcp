@@ -19,10 +19,16 @@ func (s *Server) handleRunbook(ctx context.Context, request mcp.CallToolRequest)
 		if action == "" {
 			return mcp.NewToolResultError("action is required"), nil
 		}
+		if deny := validateStringLength("id", id); deny != nil {
+			return deny, nil
+		}
 
 		switch action {
 		case "list":
 			category := request.GetString("category", "")
+			if deny := validateStringLength("category", category); deny != nil {
+				return deny, nil
+			}
 			runbooks := s.runbookEngine.ListRunbooks(category)
 			s.logAudit(agentID, "kafka_runbook", args, "", "success", len(runbooks), nil, start)
 			return marshalResult(map[string]any{"runbooks": runbooks, "total": len(runbooks)})
@@ -83,9 +89,20 @@ func (s *Server) handleRunbook(ctx context.Context, request mcp.CallToolRequest)
 			if stepIndex < 0 {
 				return mcp.NewToolResultError("step_index is required"), nil
 			}
+			stepIndex = int(clampInt64(int64(stepIndex), 0, 10000))
 			stepStatus := request.GetString("step_status", "completed")
 			stepError := request.GetString("step_error", "")
 			stepOutput := request.GetString("step_output", "")
+
+			if deny := validateStringLength("step_status", stepStatus); deny != nil {
+				return deny, nil
+			}
+			if deny := validateStringLength("step_error", stepError); deny != nil {
+				return deny, nil
+			}
+			if deny := validateStringLength("step_output", stepOutput); deny != nil {
+				return deny, nil
+			}
 
 			var output any
 			if stepOutput != "" {

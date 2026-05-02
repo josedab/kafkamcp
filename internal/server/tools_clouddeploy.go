@@ -20,6 +20,9 @@ func (s *Server) handleCloudDeployGenerate(ctx context.Context, request mcp.Call
 		if provider == "" {
 			return mcp.NewToolResultError("provider is required"), nil
 		}
+		if deny := validateStringLength("provider", provider); deny != nil {
+			return deny, nil
+		}
 
 		cfg := clouddeploy.DeploymentConfig{
 			Provider:         clouddeploy.CloudProvider(provider),
@@ -27,6 +30,13 @@ func (s *Server) handleCloudDeployGenerate(ctx context.Context, request mcp.Call
 			BootstrapServers: request.GetString("bootstrap_servers", "localhost:9092"),
 			Region:           request.GetString("region", ""),
 			ClusterName:      request.GetString("cluster_name", "kafkamcp"),
+		}
+
+		if deny := validateStringLength("region", cfg.Region); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("cluster_name", cfg.ClusterName); deny != nil {
+			return deny, nil
 		}
 
 		// Auto-detect service from provider

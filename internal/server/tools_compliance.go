@@ -18,6 +18,16 @@ func (s *Server) handleComplianceScan(ctx context.Context, request mcp.CallToolR
 		cluster := request.GetString("cluster", "")
 		topicFilter := request.GetString("topic", "")
 
+		if deny := validateStringLength("regulation", string(regulation)); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("cluster", cluster); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("topic", topicFilter); deny != nil {
+			return deny, nil
+		}
+
 		topicData, err := s.collectComplianceData(ctx, cluster, topicFilter)
 		if err != nil {
 			s.logAudit(agentID, "kafka_compliance_scan", args, cluster, "error", 0, err, start)
@@ -40,6 +50,12 @@ func (s *Server) handleComplianceReport(ctx context.Context, request mcp.CallToo
 		if regulation == "" {
 			return mcp.NewToolResultError("regulation is required"), nil
 		}
+		if deny := validateStringLength("regulation", string(regulation)); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("cluster", cluster); deny != nil {
+			return deny, nil
+		}
 
 		topicData, err := s.collectComplianceData(ctx, cluster, "")
 		if err != nil {
@@ -59,6 +75,13 @@ func (s *Server) handleComplianceViolations(ctx context.Context, request mcp.Cal
 	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 		regulation := compliance.Regulation(request.GetString("regulation", ""))
 		severity := request.GetString("severity", "")
+
+		if deny := validateStringLength("regulation", string(regulation)); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("severity", severity); deny != nil {
+			return deny, nil
+		}
 
 		violations := s.complianceEngine.GetViolations(regulation, severity)
 		s.logAudit(agentID, "kafka_compliance_violations", args, "", "success", len(violations), nil, start)

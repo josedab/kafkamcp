@@ -18,6 +18,10 @@ func (s *Server) handleSchemaPlayground(ctx context.Context, request mcp.CallToo
 		action := request.GetString("action", "list")
 		draftID := request.GetString("draft_id", "")
 
+		if deny := validateStringLength("draft_id", draftID); deny != nil {
+			return deny, nil
+		}
+
 		switch action {
 		case "create":
 			subject := request.GetString("subject", "")
@@ -26,6 +30,12 @@ func (s *Server) handleSchemaPlayground(ctx context.Context, request mcp.CallToo
 
 			if subject == "" || schema == "" {
 				return mcp.NewToolResultError("subject and schema are required"), nil
+			}
+			if deny := validateStringLength("subject", subject); deny != nil {
+				return deny, nil
+			}
+			if deny := validateStringLength("schema", schema); deny != nil {
+				return deny, nil
 			}
 
 			draft, err := s.schemaPlayground.CreateDraft(subject, schemaType, schema, agentID)

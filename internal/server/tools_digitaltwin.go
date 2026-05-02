@@ -17,6 +17,10 @@ func (s *Server) handleTwinSnapshot(ctx context.Context, request mcp.CallToolReq
 	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 		cluster := request.GetString("cluster", "")
 
+		if deny := validateStringLength("cluster", cluster); deny != nil {
+			return deny, nil
+		}
+
 		// Build snapshot from current cluster state
 		topics := make(map[string]digitaltwin.TopicState)
 		groups := make(map[string]digitaltwin.ConsumerGroupState)
@@ -73,6 +77,13 @@ func (s *Server) handleTwinSimulate(ctx context.Context, request mcp.CallToolReq
 		action := request.GetString("action", "list")
 		snapshotID := request.GetString("snapshot_id", "")
 		twinID := request.GetString("twin_id", "")
+
+		if deny := validateStringLength("snapshot_id", snapshotID); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("twin_id", twinID); deny != nil {
+			return deny, nil
+		}
 
 		switch action {
 		case "create_twin":

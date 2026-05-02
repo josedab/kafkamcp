@@ -22,6 +22,16 @@ func (s *Server) handleViewCreate(ctx context.Context, request mcp.CallToolReque
 		return mcp.NewToolResultError("name and source_topic are required"), nil
 	}
 
+	for _, pair := range []struct{ name, value string }{
+		{"name", name}, {"source_topic", sourceTopic}, {"key_field", keyField},
+		{"aggregation_type", aggType}, {"window_type", windowType},
+		{"filter_expr", filterExpr}, {"description", description},
+	} {
+		if deny := validateStringLength(pair.name, pair.value); deny != nil {
+			return deny, nil
+		}
+	}
+
 	var windowSizeMs, retentionMs int64
 	if v, ok := args["window_size_ms"].(float64); ok {
 		windowSizeMs = int64(v)
@@ -64,6 +74,9 @@ func (s *Server) handleViewQuery(ctx context.Context, request mcp.CallToolReques
 	if viewID == "" {
 		return mcp.NewToolResultError("view_id is required"), nil
 	}
+	if deny := validateStringLength("view_id", viewID); deny != nil {
+		return deny, nil
+	}
 
 	opts := viewstore.QueryOptions{
 		KeyExact:  request.GetString("key_exact", ""),
@@ -100,6 +113,10 @@ func (s *Server) handleViewQuery(ctx context.Context, request mcp.CallToolReques
 func (s *Server) handleViewStatus(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 	action, _ := args["action"].(string)
 	viewID, _ := args["view_id"].(string)
+
+	if deny := validateStringLength("view_id", viewID); deny != nil {
+		return deny, nil
+	}
 
 	switch action {
 	case "list":

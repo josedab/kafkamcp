@@ -31,7 +31,7 @@ func (s *Server) handlePredictAlert(ctx context.Context, request mcp.CallToolReq
 				return deny, nil
 			}
 			totalLag := int64(request.GetFloat("total_lag", 0))
-			memberCount := request.GetInt("member_count", 0)
+			memberCount := int(clampInt64(int64(request.GetInt("member_count", 0)), 0, 100000))
 
 			s.predictAlertEngine.RecordSample(groupID, totalLag, memberCount)
 			s.logAudit(agentID, "kafka_predict_alert", args, "", "success", 1, nil, start)

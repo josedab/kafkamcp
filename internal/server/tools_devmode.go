@@ -30,6 +30,10 @@ func (s *Server) handleDevSampleData(ctx context.Context, request mcp.CallToolRe
 		generator := request.GetString("generator", "ecommerce-orders")
 		countStr := request.GetString("count", "10")
 
+		if deny := validateStringLength("generator", generator); deny != nil {
+			return deny, nil
+		}
+
 		count, err := strconv.Atoi(countStr)
 		if err != nil {
 			count = 10
@@ -55,6 +59,13 @@ func (s *Server) handleDevTutorial(ctx context.Context, request mcp.CallToolRequ
 		action := request.GetString("action", "list")
 		tutorialID := request.GetString("tutorial_id", "")
 		difficulty := request.GetString("difficulty", "")
+
+		if deny := validateStringLength("tutorial_id", tutorialID); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("difficulty", difficulty); deny != nil {
+			return deny, nil
+		}
 
 		switch action {
 		case "get":

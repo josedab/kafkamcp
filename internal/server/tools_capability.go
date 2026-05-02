@@ -19,6 +19,13 @@ func (s *Server) handleNegotiateCapabilities(ctx context.Context, request mcp.Ca
 		role := capability.Role(request.GetString("role", "viewer"))
 		contextStr := request.GetString("context", "")
 
+		if deny := validateStringLength("role", string(role)); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("context", contextStr); deny != nil {
+			return deny, nil
+		}
+
 		var contextHints []string
 		if contextStr != "" {
 			contextHints = strings.Split(contextStr, ",")
@@ -41,6 +48,9 @@ func (s *Server) handleDiscoverTools(ctx context.Context, request mcp.CallToolRe
 		action:       auth.ActionRead,
 	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 		category := request.GetString("category", "")
+		if deny := validateStringLength("category", category); deny != nil {
+			return deny, nil
+		}
 		if category == "" {
 			// Return all categories
 			cats := s.capabilityNegotiator.ListCategories()

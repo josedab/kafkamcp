@@ -18,12 +18,22 @@ func (s *Server) handleControlPlaneOrg(ctx context.Context, request mcp.CallTool
 		action := request.GetString("action", "list")
 		orgID := request.GetString("org_id", "")
 
+		if deny := validateStringLength("org_id", orgID); deny != nil {
+			return deny, nil
+		}
+
 		switch action {
 		case "create":
 			name := request.GetString("name", "")
 			plan := request.GetString("plan", "starter")
 			if name == "" {
 				return mcp.NewToolResultError("name is required"), nil
+			}
+			if deny := validateStringLength("name", name); deny != nil {
+				return deny, nil
+			}
+			if deny := validateStringLength("plan", plan); deny != nil {
+				return deny, nil
 			}
 			org, err := s.controlPlane.CreateOrganization(name, plan)
 			if err != nil {
@@ -51,6 +61,12 @@ func (s *Server) handleControlPlaneOrg(ctx context.Context, request mcp.CallTool
 			role := request.GetString("role", "viewer")
 			if email == "" {
 				return mcp.NewToolResultError("email is required"), nil
+			}
+			if deny := validateStringLength("email", email); deny != nil {
+				return deny, nil
+			}
+			if deny := validateStringLength("role", role); deny != nil {
+				return deny, nil
 			}
 			if err := s.controlPlane.AddMember(orgID, email, email, role); err != nil {
 				return s.toolError("Failed to add member", err), nil
@@ -88,6 +104,13 @@ func (s *Server) handleControlPlaneInstance(ctx context.Context, request mcp.Cal
 		instanceID := request.GetString("instance_id", "")
 		orgID := request.GetString("org_id", "")
 
+		if deny := validateStringLength("instance_id", instanceID); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("org_id", orgID); deny != nil {
+			return deny, nil
+		}
+
 		switch action {
 		case "provision":
 			if orgID == "" {
@@ -100,6 +123,15 @@ func (s *Server) handleControlPlaneInstance(ctx context.Context, request mcp.Cal
 
 			if name == "" || bootstrap == "" {
 				return mcp.NewToolResultError("name and bootstrap_servers are required"), nil
+			}
+			if deny := validateStringLength("name", name); deny != nil {
+				return deny, nil
+			}
+			if deny := validateStringLength("tier", tier); deny != nil {
+				return deny, nil
+			}
+			if deny := validateStringLength("region", region); deny != nil {
+				return deny, nil
 			}
 
 			inst, err := s.controlPlane.ProvisionInstance(orgID, name, tier, region, controlplane.InstanceConfig{
@@ -171,6 +203,12 @@ func (s *Server) handleControlPlaneUsage(ctx context.Context, request mcp.CallTo
 
 		if orgID == "" {
 			return mcp.NewToolResultError("org_id is required"), nil
+		}
+		if deny := validateStringLength("org_id", orgID); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("period", period); deny != nil {
+			return deny, nil
 		}
 
 		summary := s.controlPlane.GetUsageSummary(orgID, period)

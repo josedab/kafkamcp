@@ -14,6 +14,11 @@ func (s *Server) handleAgentProfile(ctx context.Context, request mcp.CallToolReq
 	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 		action := request.GetString("action", "")
 		targetAgent := request.GetString("agent_id", agentID)
+
+		if deny := validateStringLength("agent_id", targetAgent); deny != nil {
+			return deny, nil
+		}
+
 		sinceHours := 24.0
 		if h, ok := args["since_hours"].(float64); ok && h > 0 {
 			sinceHours = h
@@ -50,6 +55,9 @@ func (s *Server) handleAgentOptimize(ctx context.Context, request mcp.CallToolRe
 		tool: "kafka_agent_optimize", resourceType: auth.ResourceCluster, action: auth.ActionRead,
 	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 		targetAgent := request.GetString("agent_id", agentID)
+		if deny := validateStringLength("agent_id", targetAgent); deny != nil {
+			return deny, nil
+		}
 		sinceHours := 24.0
 		if h, ok := args["since_hours"].(float64); ok && h > 0 {
 			sinceHours = h
@@ -73,6 +81,9 @@ func (s *Server) handleAgentReport(ctx context.Context, request mcp.CallToolRequ
 		tool: "kafka_agent_report", resourceType: auth.ResourceCluster, action: auth.ActionRead,
 	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 		targetAgent := request.GetString("agent_id", "")
+		if deny := validateStringLength("agent_id", targetAgent); deny != nil {
+			return deny, nil
+		}
 		sinceHours := 24.0
 		if h, ok := args["since_hours"].(float64); ok && h > 0 {
 			sinceHours = h

@@ -26,6 +26,16 @@ func (s *Server) handleACLManage(ctx context.Context, request mcp.CallToolReques
 			resourceType := request.GetString("resource_type", "")
 			cluster := request.GetString("cluster", "")
 
+			if deny := validateStringLength("principal", principal); deny != nil {
+				return deny, nil
+			}
+			if deny := validateStringLength("resource_type", resourceType); deny != nil {
+				return deny, nil
+			}
+			if deny := validateStringLength("cluster", cluster); deny != nil {
+				return deny, nil
+			}
+
 			result, err := s.kafkaManager.ListACLs(ctx, cluster, principal, resourceType, true)
 			if err != nil {
 				s.logAudit(agentID, "kafka_acl_manage", args, cluster, "error", 0, err, start)
@@ -38,6 +48,16 @@ func (s *Server) handleACLManage(ctx context.Context, request mcp.CallToolReques
 			principal := request.GetString("principal", "")
 			resourceType := request.GetString("resource_type", "")
 			cluster := request.GetString("cluster", "")
+
+			if deny := validateStringLength("principal", principal); deny != nil {
+				return deny, nil
+			}
+			if deny := validateStringLength("resource_type", resourceType); deny != nil {
+				return deny, nil
+			}
+			if deny := validateStringLength("cluster", cluster); deny != nil {
+				return deny, nil
+			}
 
 			result, err := s.kafkaManager.ListACLs(ctx, cluster, principal, resourceType, false)
 			if err != nil {
@@ -68,6 +88,9 @@ func (s *Server) handleACLManage(ctx context.Context, request mcp.CallToolReques
 			if principal == "" {
 				return mcp.NewToolResultError("principal is required"), nil
 			}
+			if deny := validateStringLength("principal", principal); deny != nil {
+				return deny, nil
+			}
 
 			var rules []aclmgmt.ACLRule
 			if rawArgs := request.GetRawArguments(); rawArgs != nil {
@@ -96,6 +119,12 @@ func (s *Server) handleACLManage(ctx context.Context, request mcp.CallToolReques
 			cluster := request.GetString("cluster", "")
 			if principal == "" {
 				return mcp.NewToolResultError("principal is required"), nil
+			}
+			if deny := validateStringLength("principal", principal); deny != nil {
+				return deny, nil
+			}
+			if deny := validateStringLength("cluster", cluster); deny != nil {
+				return deny, nil
 			}
 
 			desired := s.aclMgmtEngine.GetDesiredState(principal)
@@ -130,6 +159,12 @@ func (s *Server) handleACLManage(ctx context.Context, request mcp.CallToolReques
 			cluster := request.GetString("cluster", "")
 			if principal == "" {
 				return mcp.NewToolResultError("principal is required"), nil
+			}
+			if deny := validateStringLength("principal", principal); deny != nil {
+				return deny, nil
+			}
+			if deny := validateStringLength("cluster", cluster); deny != nil {
+				return deny, nil
 			}
 
 			desired := s.aclMgmtEngine.GetDesiredState(principal)
