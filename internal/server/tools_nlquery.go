@@ -402,3 +402,143 @@ func (s *Server) handlePlatformInfo(ctx context.Context, request mcp.CallToolReq
 		})
 	})(ctx, request)
 }
+
+// handleNLOperate processes natural language operational commands.
+func (s *Server) handleNLOperate(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+	command, _ := args["command"].(string)
+	if command == "" {
+		return mcp.NewToolResultError("command is required"), nil
+	}
+	cluster, _ := args["cluster"].(string)
+	dryRun, _ := args["dry_run"].(bool)
+
+	cmd, err := s.nlQueryEngine.ParseOperational(command)
+	if err != nil {
+		s.logAudit(agentID, "kafka_nl_operate", args, cluster, "error", 0, err, start)
+		return mcp.NewToolResultError(fmt.Sprintf("Could not parse command: %v", err)), nil
+	}
+
+	if cluster != "" {
+		cmd.Cluster = cluster
+	}
+	if cmd.Cluster == "" {
+		cmd.Cluster = s.kafkaManager.DefaultClusterName()
+	}
+
+	if dryRun {
+		s.logAudit(agentID, "kafka_nl_operate", args, cmd.Cluster, "success", 0, nil, start)
+		return marshalResult(map[string]any{
+			"dry_run": true,
+			"command": cmd,
+			"message": "Command parsed successfully. Remove dry_run to execute.",
+		})
+	}
+
+	result, execErr := s.executeNLCommand(ctx, cmd)
+	if execErr != nil {
+		s.logAudit(agentID, "kafka_nl_operate", args, cmd.Cluster, "error", 0, execErr, start)
+		return s.toolError("Command execution failed", execErr), nil
+	}
+
+	s.logAudit(agentID, "kafka_nl_operate", args, cmd.Cluster, "success", 1, nil, start)
+	return marshalResult(map[string]any{
+		"command": cmd,
+		"result":  result,
+	})
+}
+
+func (s *Server) executeNLCommand(ctx context.Context, cmd *nlquery.OperationalCommand) (any, error) {
+	switch cmd.Action {
+	case "list_topics":
+		topics, err := s.kafkaManager.ListTopics(ctx, cmd.Cluster, false)
+		if err != nil {
+			return nil, fmt.Errorf("listing topics: %w", err)
+		}
+		return map[string]any{"topics": topics, "count": len(topics)}, nil
+
+	case "describe_topic":
+		if cmd.Name == "" {
+			return nil, fmt.Errorf("topic name is required")
+		}
+		detail, err := s.kafkaManager.DescribeTopic(ctx, cmd.Cluster, cmd.Name)
+		if err != nil {
+			return nil, fmt.Errorf("describing topic %q: %w", cmd.Name, err)
+		}
+		return detail, nil
+
+	case "create_topic":
+		if cmd.Name == "" {
+			return nil, fmt.Errorf("topic name is required")
+		}
+		partitions := int32(3)
+		replication := int16(1)
+		if p, ok := cmd.Parameters["partitions"].(int); ok && p > 0 {
+			partitions = int32(p)
+		} else if p, ok := cmd.Parameters["partitions"].(float64); ok && p > 0 {
+			partitions = int32(p)
+		}
+		if r, ok := cmd.Parameters["replication_factor"].(int); ok && r > 0 {
+			replication = int16(r)
+		} else if r, ok := cmd.Parameters["replication_factor"].(float64); ok && r > 0 {
+			replication = int16(r)
+		}
+		err := s.kafkaManager.CreateTopic(ctx, cmd.Cluster, kafka.CreateTopicRequest{
+			Name:              cmd.Name,
+			Partitions:        partitions,
+			ReplicationFactor: replication,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("creating topic %q: %w", cmd.Name, err)
+		}
+		return map[string]any{"status": "created", "topic": cmd.Name, "partitions": partitions, "replication_factor": replication}, nil
+
+	case "delete_topic":
+		if cmd.Name == "" {
+			return nil, fmt.Errorf("topic name is required")
+		}
+		err := s.kafkaManager.DeleteTopic(ctx, cmd.Cluster, cmd.Name)
+		if err != nil {
+			return nil, fmt.Errorf("deleting topic %q: %w", cmd.Name, err)
+		}
+		return map[string]any{"status": "deleted", "topic": cmd.Name}, nil
+
+	case "list_groups":
+		groups, err := s.kafkaManager.ListConsumerGroups(ctx, cmd.Cluster)
+		if err != nil {
+			return nil, fmt.Errorf("listing consumer groups: %w", err)
+		}
+		return map[string]any{"consumer_groups": groups, "count": len(groups)}, nil
+
+	case "describe_group":
+		if cmd.Name == "" {
+			return nil, fmt.Errorf("group name is required")
+		}
+		detail, err := s.kafkaManager.DescribeConsumerGroup(ctx, cmd.Cluster, cmd.Name)
+		if err != nil {
+			return nil, fmt.Errorf("describing group %q: %w", cmd.Name, err)
+		}
+		return detail, nil
+
+	case "reset_offsets":
+		if cmd.Name == "" {
+			return nil, fmt.Errorf("consumer group name is required")
+		}
+		target := "earliest"
+		if t, ok := cmd.Parameters["target"].(string); ok {
+			target = t
+		}
+		topic, _ := cmd.Parameters["topic"].(string)
+		result, err := s.kafkaManager.ResetOffsets(ctx, cmd.Cluster, kafka.ResetOffsetsRequest{
+			GroupID:  cmd.Name,
+			Topic:    topic,
+			Strategy: target,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("resetting offsets for group %q: %w", cmd.Name, err)
+		}
+		return result, nil
+
+	default:
+		return nil, fmt.Errorf("unsupported operational command: %s", cmd.Action)
+	}
+}

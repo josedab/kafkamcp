@@ -31,6 +31,19 @@ func (s *Server) registerFeatureTools() {
 		mcp.WithNumber("limit", mcp.Description("Max results. Default: 100")),
 	), s.handleNLQuery)
 
+	// NL Kafka Operator
+	s.mcpServer.AddTool(mcp.NewTool("kafka_nl_operate",
+		withCategory("ops"),
+		mcp.WithDescription("Execute Kafka operational commands using plain English. Supports: create/delete/describe topics, list topics/groups, reset offsets, scale partitions, set configs, produce messages. Examples: 'create topic orders with 6 partitions', 'delete topic test-data', 'reset offsets for group my-consumers to earliest', 'list all topics'."),
+		mcp.WithString("command", mcp.Required(), mcp.Description("Natural language command")),
+		mcp.WithString("cluster", mcp.Description("Cluster name")),
+		mcp.WithBoolean("dry_run", mcp.Description("If true, parse and return the plan without executing. Default: false")),
+	), s.withToolAuth(toolAuthConfig{
+		tool:         "kafka_nl_operate",
+		resourceType: "cluster",
+		action:       "admin",
+	}, s.handleNLOperate))
+
 	// Cost Analysis
 	s.mcpServer.AddTool(mcp.NewTool("kafka_cost_analyze",
 		withCategory("governance"),
