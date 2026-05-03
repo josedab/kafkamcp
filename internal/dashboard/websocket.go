@@ -252,6 +252,7 @@ func (d *Dashboard) RegisterDashboardRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/v1/agent-activity", d.requireAuth(d.handleAgentActivity))
 	mux.HandleFunc("/api/v1/flow-rates", d.requireAuth(d.handleFlowRates))
 	mux.HandleFunc("/api/v1/dashboard-summary", d.requireAuth(d.handleDashboardSummary))
+	mux.HandleFunc("/api/v1/streaming-metrics", d.requireAuth(d.handleStreamingMetrics))
 }
 
 func (d *Dashboard) handleConsumerLag(w http.ResponseWriter, r *http.Request) {
@@ -395,5 +396,181 @@ func (d *Dashboard) handleDashboardSummary(w http.ResponseWriter, r *http.Reques
 	writeJSON(w, summary)
 }
 
+func (d *Dashboard) handleStreamingMetrics(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	metrics := map[string]any{
+		"timestamp": time.Now().UTC().Format(time.RFC3339),
+	}
+
+	// Build real-time topic flow data from message counts
+	if topics, err := d.kafkaManager.ListTopics(ctx, "", false); err == nil {
+		var totalMessages int64
+		topicFlows := make([]map[string]any, 0, len(topics))
+		for _, t := range topics {
+			totalMessages += t.MessageCount
+			topicFlows = append(topicFlows, map[string]any{
+				"topic":      t.Name,
+				"messages":   t.MessageCount,
+				"partitions": t.Partitions,
+			})
+		}
+		metrics["topic_count"] = len(topics)
+		metrics["total_messages"] = totalMessages
+		metrics["topic_flows"] = topicFlows
+	}
+
+	// Agent activity from audit log
+	entries := d.auditLogger.Recent(200)
+	agentMap := make(map[string]int64)
+	toolMap := make(map[string]int64)
+	for _, e := range entries {
+		agentMap[e.AgentID]++
+		toolMap[e.Tool]++
+	}
+	metrics["active_agents"] = len(agentMap)
+	metrics["recent_tool_calls"] = len(entries)
+	metrics["connected_clients"] = d.ConnectedClients()
+
+	// Top tools
+	type kv struct {
+		k string
+		v int64
+	}
+	var topTools []kv
+	for t, c := range toolMap {
+		topTools = append(topTools, kv{t, c})
+	}
+	sort.Slice(topTools, func(i, j int) bool { return topTools[i].v > topTools[j].v })
+	if len(topTools) > 10 {
+		topTools = topTools[:10]
+	}
+	tools := make([]map[string]any, 0, len(topTools))
+	for _, t := range topTools {
+		tools = append(tools, map[string]any{"tool": t.k, "count": t.v})
+	}
+	metrics["top_tools"] = tools
+
+	writeJSON(w, metrics)
+}
+
 // ListTopicsFunc provides topic listing for flow rate calculation.
 type ListTopicsFunc func(ctx context.Context, cluster string, includeInternal bool) ([]kafka.TopicSummary, error)
+
+// StreamingMetrics provides real-time streaming metrics for the dashboard.
+type StreamingMetrics struct {
+	mu              sync.RWMutex
+	topicSnapshots  map[string]*topicSnapshot
+	agentSnapshots  map[string]*agentSnapshot
+}
+
+type topicSnapshot struct {
+	messageCount int64
+	lastCheck    time.Time
+	produceRate  float64
+}
+
+type agentSnapshot struct {
+	calls       int64
+	errors      int64
+	lastTool    string
+	firstSeen   time.Time
+	lastSeen    time.Time
+	toolCalls   map[string]int64
+}
+
+// NewStreamingMetrics creates a new streaming metrics collector.
+func NewStreamingMetrics() *StreamingMetrics {
+	return &StreamingMetrics{
+		topicSnapshots: make(map[string]*topicSnapshot),
+		agentSnapshots: make(map[string]*agentSnapshot),
+	}
+}
+
+// UpdateTopicSnapshot records a topic's current message count for rate calculation.
+func (sm *StreamingMetrics) UpdateTopicSnapshot(topic string, messageCount int64) {
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+
+	now := time.Now()
+	if existing, ok := sm.topicSnapshots[topic]; ok {
+		elapsed := now.Sub(existing.lastCheck).Seconds()
+		if elapsed > 0 {
+			diff := messageCount - existing.messageCount
+			if diff >= 0 {
+				existing.produceRate = float64(diff) / elapsed
+			}
+		}
+		existing.messageCount = messageCount
+		existing.lastCheck = now
+	} else {
+		sm.topicSnapshots[topic] = &topicSnapshot{
+			messageCount: messageCount,
+			lastCheck:    now,
+		}
+	}
+}
+
+// RecordAgentActivity records agent tool call for streaming metrics.
+func (sm *StreamingMetrics) RecordAgentActivity(agentID, tool string, isError bool) {
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+
+	now := time.Now()
+	stats, ok := sm.agentSnapshots[agentID]
+	if !ok {
+		stats = &agentSnapshot{
+			firstSeen: now,
+			toolCalls: make(map[string]int64),
+		}
+		sm.agentSnapshots[agentID] = stats
+	}
+	stats.calls++
+	stats.lastTool = tool
+	stats.lastSeen = now
+	stats.toolCalls[tool]++
+	if isError {
+		stats.errors++
+	}
+}
+
+// GetStreamingSummary returns a real-time summary for the dashboard.
+func (sm *StreamingMetrics) GetStreamingSummary() map[string]any {
+	sm.mu.RLock()
+	defer sm.mu.RUnlock()
+
+	var totalRate float64
+	topicRates := make([]map[string]any, 0)
+	for topic, snap := range sm.topicSnapshots {
+		totalRate += snap.produceRate
+		topicRates = append(topicRates, map[string]any{
+			"topic":          topic,
+			"messages":       snap.messageCount,
+			"produce_rate":   snap.produceRate,
+			"last_updated":   snap.lastCheck.UTC().Format(time.RFC3339),
+		})
+	}
+
+	activeAgents := 0
+	cutoff := time.Now().Add(-5 * time.Minute)
+	for _, snap := range sm.agentSnapshots {
+		if snap.lastSeen.After(cutoff) {
+			activeAgents++
+		}
+	}
+
+	return map[string]any{
+		"total_produce_rate": totalRate,
+		"active_agents":     activeAgents,
+		"total_agents":      len(sm.agentSnapshots),
+		"tracked_topics":    len(sm.topicSnapshots),
+		"topic_rates":       topicRates,
+		"timestamp":         time.Now().UTC().Format(time.RFC3339),
+	}
+}
