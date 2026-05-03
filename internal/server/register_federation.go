@@ -24,8 +24,18 @@ func (s *Server) registerFederationTools() {
 
 	s.mcpServer.AddTool(mcp.NewTool("kafka_federation_status",
 		withCategory("streaming"),
-		mcp.WithDescription("Get federation status: instances, policies, health. Actions: status (overview), instances (list), policies (list), audit (audit log)."),
-		mcp.WithString("action", mcp.Description("Action: status, instances, policies, audit. Default: status")),
+		mcp.WithDescription("Get federation status: instances, policies, health. Actions: status (overview), instances (list), policies (list), audit (audit log), topology (full graph), discover (service discovery), routes (routing rules)."),
+		mcp.WithString("action", mcp.Description("Action: status, instances, policies, audit, topology, discover, routes. Default: status")),
 		mcp.WithNumber("limit", mcp.Description("Limit for audit log. Default: 50")),
 	), s.handleFederationStatus)
+
+	s.mcpServer.AddTool(mcp.NewTool("kafka_federation_route",
+		withCategory("streaming"),
+		mcp.WithDescription("Manage routing rules for the federated gateway. Actions: add (create rule), list (show rules), resolve (find target instances for a tool call)."),
+		mcp.WithString("action", mcp.Required(), mcp.Description("Action: add, list, resolve")),
+		mcp.WithString("tool_match", mcp.Description("Tool name pattern to match (for add/resolve)")),
+		mcp.WithString("cluster", mcp.Description("Target cluster name (for add/resolve)")),
+		mcp.WithObject("targets", mcp.Description("Target instance IDs (for add)")),
+		mcp.WithNumber("priority", mcp.Description("Routing priority (for add)")),
+	), s.handleFederationRoute)
 }

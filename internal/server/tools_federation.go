@@ -153,8 +153,79 @@ func (s *Server) handleFederationStatus(ctx context.Context, request mcp.CallToo
 			entries := s.federationCoord.GetAuditLog(limit)
 			return marshalResult(map[string]any{"audit_log": entries, "total": len(entries)})
 
+		case "topology":
+			topo := s.federationCoord.GetTopology()
+			s.logAudit(agentID, "kafka_federation_status", args, "", "success", 1, nil, start)
+			return marshalResult(topo)
+
+		case "discover":
+			services := s.federationCoord.DiscoverServices()
+			s.logAudit(agentID, "kafka_federation_status", args, "", "success", len(services), nil, start)
+			return marshalResult(map[string]any{"services": services, "total": len(services)})
+
+		case "routes":
+			rules := s.federationCoord.ListRoutingRules()
+			s.logAudit(agentID, "kafka_federation_status", args, "", "success", len(rules), nil, start)
+			return marshalResult(map[string]any{"routing_rules": rules, "total": len(rules)})
+
 		default:
-			return mcp.NewToolResultError("action must be: status, instances, policies, audit"), nil
+			return mcp.NewToolResultError("action must be: status, instances, policies, audit, topology, discover, or routes"), nil
+		}
+	})(ctx, request)
+}
+
+func (s *Server) handleFederationRoute(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return s.withToolAuth(toolAuthConfig{
+		tool: "kafka_federation_route", resourceType: auth.ResourceCluster, action: auth.ActionAdmin,
+	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+		action := request.GetString("action", "")
+
+		switch action {
+		case "add":
+			toolMatch, _ := args["tool_match"].(string)
+			cluster, _ := args["cluster"].(string)
+			priority := 0
+			if p, ok := args["priority"].(float64); ok {
+				priority = int(p)
+			}
+
+			var targets []string
+			if t, ok := args["targets"].([]any); ok {
+				for _, v := range t {
+					if str, ok := v.(string); ok {
+						targets = append(targets, str)
+					}
+				}
+			}
+
+			rule, err := s.federationCoord.AddRoutingRule(federation.RoutingRule{
+				ToolMatch: toolMatch,
+				Cluster:   cluster,
+				Targets:   targets,
+				Priority:  priority,
+			})
+			if err != nil {
+				s.logAudit(agentID, "kafka_federation_route", args, "", "error", 0, err, start)
+				return s.toolError("failed to add routing rule", err), nil
+			}
+
+			s.logAudit(agentID, "kafka_federation_route", args, "", "success", 1, nil, start)
+			return marshalResult(map[string]any{"status": "created", "rule": rule})
+
+		case "list":
+			rules := s.federationCoord.ListRoutingRules()
+			s.logAudit(agentID, "kafka_federation_route", args, "", "success", len(rules), nil, start)
+			return marshalResult(map[string]any{"routing_rules": rules, "total": len(rules)})
+
+		case "resolve":
+			toolMatch, _ := args["tool_match"].(string)
+			cluster, _ := args["cluster"].(string)
+			instances := s.federationCoord.ResolveRoute(toolMatch, cluster)
+			s.logAudit(agentID, "kafka_federation_route", args, "", "success", len(instances), nil, start)
+			return marshalResult(map[string]any{"resolved_instances": instances, "total": len(instances)})
+
+		default:
+			return mcp.NewToolResultError("action must be: add, list, or resolve"), nil
 		}
 	})(ctx, request)
 }

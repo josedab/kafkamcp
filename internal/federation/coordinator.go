@@ -291,3 +291,185 @@ func contains(slice []string, item string) bool {
 	}
 	return false
 }
+
+// RoutingRule defines how to route requests across federated instances.
+type RoutingRule struct {
+	ID        string   `json:"id"`
+	ToolMatch string   `json:"tool_match"` // glob pattern for tool names
+	Cluster   string   `json:"cluster"`    // target cluster name
+	Targets   []string `json:"targets"`    // instance IDs
+	Priority  int      `json:"priority"`
+	Enabled   bool     `json:"enabled"`
+}
+
+// ServiceDiscovery represents a discovered service in the federation.
+type ServiceDiscovery struct {
+	InstanceID   string   `json:"instance_id"`
+	InstanceName string   `json:"instance_name"`
+	Endpoint     string   `json:"endpoint"`
+	Clusters     []string `json:"clusters"`
+	Tools        []string `json:"tools"`
+	Status       string   `json:"status"`
+	Latency      string   `json:"latency,omitempty"`
+}
+
+// FederationTopology shows the complete federation topology.
+type FederationTopology struct {
+	LocalID    string             `json:"local_id"`
+	Instances  []Instance         `json:"instances"`
+	Routes     []RoutingRule      `json:"routing_rules"`
+	ClusterMap map[string][]string `json:"cluster_to_instances"`
+	TotalTools int                `json:"total_tools"`
+}
+
+// AddRoutingRule adds a routing rule for request forwarding.
+func (c *Coordinator) AddRoutingRule(rule RoutingRule) (*RoutingRule, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if rule.ID == "" {
+		rule.ID = randid.New("route")
+	}
+	if rule.ToolMatch == "" && rule.Cluster == "" {
+		return nil, fmt.Errorf("tool_match or cluster is required")
+	}
+	rule.Enabled = true
+
+	// Store in policies map with a route: prefix
+	c.policies["route:"+rule.ID] = &Policy{
+		ID:   rule.ID,
+		Name: rule.ToolMatch,
+		Type: "routing",
+		Rules: rule,
+	}
+
+	c.auditLog = append(c.auditLog, AuditEntry{
+		Timestamp: time.Now().UTC().Format(time.RFC3339),
+		Action:    "routing_rule_added",
+		Details:   rule,
+	})
+
+	return &rule, nil
+}
+
+// ListRoutingRules returns all routing rules.
+func (c *Coordinator) ListRoutingRules() []RoutingRule {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	var rules []RoutingRule
+	for _, p := range c.policies {
+		if p.Type == "routing" {
+			if rule, ok := p.Rules.(RoutingRule); ok {
+				rules = append(rules, rule)
+			}
+		}
+	}
+	return rules
+}
+
+// ResolveRoute finds the best instances to route a tool call to.
+func (c *Coordinator) ResolveRoute(tool, cluster string) []Instance {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	// Check routing rules first
+	for _, p := range c.policies {
+		if p.Type != "routing" {
+			continue
+		}
+		rule, ok := p.Rules.(RoutingRule)
+		if !ok || !rule.Enabled {
+			continue
+		}
+
+		toolMatch := rule.ToolMatch == "" || rule.ToolMatch == "*" || rule.ToolMatch == tool
+		clusterMatch := rule.Cluster == "" || rule.Cluster == cluster
+
+		if toolMatch && clusterMatch && len(rule.Targets) > 0 {
+			var targets []Instance
+			for _, targetID := range rule.Targets {
+				if inst, ok := c.instances[targetID]; ok && inst.Status == StatusActive {
+					targets = append(targets, *inst)
+				}
+			}
+			if len(targets) > 0 {
+				return targets
+			}
+		}
+	}
+
+	// Fall back to cluster-based routing
+	if cluster != "" {
+		var result []Instance
+		for _, inst := range c.instances {
+			if inst.Status != StatusActive {
+				continue
+			}
+			for _, c := range inst.Clusters {
+				if c == cluster {
+					result = append(result, *inst)
+					break
+				}
+			}
+		}
+		if len(result) > 0 {
+			return result
+		}
+	}
+
+	// Default: return all active instances
+	var result []Instance
+	for _, inst := range c.instances {
+		if inst.Status == StatusActive {
+			result = append(result, *inst)
+		}
+	}
+	return result
+}
+
+// DiscoverServices returns all available services across the federation.
+func (c *Coordinator) DiscoverServices() []ServiceDiscovery {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	var services []ServiceDiscovery
+	for _, inst := range c.instances {
+		svc := ServiceDiscovery{
+			InstanceID:   inst.ID,
+			InstanceName: inst.Name,
+			Endpoint:     inst.Endpoint,
+			Clusters:     inst.Clusters,
+			Tools:        inst.Capabilities,
+			Status:       string(inst.Status),
+		}
+		services = append(services, svc)
+	}
+	return services
+}
+
+// GetTopology returns the complete federation topology.
+func (c *Coordinator) GetTopology() *FederationTopology {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	topo := &FederationTopology{
+		LocalID:    c.localID,
+		ClusterMap: make(map[string][]string),
+	}
+
+	toolSet := make(map[string]bool)
+	for _, inst := range c.instances {
+		topo.Instances = append(topo.Instances, *inst)
+		for _, cluster := range inst.Clusters {
+			topo.ClusterMap[cluster] = append(topo.ClusterMap[cluster], inst.ID)
+		}
+		for _, cap := range inst.Capabilities {
+			toolSet[cap] = true
+		}
+	}
+	topo.TotalTools = len(toolSet)
+	topo.Routes = c.ListRoutingRules()
+
+	return topo
+}
