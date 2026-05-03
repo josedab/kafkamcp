@@ -458,3 +458,207 @@ func (pe *PolicyEngine) ExportPolicies() (string, error) {
 	}
 	return string(data), nil
 }
+
+// PolicyValidation describes the result of validating a Rego policy.
+type PolicyValidation struct {
+	Valid       bool     `json:"valid"`
+	Errors      []string `json:"errors,omitempty"`
+	Warnings    []string `json:"warnings,omitempty"`
+	RuleCount   int      `json:"rule_count"`
+	HasAllow    bool     `json:"has_allow_rule"`
+	HasDeny     bool     `json:"has_deny_rule"`
+	HasPackage  bool     `json:"has_package_declaration"`
+}
+
+// PolicyImpact predicts the impact of adding/modifying a policy.
+type PolicyImpact struct {
+	PolicyID        string `json:"policy_id"`
+	AffectedAgents  int    `json:"affected_agents"`
+	AffectedActions int    `json:"affected_actions"`
+	WouldAllow      int    `json:"would_allow"`
+	WouldDeny       int    `json:"would_deny"`
+	RiskLevel       string `json:"risk_level"`
+	Summary         string `json:"summary"`
+}
+
+// ValidatePolicy checks a Rego policy for syntax and structural issues without registering it.
+func (pe *PolicyEngine) ValidatePolicy(rego string) *PolicyValidation {
+	v := &PolicyValidation{Valid: true}
+
+	if rego == "" {
+		v.Valid = false
+		v.Errors = append(v.Errors, "empty policy")
+		return v
+	}
+
+	if strings.Contains(rego, "package ") {
+		v.HasPackage = true
+	} else {
+		v.Warnings = append(v.Warnings, "missing package declaration")
+	}
+
+	// Count rules
+	allowCount := strings.Count(rego, "allow")
+	denyCount := strings.Count(rego, "deny")
+	v.RuleCount = allowCount + denyCount
+	v.HasAllow = allowCount > 0
+	v.HasDeny = denyCount > 0
+
+	if v.RuleCount == 0 {
+		v.Valid = false
+		v.Errors = append(v.Errors, "no allow or deny rules found")
+	}
+
+	// Check for balanced braces
+	openBraces := strings.Count(rego, "{")
+	closeBraces := strings.Count(rego, "}")
+	if openBraces != closeBraces {
+		v.Valid = false
+		v.Errors = append(v.Errors, fmt.Sprintf("unbalanced braces: %d open, %d close", openBraces, closeBraces))
+	}
+
+	// Check for input references
+	if !strings.Contains(rego, "input.") {
+		v.Warnings = append(v.Warnings, "policy does not reference input — may match all or no requests")
+	}
+
+	// Check for overly broad allow
+	if strings.Contains(rego, "default allow = true") {
+		v.Warnings = append(v.Warnings, "default allow = true is extremely permissive")
+	}
+
+	return v
+}
+
+// PredictImpact simulates what would happen if a policy were applied.
+func (pe *PolicyEngine) PredictImpact(policyID, rego string) *PolicyImpact {
+	pe.mu.RLock()
+	defer pe.mu.RUnlock()
+
+	impact := &PolicyImpact{PolicyID: policyID}
+
+	testPolicy := &Policy{ID: policyID, Rego: rego, Enabled: true}
+
+	// Test against common agent/action combinations
+	testAgents := []string{"admin", "analyst", "pipeline", "anonymous"}
+	testActions := []string{"read", "write", "delete", "admin", "describe"}
+	testResources := []string{"topic", "consumer_group", "schema", "cluster"}
+
+	for _, agent := range testAgents {
+		agentAffected := false
+		for _, action := range testActions {
+			for _, resource := range testResources {
+				input := PolicyInput{Agent: agent, Action: action, Resource: resource, ResourceName: "*"}
+				result := pe.evaluateRego(testPolicy, input)
+				if result == "allow" {
+					impact.WouldAllow++
+					agentAffected = true
+				} else if result == "deny" {
+					impact.WouldDeny++
+					agentAffected = true
+				}
+			}
+		}
+		if agentAffected {
+			impact.AffectedAgents++
+		}
+	}
+
+	impact.AffectedActions = impact.WouldAllow + impact.WouldDeny
+
+	switch {
+	case impact.WouldDeny > 10:
+		impact.RiskLevel = "critical"
+		impact.Summary = "Policy would deny many operations — review carefully"
+	case impact.WouldDeny > 5:
+		impact.RiskLevel = "high"
+		impact.Summary = "Policy would deny several operations"
+	case impact.WouldDeny > 0:
+		impact.RiskLevel = "medium"
+		impact.Summary = "Policy has targeted deny rules"
+	default:
+		impact.RiskLevel = "low"
+		impact.Summary = "Policy primarily allows operations"
+	}
+
+	return impact
+}
+
+// RegisterBundle creates or updates a policy bundle grouping multiple policies.
+func (pe *PolicyEngine) RegisterBundle(id, name, version string, policyIDs []string) (*PolicyBundle, error) {
+	pe.mu.Lock()
+	defer pe.mu.Unlock()
+
+	if id == "" || name == "" {
+		return nil, fmt.Errorf("bundle id and name are required")
+	}
+
+	// Validate all policy IDs exist
+	for _, pid := range policyIDs {
+		if _, ok := pe.policies[pid]; !ok {
+			return nil, fmt.Errorf("policy %q not found", pid)
+		}
+	}
+
+	bundle := &PolicyBundle{
+		ID:       id,
+		Name:     name,
+		Policies: policyIDs,
+		Version:  version,
+		LoadedAt: time.Now(),
+	}
+	pe.bundles[id] = bundle
+
+	pe.logger.Info("policy bundle registered", "id", id, "name", name, "policies", len(policyIDs))
+	return bundle, nil
+}
+
+// ListBundles returns all registered policy bundles.
+func (pe *PolicyEngine) ListBundles() []PolicyBundle {
+	pe.mu.RLock()
+	defer pe.mu.RUnlock()
+
+	var result []PolicyBundle
+	for _, b := range pe.bundles {
+		result = append(result, *b)
+	}
+	return result
+}
+
+// EnableBundle enables all policies in a bundle.
+func (pe *PolicyEngine) EnableBundle(bundleID string) error {
+	pe.mu.Lock()
+	defer pe.mu.Unlock()
+
+	bundle, ok := pe.bundles[bundleID]
+	if !ok {
+		return fmt.Errorf("bundle %q not found", bundleID)
+	}
+
+	for _, pid := range bundle.Policies {
+		if p, ok := pe.policies[pid]; ok {
+			p.Enabled = true
+			p.UpdatedAt = time.Now()
+		}
+	}
+	return nil
+}
+
+// DisableBundle disables all policies in a bundle.
+func (pe *PolicyEngine) DisableBundle(bundleID string) error {
+	pe.mu.Lock()
+	defer pe.mu.Unlock()
+
+	bundle, ok := pe.bundles[bundleID]
+	if !ok {
+		return fmt.Errorf("bundle %q not found", bundleID)
+	}
+
+	for _, pid := range bundle.Policies {
+		if p, ok := pe.policies[pid]; ok {
+			p.Enabled = false
+			p.UpdatedAt = time.Now()
+		}
+	}
+	return nil
+}
