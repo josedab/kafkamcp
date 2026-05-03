@@ -507,3 +507,335 @@ func fieldMap(fields []FieldInfo) map[string]FieldInfo {
 	}
 	return m
 }
+
+// UsagePattern tracks how a schema field is used across versions.
+type UsagePattern struct {
+	FieldName    string  `json:"field_name"`
+	AddedVersion int     `json:"added_in_version"`
+	Stability    float64 `json:"stability_score"` // 0-1, how stable this field has been
+	UsageType    string  `json:"usage_type"`       // key, value, metadata, timestamp
+	ChangeCount  int     `json:"change_count"`
+}
+
+// SchemaRecommendation is an ML-powered suggestion for schema evolution.
+type SchemaRecommendation struct {
+	Type        string  `json:"type"`        // add_field, remove_field, rename, restructure, optimize
+	Confidence  float64 `json:"confidence"`  // 0-1
+	Field       string  `json:"field,omitempty"`
+	Description string  `json:"description"`
+	Impact      string  `json:"impact"` // low, medium, high
+	Reasoning   string  `json:"reasoning"`
+	Suggested   string  `json:"suggested_change,omitempty"`
+}
+
+// SchemaIntelligence provides ML-powered analysis results.
+type SchemaIntelligence struct {
+	Subject          string                 `json:"subject"`
+	SchemaType       string                 `json:"schema_type"`
+	UsagePatterns    []UsagePattern         `json:"usage_patterns"`
+	Recommendations  []SchemaRecommendation `json:"recommendations"`
+	EvolutionScore   float64                `json:"evolution_score"` // 0-100
+	ComplexityScore  float64                `json:"complexity_score"` // 0-100
+	Prediction       string                 `json:"evolution_prediction"`
+}
+
+// AnalyzeIntelligent performs ML-inspired analysis of schema evolution patterns.
+func (a *Advisor) AnalyzeIntelligent(subject string) (*SchemaIntelligence, error) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+
+	history, ok := a.history[subject]
+	if !ok || len(history) == 0 {
+		return nil, fmt.Errorf("no schema history for subject %q", subject)
+	}
+
+	intel := &SchemaIntelligence{
+		Subject:    subject,
+		SchemaType: history[0].SchemaType,
+	}
+
+	// Analyze field-level usage patterns across versions
+	fieldHistory := make(map[string]*fieldEvolution)
+	for _, version := range history {
+		seen := make(map[string]bool)
+		for _, field := range version.Fields {
+			fh, ok := fieldHistory[field.Name]
+			if !ok {
+				fh = &fieldEvolution{
+					addedVersion: version.Version,
+					types:        make(map[string]int),
+				}
+				fieldHistory[field.Name] = fh
+			}
+			fh.lastVersion = version.Version
+			fh.types[field.Type]++
+			if !seen[field.Name] {
+				fh.appearances++
+				seen[field.Name] = true
+			}
+		}
+	}
+
+	totalVersions := len(history)
+	for name, fh := range fieldHistory {
+		stability := float64(fh.appearances) / float64(totalVersions)
+		if stability > 1 {
+			stability = 1
+		}
+
+		usageType := inferFieldUsage(name, fh)
+		pattern := UsagePattern{
+			FieldName:    name,
+			AddedVersion: fh.addedVersion,
+			Stability:    stability,
+			UsageType:    usageType,
+			ChangeCount:  len(fh.types) - 1,
+		}
+		intel.UsagePatterns = append(intel.UsagePatterns, pattern)
+	}
+
+	// Generate recommendations
+	intel.Recommendations = a.generateRecommendations(history, fieldHistory, totalVersions)
+
+	// Compute scores
+	intel.EvolutionScore = a.computeEvolutionScore(history, fieldHistory)
+	intel.ComplexityScore = a.computeComplexityScore(history)
+	intel.Prediction = a.predictNextEvolution(history, fieldHistory)
+
+	return intel, nil
+}
+
+type fieldEvolution struct {
+	addedVersion int
+	lastVersion  int
+	appearances  int
+	types        map[string]int
+}
+
+func inferFieldUsage(name string, fh *fieldEvolution) string {
+	nameLower := strings.ToLower(name)
+	switch {
+	case strings.Contains(nameLower, "id") || strings.Contains(nameLower, "key"):
+		return "key"
+	case strings.Contains(nameLower, "time") || strings.Contains(nameLower, "date") || strings.Contains(nameLower, "created") || strings.Contains(nameLower, "updated"):
+		return "timestamp"
+	case strings.Contains(nameLower, "meta") || strings.Contains(nameLower, "header") || strings.Contains(nameLower, "tag"):
+		return "metadata"
+	default:
+		return "value"
+	}
+}
+
+func (a *Advisor) generateRecommendations(history []SchemaVersion, fieldHistory map[string]*fieldEvolution, totalVersions int) []SchemaRecommendation {
+	var recs []SchemaRecommendation
+
+	// Detect unstable fields that change type frequently
+	for name, fh := range fieldHistory {
+		if len(fh.types) > 2 {
+			recs = append(recs, SchemaRecommendation{
+				Type:        "restructure",
+				Confidence:  0.85,
+				Field:       name,
+				Description: fmt.Sprintf("Field %q has changed type %d times — consider using a union type or separate fields", name, len(fh.types)-1),
+				Impact:      "high",
+				Reasoning:   "Frequent type changes indicate evolving requirements; a flexible type prevents future breaking changes",
+			})
+		}
+	}
+
+	// Detect fields with low stability that are still in latest schema (candidates for cleanup)
+	if totalVersions > 2 {
+		latestFields := fieldMap(history[len(history)-1].Fields)
+		for name, fh := range fieldHistory {
+			stability := float64(fh.appearances) / float64(totalVersions)
+			// Field is in latest but only appeared in few versions — may be unnecessary
+			if _, inLatest := latestFields[name]; inLatest && stability < 0.5 {
+				recs = append(recs, SchemaRecommendation{
+					Type:        "remove_field",
+					Confidence:  0.6,
+					Field:       name,
+					Description: fmt.Sprintf("Field %q appears in only %.0f%% of versions — candidate for deprecation", name, stability*100),
+					Impact:      "medium",
+					Reasoning:   "Low-stability fields increase schema complexity without consistent usage",
+				})
+			}
+		}
+	}
+
+	// Recommend adding documentation for undocumented fields
+	if len(history) > 0 {
+		latest := history[len(history)-1]
+		undocumented := 0
+		for _, f := range latest.Fields {
+			if f.Doc == "" {
+				undocumented++
+			}
+		}
+		if undocumented > 0 && len(latest.Fields) > 0 {
+			ratio := float64(undocumented) / float64(len(latest.Fields))
+			if ratio > 0.5 {
+				recs = append(recs, SchemaRecommendation{
+					Type:        "optimize",
+					Confidence:  0.9,
+					Description: fmt.Sprintf("%d of %d fields lack documentation — add doc strings for better consumer understanding", undocumented, len(latest.Fields)),
+					Impact:      "low",
+					Reasoning:   "Well-documented schemas reduce integration errors and onboarding time",
+				})
+			}
+		}
+	}
+
+	// Recommend defaults for required fields without them
+	if len(history) > 0 {
+		latest := history[len(history)-1]
+		for _, f := range latest.Fields {
+			if f.Required && f.Default == nil {
+				recs = append(recs, SchemaRecommendation{
+					Type:        "add_field",
+					Confidence:  0.75,
+					Field:       f.Name,
+					Description: fmt.Sprintf("Required field %q has no default value — add a default for backward compatibility", f.Name),
+					Impact:      "medium",
+					Reasoning:   "Default values on required fields enable backward-compatible schema evolution",
+					Suggested:   fmt.Sprintf("Add default value for field %q", f.Name),
+				})
+			}
+		}
+	}
+
+	// Suggest field naming conventions based on patterns
+	if len(history) > 0 {
+		latest := history[len(history)-1]
+		hasCamel, hasSnake := false, false
+		for _, f := range latest.Fields {
+			if strings.Contains(f.Name, "_") {
+				hasSnake = true
+			} else if f.Name != strings.ToLower(f.Name) {
+				hasCamel = true
+			}
+		}
+		if hasCamel && hasSnake {
+			recs = append(recs, SchemaRecommendation{
+				Type:        "optimize",
+				Confidence:  0.7,
+				Description: "Mixed naming conventions detected (camelCase and snake_case) — standardize for consistency",
+				Impact:      "low",
+				Reasoning:   "Consistent naming reduces cognitive load and serialization issues",
+			})
+		}
+	}
+
+	sort.Slice(recs, func(i, j int) bool { return recs[i].Confidence > recs[j].Confidence })
+	return recs
+}
+
+func (a *Advisor) computeEvolutionScore(history []SchemaVersion, fieldHistory map[string]*fieldEvolution) float64 {
+	score := 100.0
+
+	// Penalize type changes
+	for _, fh := range fieldHistory {
+		if len(fh.types) > 1 {
+			score -= float64(len(fh.types)-1) * 10
+		}
+	}
+
+	// Penalize rapid version growth
+	if len(history) > 20 {
+		score -= float64(len(history)-20) * 2
+	}
+
+	// Reward consistent additive evolution
+	additive := 0
+	for i := 1; i < len(history); i++ {
+		prevFields := fieldMap(history[i-1].Fields)
+		currFields := fieldMap(history[i].Fields)
+		isAdditive := true
+		for name := range prevFields {
+			if _, ok := currFields[name]; !ok {
+				isAdditive = false
+				break
+			}
+		}
+		if isAdditive {
+			additive++
+		}
+	}
+	if len(history) > 1 {
+		additiveRatio := float64(additive) / float64(len(history)-1)
+		score += additiveRatio * 20
+	}
+
+	if score < 0 {
+		score = 0
+	}
+	if score > 100 {
+		score = 100
+	}
+	return score
+}
+
+func (a *Advisor) computeComplexityScore(history []SchemaVersion) float64 {
+	if len(history) == 0 {
+		return 0
+	}
+	latest := history[len(history)-1]
+	fieldCount := float64(len(latest.Fields))
+
+	// Complexity grows with field count and nesting
+	score := fieldCount * 5
+	for _, f := range latest.Fields {
+		if strings.Contains(f.Type, "array") || strings.Contains(f.Type, "map") || strings.Contains(f.Type, "record") {
+			score += 10
+		}
+		if strings.Contains(f.Type, "union") || strings.Contains(f.Type, "null") {
+			score += 5
+		}
+	}
+
+	if score > 100 {
+		score = 100
+	}
+	if score < 0 {
+		score = 0
+	}
+	return score
+}
+
+func (a *Advisor) predictNextEvolution(history []SchemaVersion, fieldHistory map[string]*fieldEvolution) string {
+	if len(history) < 2 {
+		return "Insufficient history for prediction — record more versions"
+	}
+
+	// Analyze trends
+	additionsPerVersion := 0
+	removalsPerVersion := 0
+	for i := 1; i < len(history); i++ {
+		prevMap := fieldMap(history[i-1].Fields)
+		currMap := fieldMap(history[i].Fields)
+		for name := range currMap {
+			if _, ok := prevMap[name]; !ok {
+				additionsPerVersion++
+			}
+		}
+		for name := range prevMap {
+			if _, ok := currMap[name]; !ok {
+				removalsPerVersion++
+			}
+		}
+	}
+
+	versions := len(history) - 1
+	avgAdd := float64(additionsPerVersion) / float64(versions)
+	avgRemove := float64(removalsPerVersion) / float64(versions)
+
+	switch {
+	case avgAdd > 2 && avgRemove < 0.5:
+		return "Rapid additive growth pattern — expect continued field additions; consider partitioning into sub-schemas"
+	case avgRemove > 1:
+		return "Active pruning pattern — schema is being refined; ensure deprecated fields have migration paths"
+	case avgAdd < 0.5 && avgRemove < 0.5:
+		return "Stable schema — minimal evolution expected; good candidate for FULL compatibility mode"
+	default:
+		return "Moderate evolution — balanced additions and modifications expected"
+	}
+}

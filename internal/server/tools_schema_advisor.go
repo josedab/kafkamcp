@@ -86,3 +86,25 @@ func (s *Server) handleSchemaAdvisorAnalyze(ctx context.Context, request mcp.Cal
 		return marshalResult(map[string]any{"advice": advice})
 	})(ctx, request)
 }
+
+func (s *Server) handleSchemaAdvisorIntelligent(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return s.withToolAuth(toolAuthConfig{
+		tool:         "kafka_schema_advisor_intelligent",
+		resourceType: auth.ResourceCluster,
+		action:       auth.ActionRead,
+	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+		subject := request.GetString("subject", "")
+		if subject == "" {
+			return mcp.NewToolResultError("subject is required"), nil
+		}
+
+		intel, err := s.schemaAdvisor.AnalyzeIntelligent(subject)
+		if err != nil {
+			s.logAudit(agentID, "kafka_schema_advisor_intelligent", args, "", "error", 0, err, start)
+			return s.toolError("Failed to perform intelligent analysis", err), nil
+		}
+
+		s.logAudit(agentID, "kafka_schema_advisor_intelligent", args, "", "success", 0, nil, start)
+		return marshalResult(map[string]any{"intelligence": intel})
+	})(ctx, request)
+}
