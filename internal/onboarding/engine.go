@@ -13,7 +13,8 @@ import (
 
 // Engine manages the zero-config onboarding experience.
 type Engine struct {
-	logger *slog.Logger
+	logger               *slog.Logger
+	interactiveOnboarder *InteractiveOnboarder
 }
 
 // DiscoveryResult represents discovered Kafka clusters.
@@ -70,7 +71,14 @@ type QuickstartStep struct {
 
 // NewEngine creates a new onboarding engine.
 func NewEngine(logger *slog.Logger) *Engine {
-	return &Engine{logger: logger}
+	e := &Engine{logger: logger}
+	e.interactiveOnboarder = NewInteractiveOnboarder(e)
+	return e
+}
+
+// Interactive returns the interactive onboarding system.
+func (e *Engine) Interactive() *InteractiveOnboarder {
+	return e.interactiveOnboarder
 }
 
 // DiscoverClusters auto-discovers Kafka clusters via common methods.
