@@ -25,6 +25,12 @@ import (
 	"github.com/kafkamcp/kafkamcp/internal/devmode"
 	"github.com/kafkamcp/kafkamcp/internal/digitaltwin"
 	"github.com/kafkamcp/kafkamcp/internal/encryption"
+	"github.com/kafkamcp/kafkamcp/internal/eventbus"
+	"github.com/kafkamcp/kafkamcp/internal/kafkaproxy"
+	"github.com/kafkamcp/kafkamcp/internal/perfguard"
+	"github.com/kafkamcp/kafkamcp/internal/toolcompose"
+	"github.com/kafkamcp/kafkamcp/internal/statemachine"
+	"github.com/kafkamcp/kafkamcp/internal/intentverify"
 	"github.com/kafkamcp/kafkamcp/internal/eventsourcing"
 	"github.com/kafkamcp/kafkamcp/internal/federation"
 	"github.com/kafkamcp/kafkamcp/internal/finops"
@@ -144,6 +150,12 @@ type Platform struct {
 	reviewStore          *plugin.ReviewStore       // marketplace review store
 	encryptionEngine     *encryption.Engine        // field-level encryption engine
 	portalEngine         *portal.Engine            // governance portal data layer
+	kafkaProxy           *kafkaproxy.Proxy         // Kafka wire protocol proxy
+	eventBus             *eventbus.Bus             // real-time agent observability bus
+	perfGuard            *perfguard.Guard          // performance regression guard
+	toolComposeEngine    *toolcompose.Engine       // MCP tool composition engine
+	stateMachineEngine   *statemachine.Engine      // topic-backed state machine engine
+	intentVerifier       *intentverify.Verifier    // agent intent verification
 }
 
 // newPlatform initializes all platform subsystems.
@@ -219,6 +231,11 @@ func newPlatform(logger *slog.Logger) Platform {
 		reviewStore:          plugin.NewReviewStore(),
 		encryptionEngine:     encryption.NewEngine(logger),
 		portalEngine:         portal.NewEngine(logger),
+		eventBus:             eventbus.NewBus(eventbus.DefaultBusConfig(), logger),
+		perfGuard:            perfguard.NewGuard(perfguard.DefaultGuardConfig(), logger),
+		toolComposeEngine:    toolcompose.NewEngine(logger),
+		stateMachineEngine:   statemachine.NewEngine(logger),
+		intentVerifier:       intentverify.NewVerifier(intentverify.DefaultVerifierConfig(), logger),
 	}
 	p.marketplace = plugin.NewMarketplace(p.pluginRegistry)
 	return p
