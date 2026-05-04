@@ -5,6 +5,7 @@ import (
 
 	"github.com/kafkamcp/kafkamcp/internal/aclmgmt"
 	"github.com/kafkamcp/kafkamcp/internal/adaptiverate"
+	"github.com/kafkamcp/kafkamcp/internal/autopilot"
 	"github.com/kafkamcp/kafkamcp/internal/agentmemory"
 	"github.com/kafkamcp/kafkamcp/internal/benchmark"
 	"github.com/kafkamcp/kafkamcp/internal/capability"
@@ -23,11 +24,13 @@ import (
 	"github.com/kafkamcp/kafkamcp/internal/dagworkflow"
 	"github.com/kafkamcp/kafkamcp/internal/devmode"
 	"github.com/kafkamcp/kafkamcp/internal/digitaltwin"
+	"github.com/kafkamcp/kafkamcp/internal/encryption"
 	"github.com/kafkamcp/kafkamcp/internal/eventsourcing"
 	"github.com/kafkamcp/kafkamcp/internal/federation"
 	"github.com/kafkamcp/kafkamcp/internal/finops"
 	"github.com/kafkamcp/kafkamcp/internal/gateway"
 	"github.com/kafkamcp/kafkamcp/internal/gitops"
+	"github.com/kafkamcp/kafkamcp/internal/graphqlapi"
 	"github.com/kafkamcp/kafkamcp/internal/healthscore"
 	"github.com/kafkamcp/kafkamcp/internal/kafka"
 	"github.com/kafkamcp/kafkamcp/internal/llmpipeline"
@@ -42,6 +45,7 @@ import (
 	"github.com/kafkamcp/kafkamcp/internal/pipeline"
 	"github.com/kafkamcp/kafkamcp/internal/platform"
 	"github.com/kafkamcp/kafkamcp/internal/playbook"
+	"github.com/kafkamcp/kafkamcp/internal/portal"
 	"github.com/kafkamcp/kafkamcp/internal/predictalert"
 	"github.com/kafkamcp/kafkamcp/internal/plugin"
 	"github.com/kafkamcp/kafkamcp/internal/profiler"
@@ -62,6 +66,7 @@ import (
 	"github.com/kafkamcp/kafkamcp/internal/topictemplate"
 	"github.com/kafkamcp/kafkamcp/internal/vectorsync"
 	"github.com/kafkamcp/kafkamcp/internal/viewstore"
+	"github.com/kafkamcp/kafkamcp/internal/wasmruntime"
 	"github.com/kafkamcp/kafkamcp/internal/webhook"
 	"github.com/kafkamcp/kafkamcp/internal/workflow"
 )
@@ -132,6 +137,12 @@ type Platform struct {
 	aclMgmtEngine        *aclmgmt.Engine           // ACL management with diff/audit
 	benchmarkEngine      *benchmark.Engine         // embedded benchmarking & load testing
 	webhookManager       *webhook.Manager          // webhook event gateway
+	autopilotEngine      *autopilot.Engine         // automated migration autopilot
+	wasmEngine           *wasmruntime.Engine       // WASM plugin runtime
+	graphqlEngine        *graphqlapi.Engine        // GraphQL federation layer
+	reviewStore          *plugin.ReviewStore       // marketplace review store
+	encryptionEngine     *encryption.Engine        // field-level encryption engine
+	portalEngine         *portal.Engine            // governance portal data layer
 }
 
 // newPlatform initializes all platform subsystems.
@@ -200,6 +211,12 @@ func newPlatform(logger *slog.Logger) Platform {
 		aclMgmtEngine:        aclmgmt.NewEngine(logger),
 		benchmarkEngine:      benchmark.NewEngine(logger),
 		webhookManager:       webhook.NewManager(logger),
+		autopilotEngine:      autopilot.NewEngine(migration.NewPlanner(), digitaltwin.NewEngine(logger), sandbox.NewEngine(logger), logger),
+		wasmEngine:           wasmruntime.NewEngine(logger),
+		graphqlEngine:        graphqlapi.NewEngine(logger),
+		reviewStore:          plugin.NewReviewStore(),
+		encryptionEngine:     encryption.NewEngine(logger),
+		portalEngine:         portal.NewEngine(logger),
 	}
 	p.marketplace = plugin.NewMarketplace(p.pluginRegistry)
 	return p
