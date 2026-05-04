@@ -87,18 +87,24 @@ type ReplayPrediction struct {
 
 // Engine manages replay sessions and bookmarks.
 type Engine struct {
-	bookmarks   map[string]*Bookmark
-	simulations map[string]*Simulation
-	logger      *slog.Logger
-	mu          sync.RWMutex
+	bookmarks        map[string]*Bookmark
+	simulations      map[string]*Simulation
+	recordings       map[string]*Recording
+	replaySessions   map[string]*ReplaySession
+	regressionSuites map[string]*RegressionSuite
+	logger           *slog.Logger
+	mu               sync.RWMutex
 }
 
 // NewEngine creates a new replay engine.
 func NewEngine(logger *slog.Logger) *Engine {
 	return &Engine{
-		bookmarks:   make(map[string]*Bookmark),
-		simulations: make(map[string]*Simulation),
-		logger:      logger,
+		bookmarks:        make(map[string]*Bookmark),
+		simulations:      make(map[string]*Simulation),
+		recordings:       make(map[string]*Recording),
+		replaySessions:   make(map[string]*ReplaySession),
+		regressionSuites: make(map[string]*RegressionSuite),
+		logger:           logger,
 	}
 }
 
