@@ -80,19 +80,23 @@ type AuditEntry struct {
 
 // Engine manages runbooks and their execution.
 type Engine struct {
-	mu         sync.RWMutex
-	runbooks   map[string]*Runbook
-	executions map[string]*Execution
-	logger     *slog.Logger
-	nextID     int64
+	mu                 sync.RWMutex
+	runbooks           map[string]*Runbook
+	executions         map[string]*Execution
+	agenticRunbooks    map[string]*AgenticRunbook
+	agenticExecutions  map[string]*AgenticExecution
+	logger             *slog.Logger
+	nextID             int64
 }
 
 // NewEngine creates a new runbook engine with built-in runbooks.
 func NewEngine(logger *slog.Logger) *Engine {
 	e := &Engine{
-		runbooks:   make(map[string]*Runbook),
-		executions: make(map[string]*Execution),
-		logger:     logger,
+		runbooks:          make(map[string]*Runbook),
+		executions:        make(map[string]*Execution),
+		agenticRunbooks:   make(map[string]*AgenticRunbook),
+		agenticExecutions: make(map[string]*AgenticExecution),
+		logger:            logger,
 	}
 	e.seedBuiltins()
 	return e
