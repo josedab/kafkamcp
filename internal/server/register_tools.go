@@ -82,4 +82,6 @@ s.registerRunbookTools()
 s.registerCrossLineageTools()
 s.registerACLMgmtTools()
 s.registerBenchmarkTools()
+s.registerWebhookTools()
+s.registerTimeTravelTools()
 }

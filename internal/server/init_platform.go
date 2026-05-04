@@ -57,10 +57,12 @@ import (
 	"github.com/kafkamcp/kafkamcp/internal/taskqueue"
 	"github.com/kafkamcp/kafkamcp/internal/telemetry"
 	"github.com/kafkamcp/kafkamcp/internal/timeseries"
+	"github.com/kafkamcp/kafkamcp/internal/timetravel"
 	"github.com/kafkamcp/kafkamcp/internal/topicportal"
 	"github.com/kafkamcp/kafkamcp/internal/topictemplate"
 	"github.com/kafkamcp/kafkamcp/internal/vectorsync"
 	"github.com/kafkamcp/kafkamcp/internal/viewstore"
+	"github.com/kafkamcp/kafkamcp/internal/webhook"
 	"github.com/kafkamcp/kafkamcp/internal/workflow"
 )
 
@@ -113,6 +115,7 @@ type Platform struct {
 	chatEngine           *chat.Engine              // conversational REPL chat engine
 	smartRouter          *smartroute.Router        // intelligent tool routing & composition
 	timeseriesEngine     *timeseries.Engine        // time-series analytics engine
+	timeTravelEngine     *timetravel.Engine        // point-in-time state reconstruction
 	controlPlane         *controlplane.Manager     // multi-tenant SaaS control plane
 	schemaPlayground     *schemaplayground.Engine  // interactive schema playground
 	capabilityNegotiator *capability.Negotiator    // agent capability negotiation
@@ -128,6 +131,7 @@ type Platform struct {
 	crossLineageEngine   *crosslineage.Engine      // cross-topic data lineage
 	aclMgmtEngine        *aclmgmt.Engine           // ACL management with diff/audit
 	benchmarkEngine      *benchmark.Engine         // embedded benchmarking & load testing
+	webhookManager       *webhook.Manager          // webhook event gateway
 }
 
 // newPlatform initializes all platform subsystems.
@@ -179,6 +183,7 @@ func newPlatform(logger *slog.Logger) Platform {
 		chatEngine:           chat.NewEngine(logger),
 		smartRouter:          smartroute.NewRouter(logger),
 		timeseriesEngine:     timeseries.NewEngine(logger),
+		timeTravelEngine:     timetravel.NewEngine(logger),
 		controlPlane:         controlplane.NewManager(logger),
 		schemaPlayground:     schemaplayground.NewEngine(logger),
 		capabilityNegotiator: capability.NewNegotiator(logger),
@@ -194,6 +199,7 @@ func newPlatform(logger *slog.Logger) Platform {
 		crossLineageEngine:   crosslineage.NewEngine(logger),
 		aclMgmtEngine:        aclmgmt.NewEngine(logger),
 		benchmarkEngine:      benchmark.NewEngine(logger),
+		webhookManager:       webhook.NewManager(logger),
 	}
 	p.marketplace = plugin.NewMarketplace(p.pluginRegistry)
 	return p
