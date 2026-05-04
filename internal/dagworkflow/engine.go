@@ -78,21 +78,23 @@ type StepResult struct {
 
 // Engine manages DAG workflow templates and executions.
 type Engine struct {
-	mu        sync.RWMutex
-	templates map[string]*WorkflowTemplate // key: template ID
-	versions  map[string][]*WorkflowTemplate // key: name -> version history
-	runs      map[string]*WorkflowRun
-	logger    *slog.Logger
-	nextID    int64
+	mu             sync.RWMutex
+	templates      map[string]*WorkflowTemplate // key: template ID
+	versions       map[string][]*WorkflowTemplate // key: name -> version history
+	runs           map[string]*WorkflowRun
+	multiAgentRuns map[string]*MultiAgentRun
+	logger         *slog.Logger
+	nextID         int64
 }
 
 // NewEngine creates a new DAG workflow engine.
 func NewEngine(logger *slog.Logger) *Engine {
 	return &Engine{
-		templates: make(map[string]*WorkflowTemplate),
-		versions:  make(map[string][]*WorkflowTemplate),
-		runs:      make(map[string]*WorkflowRun),
-		logger:    logger,
+		templates:      make(map[string]*WorkflowTemplate),
+		versions:       make(map[string][]*WorkflowTemplate),
+		runs:           make(map[string]*WorkflowRun),
+		multiAgentRuns: make(map[string]*MultiAgentRun),
+		logger:         logger,
 	}
 }
 
