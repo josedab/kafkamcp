@@ -13,6 +13,7 @@ import (
 	"github.com/kafkamcp/kafkamcp/internal/incident"
 	"github.com/kafkamcp/kafkamcp/internal/lagdiag"
 	"github.com/kafkamcp/kafkamcp/internal/nlquery"
+	"github.com/kafkamcp/kafkamcp/internal/telemetry"
 )
 
 // Analytics groups AI-powered analysis and intelligence subsystems.
@@ -28,6 +29,7 @@ type Analytics struct {
 	advisorEngine      *advisor.Engine            // intelligent topic advisor
 	dataQualityEngine  *dataquality.Engine        // data quality scoring & SLA
 	incidentCorrelator *incident.Correlator       // cross-cluster incident correlation
+	telemetryDataLake  *telemetry.DataLake        // agent interaction telemetry data lake
 }
 
 // newAnalytics initializes all analytics subsystems.
@@ -44,5 +46,6 @@ func newAnalytics(logger *slog.Logger) Analytics {
 		advisorEngine:      advisor.NewEngine(logger),
 		dataQualityEngine:  dataquality.NewEngine(logger),
 		incidentCorrelator: incident.NewCorrelator(incident.DefaultCorrelatorConfig(), logger),
+		telemetryDataLake:  telemetry.NewDataLake(100000),
 	}
 }
