@@ -24,6 +24,7 @@ type Governance struct {
 	rateLimiter      *ratelimit.Limiter
 	maskingEngine    *masking.Engine           // PII redaction engine
 	contractEngine   *contracts.Engine         // schema-aware data contracts
+	contractTester   *contracts.ContractTester // producer/consumer contract testing
 	personaEngine    *persona.Engine           // declarative agent personas
 	tenantManager    *tenant.Manager           // multi-tenant management
 	usageTracker     *tenant.UsageTracker      // usage analytics tracking
@@ -54,6 +55,7 @@ func newGovernance(cfg *config.Config, logger *slog.Logger) (Governance, error) 
 		rateLimiter:      rl,
 		maskingEngine:    masking.NewEngine(cfg.Masking, logger),
 		contractEngine:   contracts.NewEngine(),
+		contractTester:   contracts.NewContractTester(),
 		personaEngine:    persona.NewEngine(),
 		tenantManager:    tenant.NewManager(),
 		usageTracker:     tenant.NewUsageTracker(),
