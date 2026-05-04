@@ -81,6 +81,7 @@ type Platform struct {
 	migrationPlanner     *migration.Planner        // kafka migration assistant
 	workflowEngine       *workflow.Engine          // agent workflow templates
 	gatewayManager       *gateway.Manager          // multi-protocol streaming gateway
+	eventTranslator      *gateway.EventTranslator  // cross-platform event translation
 	collaborationCoord   *collaboration.Coordinator // agent collaboration
 	semanticEngine       *semantic.Engine          // semantic search & RAG
 	onboardingEngine     *onboarding.Engine        // zero-config onboarding
@@ -156,6 +157,7 @@ func newPlatform(logger *slog.Logger) Platform {
 		migrationPlanner:     migration.NewPlanner(),
 		workflowEngine:       workflow.NewEngine(logger),
 		gatewayManager:       gateway.NewManager(logger),
+		eventTranslator:      gateway.NewEventTranslator(gateway.NewManager(logger), logger),
 		collaborationCoord:   collaboration.NewCoordinator(logger),
 		semanticEngine:       semantic.NewEngine(logger),
 		onboardingEngine:     onboarding.NewEngine(logger),
