@@ -12,12 +12,13 @@ import (
 
 // Engine provides semantic search and RAG capabilities over indexed messages.
 type Engine struct {
-	mu       sync.RWMutex
-	index    map[string]*IndexedDocument
-	topics   map[string][]string // topic -> document IDs
-	logger   *slog.Logger
-	maxDocs  int
-	nextID   int64
+	mu         sync.RWMutex
+	index      map[string]*IndexedDocument
+	topics     map[string][]string // topic -> document IDs
+	topicIndex *TopicIndex
+	logger     *slog.Logger
+	maxDocs    int
+	nextID     int64
 }
 
 // IndexedDocument represents a semantically indexed Kafka message.
@@ -61,10 +62,11 @@ type IndexStats struct {
 // NewEngine creates a new semantic search engine.
 func NewEngine(logger *slog.Logger) *Engine {
 	return &Engine{
-		index:   make(map[string]*IndexedDocument),
-		topics:  make(map[string][]string),
-		logger:  logger,
-		maxDocs: 100000,
+		index:      make(map[string]*IndexedDocument),
+		topics:     make(map[string][]string),
+		topicIndex: NewTopicIndex(),
+		logger:     logger,
+		maxDocs:    100000,
 	}
 }
 
@@ -215,6 +217,11 @@ func (e *Engine) GetStats() IndexStats {
 		TopicCounts:    topicCounts,
 		VocabSize:      len(vocab),
 	}
+}
+
+// TopicIndex returns the NL-based topic search index.
+func (e *Engine) TopicIndex() *TopicIndex {
+	return e.topicIndex
 }
 
 // DeleteByTopic removes all documents for a topic from the index.
