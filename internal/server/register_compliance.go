@@ -24,4 +24,12 @@ func (s *Server) registerComplianceTools() {
 		mcp.WithString("regulation", mcp.Description("Filter by regulation")),
 		mcp.WithString("severity", mcp.Description("Filter by severity: critical, high, medium, low")),
 	), s.handleComplianceViolations)
+
+	s.mcpServer.AddTool(mcp.NewTool("kafka_compliance_audit_report",
+		withCategory("governance"),
+		mcp.WithDescription("Generate an exportable SOC2/HIPAA/GDPR/PCI-DSS audit report combining compliance scans, audit logs, data lineage, and access patterns into HTML, JSON, or text format."),
+		mcp.WithString("regulation", mcp.Required(), mcp.Description("Regulation: GDPR, HIPAA, SOC2, PCI-DSS")),
+		mcp.WithString("cluster", mcp.Description("Cluster name")),
+		mcp.WithString("format", mcp.Description("Output format: html, json, text. Default: json")),
+	), s.handleComplianceAuditReport)
 }

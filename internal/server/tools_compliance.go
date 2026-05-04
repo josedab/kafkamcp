@@ -123,3 +123,62 @@ func (s *Server) collectComplianceData(ctx context.Context, cluster, topicFilter
 
 	return data, nil
 }
+
+func (s *Server) handleComplianceAuditReport(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return s.withToolAuth(toolAuthConfig{
+		tool: "kafka_compliance_audit_report", resourceType: auth.ResourceCluster, action: auth.ActionRead,
+	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+		regulation := compliance.Regulation(request.GetString("regulation", ""))
+		cluster := request.GetString("cluster", "")
+		format := compliance.AuditReportFormat(request.GetString("format", "json"))
+
+		if regulation == "" {
+			return mcp.NewToolResultError("regulation is required"), nil
+		}
+		if deny := validateStringLength("regulation", string(regulation)); deny != nil {
+			return deny, nil
+		}
+		if deny := validateStringLength("cluster", cluster); deny != nil {
+			return deny, nil
+		}
+
+		clusterName := s.resolveClusterName(cluster)
+
+		// Collect compliance data and run scan
+		topicData, err := s.collectComplianceData(ctx, cluster, "")
+		if err != nil {
+			s.logAudit(agentID, "kafka_compliance_audit_report", args, cluster, "error", 0, err, start)
+			return s.toolError("failed to collect topic data", err), nil
+		}
+
+		report := s.complianceEngine.GenerateReport(clusterName, regulation, topicData)
+
+		input := compliance.AuditReportInput{
+			ClusterName: clusterName,
+			Regulation:  regulation,
+			Report:      report,
+		}
+
+		// Collect audit entries if audit logger is available
+		if s.auditLogger != nil {
+			entries := s.auditLogger.RecentEntries(100)
+			for _, e := range entries {
+				input.AuditEntries = append(input.AuditEntries, compliance.AuditEntry{
+					Timestamp: e.Timestamp,
+					AgentID:   e.AgentID,
+					Tool:      e.Tool,
+					Cluster:   e.Cluster,
+					Status:    e.Result.Status,
+				})
+			}
+		}
+
+		auditReport, err := s.complianceEngine.GenerateAuditReport(input, format)
+		if err != nil {
+			return s.toolError("failed to generate audit report", err), nil
+		}
+
+		s.logAudit(agentID, "kafka_compliance_audit_report", args, cluster, "success", 1, nil, start)
+		return marshalResult(auditReport)
+	})(ctx, request)
+}
