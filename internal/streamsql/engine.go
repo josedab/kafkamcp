@@ -79,6 +79,7 @@ type Engine struct {
 	mu      sync.RWMutex
 	queries map[string]*Query
 	results map[string]*QueryResult
+	budgets map[string]*Budget
 	logger  *slog.Logger
 	nextID  int64
 }
@@ -88,6 +89,7 @@ func NewEngine(logger *slog.Logger) *Engine {
 	return &Engine{
 		queries: make(map[string]*Query),
 		results: make(map[string]*QueryResult),
+		budgets: make(map[string]*Budget),
 		logger:  logger,
 	}
 }
