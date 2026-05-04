@@ -120,6 +120,7 @@ type Engine struct {
 	experiments       map[string]*Experiment
 	experimentCancels map[string]context.CancelFunc
 	scenarios         []Scenario
+	gymnasium         *Gymnasium
 	logger            *slog.Logger
 	mu                sync.RWMutex
 	experimentCounter atomic.Uint64
@@ -131,6 +132,7 @@ func NewEngine(logger *slog.Logger) *Engine {
 	e := &Engine{
 		experiments:       make(map[string]*Experiment),
 		experimentCancels: make(map[string]context.CancelFunc),
+		gymnasium:         NewGymnasium(),
 		logger:            logger,
 		stopCleanup:       make(chan struct{}),
 	}
@@ -376,6 +378,11 @@ func (e *Engine) Close() {
 		delete(e.experimentCancels, id)
 	}
 	e.experiments = make(map[string]*Experiment)
+}
+
+// Gymnasium returns the gamified training system.
+func (e *Engine) Gymnasium() *Gymnasium {
+	return e.gymnasium
 }
 
 // ListExperiments returns all experiments with optional status filter.
