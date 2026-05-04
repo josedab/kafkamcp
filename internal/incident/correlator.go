@@ -114,6 +114,8 @@ type Correlator struct {
 	config       CorrelatorConfig
 	events       []AnomalyEvent
 	incidents    []IncidentCluster
+	incidentMap  map[string]*IncidentCluster
+	runbooks     map[string]*RemediationRunbook
 	dependencies []TopicDependency
 	logger       *slog.Logger
 }
@@ -121,10 +123,12 @@ type Correlator struct {
 // NewCorrelator creates a new incident correlator.
 func NewCorrelator(cfg CorrelatorConfig, logger *slog.Logger) *Correlator {
 	return &Correlator{
-		config:    cfg,
-		events:    make([]AnomalyEvent, 0),
-		incidents: make([]IncidentCluster, 0),
-		logger:    logger,
+		config:      cfg,
+		events:      make([]AnomalyEvent, 0),
+		incidents:   make([]IncidentCluster, 0),
+		incidentMap: make(map[string]*IncidentCluster),
+		runbooks:    make(map[string]*RemediationRunbook),
+		logger:      logger,
 	}
 }
 
@@ -179,6 +183,7 @@ func (c *Correlator) IngestEvent(event AnomalyEvent) *IncidentCluster {
 		c.incidents = c.incidents[1:]
 	}
 	c.incidents = append(c.incidents, incident)
+	c.incidentMap[incident.ID] = &c.incidents[len(c.incidents)-1]
 	return &incident
 }
 
