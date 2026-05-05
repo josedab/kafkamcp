@@ -1,8 +1,13 @@
 package server
 
 import (
+	"context"
+	"fmt"
 	"strings"
 	"testing"
+
+	"github.com/kafkamcp/kafkamcp/internal/config"
+	"github.com/kafkamcp/kafkamcp/internal/kafka"
 )
 
 func TestValidateConnectorConfig_NormalPassthrough(t *testing.T) {
@@ -119,4 +124,206 @@ func TestValidateConnectorConfig_MultipleSensitiveKeys(t *testing.T) {
 	if redacted["api.key"] != "***REDACTED***" {
 		t.Errorf("api.key should be redacted")
 	}
+}
+
+// ===================== Handler-level tests with mock =====================
+
+func TestHandleCreateConnector_MissingName_Connect(t *testing.T) {
+	t.Parallel()
+	s := newTestServerWithMock(t, &kafka.MockKafkaManager{})
+	req := makeToolRequest(map[string]any{})
+
+	result, err := s.handleCreateConnector(context.Background(), req)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	assertIsError(t, result)
+	if !strings.Contains(resultText(t, result), "name is required") {
+		t.Error("expected 'name is required' error")
+	}
+}
+
+func TestHandleCreateConnector_ConnectNotAvailable_Connect(t *testing.T) {
+	t.Parallel()
+	mock := &kafka.MockKafkaManager{
+		GetClusterConfigFn: func(name string) (*config.ClusterConfig, error) {
+			return &config.ClusterConfig{Name: "default", BootstrapServers: "localhost:9092"}, nil
+		},
+	}
+	s := newTestServerWithMock(t, mock)
+	req := makeToolRequest(map[string]any{
+		"name":   "my-connector",
+		"config": map[string]any{"connector.class": "FileSource"},
+	})
+
+	result, err := s.handleCreateConnector(context.Background(), req)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	assertIsError(t, result)
+	if !strings.Contains(resultText(t, result), "Kafka Connect is not available") {
+		t.Errorf("expected 'not available' error, got: %s", resultText(t, result))
+	}
+}
+
+func TestHandleCreateConnector_MissingConfig_Connect(t *testing.T) {
+	t.Parallel()
+	mock := &kafka.MockKafkaManager{
+		GetClusterConfigFn: func(name string) (*config.ClusterConfig, error) {
+			return &config.ClusterConfig{Name: "default", ConnectURL: "http://localhost:8083"}, nil
+		},
+	}
+	s := newTestServerWithMock(t, mock)
+	req := makeToolRequest(map[string]any{"name": "my-connector"})
+
+	result, err := s.handleCreateConnector(context.Background(), req)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	assertIsError(t, result)
+	if !strings.Contains(resultText(t, result), "config is required") {
+		t.Errorf("expected 'config is required', got: %s", resultText(t, result))
+	}
+}
+
+func TestHandleUpdateConnector_MissingName_Connect(t *testing.T) {
+	t.Parallel()
+	s := newTestServerWithMock(t, &kafka.MockKafkaManager{})
+	req := makeToolRequest(map[string]any{})
+
+	result, err := s.handleUpdateConnector(context.Background(), req)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	assertIsError(t, result)
+}
+
+func TestHandleUpdateConnector_ConnectNotAvailable_Connect(t *testing.T) {
+	t.Parallel()
+	mock := &kafka.MockKafkaManager{
+		GetClusterConfigFn: func(name string) (*config.ClusterConfig, error) {
+			return &config.ClusterConfig{Name: "default"}, nil
+		},
+	}
+	s := newTestServerWithMock(t, mock)
+	req := makeToolRequest(map[string]any{
+		"name":   "my-connector",
+		"config": map[string]any{"connector.class": "FileSource"},
+	})
+
+	result, err := s.handleUpdateConnector(context.Background(), req)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	assertIsError(t, result)
+	if !strings.Contains(resultText(t, result), "Kafka Connect is not available") {
+		t.Errorf("expected 'not available' error")
+	}
+}
+
+func TestHandleDeleteConnector_MissingName_Connect(t *testing.T) {
+	t.Parallel()
+	s := newTestServerWithMock(t, &kafka.MockKafkaManager{})
+	req := makeToolRequest(map[string]any{})
+
+	result, err := s.handleDeleteConnector(context.Background(), req)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	assertIsError(t, result)
+}
+
+func TestHandleDeleteConnector_ConnectNotAvailable_Connect(t *testing.T) {
+	t.Parallel()
+	mock := &kafka.MockKafkaManager{
+		GetClusterConfigFn: func(name string) (*config.ClusterConfig, error) {
+			return &config.ClusterConfig{Name: "default"}, nil
+		},
+	}
+	s := newTestServerWithMock(t, mock)
+	req := makeToolRequest(map[string]any{"name": "my-connector"})
+
+	result, err := s.handleDeleteConnector(context.Background(), req)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	assertIsError(t, result)
+}
+
+func TestHandleRestartConnector_MissingName_Connect(t *testing.T) {
+	t.Parallel()
+	s := newTestServerWithMock(t, &kafka.MockKafkaManager{})
+	req := makeToolRequest(map[string]any{})
+
+	result, err := s.handleRestartConnector(context.Background(), req)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	assertIsError(t, result)
+}
+
+func TestHandleRestartConnector_ConnectNotAvailable_Connect(t *testing.T) {
+	t.Parallel()
+	mock := &kafka.MockKafkaManager{
+		GetClusterConfigFn: func(name string) (*config.ClusterConfig, error) {
+			return &config.ClusterConfig{Name: "default"}, nil
+		},
+	}
+	s := newTestServerWithMock(t, mock)
+	req := makeToolRequest(map[string]any{"name": "my-connector"})
+
+	result, err := s.handleRestartConnector(context.Background(), req)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	assertIsError(t, result)
+}
+
+func TestHandleConnectorHealth_MissingName_Connect(t *testing.T) {
+	t.Parallel()
+	s := newTestServerWithMock(t, &kafka.MockKafkaManager{})
+	req := makeToolRequest(map[string]any{})
+
+	result, err := s.handleConnectorHealth(context.Background(), req)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	assertIsError(t, result)
+}
+
+func TestHandleConnectorHealth_ConnectNotAvailable_Connect(t *testing.T) {
+	t.Parallel()
+	mock := &kafka.MockKafkaManager{
+		GetClusterConfigFn: func(name string) (*config.ClusterConfig, error) {
+			return &config.ClusterConfig{Name: "default"}, nil
+		},
+	}
+	s := newTestServerWithMock(t, mock)
+	req := makeToolRequest(map[string]any{"name": "my-connector"})
+
+	result, err := s.handleConnectorHealth(context.Background(), req)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	assertIsError(t, result)
+}
+
+func TestHandleCreateConnector_ClusterError_Connect(t *testing.T) {
+	t.Parallel()
+	mock := &kafka.MockKafkaManager{
+		GetClusterConfigFn: func(name string) (*config.ClusterConfig, error) {
+			return nil, fmt.Errorf("cluster not found")
+		},
+	}
+	s := newTestServerWithMock(t, mock)
+	req := makeToolRequest(map[string]any{
+		"name":   "connector",
+		"config": map[string]any{"connector.class": "Source"},
+	})
+
+	result, err := s.handleCreateConnector(context.Background(), req)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	assertIsError(t, result)
 }
