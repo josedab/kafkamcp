@@ -11,7 +11,7 @@ COPY . .
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/kafkamcp ./cmd/kafkamcp
 
 # Runtime stage
-FROM alpine:3.20
+FROM alpine:3.23
 
 RUN apk add --no-cache ca-certificates tzdata
 
