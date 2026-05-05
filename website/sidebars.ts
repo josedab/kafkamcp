@@ -5,6 +5,8 @@ const sidebars: SidebarsConfig = {
     'intro',
     'getting-started',
     'core-concepts',
+    'architecture',
+    'security',
     {
       type: 'category',
       label: 'Guides',
@@ -16,9 +18,20 @@ const sidebars: SidebarsConfig = {
         'guides/access-control',
         'guides/monitoring',
         'guides/dashboard',
-        'guides/typescript-sdk',
         'guides/openapi-spec',
         'guides/intellij',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'SDKs & Integrations',
+      collapsed: false,
+      items: [
+        'guides/typescript-sdk',
+        'guides/go-sdk',
+        'guides/python-sdk',
+        'guides/langchain-sdk',
+        'guides/crewai-sdk',
       ],
     },
     {
@@ -43,6 +56,7 @@ const sidebars: SidebarsConfig = {
     },
     'comparison',
     'troubleshooting',
+    'faq',
     'contributing',
   ],
 };

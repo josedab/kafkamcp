@@ -100,6 +100,7 @@ const config: Config = {
           items: [
             {label: 'Getting Started', to: '/docs/getting-started'},
             {label: 'Core Concepts', to: '/docs/core-concepts'},
+            {label: 'Architecture', to: '/docs/architecture'},
             {label: 'API Reference', to: '/docs/api-reference/tools'},
             {label: 'Configuration', to: '/docs/configuration'},
           ],
@@ -116,6 +117,7 @@ const config: Config = {
           title: 'More',
           items: [
             {label: 'Blog', to: '/blog'},
+            {label: 'FAQ', to: '/docs/faq'},
             {label: 'GitHub', href: 'https://github.com/kafkamcp/kafkamcp'},
             {label: 'Releases', href: 'https://github.com/kafkamcp/kafkamcp/releases'},
           ],
