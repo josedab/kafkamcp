@@ -491,3 +491,198 @@ func TestWebSocketHub_LargeClientCount(t *testing.T) {
 	hub.Broadcast("ping", nil)
 	time.Sleep(50 * time.Millisecond)
 }
+
+// ===================== StreamingMetrics tests =====================
+
+func TestNewStreamingMetrics(t *testing.T) {
+	t.Parallel()
+	sm := NewStreamingMetrics()
+	if sm == nil {
+		t.Fatal("expected non-nil StreamingMetrics")
+	}
+	summary := sm.GetStreamingSummary()
+	if summary == nil {
+		t.Fatal("expected non-nil summary")
+	}
+	if summary["tracked_topics"].(int) != 0 {
+		t.Errorf("expected 0 tracked topics, got %v", summary["tracked_topics"])
+	}
+}
+
+func TestStreamingMetrics_UpdateTopicSnapshot_NewTopic(t *testing.T) {
+	t.Parallel()
+	sm := NewStreamingMetrics()
+
+	sm.UpdateTopicSnapshot("orders", 1000)
+
+	summary := sm.GetStreamingSummary()
+	trackedTopics := summary["tracked_topics"].(int)
+	if trackedTopics != 1 {
+		t.Errorf("expected 1 tracked topic, got %d", trackedTopics)
+	}
+	topicRates := summary["topic_rates"].([]map[string]any)
+	if len(topicRates) != 1 {
+		t.Fatalf("expected 1 topic rate, got %d", len(topicRates))
+	}
+	if topicRates[0]["topic"] != "orders" {
+		t.Errorf("expected topic 'orders', got %v", topicRates[0]["topic"])
+	}
+	if topicRates[0]["messages"].(int64) != 1000 {
+		t.Errorf("expected 1000 messages, got %v", topicRates[0]["messages"])
+	}
+}
+
+func TestStreamingMetrics_UpdateTopicSnapshot_Overwrite(t *testing.T) {
+	t.Parallel()
+	sm := NewStreamingMetrics()
+
+	sm.UpdateTopicSnapshot("orders", 1000)
+	time.Sleep(10 * time.Millisecond)
+	sm.UpdateTopicSnapshot("orders", 1050)
+
+	summary := sm.GetStreamingSummary()
+	trackedTopics := summary["tracked_topics"].(int)
+	if trackedTopics != 1 {
+		t.Errorf("expected 1 tracked topic after overwrite, got %d", trackedTopics)
+	}
+	topicRates := summary["topic_rates"].([]map[string]any)
+	if topicRates[0]["messages"].(int64) != 1050 {
+		t.Errorf("expected 1050 messages, got %v", topicRates[0]["messages"])
+	}
+	rate := topicRates[0]["produce_rate"].(float64)
+	if rate <= 0 {
+		t.Errorf("expected positive produce rate, got %f", rate)
+	}
+}
+
+func TestStreamingMetrics_UpdateTopicSnapshot_MultipleTopics(t *testing.T) {
+	t.Parallel()
+	sm := NewStreamingMetrics()
+
+	sm.UpdateTopicSnapshot("orders", 1000)
+	sm.UpdateTopicSnapshot("events", 5000)
+	sm.UpdateTopicSnapshot("logs", 10000)
+
+	summary := sm.GetStreamingSummary()
+	if summary["tracked_topics"].(int) != 3 {
+		t.Errorf("expected 3 tracked topics, got %v", summary["tracked_topics"])
+	}
+}
+
+func TestStreamingMetrics_RecordAgentActivity_NewAgent(t *testing.T) {
+	t.Parallel()
+	sm := NewStreamingMetrics()
+
+	sm.RecordAgentActivity("agent-1", "list_topics", false)
+
+	summary := sm.GetStreamingSummary()
+	if summary["total_agents"].(int) != 1 {
+		t.Errorf("expected 1 total agent, got %v", summary["total_agents"])
+	}
+	if summary["active_agents"].(int) != 1 {
+		t.Errorf("expected 1 active agent, got %v", summary["active_agents"])
+	}
+}
+
+func TestStreamingMetrics_RecordAgentActivity_AccumulateCounts(t *testing.T) {
+	t.Parallel()
+	sm := NewStreamingMetrics()
+
+	sm.RecordAgentActivity("agent-1", "list_topics", false)
+	sm.RecordAgentActivity("agent-1", "consume", false)
+	sm.RecordAgentActivity("agent-1", "produce", true)
+
+	summary := sm.GetStreamingSummary()
+	if summary["total_agents"].(int) != 1 {
+		t.Errorf("expected 1 total agent, got %v", summary["total_agents"])
+	}
+}
+
+func TestStreamingMetrics_RecordAgentActivity_ConcurrentWrites(t *testing.T) {
+	t.Parallel()
+	sm := NewStreamingMetrics()
+
+	var wg sync.WaitGroup
+	for i := 0; i < 100; i++ {
+		wg.Add(1)
+		go func(n int) {
+			defer wg.Done()
+			sm.RecordAgentActivity("agent-1", "tool", n%5 == 0)
+		}(i)
+	}
+	wg.Wait()
+
+	summary := sm.GetStreamingSummary()
+	if summary["total_agents"].(int) != 1 {
+		t.Errorf("expected 1 agent after concurrent writes, got %v", summary["total_agents"])
+	}
+}
+
+func TestStreamingMetrics_GetStreamingSummary_Empty(t *testing.T) {
+	t.Parallel()
+	sm := NewStreamingMetrics()
+
+	summary := sm.GetStreamingSummary()
+	if summary["total_produce_rate"].(float64) != 0 {
+		t.Errorf("expected 0 produce rate, got %v", summary["total_produce_rate"])
+	}
+	if summary["active_agents"].(int) != 0 {
+		t.Errorf("expected 0 active agents, got %v", summary["active_agents"])
+	}
+	if summary["tracked_topics"].(int) != 0 {
+		t.Errorf("expected 0 tracked topics, got %v", summary["tracked_topics"])
+	}
+}
+
+func TestStreamingMetrics_GetStreamingSummary_WithData(t *testing.T) {
+	t.Parallel()
+	sm := NewStreamingMetrics()
+
+	sm.UpdateTopicSnapshot("t1", 100)
+	time.Sleep(10 * time.Millisecond)
+	sm.UpdateTopicSnapshot("t1", 200)
+	sm.RecordAgentActivity("a1", "tool1", false)
+
+	summary := sm.GetStreamingSummary()
+	if summary["tracked_topics"].(int) != 1 {
+		t.Errorf("expected 1 tracked topic, got %v", summary["tracked_topics"])
+	}
+	if summary["total_agents"].(int) != 1 {
+		t.Errorf("expected 1 total agent, got %v", summary["total_agents"])
+	}
+	if _, ok := summary["timestamp"]; !ok {
+		t.Error("expected 'timestamp' in summary")
+	}
+}
+
+// ===================== handleStreamingMetrics HTTP handler tests =====================
+
+func TestHandleStreamingMetrics_Success(t *testing.T) {
+	t.Parallel()
+	d := setupDashboard(t)
+	mux := http.NewServeMux()
+	d.RegisterDashboardRoutes(mux)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/streaming-metrics", nil)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestHandleStreamingMetrics_MethodNotAllowed(t *testing.T) {
+	t.Parallel()
+	d := setupDashboard(t)
+	mux := http.NewServeMux()
+	d.RegisterDashboardRoutes(mux)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/streaming-metrics", nil)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusMethodNotAllowed {
+		t.Errorf("expected 405, got %d", w.Code)
+	}
+}
