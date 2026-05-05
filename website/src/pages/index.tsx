@@ -18,7 +18,7 @@ const features = [
   },
   {
     title: '🔒 Secure by Default',
-    description: 'Per-agent access control with default-deny policies, rate limiting, TLS, and a full audit trail of every interaction.',
+    description: 'Per-agent access control with default-deny policies, rate limiting, TLS 1.3, and a full audit trail of every interaction.',
   },
   {
     title: '📋 Schema-Aware',
@@ -30,7 +30,30 @@ const features = [
   },
   {
     title: '📊 Observable',
-    description: 'Prometheus metrics for every tool call — latency histograms, throughput counters, auth denials, and rate limit tracking.',
+    description: 'Prometheus metrics, OpenTelemetry tracing, Grafana dashboards, and a built-in web UI for real-time monitoring.',
+  },
+];
+
+const useCases = [
+  {
+    prompt: '"List all Kafka topics and their partition counts"',
+    tool: 'kafka_list_topics',
+    description: 'Discover your entire Kafka topology',
+  },
+  {
+    prompt: '"Show me the last 10 messages from orders.created"',
+    tool: 'kafka_consume',
+    description: 'Read messages with flexible positioning',
+  },
+  {
+    prompt: '"What\'s the lag on the order-processor consumer group?"',
+    tool: 'kafka_describe_consumer_group',
+    description: 'Monitor consumer health and lag',
+  },
+  {
+    prompt: '"Analyze the dead-letter queue for error patterns"',
+    tool: 'kafka_analyze_dlq',
+    description: 'Categorize and diagnose DLQ errors',
   },
 ];
 
@@ -44,10 +67,10 @@ function HeroSection() {
         </Heading>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <div className={styles.badgeRow}>
-          <img src="https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go&logoColor=white" alt="Go" />
+          <img src="https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go&logoColor=white" alt="Go" />
           <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License" />
           <img src="https://img.shields.io/badge/MCP-compatible-8A2BE2" alt="MCP" />
-          <img src="https://img.shields.io/badge/Kafka-compatible-231F20?logo=apachekafka&logoColor=white" alt="Kafka" />
+          <img src="https://img.shields.io/badge/Tools-251-green" alt="251 Tools" />
         </div>
         <div className={styles.installCommand}>
           <code>go install github.com/kafkamcp/kafkamcp/cmd/kafkamcp@latest</code>
@@ -57,11 +80,50 @@ function HeroSection() {
             Get Started in 5 Minutes →
           </Link>
           <Link className="button button--outline button--lg" to="https://github.com/kafkamcp/kafkamcp" style={{marginLeft: '1rem', color: 'white', borderColor: 'white'}}>
-            GitHub
+            ★ GitHub
           </Link>
         </div>
       </div>
     </header>
+  );
+}
+
+function HowItWorksSection() {
+  return (
+    <section className={styles.howItWorks}>
+      <div className="container">
+        <Heading as="h2" style={{textAlign: 'center', marginBottom: '0.5rem'}}>How It Works</Heading>
+        <p style={{textAlign: 'center', color: 'var(--ifm-color-emphasis-700)', marginBottom: '2rem', maxWidth: '600px', margin: '0 auto 2rem'}}>
+          Three steps to give your AI agents full Kafka access.
+        </p>
+        <div className="row">
+          <div className="col col--4">
+            <div className={styles.stepCard}>
+              <div className={styles.stepNumber}>1</div>
+              <Heading as="h3">Install</Heading>
+              <code className={styles.stepCode}>go install github.com/kafkamcp/kafkamcp/cmd/kafkamcp@latest</code>
+              <p>Single binary, no JVM, no dependencies. Also available via Docker and pre-built binaries.</p>
+            </div>
+          </div>
+          <div className="col col--4">
+            <div className={styles.stepCard}>
+              <div className={styles.stepNumber}>2</div>
+              <Heading as="h3">Configure</Heading>
+              <code className={styles.stepCode}>kafkamcp init --output kafkamcp.yaml</code>
+              <p>Point it at your Kafka clusters. Add Schema Registry, access policies, and audit logging as needed.</p>
+            </div>
+          </div>
+          <div className="col col--4">
+            <div className={styles.stepCard}>
+              <div className={styles.stepNumber}>3</div>
+              <Heading as="h3">Connect</Heading>
+              <code className={styles.stepCode}>kafkamcp --config kafkamcp.yaml</code>
+              <p>Wire it into Claude Desktop, LangChain, CrewAI, or any MCP-compatible client. Agents get instant Kafka access.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -80,6 +142,10 @@ function FeaturesSection() {
   return (
     <section className={styles.features}>
       <div className="container">
+        <Heading as="h2" style={{textAlign: 'center', marginBottom: '0.5rem'}}>Why KafkaMCP</Heading>
+        <p style={{textAlign: 'center', color: 'var(--ifm-color-emphasis-700)', marginBottom: '2rem'}}>
+          Everything agents need to work with Kafka — built into a single server.
+        </p>
         <div className="row">
           {features.map((f, idx) => (
             <FeatureCard key={idx} title={f.title} description={f.description} />
@@ -90,34 +156,55 @@ function FeaturesSection() {
   );
 }
 
-function CodeExample() {
+function UseCasesSection() {
   return (
     <section className={styles.codeSection}>
       <div className="container">
+        <Heading as="h2" style={{textAlign: 'center', marginBottom: '0.5rem'}}>Your Agent, Connected to Kafka</Heading>
+        <p style={{textAlign: 'center', color: 'var(--ifm-color-emphasis-700)', marginBottom: '2rem'}}>
+          Once KafkaMCP is running, agents interact with Kafka using natural language.
+        </p>
         <div className="row">
           <div className="col col--6">
-            <Heading as="h2">Your agent, connected to Kafka</Heading>
-            <p>Once KafkaMCP is running, your AI agent can interact with Kafka using natural language:</p>
-            <ul>
-              <li><em>"List all Kafka topics in my cluster"</em></li>
-              <li><em>"Show me the last 10 messages from orders.created"</em></li>
-              <li><em>"Describe the consumer group order-processor"</em></li>
-              <li><em>"Check if this schema change is compatible"</em></li>
-              <li><em>"Analyze the dead-letter queue for errors"</em></li>
-            </ul>
-            <p>22 MCP tools and 10 resources — covering discovery, consumption, production, schema management, consumer groups, topic administration, stream processing, and more.</p>
+            <div className={styles.useCaseList}>
+              {useCases.map((uc, idx) => (
+                <div key={idx} className={styles.useCaseItem}>
+                  <div className={styles.useCasePrompt}>{uc.prompt}</div>
+                  <div className={styles.useCaseMeta}>
+                    <code>{uc.tool}</code> — {uc.description}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p style={{marginTop: '1.5rem'}}>
+              <strong>251 MCP tools</strong> and <strong>18 resources</strong> covering discovery, consumption, production, schema management, consumer groups, connectors, stream processing, anomaly detection, and more.
+            </p>
           </div>
           <div className="col col--6">
-            <div style={{background: 'var(--ifm-color-emphasis-100)', borderRadius: '12px', padding: '1.5rem', fontFamily: 'var(--ifm-font-family-monospace)', fontSize: '0.85rem', lineHeight: 1.6}}>
-              <div style={{color: 'var(--ifm-color-emphasis-600)', marginBottom: '0.5rem'}}>{'# kafkamcp.yaml'}</div>
-              <div><span style={{color: 'var(--ifm-color-primary)'}}>server</span>:</div>
-              <div>&nbsp;&nbsp;<span style={{color: 'var(--ifm-color-primary)'}}>transport</span>: stdio</div>
-              <div style={{marginTop: '0.5rem'}}><span style={{color: 'var(--ifm-color-primary)'}}>clusters</span>:</div>
-              <div>&nbsp;&nbsp;- <span style={{color: 'var(--ifm-color-primary)'}}>name</span>: production</div>
-              <div>&nbsp;&nbsp;&nbsp;&nbsp;<span style={{color: 'var(--ifm-color-primary)'}}>bootstrap_servers</span>: "broker:9092"</div>
-              <div>&nbsp;&nbsp;&nbsp;&nbsp;<span style={{color: 'var(--ifm-color-primary)'}}>default</span>: true</div>
-              <div style={{marginTop: '0.5rem'}}><span style={{color: 'var(--ifm-color-primary)'}}>audit</span>:</div>
-              <div>&nbsp;&nbsp;<span style={{color: 'var(--ifm-color-primary)'}}>enabled</span>: true</div>
+            <div className={styles.configBlock}>
+              <div className={styles.configHeader}>kafkamcp.yaml</div>
+              <pre className={styles.configPre}>{`server:
+  transport: stdio
+
+clusters:
+  - name: production
+    bootstrap_servers: "broker:9092"
+    default: true
+    schema_registry:
+      url: "http://schema-registry:8081"
+
+policies:
+  default_deny: true
+  agents:
+    - id: "my-agent"
+      topics:
+        - pattern: "orders.*"
+          permissions: [read, write]
+      rate_limit:
+        requests_per_minute: 120
+
+audit:
+  enabled: true`}</pre>
             </div>
           </div>
         </div>
@@ -130,32 +217,82 @@ function ArchitectureSection() {
   return (
     <section className={styles.architectureSection}>
       <div className="container">
-        <Heading as="h2" style={{textAlign: 'center', marginBottom: '2rem'}}>Architecture</Heading>
+        <Heading as="h2" style={{textAlign: 'center', marginBottom: '0.5rem'}}>Architecture</Heading>
+        <p style={{textAlign: 'center', color: 'var(--ifm-color-emphasis-700)', marginBottom: '2rem'}}>
+          A purpose-built bridge between AI agents and Apache Kafka.
+        </p>
         <div style={{textAlign: 'center'}}>
-          <pre style={{display: 'inline-block', textAlign: 'left', fontSize: '0.8rem', lineHeight: 1.5, background: 'var(--ifm-color-emphasis-100)', padding: '1.5rem', borderRadius: '12px', maxWidth: '100%', overflow: 'auto'}}>
-{`┌──────────────────────────────────────────────────────┐
-│  AI Agents (Claude, LangChain, AutoGen, CrewAI)      │
-└──────────────┬─────────────────────┬─────────────────┘
-               │ stdio               │ SSE/HTTP
-┌──────────────▼─────────────────────▼─────────────────┐
-│              KafkaMCP Server                          │
-│  ┌────────┐ ┌────────┐ ┌──────┐ ┌────────┐ ┌──────┐ │
-│  │ 22     │ │ 10     │ │ Auth │ │ Rate   │ │Audit │ │
-│  │ Tools  │ │ Rsrcs  │ │Engine│ │Limiter │ │ Log  │ │
-│  └────┬───┘ └────┬───┘ └──────┘ └────────┘ └──────┘ │
-│       └──────────┼───────────────────────────────────│
-│  ┌───────────────▼───────────────────────────────┐   │
-│  │ Kafka Client (franz-go) │ Schema Registry     │   │
-│  │ Admin │ Consumer │ Producer │ HTTP Client      │   │
-│  └───────────────┬───────────────────────────────┘   │
-└──────────────────┼───────────────────────────────────┘
-     ┌─────────────┼─────────────┐
-     ▼             ▼             ▼
-┌─────────┐ ┌───────────┐ ┌──────────┐
-│  Kafka  │ │  Schema   │ │  Kafka   │
-│ Brokers │ │ Registry  │ │ Connect  │
-└─────────┘ └───────────┘ └──────────┘`}
+          <pre className={styles.architecturePre}>
+{`┌──────────────────────────────────────────────────────────┐
+│  AI Agents (Claude, LangChain, CrewAI, AutoGen, Custom)  │
+└──────────────┬─────────────────────┬─────────────────────┘
+               │ stdio               │ SSE / HTTP
+┌──────────────▼─────────────────────▼─────────────────────┐
+│                   KafkaMCP Server                         │
+│  ┌─────────┐ ┌─────────┐ ┌──────┐ ┌────────┐ ┌────────┐ │
+│  │ 251     │ │ 18      │ │ Auth │ │ Rate   │ │ Audit  │ │
+│  │ Tools   │ │ Rsrcs   │ │Engine│ │Limiter │ │ Logger │ │
+│  └────┬────┘ └────┬────┘ └──────┘ └────────┘ └────────┘ │
+│       └───────────┼──────────────────────────────────────│
+│  ┌────────────────▼────────────────────────────────────┐ │
+│  │  Kafka Client (franz-go) │ Schema Registry │ Connect│ │
+│  └────────────────┬────────────────────────────────────┘ │
+└───────────────────┼──────────────────────────────────────┘
+     ┌──────────────┼──────────────┐
+     ▼              ▼              ▼
+┌─────────┐  ┌───────────┐  ┌──────────┐
+│  Kafka  │  │  Schema   │  │  Kafka   │
+│ Brokers │  │ Registry  │  │ Connect  │
+└─────────┘  └───────────┘  └──────────┘`}
           </pre>
+        </div>
+        <div style={{textAlign: 'center', marginTop: '1.5rem'}}>
+          <Link className="button button--primary button--md" to="/docs/architecture">
+            Read the Architecture Guide →
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CommunitySection() {
+  return (
+    <section className={styles.communitySection}>
+      <div className="container">
+        <Heading as="h2" style={{textAlign: 'center', marginBottom: '0.5rem'}}>Join the Community</Heading>
+        <p style={{textAlign: 'center', color: 'var(--ifm-color-emphasis-700)', marginBottom: '2rem'}}>
+          KafkaMCP is open source under the Apache 2.0 license. We welcome contributions of all kinds.
+        </p>
+        <div className="row" style={{justifyContent: 'center'}}>
+          <div className="col col--3" style={{textAlign: 'center'}}>
+            <Link to="https://github.com/kafkamcp/kafkamcp" className={styles.communityLink}>
+              <div className={styles.communityIcon}>🐙</div>
+              <strong>GitHub</strong>
+              <p>Star, fork, contribute</p>
+            </Link>
+          </div>
+          <div className="col col--3" style={{textAlign: 'center'}}>
+            <Link to="https://github.com/kafkamcp/kafkamcp/discussions" className={styles.communityLink}>
+              <div className={styles.communityIcon}>💬</div>
+              <strong>Discussions</strong>
+              <p>Ask questions, share ideas</p>
+            </Link>
+          </div>
+          <div className="col col--3" style={{textAlign: 'center'}}>
+            <Link to="https://discord.gg/kafkamcp" className={styles.communityLink}>
+              <div className={styles.communityIcon}>🎮</div>
+              <strong>Discord</strong>
+              <p>Chat with the community</p>
+            </Link>
+          </div>
+          <div className="col col--3" style={{textAlign: 'center'}}>
+            <Link to="/docs/contributing" className={styles.communityLink}>
+              <div className={styles.communityIcon}>🤝</div>
+              <strong>Contribute</strong>
+              <p>Read the contributor guide</p>
+            </Link>
+          </div>
         </div>
       </div>
     </section>
@@ -168,9 +305,11 @@ export default function Home(): React.JSX.Element {
     <Layout title="Home" description={siteConfig.tagline}>
       <HeroSection />
       <main>
+        <HowItWorksSection />
         <FeaturesSection />
-        <CodeExample />
+        <UseCasesSection />
         <ArchitectureSection />
+        <CommunitySection />
       </main>
     </Layout>
   );
