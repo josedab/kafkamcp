@@ -3,7 +3,7 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerGovernancePortalTools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_governance_request",
+	s.addTool(mcp.NewTool("kafka_governance_request",
 		withCategory("governance"),
 		mcp.WithDescription("Submit, review, or manage governance requests for topic provisioning, schema changes, access grants, and more. Self-service workflow with approval chains."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: submit, review, get, list")),
@@ -18,12 +18,12 @@ func (s *Server) registerGovernancePortalTools() {
 		mcp.WithString("status", mcp.Description("Filter by status (for list): pending, approved, rejected, completed")),
 	), s.handleGovernanceRequest)
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_governance_dashboard",
+	s.addTool(mcp.NewTool("kafka_governance_dashboard",
 		withCategory("governance"),
 		mcp.WithDescription("Get the governance dashboard with request statistics, compliance score, cost summary, and recent activity."),
 	), s.handleGovernanceDashboard)
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_governance_workflows",
+	s.addTool(mcp.NewTool("kafka_governance_workflows",
 		withCategory("governance"),
 		mcp.WithDescription("List configured governance workflow templates showing approval chains for each request type."),
 	), s.handleGovernanceWorkflows)

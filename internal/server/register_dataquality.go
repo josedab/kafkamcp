@@ -13,7 +13,7 @@ func (s *Server) registerDataQualityTools() {
 		return
 	}
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_quality_score",
+	s.addTool(mcp.NewTool("kafka_quality_score",
 		withCategory("quality"),
 		mcp.WithDescription("Get the real-time data quality score for a Kafka topic across freshness, completeness, conformance, anomaly rate, and volume consistency."),
 		mcp.WithString("topic", mcp.Required(), mcp.Description("Topic name to evaluate")),
@@ -29,7 +29,7 @@ func (s *Server) registerDataQualityTools() {
 		},
 	}, s.handleQualityScore))
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_quality_report",
+	s.addTool(mcp.NewTool("kafka_quality_report",
 		withCategory("quality"),
 		mcp.WithDescription("Generate a detailed data quality report for a topic including trends, SLA status, and recommendations."),
 		mcp.WithString("topic", mcp.Required(), mcp.Description("Topic name")),
@@ -45,7 +45,7 @@ func (s *Server) registerDataQualityTools() {
 		},
 	}, s.handleQualityReport))
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_sla_status",
+	s.addTool(mcp.NewTool("kafka_sla_status",
 		withCategory("quality"),
 		mcp.WithDescription("Get the SLA compliance status for a topic or list all configured SLAs."),
 		mcp.WithString("topic", mcp.Description("Topic name (omit to list all SLAs)")),
@@ -55,7 +55,7 @@ func (s *Server) registerDataQualityTools() {
 		action:       "read",
 	}, s.handleSLAStatus))
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_sla_configure",
+	s.addTool(mcp.NewTool("kafka_sla_configure",
 		withCategory("quality"),
 		mcp.WithDescription("Configure a data quality SLA for a topic with threshold alerts."),
 		mcp.WithString("topic", mcp.Required(), mcp.Description("Topic name")),
@@ -172,8 +172,8 @@ func (s *Server) handleSLAConfigure(ctx context.Context, request mcp.CallToolReq
 
 	s.logAudit(agentID, "kafka_sla_configure", args, "", "success", 1, nil, start)
 	return marshalResult(map[string]any{
-		"status":  "configured",
-		"topic":   topic,
-		"sla":     cfg,
+		"status": "configured",
+		"topic":  topic,
+		"sla":    cfg,
 	})
 }

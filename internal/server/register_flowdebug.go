@@ -3,7 +3,7 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerFlowDebugTools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_flow_debug",
+	s.addTool(mcp.NewTool("kafka_flow_debug",
 		withCategory("streaming"),
 		mcp.WithDescription("Live message flow debugging. Builds a real-time graph of producers, topics, and consumer groups with throughput/latency metrics. Actions: graph (get current flow graph), snapshots (historical snapshots), config (get/set bottleneck thresholds), collect (trigger metric collection from cluster)."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: graph, snapshots, config, collect")),
@@ -13,7 +13,7 @@ func (s *Server) registerFlowDebugTools() {
 		mcp.WithObject("thresholds", mcp.Description("Bottleneck thresholds for config action (lag_warning, lag_critical, error_rate_warning, etc.)")),
 	), s.handleFlowDebug)
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_flow_bottlenecks",
+	s.addTool(mcp.NewTool("kafka_flow_bottlenecks",
 		withCategory("streaming"),
 		mcp.WithDescription("Detect bottlenecks in the message flow: high consumer lag, low throughput, high error rates, and high latency. Returns chart-ready JSON with severity levels."),
 		mcp.WithString("cluster", mcp.Description("Cluster name")),

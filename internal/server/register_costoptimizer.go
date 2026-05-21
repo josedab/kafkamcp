@@ -3,7 +3,7 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerCostOptimizerTools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_sql_optimize",
+	s.addTool(mcp.NewTool("kafka_sql_optimize",
 		withCategory("streaming"),
 		mcp.WithDescription("Analyze a streaming SQL query and generate a cost-aware execution plan with budget enforcement. Shows estimated cost, data volume, optimizations, and budget status."),
 		mcp.WithString("sql", mcp.Required(), mcp.Description("SQL query to optimize")),
@@ -11,7 +11,7 @@ func (s *Server) registerCostOptimizerTools() {
 		mcp.WithString("budget_id", mcp.Description("Budget ID for cost enforcement")),
 	), s.handleSQLOptimize)
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_sql_budget",
+	s.addTool(mcp.NewTool("kafka_sql_budget",
 		withCategory("streaming"),
 		mcp.WithDescription("Manage query cost budgets: create, get, or list budgets with spending limits and alert thresholds."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: create, get, list")),

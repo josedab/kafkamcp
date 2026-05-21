@@ -13,7 +13,7 @@ func (s *Server) registerLLMPipelineTools() {
 		return
 	}
 
-	s.mcpServer.AddTool(mcp.NewTool("llm_pipeline_create",
+	s.addTool(mcp.NewTool("llm_pipeline_create",
 		withCategory("ml"),
 		mcp.WithDescription("Create an LLM training data export pipeline from Kafka topics with sampling, PII redaction, and deduplication."),
 		mcp.WithString("topics", mcp.Required(), mcp.Description("Comma-separated list of source topics")),
@@ -31,7 +31,7 @@ func (s *Server) registerLLMPipelineTools() {
 		action:       "read",
 	}, s.handleLLMPipelineCreate))
 
-	s.mcpServer.AddTool(mcp.NewTool("llm_pipeline_list",
+	s.addTool(mcp.NewTool("llm_pipeline_list",
 		withCategory("ml"),
 		mcp.WithDescription("List all configured LLM training data export pipelines."),
 	), s.withToolAuth(toolAuthConfig{
@@ -40,7 +40,7 @@ func (s *Server) registerLLMPipelineTools() {
 		action:       "read",
 	}, s.handleLLMPipelineList))
 
-	s.mcpServer.AddTool(mcp.NewTool("llm_pipeline_status",
+	s.addTool(mcp.NewTool("llm_pipeline_status",
 		withCategory("ml"),
 		mcp.WithDescription("Get the status and results of an LLM training data pipeline."),
 		mcp.WithString("pipeline_id", mcp.Required(), mcp.Description("Pipeline ID")),
@@ -65,9 +65,9 @@ func (s *Server) handleLLMPipelineCreate(ctx context.Context, request mcp.CallTo
 	}
 
 	cfg := llmpipeline.PipelineConfig{
-		Topics:      topics,
+		Topics:       topics,
 		PIIRedaction: true,
-		Deduplicate: true,
+		Deduplicate:  true,
 	}
 
 	if f, ok := args["format"].(string); ok && f != "" {

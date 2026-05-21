@@ -3,7 +3,7 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerRunbookTools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_runbook",
+	s.addTool(mcp.NewTool("kafka_runbook",
 		withCategory("ops"),
 		mcp.WithDescription("Automated runbook executor for multi-step operational procedures (partition reassignment, rolling restart verification, topic migration). Defines and runs auditable workflows."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: list, get, create, execute, status, complete_step, executions, enable, disable, delete")),

@@ -3,7 +3,7 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerEncryptionTools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_encryption_key",
+	s.addTool(mcp.NewTool("kafka_encryption_key",
 		withCategory("security"),
 		mcp.WithDescription("Manage encryption keys: create, rotate, revoke, list, or get key details. Supports AES-256-GCM and AES-128-GCM with local, Vault, or KMS providers."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: create, rotate, revoke, list, get")),
@@ -13,7 +13,7 @@ func (s *Server) registerEncryptionTools() {
 		mcp.WithString("algorithm", mcp.Description("Algorithm: AES-256-GCM, AES-128-GCM. Default: AES-256-GCM")),
 	), s.handleEncryptionKey)
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_encryption_configure",
+	s.addTool(mcp.NewTool("kafka_encryption_configure",
 		withCategory("security"),
 		mcp.WithDescription("Configure field-level encryption for a topic or set per-agent encryption policies."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: configure_fields, set_policy, get_policy")),
@@ -22,7 +22,7 @@ func (s *Server) registerEncryptionTools() {
 		mcp.WithString("agent_id", mcp.Description("Agent ID (for set_policy/get_policy)")),
 	), s.handleEncryptionConfigure)
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_encryption_process",
+	s.addTool(mcp.NewTool("kafka_encryption_process",
 		withCategory("security"),
 		mcp.WithDescription("Encrypt or decrypt message fields transparently. Uses configured field-level encryption with per-agent key policies."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: encrypt, decrypt")),

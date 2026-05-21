@@ -3,7 +3,7 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerBenchmarkTools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_benchmark",
+	s.addTool(mcp.NewTool("kafka_benchmark",
 		withCategory("ops"),
 		mcp.WithDescription("Embedded benchmarking and load testing. Measure producer/consumer throughput, latency percentiles, and topic performance under configurable synthetic workloads."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: run, status, list")),

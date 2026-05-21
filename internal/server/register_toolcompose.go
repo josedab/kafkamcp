@@ -3,7 +3,7 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerToolComposeTools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_tool_compose",
+	s.addTool(mcp.NewTool("kafka_tool_compose",
 		withCategory("platform"),
 		mcp.WithDescription("MCP tool composition engine. Define composite tools that chain multiple atomic MCP tools into reusable workflows. Supports DAG validation, parallel branches, and a shareable registry."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: list, get, create, execute, status, delete, search")),

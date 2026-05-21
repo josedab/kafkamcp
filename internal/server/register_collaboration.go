@@ -12,7 +12,7 @@ func (s *Server) registerCollaborationTools() {
 		return
 	}
 
-	s.mcpServer.AddTool(mcp.NewTool("agent_lock_acquire",
+	s.addTool(mcp.NewTool("agent_lock_acquire",
 		withCategory("ops"),
 		mcp.WithDescription("Acquire a distributed lock on a shared resource (topic, consumer group, schema) to prevent concurrent modifications by multiple agents."),
 		mcp.WithString("resource", mcp.Required(), mcp.Description("Resource to lock (e.g., 'topic:orders', 'group:my-group')")),
@@ -23,7 +23,7 @@ func (s *Server) registerCollaborationTools() {
 		action:       "write",
 	}, s.handleLockAcquire))
 
-	s.mcpServer.AddTool(mcp.NewTool("agent_lock_release",
+	s.addTool(mcp.NewTool("agent_lock_release",
 		withCategory("ops"),
 		mcp.WithDescription("Release a previously acquired distributed lock on a resource."),
 		mcp.WithString("resource", mcp.Required(), mcp.Description("Resource to unlock")),
@@ -33,7 +33,7 @@ func (s *Server) registerCollaborationTools() {
 		action:       "write",
 	}, s.handleLockRelease))
 
-	s.mcpServer.AddTool(mcp.NewTool("agent_lock_list",
+	s.addTool(mcp.NewTool("agent_lock_list",
 		withCategory("ops"),
 		mcp.WithDescription("List all active distributed locks showing resource, owner, and expiration."),
 	), s.withToolAuth(toolAuthConfig{
@@ -42,7 +42,7 @@ func (s *Server) registerCollaborationTools() {
 		action:       "read",
 	}, s.handleLockList))
 
-	s.mcpServer.AddTool(mcp.NewTool("agent_clock_get",
+	s.addTool(mcp.NewTool("agent_clock_get",
 		withCategory("ops"),
 		mcp.WithDescription("Get the vector clock for a resource to check causal ordering of operations across agents."),
 		mcp.WithString("resource", mcp.Required(), mcp.Description("Resource to get clock for")),
@@ -52,7 +52,7 @@ func (s *Server) registerCollaborationTools() {
 		action:       "read",
 	}, s.handleClockGet))
 
-	s.mcpServer.AddTool(mcp.NewTool("agent_clock_increment",
+	s.addTool(mcp.NewTool("agent_clock_increment",
 		withCategory("ops"),
 		mcp.WithDescription("Increment the vector clock for a resource, recording an operation by this agent."),
 		mcp.WithString("resource", mcp.Required(), mcp.Description("Resource to increment clock for")),
@@ -62,7 +62,7 @@ func (s *Server) registerCollaborationTools() {
 		action:       "write",
 	}, s.handleClockIncrement))
 
-	s.mcpServer.AddTool(mcp.NewTool("agent_message_send",
+	s.addTool(mcp.NewTool("agent_message_send",
 		withCategory("ops"),
 		mcp.WithDescription("Send a message to another agent for coordination. Use '*' as recipient for broadcasts."),
 		mcp.WithString("to", mcp.Required(), mcp.Description("Recipient agent ID or '*' for broadcast")),
@@ -75,7 +75,7 @@ func (s *Server) registerCollaborationTools() {
 		action:       "write",
 	}, s.handleMessageSend))
 
-	s.mcpServer.AddTool(mcp.NewTool("agent_message_inbox",
+	s.addTool(mcp.NewTool("agent_message_inbox",
 		withCategory("ops"),
 		mcp.WithDescription("Read messages sent to this agent. Supports filtering to unread-only."),
 		mcp.WithBoolean("unread_only", mcp.Description("Only return unread messages. Default: false")),
@@ -85,7 +85,7 @@ func (s *Server) registerCollaborationTools() {
 		action:       "read",
 	}, s.handleMessageInbox))
 
-	s.mcpServer.AddTool(mcp.NewTool("agent_coordinate_register",
+	s.addTool(mcp.NewTool("agent_coordinate_register",
 		withCategory("ops"),
 		mcp.WithDescription("Register this agent's capabilities and status for coordination with other agents."),
 		mcp.WithString("status", mcp.Description("Agent status: active, idle, busy. Default: active")),
@@ -96,7 +96,7 @@ func (s *Server) registerCollaborationTools() {
 		action:       "write",
 	}, s.handleAgentRegister))
 
-	s.mcpServer.AddTool(mcp.NewTool("agent_coordinate_list",
+	s.addTool(mcp.NewTool("agent_coordinate_list",
 		withCategory("ops"),
 		mcp.WithDescription("List all registered agents with their status, capabilities, and last seen time."),
 	), s.withToolAuth(toolAuthConfig{
@@ -106,7 +106,7 @@ func (s *Server) registerCollaborationTools() {
 	}, s.handleAgentList))
 
 	// Lease-based topic ownership tools
-	s.mcpServer.AddTool(mcp.NewTool("agent_topic_lease_acquire",
+	s.addTool(mcp.NewTool("agent_topic_lease_acquire",
 		withCategory("ops"),
 		mcp.WithDescription("Acquire a lease on a Kafka topic for exclusive or shared ownership. Prevents concurrent conflicting operations by multiple agents."),
 		mcp.WithString("topic", mcp.Required(), mcp.Description("Topic name to lease")),
@@ -126,7 +126,7 @@ func (s *Server) registerCollaborationTools() {
 		},
 	}, s.handleTopicLeaseAcquire))
 
-	s.mcpServer.AddTool(mcp.NewTool("agent_topic_lease_release",
+	s.addTool(mcp.NewTool("agent_topic_lease_release",
 		withCategory("ops"),
 		mcp.WithDescription("Release a previously acquired topic lease."),
 		mcp.WithString("topic", mcp.Required(), mcp.Description("Topic name to release lease on")),
@@ -136,7 +136,7 @@ func (s *Server) registerCollaborationTools() {
 		action:       "write",
 	}, s.handleTopicLeaseRelease))
 
-	s.mcpServer.AddTool(mcp.NewTool("agent_topic_lease_renew",
+	s.addTool(mcp.NewTool("agent_topic_lease_renew",
 		withCategory("ops"),
 		mcp.WithDescription("Renew an existing topic lease to extend its TTL."),
 		mcp.WithString("topic", mcp.Required(), mcp.Description("Topic name to renew lease for")),
@@ -147,7 +147,7 @@ func (s *Server) registerCollaborationTools() {
 		action:       "write",
 	}, s.handleTopicLeaseRenew))
 
-	s.mcpServer.AddTool(mcp.NewTool("agent_topic_lease_list",
+	s.addTool(mcp.NewTool("agent_topic_lease_list",
 		withCategory("ops"),
 		mcp.WithDescription("List all active topic leases showing owner, type, permissions, and expiration."),
 	), s.withToolAuth(toolAuthConfig{

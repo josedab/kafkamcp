@@ -3,7 +3,7 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerEventBusTools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_event_bus",
+	s.addTool(mcp.NewTool("kafka_event_bus",
 		withCategory("observability"),
 		mcp.WithDescription("Real-time agent observability bus. Subscribe to agent interactions, tool invocations, and Kafka operations as structured events. Supports filtering, backpressure, and historical replay."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: subscribe, unsubscribe, publish, replay, stats, list_subscriptions")),

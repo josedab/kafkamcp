@@ -3,7 +3,7 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerStateMachineTools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_state_machine",
+	s.addTool(mcp.NewTool("kafka_state_machine",
 		withCategory("streaming"),
 		mcp.WithDescription("Kafka state machine engine. Define topic-backed finite state machines, query current state, valid transitions, and execute saga patterns with compensation logic."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: list_machines, get_machine, create_machine, create_instance, get_instance, list_instances, transition, valid_transitions, start_saga, complete_saga_step")),

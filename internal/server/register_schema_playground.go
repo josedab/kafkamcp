@@ -3,7 +3,7 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerSchemaPlaygroundTools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_schema_playground",
+	s.addTool(mcp.NewTool("kafka_schema_playground",
 		withCategory("schema"),
 		mcp.WithDescription("Interactive schema playground for drafting, testing, and validating schemas. Supports draft lifecycle: create → test → validate → promote."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: create, update, test, validate, promote, get, list, evolve")),

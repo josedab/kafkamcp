@@ -3,7 +3,7 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerInteractiveOnboardingTools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_onboard_interactive",
+	s.addTool(mcp.NewTool("kafka_onboard_interactive",
 		withCategory("onboarding"),
 		mcp.WithDescription("AI-guided interactive onboarding experience. Walks you through setup, configuration, and first successful Kafka interaction with contextual guidance. Actions: start, current_step, advance, skip, progress, help."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: start, current_step, advance, skip, progress, help")),

@@ -4,7 +4,7 @@ import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerAdvancedTools() {
 	// Kafka Connect management
-	s.mcpServer.AddTool(mcp.NewTool("kafka_create_connector",
+	s.addTool(mcp.NewTool("kafka_create_connector",
 		withCategory("streaming"),
 		mcp.WithDescription("Create a new Kafka Connect connector with the specified configuration."),
 		mcp.WithString("name", mcp.Required(), mcp.Description("Connector name")),
@@ -12,7 +12,7 @@ func (s *Server) registerAdvancedTools() {
 		mcp.WithString("cluster", mcp.Description("Cluster name.")),
 	), s.handleCreateConnector)
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_update_connector",
+	s.addTool(mcp.NewTool("kafka_update_connector",
 		withCategory("streaming"),
 		mcp.WithDescription("Update an existing Kafka Connect connector configuration."),
 		mcp.WithString("name", mcp.Required(), mcp.Description("Connector name")),
@@ -20,14 +20,14 @@ func (s *Server) registerAdvancedTools() {
 		mcp.WithString("cluster", mcp.Description("Cluster name.")),
 	), s.handleUpdateConnector)
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_delete_connector",
+	s.addTool(mcp.NewTool("kafka_delete_connector",
 		withCategory("streaming"),
 		mcp.WithDescription("Delete a Kafka Connect connector."),
 		mcp.WithString("name", mcp.Required(), mcp.Description("Connector name")),
 		mcp.WithString("cluster", mcp.Description("Cluster name.")),
 	), s.handleDeleteConnector)
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_restart_connector",
+	s.addTool(mcp.NewTool("kafka_restart_connector",
 		withCategory("streaming"),
 		mcp.WithDescription("Restart a Kafka Connect connector or specific tasks. Supports bulk restart of failed tasks."),
 		mcp.WithString("name", mcp.Required(), mcp.Description("Connector name")),
@@ -36,7 +36,7 @@ func (s *Server) registerAdvancedTools() {
 		mcp.WithString("cluster", mcp.Description("Cluster name.")),
 	), s.handleRestartConnector)
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_connector_health",
+	s.addTool(mcp.NewTool("kafka_connector_health",
 		withCategory("streaming"),
 		mcp.WithDescription("Get health score and diagnostics for a Kafka Connect connector including task states, error rates, and recommendations."),
 		mcp.WithString("name", mcp.Required(), mcp.Description("Connector name")),
@@ -44,7 +44,7 @@ func (s *Server) registerAdvancedTools() {
 	), s.handleConnectorHealth)
 
 	// Time-travel query engine
-	s.mcpServer.AddTool(mcp.NewTool("kafka_time_travel",
+	s.addTool(mcp.NewTool("kafka_time_travel",
 		withCategory("streaming"),
 		mcp.WithDescription("Point-in-time topic queries: snapshot state at a timestamp, reconstruct compacted topic state, or diff state between two timestamps."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: snapshot, diff")),
@@ -57,7 +57,7 @@ func (s *Server) registerAdvancedTools() {
 	), s.handleTimeTravel)
 
 	// Intelligent topic recommendations
-	s.mcpServer.AddTool(mcp.NewTool("kafka_recommend",
+	s.addTool(mcp.NewTool("kafka_recommend",
 		withCategory("streaming"),
 		mcp.WithDescription("Get intelligent recommendations for topic optimization: detect under-replicated partitions, idle topics, consumer lag trends, partition hotspots, retention tuning, and compression analysis."),
 		mcp.WithString("topic", mcp.Description("Specific topic to analyze (optional, analyzes all if empty)")),
@@ -65,7 +65,7 @@ func (s *Server) registerAdvancedTools() {
 	), s.handleRecommend)
 
 	// End-to-end message tracing
-	s.mcpServer.AddTool(mcp.NewTool("kafka_trace_message",
+	s.addTool(mcp.NewTool("kafka_trace_message",
 		withCategory("streaming"),
 		mcp.WithDescription("Trace a message across topics using correlation IDs. Auto-detects correlation-id, trace-id, x-request-id headers and builds a message flow graph."),
 		mcp.WithString("correlation_id", mcp.Required(), mcp.Description("Correlation ID to trace")),
@@ -76,7 +76,7 @@ func (s *Server) registerAdvancedTools() {
 	), s.handleTraceMessage)
 
 	// ACL & Security audit
-	s.mcpServer.AddTool(mcp.NewTool("kafka_list_acls",
+	s.addTool(mcp.NewTool("kafka_list_acls",
 		withCategory("streaming"),
 		mcp.WithDescription("List all Kafka ACLs with principal, resource, and operation breakdown. Includes security analysis for over-permissioned principals and wildcard exposure."),
 		mcp.WithString("principal", mcp.Description("Filter by principal (e.g., 'User:alice')")),
@@ -86,7 +86,7 @@ func (s *Server) registerAdvancedTools() {
 	), s.handleListACLs)
 
 	// Configuration drift detection
-	s.mcpServer.AddTool(mcp.NewTool("kafka_config_drift",
+	s.addTool(mcp.NewTool("kafka_config_drift",
 		withCategory("streaming"),
 		mcp.WithDescription("Detect configuration drift across clusters. Compare topic configs between clusters, check against golden templates, and generate remediation commands."),
 		mcp.WithString("action", mcp.Description("Action: compare, audit, template. Default: compare")),
@@ -98,7 +98,7 @@ func (s *Server) registerAdvancedTools() {
 	), s.handleConfigDrift)
 
 	// Interactive Kafka playground
-	s.mcpServer.AddTool(mcp.NewTool("kafka_playground",
+	s.addTool(mcp.NewTool("kafka_playground",
 		withCategory("streaming"),
 		mcp.WithDescription("Sandboxed Kafka environment for safe experimentation. Create temporary topics, generate sample data, and auto-cleanup. Actions: create, produce_sample, list, cleanup."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: create, produce_sample, list, cleanup")),

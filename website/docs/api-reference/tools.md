@@ -6,7 +6,7 @@ toc_max_heading_level: 3
 
 # API Reference: Tools
 
-KafkaMCP exposes 251 MCP tools across the following categories:
+KafkaMCP exposes 317 MCP tools across the following categories. By default only the **essential** tool pack (~30 tools) is advertised to MCP clients, keeping the surface area within the ~40–60 tool ceiling where LLM tool-routing quality stays sharp. Opt into additional packs (`ops`, `analytics`, `governance`, `streaming`, `experimental`, or `all`) via `server.tool_packs` in `kafkamcp.yaml`.
 
 - **Core (P0)** — discovery, read, write, schemas, consumer groups
 - **Advanced (P1)** — subscriptions, admin operations, search, offset resets, DLQ analysis

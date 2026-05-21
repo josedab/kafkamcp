@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Adaptive tool surface: register tools by **tier** (`essential`, `advanced`, `experimental`) and **pack** (`essential`, `ops`, `analytics`, `governance`, `streaming`, `experimental`, `all`). Configure via `server.tool_packs` in `kafkamcp.yaml`; defaults to `[essential]` so the advertised surface stays under the ~40–60 tool ceiling where LLM tool-routing degrades. Full catalog still ~317 tools — opt in to additional packs as needed.
+
+### Changed
+- `internal/server`: every `mcp.NewTool` registration now flows through the new `s.addTool` wrapper which consults the active `ToolPackFilter`. Experimental tools (`kafka_chaos_*`, `kafka_wasm_*`, `kafka_proxy`, `kafka_controlplane_*`, `kafka_migration_plan`, `kafka_autopilot_execute/rollback`, `kafka_plugin_install`) are now tagged with tier `experimental` and only register when the `experimental` (or `all`) pack is active.
+- `docs/tool-reference.md` is grouped by tier; the generator (`cmd/gen-tool-docs`) now reads tier annotations and the `essentialPackTools` allow-list to render per-tier sections.
+
 ## [0.1.0] - 2026-05-03
 
 ### Added

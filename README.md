@@ -48,7 +48,7 @@ KafkaMCP is an MCP (Model Context Protocol) server that transforms Apache Kafka 
 - **🏢 Multi-Cluster** — Connect to multiple Kafka clusters with per-cluster configuration
 - **🩺 Self-Healing** — Consumer group health monitoring with automated remediation recommendations
 
-> **How does KafkaMCP compare?** See the [KafkaMCP vs Alternatives](https://kafkamcp.dev/docs/comparison) comparison matrix for a detailed feature breakdown against Kafka REST Proxy, LangChain, Kafka Connect, and ksqlDB.
+> **How does KafkaMCP compare?** A detailed comparison matrix against Kafka REST Proxy, LangChain, Kafka Connect, and ksqlDB is planned for the project website (the `kafkamcp.dev` domain is not yet live).
 
 ## Quick Start
 
@@ -176,7 +176,7 @@ Once connected, your AI agent can:
 
 ## MCP Tools
 
-> **Full reference:** The auto-generated [Tool Reference](docs/tool-reference.md) lists all **251 tools** with complete parameter details.
+> **Full reference:** The auto-generated [Tool Reference](docs/tool-reference.md) lists all **317 tools** with complete parameter details. By default, only the **essential** tool pack (~30 tools) is advertised to MCP clients so LLM tool-routing quality stays high; opt into `ops`, `analytics`, `governance`, `streaming`, `experimental`, or `all` via `server.tool_packs` in `kafkamcp.yaml`.
 
 ### P0 — Core Tools
 | Tool | Description |
@@ -552,7 +552,6 @@ Once connected, your AI agent can:
 - **Structured JSON logging** via `slog`
 - **OpenTelemetry tracing** — optional OTLP export for distributed trace analysis (see [Telemetry config](#telemetry-opentelemetry))
 - **Grafana dashboard** — a ready-to-use dashboard ships at [`deploy/grafana/kafkamcp-overview.json`](deploy/grafana/kafkamcp-overview.json) with 23 panels covering tool call rates, latency percentiles, message throughput, schema cache performance, auth/rate-limit denials, and active connections. Import it into Grafana and select your Prometheus data source.
-- **Web Dashboard** — an embedded web UI is served at the MCP server's root URL when using SSE or streamable-http transport. It provides real-time agent activity monitoring, audit trail browsing, topic topology visualization, rate limit status, and schema browsing. Secure it with an API key via `server.dashboard.api_key`. See the [Dashboard Guide](https://kafkamcp.dev/docs/guides/dashboard) for details.
 
 ## SDKs & Editor Integrations
 
@@ -661,8 +660,7 @@ The [`examples/`](examples/) directory contains ready-to-use configurations and 
 |----------|-------------|
 | [`deploy/helm/kafkamcp/`](deploy/helm/kafkamcp/) | Production-ready Helm chart (Deployment, Service, HPA, PDB, NetworkPolicy, ServiceMonitor) |
 | [`deploy/grafana/`](deploy/grafana/) | Grafana dashboard JSON for KafkaMCP monitoring |
-| [Kubernetes Guide](https://kafkamcp.dev/docs/deployment/kubernetes) | Full Kubernetes deployment walkthrough |
-| [Docker Guide](https://kafkamcp.dev/docs/deployment/docker) | Docker and Docker Compose deployment |
+| [`docs/PERSISTENCE.md`](docs/PERSISTENCE.md) | What state survives a restart (almost nothing) and how to mitigate it |
 
 ## Configuration Reference
 
@@ -1044,15 +1042,12 @@ If using access control (`default_deny: true`), ensure the connecting agent's ID
 
 ### More Help
 
-> 📖 **[See full troubleshooting guide →](https://kafkamcp.dev/docs/troubleshooting)**
-
-For additional troubleshooting guides, see the [full troubleshooting documentation](https://kafkamcp.dev/docs/troubleshooting).
+For deployment walk-throughs see [`deploy/helm/kafkamcp/`](deploy/helm/kafkamcp/) and the project's [`examples/docker-compose.yaml`](examples/docker-compose.yaml). For background on what state is persistent vs. volatile across restarts see [`docs/PERSISTENCE.md`](docs/PERSISTENCE.md).
 
 ## Documentation & Community
 
-- 📖 **Website & Docs** — [kafkamcp.dev](https://kafkamcp.dev) · [docs.kafkamcp.dev](https://docs.kafkamcp.dev)
+- 📖 **In-repo docs** — [`docs/`](docs/) (architecture, ADRs, tool reference, persistence)
 - 📋 **Changelog** — [CHANGELOG.md](CHANGELOG.md)
-- 💬 **Discord** — [discord.gg/kafkamcp](https://discord.gg/kafkamcp)
 - 📝 **Blog**:
   - [Your AI Agents Are Blind to Kafka — And That's Costing You Weeks](blog/01-agents-blind-to-kafka.md)
   - [Connect Claude to Your Kafka Cluster in 5 Minutes](blog/02-connect-claude-to-kafka.md)

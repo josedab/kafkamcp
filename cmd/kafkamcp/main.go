@@ -304,6 +304,11 @@ func runServer(cmd *cobra.Command, args []string) error {
 	}
 	defer srv.Close()
 
+	logger.Info("tool packs configured",
+		"packs", cfg.Server.ToolPacks,
+		"registered_tools", srv.RegisteredToolCount(),
+		"skipped_tools", srv.SkippedToolCount())
+
 	if !cfg.Policies.DefaultDeny {
 		logger.Warn("running with default_deny=false — all agents have unrestricted access; enable policies.default_deny for production use")
 
@@ -318,6 +323,31 @@ func runServer(cmd *cobra.Command, args []string) error {
 			logger.Warn("INSECURE DEFAULTS: default_deny is false and no rate limits are configured — this installation has zero access control; configure policies for production use")
 		}
 	}
+
+	if cfg.Experimental.Chaos {
+		logger.Warn("EXPERIMENTAL: chaos engineering tool enabled — current implementation records metadata only; it does NOT actually disrupt Kafka traffic")
+	}
+	if cfg.Experimental.WASMRuntime {
+		logger.Warn("EXPERIMENTAL: WASM runtime enabled — current implementation does NOT execute WebAssembly modules; outputs are simulated")
+	}
+	if cfg.Experimental.KafkaProxy {
+		logger.Warn("EXPERIMENTAL: Kafka proxy enabled — without a wired MCP translation callback the proxy returns hardcoded responses; do NOT point real Kafka clients at it in production")
+	}
+	if cfg.Experimental.Migration {
+		logger.Warn("EXPERIMENTAL: migration execute/rollback enabled — current build's migration.ExecutePlan does NOT actually apply changes to the target cluster; results are simulated success counters")
+	}
+	if cfg.Experimental.ControlPlane {
+		logger.Warn("EXPERIMENTAL: control plane enabled — kafka_controlplane_* tools fabricate org/instance/billing data; there is no real SaaS layer behind them")
+	}
+	if cfg.Experimental.Marketplace {
+		logger.Warn("EXPERIMENTAL: plugin marketplace enabled — kafka_plugin_install only flips an in-memory boolean; it does NOT download, verify, or sandbox a real plugin")
+	}
+
+	// Persistence reality check (F15): all subsystems below keep state in
+	// process memory only. Surface this once at startup so operators are not
+	// surprised when restart wipes encryption keys, audit ring-buffers,
+	// rate-limit buckets, sessions, etc.
+	logger.Warn("VOLATILE STATE: keys, audit ring-buffer, rate-limit buckets, sessions, plugin/digital-twin state, etc. are in-memory only and will be lost on restart — see docs/PERSISTENCE.md")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

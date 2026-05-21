@@ -9,7 +9,7 @@ func (s *Server) registerCatalogTools() {
 		return
 	}
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_catalog_search",
+	s.addTool(mcp.NewTool("kafka_catalog_search",
 		withCategory("governance"),
 		mcp.WithDescription("Search the data catalog for topics, schemas, connectors by name, description, tag, owner, freshness, or quality score."),
 		mcp.WithString("query", mcp.Description("Full-text search query")),
@@ -25,7 +25,7 @@ func (s *Server) registerCatalogTools() {
 		action:       "read",
 	}, s.handleCatalogSearch))
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_catalog_tag",
+	s.addTool(mcp.NewTool("kafka_catalog_tag",
 		withCategory("governance"),
 		mcp.WithDescription("Add tags to a catalog entry, index a new entry, or set lineage information."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: tag, index, lineage, delete")),
@@ -42,7 +42,7 @@ func (s *Server) registerCatalogTools() {
 		action:       "write",
 	}, s.handleCatalogTag))
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_catalog_stats",
+	s.addTool(mcp.NewTool("kafka_catalog_stats",
 		withCategory("governance"),
 		mcp.WithDescription("Get catalog statistics: entry counts by type, freshness distribution, quality scores, tag usage."),
 	), s.withToolAuth(toolAuthConfig{

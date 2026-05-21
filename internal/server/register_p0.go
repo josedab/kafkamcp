@@ -3,7 +3,7 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerP0Tools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_list_topics",
+	s.addTool(mcp.NewTool("kafka_list_topics",
 		withCategory("streaming"),
 		mcp.WithDescription("List all Kafka topics in the cluster with metadata including partition count, replication factor, and estimated message count."),
 		mcp.WithString("filter", mcp.Description("Glob pattern to filter topic names (e.g., 'orders.*', '*-dlq')")),
@@ -11,14 +11,14 @@ func (s *Server) registerP0Tools() {
 		mcp.WithString("cluster", mcp.Description("Cluster name for multi-cluster setups.")),
 	), s.handleListTopics)
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_describe_topic",
+	s.addTool(mcp.NewTool("kafka_describe_topic",
 		withCategory("streaming"),
 		mcp.WithDescription("Get detailed metadata for a specific topic including partition details, replicas, ISR, offsets, and configuration."),
 		mcp.WithString("topic", mcp.Required(), mcp.Description("Topic name")),
 		mcp.WithString("cluster", mcp.Description("Cluster name for multi-cluster setups.")),
 	), s.handleDescribeTopic)
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_consume",
+	s.addTool(mcp.NewTool("kafka_consume",
 		withCategory("streaming"),
 		mcp.WithDescription("Read messages from a Kafka topic with flexible positioning. Supports earliest, latest, numeric offset, or ISO 8601 timestamp."),
 		mcp.WithString("topic", mcp.Required(), mcp.Description("Topic name")),
@@ -30,7 +30,7 @@ func (s *Server) registerP0Tools() {
 		mcp.WithString("cluster", mcp.Description("Cluster name.")),
 	), s.handleConsume)
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_produce",
+	s.addTool(mcp.NewTool("kafka_produce",
 		withCategory("streaming"),
 		mcp.WithDescription("Publish one or more messages to a Kafka topic. Returns delivery confirmation with partition, offset, and timestamp."),
 		mcp.WithString("topic", mcp.Required(), mcp.Description("Topic name")),
@@ -42,22 +42,22 @@ func (s *Server) registerP0Tools() {
 	), s.handleProduce)
 
 	if s.hasSchemaRegistry() {
-		s.mcpServer.AddTool(mcp.NewTool("kafka_list_schemas",
-		withCategory("streaming"),
+		s.addTool(mcp.NewTool("kafka_list_schemas",
+			withCategory("streaming"),
 			mcp.WithDescription("List all subjects in the Schema Registry with latest version, type, and compatibility level."),
 			mcp.WithString("filter", mcp.Description("Glob pattern to filter subject names")),
 		), s.handleListSchemas)
 
-		s.mcpServer.AddTool(mcp.NewTool("kafka_get_schema",
-		withCategory("streaming"),
+		s.addTool(mcp.NewTool("kafka_get_schema",
+			withCategory("streaming"),
 			mcp.WithDescription("Get the full schema definition for a subject. Returns parsed schema, field summary, compatibility, and references."),
 			mcp.WithString("subject", mcp.Required(), mcp.Description("Schema subject name (e.g., 'orders.created-value')")),
 			mcp.WithString("version", mcp.Description("Version: 'latest' or number. Default: 'latest'")),
 		), s.handleGetSchema)
 
 		// P1: Schema compatibility check
-		s.mcpServer.AddTool(mcp.NewTool("kafka_check_schema_compatibility",
-		withCategory("streaming"),
+		s.addTool(mcp.NewTool("kafka_check_schema_compatibility",
+			withCategory("streaming"),
 			mcp.WithDescription("Check if a proposed schema is compatible with the subject's compatibility policy."),
 			mcp.WithString("subject", mcp.Required(), mcp.Description("Schema subject name")),
 			mcp.WithString("schema", mcp.Required(), mcp.Description("The proposed schema definition as a JSON string")),
@@ -66,14 +66,14 @@ func (s *Server) registerP0Tools() {
 		), s.handleCheckSchemaCompatibility)
 	}
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_describe_consumer_group",
+	s.addTool(mcp.NewTool("kafka_describe_consumer_group",
 		withCategory("streaming"),
 		mcp.WithDescription("Get the state, members, partition assignments, and per-partition lag of a consumer group."),
 		mcp.WithString("group_id", mcp.Required(), mcp.Description("Consumer group ID")),
 		mcp.WithString("cluster", mcp.Description("Cluster name.")),
 	), s.handleDescribeConsumerGroup)
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_list_consumer_groups",
+	s.addTool(mcp.NewTool("kafka_list_consumer_groups",
 		withCategory("streaming"),
 		mcp.WithDescription("List all consumer groups with summary state, member count, and total lag."),
 		mcp.WithString("state_filter", mcp.Description("Filter by state (Stable, Empty, Dead)")),

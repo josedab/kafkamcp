@@ -9,7 +9,7 @@ func (s *Server) registerTaskQueueTools() {
 		return
 	}
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_task_publish",
+	s.addTool(mcp.NewTool("kafka_task_publish",
 		withCategory("ops"),
 		mcp.WithDescription("Publish a task to a priority queue for other agents to claim and execute."),
 		mcp.WithString("queue", mcp.Required(), mcp.Description("Queue name")),
@@ -24,7 +24,7 @@ func (s *Server) registerTaskQueueTools() {
 		action:       "write",
 	}, s.handleTaskPublish))
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_task_claim",
+	s.addTool(mcp.NewTool("kafka_task_claim",
 		withCategory("ops"),
 		mcp.WithDescription("Claim the highest-priority pending task from a queue."),
 		mcp.WithString("queue", mcp.Required(), mcp.Description("Queue name")),
@@ -34,7 +34,7 @@ func (s *Server) registerTaskQueueTools() {
 		action:       "write",
 	}, s.handleTaskClaim))
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_task_complete",
+	s.addTool(mcp.NewTool("kafka_task_complete",
 		withCategory("ops"),
 		mcp.WithDescription("Mark a claimed task as completed or failed."),
 		mcp.WithString("task_id", mcp.Required(), mcp.Description("Task ID")),
@@ -47,7 +47,7 @@ func (s *Server) registerTaskQueueTools() {
 		action:       "write",
 	}, s.handleTaskComplete))
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_task_status",
+	s.addTool(mcp.NewTool("kafka_task_status",
 		withCategory("ops"),
 		mcp.WithDescription("Get task status, queue statistics, or list tasks. Actions: get, stats, list, heartbeat."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: get, stats, list, heartbeat")),

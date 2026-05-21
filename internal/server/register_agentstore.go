@@ -3,7 +3,7 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerAgentStoreTools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_agent_config_search",
+	s.addTool(mcp.NewTool("kafka_agent_config_search",
 		withCategory("ops"),
 		mcp.WithDescription("Search the agent configuration marketplace for pre-built agent configs, tool bundles, and integration setups."),
 		mcp.WithString("query", mcp.Description("Search query (matches name, description, tags)")),
@@ -12,14 +12,14 @@ func (s *Server) registerAgentStoreTools() {
 		mcp.WithBoolean("verified_only", mcp.Description("Only show verified entries. Default: false")),
 	), s.handleAgentConfigSearch)
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_agent_config_get",
+	s.addTool(mcp.NewTool("kafka_agent_config_get",
 		withCategory("ops"),
 		mcp.WithDescription("Get details of a specific agent configuration or tool bundle from the marketplace."),
 		mcp.WithString("name", mcp.Required(), mcp.Description("Name of the agent config or tool bundle")),
 		mcp.WithString("type", mcp.Description("Type: config or bundle. Default: config")),
 	), s.handleAgentConfigGet)
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_agent_config_publish",
+	s.addTool(mcp.NewTool("kafka_agent_config_publish",
 		withCategory("ops"),
 		mcp.WithDescription("Publish an agent configuration or tool bundle to the marketplace."),
 		mcp.WithString("name", mcp.Required(), mcp.Description("Name of the agent config or tool bundle")),

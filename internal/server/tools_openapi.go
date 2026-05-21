@@ -9,7 +9,7 @@ import (
 )
 
 func (s *Server) registerOpenAPITools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_openapi_spec",
+	s.addTool(mcp.NewTool("kafka_openapi_spec",
 		mcp.WithDescription("Generate an OpenAPI 3.0 specification from all registered MCP tools. Returns JSON-formatted OpenAPI spec for SDK code generation."),
 		mcp.WithString("format", mcp.Description("Output format: json, yaml. Default: json")),
 	), s.handleOpenAPISpec)

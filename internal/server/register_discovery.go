@@ -5,19 +5,19 @@ import (
 )
 
 func (s *Server) registerDiscoveryTools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_marketplace_discover",
+	s.addTool(mcp.NewTool("kafka_marketplace_discover",
 		withCategory("marketplace"),
 		mcp.WithDescription("Discover plugins, agent configs, and tool bundles across the marketplace. Unified search across all item types with category filtering."),
 		mcp.WithString("query", mcp.Description("Search query")),
 		mcp.WithString("category", mcp.Description("Filter by category: monitoring, security, analytics, integration, utility, operations, pipeline")),
 	), s.handleMarketplaceDiscover)
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_marketplace_stats",
+	s.addTool(mcp.NewTool("kafka_marketplace_stats",
 		withCategory("marketplace"),
 		mcp.WithDescription("Get marketplace statistics including total items, categories, top rated, and featured items."),
 	), s.handleMarketplaceStats)
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_marketplace_review",
+	s.addTool(mcp.NewTool("kafka_marketplace_review",
 		withCategory("marketplace"),
 		mcp.WithDescription("Add or view reviews for marketplace items (plugins, agent configs, tool bundles)."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: add, list")),

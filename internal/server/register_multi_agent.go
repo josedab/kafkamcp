@@ -3,7 +3,7 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerMultiAgentOrchestratorTools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_multi_agent_orchestrate",
+	s.addTool(mcp.NewTool("kafka_multi_agent_orchestrate",
 		withCategory("orchestration"),
 		mcp.WithDescription("Multi-agent DAG workflow coordination. Assign steps to agents, manage handoffs, and track per-agent progress. Actions: assign, handoff, agent_steps, agent_ready, status."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: assign, handoff, agent_steps, agent_ready, status")),

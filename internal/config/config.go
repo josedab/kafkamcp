@@ -12,30 +12,26 @@ import (
 
 // Config is the top-level KafkaMCP configuration.
 type Config struct {
-	Server      ServerConfig   `yaml:"server" json:"server"`
-	Clusters    []ClusterConfig `yaml:"clusters" json:"clusters"`
-	Policies    PolicyConfig   `yaml:"policies" json:"policies"`
-	SchemaCache CacheConfig    `yaml:"schema_cache" json:"schema_cache"`
-	Audit       AuditConfig    `yaml:"audit" json:"audit"`
-	Masking     MaskingConfig  `yaml:"masking,omitempty" json:"masking,omitempty"`
-	Telemetry   TelemetryConfig `yaml:"telemetry,omitempty" json:"telemetry,omitempty"`
+	Server       ServerConfig       `yaml:"server" json:"server"`
+	Clusters     []ClusterConfig    `yaml:"clusters" json:"clusters"`
+	Policies     PolicyConfig       `yaml:"policies" json:"policies"`
+	SchemaCache  CacheConfig        `yaml:"schema_cache" json:"schema_cache"`
+	Audit        AuditConfig        `yaml:"audit" json:"audit"`
+	Masking      MaskingConfig      `yaml:"masking,omitempty" json:"masking,omitempty"`
+	Telemetry    TelemetryConfig    `yaml:"telemetry,omitempty" json:"telemetry,omitempty"`
+	Experimental ExperimentalConfig `yaml:"experimental,omitempty" json:"experimental,omitempty"`
 }
 
 // ServerConfig holds network transport and TLS settings for the MCP server.
 type ServerConfig struct {
-	Transport      string          `yaml:"transport" json:"transport"`             // Protocol: "stdio", "sse", or "streamable-http"
-	Host           string          `yaml:"host" json:"host"`                       // Bind address (default "0.0.0.0")
-	Port           int             `yaml:"port" json:"port"`                       // Listen port (default 3100)
-	LogLevel       string          `yaml:"log_level" json:"log_level"`             // Log verbosity: "debug", "info", "warn", "error"
-	MaxMessageSize int             `yaml:"max_message_size" json:"max_message_size"` // Max MCP message size in bytes (default 1 MB)
-	TLSCert        string          `yaml:"tls_cert,omitempty" json:"tls_cert,omitempty"` // Path to TLS certificate file
-	TLSKey         string          `yaml:"tls_key,omitempty" json:"tls_key,omitempty"`   // Path to TLS private key file
-	Dashboard      DashboardConfig `yaml:"dashboard,omitempty" json:"dashboard,omitempty"` // Dashboard settings
-}
-
-// DashboardConfig holds settings for the embedded web dashboard.
-type DashboardConfig struct {
-	APIKey string `yaml:"api_key,omitempty" json:"-"` // API key for dashboard authentication
+	Transport      string   `yaml:"transport" json:"transport"`                       // Protocol: "stdio", "sse", or "streamable-http"
+	Host           string   `yaml:"host" json:"host"`                                 // Bind address (default "0.0.0.0")
+	Port           int      `yaml:"port" json:"port"`                                 // Listen port (default 3100)
+	LogLevel       string   `yaml:"log_level" json:"log_level"`                       // Log verbosity: "debug", "info", "warn", "error"
+	MaxMessageSize int      `yaml:"max_message_size" json:"max_message_size"`         // Max MCP message size in bytes (default 1 MB)
+	TLSCert        string   `yaml:"tls_cert,omitempty" json:"tls_cert,omitempty"`     // Path to TLS certificate file
+	TLSKey         string   `yaml:"tls_key,omitempty" json:"tls_key,omitempty"`       // Path to TLS private key file
+	ToolPacks      []string `yaml:"tool_packs,omitempty" json:"tool_packs,omitempty"` // Adaptive tool surface: any of essential, ops, analytics, governance, streaming, experimental, all. Default: ["essential"].
 }
 
 // Address returns the "host:port" listen address, using defaults if not set.
@@ -54,12 +50,12 @@ func (s ServerConfig) Address() string {
 // ClusterConfig describes a single Kafka cluster connection including broker
 // addresses, authentication, Schema Registry, and Kafka Connect settings.
 type ClusterConfig struct {
-	Name             string               `yaml:"name" json:"name"`                                         // Unique cluster identifier
-	BootstrapServers string               `yaml:"bootstrap_servers" json:"bootstrap_servers"`                // Comma-separated broker addresses
-	SecurityProtocol string               `yaml:"security_protocol" json:"security_protocol"`                // e.g. "PLAINTEXT", "SSL", "SASL_SSL"
+	Name             string               `yaml:"name" json:"name"`                                           // Unique cluster identifier
+	BootstrapServers string               `yaml:"bootstrap_servers" json:"bootstrap_servers"`                 // Comma-separated broker addresses
+	SecurityProtocol string               `yaml:"security_protocol" json:"security_protocol"`                 // e.g. "PLAINTEXT", "SSL", "SASL_SSL"
 	SASLMechanism    string               `yaml:"sasl_mechanism,omitempty" json:"sasl_mechanism,omitempty"`   // e.g. "PLAIN", "SCRAM-SHA-256"
-	SASLUsername     string               `yaml:"sasl_username,omitempty" json:"-"`                            // SASL username (required when mechanism is set)
-	SASLPassword     string               `yaml:"sasl_password,omitempty" json:"-"`                          // SASL password (required when mechanism is set)
+	SASLUsername     string               `yaml:"sasl_username,omitempty" json:"-"`                           // SASL username (required when mechanism is set)
+	SASLPassword     string               `yaml:"sasl_password,omitempty" json:"-"`                           // SASL password (required when mechanism is set)
 	SSLCALocation    string               `yaml:"ssl_ca_location,omitempty" json:"ssl_ca_location,omitempty"` // Path to CA certificate bundle
 	SchemaRegistry   SchemaRegistryConfig `yaml:"schema_registry,omitempty" json:"schema_registry,omitempty"` // Optional Schema Registry connection
 	ConnectURL       string               `yaml:"connect_url,omitempty" json:"connect_url,omitempty"`         // Kafka Connect REST API base URL
@@ -94,18 +90,60 @@ type CacheConfig struct {
 
 // PolicyConfig defines the access-control policy applied to MCP agents.
 type PolicyConfig struct {
-	DefaultDeny bool          `yaml:"default_deny" json:"default_deny"` // When true, deny access unless explicitly allowed
-	Agents      []AgentPolicy `yaml:"agents" json:"agents"`             // Per-agent permission definitions
+	DefaultDeny              bool          `yaml:"default_deny" json:"default_deny"`                                                     // When true, deny access unless explicitly allowed
+	Agents                   []AgentPolicy `yaml:"agents" json:"agents"`                                                                 // Per-agent permission definitions
+	GlobalRateLimitPerMinute int           `yaml:"global_rate_limit_per_minute,omitempty" json:"global_rate_limit_per_minute,omitempty"` // Shared cap across all agents (0 = unlimited)
+}
+
+// ExperimentalConfig gates subsystems whose current implementation is a stub
+// or a metadata-only simulation. They remain disabled by default so the
+// server never silently advertises behaviour it cannot deliver.
+type ExperimentalConfig struct {
+	// Chaos enables the chaos-injection MCP tool. The current build does not
+	// actually disrupt Kafka traffic; experiments are recorded in-process
+	// only. Enabling this flag will log a loud warning at startup.
+	Chaos bool `yaml:"chaos,omitempty" json:"chaos,omitempty"`
+
+	// WASMRuntime enables the kafka_wasm_* tools. The current build does NOT
+	// execute WebAssembly modules — Execute returns a canned simulated
+	// response. Enabling this flag will log a loud warning at startup.
+	WASMRuntime bool `yaml:"wasm_runtime,omitempty" json:"wasm_runtime,omitempty"`
+
+	// KafkaProxy enables the kafka_proxy MCP tool. The current proxy does
+	// NOT forward Kafka traffic to a real broker; without an OnTranslated
+	// callback it returns hardcoded responses. Enabling this flag without
+	// wiring up an MCP translation callback will still produce stub
+	// responses; the flag exists to surface that intent in config.
+	KafkaProxy bool `yaml:"kafka_proxy,omitempty" json:"kafka_proxy,omitempty"`
+
+	// Migration enables the destructive paths of kafka_autopilot_execute /
+	// kafka_autopilot_rollback. The current build does NOT actually apply
+	// topic/group/schema changes to the target cluster — ExecutePlan only
+	// updates in-process status. Until a real executor is wired in, this
+	// tool stays gated. (Dry-run paths and the assessment/planning steps
+	// remain available without the flag.)
+	Migration bool `yaml:"migration,omitempty" json:"migration,omitempty"`
+
+	// ControlPlane enables the kafka_controlplane_* family. The current
+	// build's controlplane.Manager fabricates instance endpoints and
+	// org/billing data in memory — there is no real SaaS layer behind it.
+	ControlPlane bool `yaml:"control_plane,omitempty" json:"control_plane,omitempty"`
+
+	// Marketplace enables kafka_plugin_install, which today only flips an
+	// in-memory boolean on the marketplace catalog entry. It does NOT
+	// download, verify, or sandbox a real plugin artifact. Gated so agents
+	// are not misled into believing they have side-effects on the host.
+	Marketplace bool `yaml:"marketplace,omitempty" json:"marketplace,omitempty"`
 }
 
 // AgentPolicy specifies the permissions and rate limits for a single MCP agent.
 type AgentPolicy struct {
-	ID             string              `yaml:"id" json:"id"`
-	Role           string              `yaml:"role" json:"role"`
-	Topics         []TopicPermission   `yaml:"topics" json:"topics"`
-	ConsumerGroups GroupPermission      `yaml:"consumer_groups" json:"consumer_groups"`
-	Schemas        SchemaPermission    `yaml:"schemas" json:"schemas"`
-	RateLimit      RateLimitConfig     `yaml:"rate_limit" json:"rate_limit"`
+	ID             string            `yaml:"id" json:"id"`
+	Role           string            `yaml:"role" json:"role"`
+	Topics         []TopicPermission `yaml:"topics" json:"topics"`
+	ConsumerGroups GroupPermission   `yaml:"consumer_groups" json:"consumer_groups"`
+	Schemas        SchemaPermission  `yaml:"schemas" json:"schemas"`
+	RateLimit      RateLimitConfig   `yaml:"rate_limit" json:"rate_limit"`
 }
 
 // TopicPermission maps a glob pattern to the set of allowed operations on
@@ -145,21 +183,21 @@ type MaskingConfig struct {
 
 // MaskingRule defines a single masking rule for a field pattern.
 type MaskingRule struct {
-	Name      string `yaml:"name" json:"name"`           // Rule identifier
-	Type      string `yaml:"type" json:"type"`           // Rule type: email, ssn, credit_card, phone, regex, ner
-	FieldPath string `yaml:"field_path" json:"field_path"` // JSON path pattern (e.g., "$.user.email", "**email**")
-	Pattern   string `yaml:"pattern,omitempty" json:"pattern,omitempty"` // Custom regex pattern (for type=regex)
-	Replace   string `yaml:"replace,omitempty" json:"replace,omitempty"` // Replacement string. Default: "***REDACTED***"
-	Agents    []string `yaml:"agents,omitempty" json:"agents,omitempty"` // Apply only to these agents. Empty = all.
+	Name      string   `yaml:"name" json:"name"`                           // Rule identifier
+	Type      string   `yaml:"type" json:"type"`                           // Rule type: email, ssn, credit_card, phone, regex, ner
+	FieldPath string   `yaml:"field_path" json:"field_path"`               // JSON path pattern (e.g., "$.user.email", "**email**")
+	Pattern   string   `yaml:"pattern,omitempty" json:"pattern,omitempty"` // Custom regex pattern (for type=regex)
+	Replace   string   `yaml:"replace,omitempty" json:"replace,omitempty"` // Replacement string. Default: "***REDACTED***"
+	Agents    []string `yaml:"agents,omitempty" json:"agents,omitempty"`   // Apply only to these agents. Empty = all.
 }
 
 // TelemetryConfig holds OpenTelemetry configuration for tracing.
 type TelemetryConfig struct {
 	Enabled     bool    `yaml:"enabled" json:"enabled"`
-	Endpoint    string  `yaml:"endpoint,omitempty" json:"endpoint,omitempty"`       // OTLP endpoint (e.g., "localhost:4318")
-	Insecure    bool    `yaml:"insecure,omitempty" json:"insecure,omitempty"`       // Use HTTP instead of HTTPS
+	Endpoint    string  `yaml:"endpoint,omitempty" json:"endpoint,omitempty"`         // OTLP endpoint (e.g., "localhost:4318")
+	Insecure    bool    `yaml:"insecure,omitempty" json:"insecure,omitempty"`         // Use HTTP instead of HTTPS
 	ServiceName string  `yaml:"service_name,omitempty" json:"service_name,omitempty"` // Service name for traces
-	SampleRate  float64 `yaml:"sample_rate,omitempty" json:"sample_rate,omitempty"` // 0.0-1.0, default 1.0
+	SampleRate  float64 `yaml:"sample_rate,omitempty" json:"sample_rate,omitempty"`   // 0.0-1.0, default 1.0
 }
 
 var envVarPattern = regexp.MustCompile(`\$\{([^}]+)\}`)
@@ -282,6 +320,11 @@ func (c *Config) applyDefaults() {
 	}
 	if c.Server.MaxMessageSize == 0 {
 		c.Server.MaxMessageSize = 1048576 // 1MB default
+	}
+	if len(c.Server.ToolPacks) == 0 {
+		// Default to the essential pack: keeps the advertised tool surface
+		// under the ~40–60 ceiling where LLM tool-routing degrades.
+		c.Server.ToolPacks = []string{"essential"}
 	}
 	if c.SchemaCache.MaxEntries == 0 {
 		c.SchemaCache.MaxEntries = 10000

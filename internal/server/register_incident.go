@@ -13,7 +13,7 @@ func (s *Server) registerIncidentCorrelationTools() {
 		return
 	}
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_incident_list",
+	s.addTool(mcp.NewTool("kafka_incident_list",
 		withCategory("observability"),
 		mcp.WithDescription("List correlated incidents across Kafka clusters with root cause analysis."),
 		mcp.WithNumber("limit", mcp.Description("Max incidents. Default: 10")),
@@ -23,7 +23,7 @@ func (s *Server) registerIncidentCorrelationTools() {
 		action:       "read",
 	}, s.handleIncidentList))
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_incident_report",
+	s.addTool(mcp.NewTool("kafka_incident_report",
 		withCategory("observability"),
 		mcp.WithDescription("Generate a structured incident report with timeline, blast radius, root cause, and remediation steps."),
 		mcp.WithString("incident_id", mcp.Required(), mcp.Description("Incident ID")),
@@ -33,7 +33,7 @@ func (s *Server) registerIncidentCorrelationTools() {
 		action:       "read",
 	}, s.handleIncidentReport))
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_incident_ingest",
+	s.addTool(mcp.NewTool("kafka_incident_ingest",
 		withCategory("observability"),
 		mcp.WithDescription("Ingest an anomaly event for cross-cluster correlation."),
 		mcp.WithString("cluster", mcp.Required(), mcp.Description("Cluster name")),
@@ -47,7 +47,7 @@ func (s *Server) registerIncidentCorrelationTools() {
 		action:       "write",
 	}, s.handleIncidentIngest))
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_incident_stats",
+	s.addTool(mcp.NewTool("kafka_incident_stats",
 		withCategory("observability"),
 		mcp.WithDescription("Get incident correlation engine statistics."),
 	), s.withToolAuth(toolAuthConfig{

@@ -3,7 +3,7 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerContractTestingTools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_contract_test",
+	s.addTool(mcp.NewTool("kafka_contract_test",
 		withCategory("governance"),
 		mcp.WithDescription("Schema contract testing between producers and consumers. Actions: register_pair, register_schema, test_compatibility, create_suite, run_suite, detect_changes, list_pairs, list_suites."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action to perform")),

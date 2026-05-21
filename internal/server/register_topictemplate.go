@@ -3,7 +3,7 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerTopicTemplateTools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_topic_template",
+	s.addTool(mcp.NewTool("kafka_topic_template",
 		withCategory("ops"),
 		mcp.WithDescription("Manage declarative topic-as-code templates. Define topic settings (partitions, replication, retention, cleanup policy) as YAML/JSON templates with apply/diff/plan commands."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: parse, save, get, list, delete, diff, plan, export")),

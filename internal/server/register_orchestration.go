@@ -3,21 +3,21 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerOrchestrationTools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_orchestration_create",
+	s.addTool(mcp.NewTool("kafka_orchestration_create",
 		withCategory("ops"),
 		mcp.WithDescription("Create a multi-agent orchestration that coordinates agents working together on Kafka operations with step dependencies, role-based assignment, and shared context."),
 		mcp.WithString("name", mcp.Required(), mcp.Description("Orchestration name")),
 		mcp.WithString("description", mcp.Description("Description of the orchestration")),
 	), s.handleOrchestrationCreate)
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_orchestration_status",
+	s.addTool(mcp.NewTool("kafka_orchestration_status",
 		withCategory("ops"),
 		mcp.WithDescription("Get status of an orchestration, list all orchestrations, or get ready steps for execution."),
 		mcp.WithString("orchestration_id", mcp.Description("Orchestration ID (omit to list all)")),
 		mcp.WithString("action", mcp.Description("Action: status, ready_steps, context. Default: status")),
 	), s.handleOrchestrationStatus)
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_orchestration_complete_step",
+	s.addTool(mcp.NewTool("kafka_orchestration_complete_step",
 		withCategory("ops"),
 		mcp.WithDescription("Complete a step in an orchestration with results, enabling dependent steps to proceed."),
 		mcp.WithString("orchestration_id", mcp.Required(), mcp.Description("Orchestration ID")),
@@ -26,7 +26,7 @@ func (s *Server) registerOrchestrationTools() {
 		mcp.WithString("error", mcp.Description("Error message if failed")),
 	), s.handleOrchestrationCompleteStep)
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_orchestration_handoff",
+	s.addTool(mcp.NewTool("kafka_orchestration_handoff",
 		withCategory("ops"),
 		mcp.WithDescription("Create a task handoff between agents with context and message for collaborative operations."),
 		mcp.WithString("from_agent", mcp.Required(), mcp.Description("Source agent ID")),
@@ -34,7 +34,7 @@ func (s *Server) registerOrchestrationTools() {
 		mcp.WithString("message", mcp.Required(), mcp.Description("Handoff message describing the task")),
 	), s.handleOrchestrationHandoff)
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_orchestration_agents",
+	s.addTool(mcp.NewTool("kafka_orchestration_agents",
 		withCategory("ops"),
 		mcp.WithDescription("Register an agent for orchestration or list available agents."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: register, list, heartbeat")),

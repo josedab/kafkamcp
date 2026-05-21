@@ -3,7 +3,7 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerTracingFlowTools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_trace_flow",
+	s.addTool(mcp.NewTool("kafka_trace_flow",
 		withCategory("ops"),
 		mcp.WithDescription("Distributed tracing for Kafka messages: inject W3C Trace Context headers, correlate across topic chains, and visualize message flow graphs. Actions: trace (get trace by ID), record (record a span), create_context (generate trace context), list (recent traces)."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: trace, record, create_context, list")),

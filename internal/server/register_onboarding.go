@@ -12,7 +12,7 @@ func (s *Server) registerOnboardingTools() {
 		return
 	}
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_quickstart",
+	s.addTool(mcp.NewTool("kafka_quickstart",
 		withCategory("ops"),
 		mcp.WithDescription("Guided onboarding: auto-discovers Kafka clusters, suggests configuration, and generates a step-by-step getting started guide."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: discover (find clusters), suggest_rbac (recommend RBAC), guide (full quickstart guide)")),
@@ -22,7 +22,7 @@ func (s *Server) registerOnboardingTools() {
 		action:       "read",
 	}, s.handleQuickstart))
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_discover_clusters",
+	s.addTool(mcp.NewTool("kafka_discover_clusters",
 		withCategory("ops"),
 		mcp.WithDescription("Auto-discover Kafka clusters by scanning common ports, environment variables, and DNS records."),
 	), s.withToolAuth(toolAuthConfig{
@@ -31,7 +31,7 @@ func (s *Server) registerOnboardingTools() {
 		action:       "read",
 	}, s.handleDiscoverClusters))
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_suggest_rbac",
+	s.addTool(mcp.NewTool("kafka_suggest_rbac",
 		withCategory("ops"),
 		mcp.WithDescription("Generate recommended RBAC configuration based on your Kafka topology. Outputs ready-to-use YAML config."),
 		mcp.WithString("cluster", mcp.Description("Cluster to analyze")),

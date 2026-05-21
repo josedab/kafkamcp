@@ -3,8 +3,9 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerKafkaProxyTools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_proxy",
+	s.addTool(mcp.NewTool("kafka_proxy",
 		withCategory("ops"),
+		withTier(TierExperimental),
 		mcp.WithDescription("Kafka MCP Proxy Protocol. Transparent proxy that translates Kafka wire protocol to MCP tool calls, allowing existing Kafka clients to use KafkaMCP features (auth, audit, masking) without code changes."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: start, stop, status, connections, stats, configure")),
 		mcp.WithString("listen_addr", mcp.Description("TCP listen address for proxy (default: :19092)")),

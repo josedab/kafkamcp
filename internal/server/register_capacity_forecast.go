@@ -3,7 +3,7 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerPredictiveCapacityTools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_capacity_forecast",
+	s.addTool(mcp.NewTool("kafka_capacity_forecast",
 		withCategory("analytics"),
 		mcp.WithDescription("ML-based Kafka capacity forecasting. Analyzes historical metrics to predict scaling needs and recommend optimal partition/broker configurations."),
 		mcp.WithString("cluster", mcp.Description("Cluster name")),

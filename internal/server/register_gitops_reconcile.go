@@ -13,7 +13,7 @@ func (s *Server) registerGitOpsReconcileTools() {
 		return
 	}
 
-	s.mcpServer.AddTool(mcp.NewTool("gitops_reconcile",
+	s.addTool(mcp.NewTool("gitops_reconcile",
 		withCategory("gitops"),
 		mcp.WithDescription("Run a GitOps reconciliation against the live cluster state. Defaults to dry-run mode."),
 		mcp.WithBoolean("dry_run", mcp.Description("Run in dry-run mode (no changes applied). Default: true")),
@@ -23,7 +23,7 @@ func (s *Server) registerGitOpsReconcileTools() {
 		action:       "write",
 	}, s.handleGitOpsReconcile))
 
-	s.mcpServer.AddTool(mcp.NewTool("gitops_set_desired_state",
+	s.addTool(mcp.NewTool("gitops_set_desired_state",
 		withCategory("gitops"),
 		mcp.WithDescription("Set the desired Kafka state for GitOps reconciliation (topics, schemas, ACLs in YAML format)."),
 		mcp.WithString("state_yaml", mcp.Required(), mcp.Description("YAML-encoded desired state")),
@@ -33,7 +33,7 @@ func (s *Server) registerGitOpsReconcileTools() {
 		action:       "write",
 	}, s.handleGitOpsSetState))
 
-	s.mcpServer.AddTool(mcp.NewTool("gitops_reconcile_history",
+	s.addTool(mcp.NewTool("gitops_reconcile_history",
 		withCategory("gitops"),
 		mcp.WithDescription("Get recent GitOps reconciliation results."),
 		mcp.WithNumber("limit", mcp.Description("Max results. Default: 10")),
@@ -43,7 +43,7 @@ func (s *Server) registerGitOpsReconcileTools() {
 		action:       "read",
 	}, s.handleGitOpsHistory))
 
-	s.mcpServer.AddTool(mcp.NewTool("gitops_webhook",
+	s.addTool(mcp.NewTool("gitops_webhook",
 		withCategory("gitops"),
 		mcp.WithDescription("Process a Git webhook event (push or pull_request) for PR-based reconciliation workflows."),
 		mcp.WithString("type", mcp.Required(), mcp.Description("Webhook event type: push or pull_request")),
@@ -134,7 +134,7 @@ func (s *Server) handleGitOpsWebhook(ctx context.Context, request mcp.CallToolRe
 	if result == nil {
 		s.logAudit(agentID, "gitops_webhook", args, "", "success", 0, nil, start)
 		return marshalResult(map[string]any{
-			"status": "no_action",
+			"status":  "no_action",
 			"message": "Webhook event did not trigger reconciliation",
 		})
 	}

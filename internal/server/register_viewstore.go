@@ -9,7 +9,7 @@ func (s *Server) registerViewStoreTools() {
 		return
 	}
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_view_create",
+	s.addTool(mcp.NewTool("kafka_view_create",
 		withCategory("streaming"),
 		mcp.WithDescription("Create a materialized view over a Kafka topic with projections, aggregations (count/sum/avg/min/max), windowed computations, and GROUP BY support for instant analytical queries."),
 		mcp.WithString("name", mcp.Required(), mcp.Description("View name")),
@@ -29,7 +29,7 @@ func (s *Server) registerViewStoreTools() {
 		action:       "write",
 	}, s.handleViewCreate))
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_view_query",
+	s.addTool(mcp.NewTool("kafka_view_query",
 		withCategory("streaming"),
 		mcp.WithDescription("Query a materialized view with point lookups, range scans, or full scans. Returns instant results without re-scanning the source topic."),
 		mcp.WithString("view_id", mcp.Required(), mcp.Description("View ID to query")),
@@ -44,7 +44,7 @@ func (s *Server) registerViewStoreTools() {
 		action:       "read",
 	}, s.handleViewQuery))
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_view_status",
+	s.addTool(mcp.NewTool("kafka_view_status",
 		withCategory("streaming"),
 		mcp.WithDescription("Manage materialized views. Actions: list, get, delete, stats."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: list, get, delete, stats")),

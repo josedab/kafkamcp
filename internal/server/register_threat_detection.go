@@ -13,7 +13,7 @@ func (s *Server) registerThreatDetectionTools() {
 		return
 	}
 
-	s.mcpServer.AddTool(mcp.NewTool("agent_threat_alerts",
+	s.addTool(mcp.NewTool("agent_threat_alerts",
 		withCategory("security"),
 		mcp.WithDescription("List recent behavioral threat alerts detected for agents (data exfiltration, privilege escalation, bulk reads)."),
 		mcp.WithString("agent_id", mcp.Description("Filter by agent ID")),
@@ -24,7 +24,7 @@ func (s *Server) registerThreatDetectionTools() {
 		action:       "read",
 	}, s.handleThreatAlerts))
 
-	s.mcpServer.AddTool(mcp.NewTool("agent_threat_profile",
+	s.addTool(mcp.NewTool("agent_threat_profile",
 		withCategory("security"),
 		mcp.WithDescription("Get the behavioral profile for an agent, including access patterns, topic usage, and baseline status."),
 		mcp.WithString("agent_id", mcp.Required(), mcp.Description("Agent ID to profile")),
@@ -34,7 +34,7 @@ func (s *Server) registerThreatDetectionTools() {
 		action:       "read",
 	}, s.handleThreatProfile))
 
-	s.mcpServer.AddTool(mcp.NewTool("agent_threat_stats",
+	s.addTool(mcp.NewTool("agent_threat_stats",
 		withCategory("security"),
 		mcp.WithDescription("Get threat detection system statistics including profile count and alert totals."),
 	), s.withToolAuth(toolAuthConfig{

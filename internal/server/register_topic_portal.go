@@ -13,7 +13,7 @@ func (s *Server) registerTopicPortalTools() {
 		return
 	}
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_topic_request",
+	s.addTool(mcp.NewTool("kafka_topic_request",
 		withCategory("provisioning"),
 		mcp.WithDescription("Submit a self-service topic provisioning request with justification and approval chain."),
 		mcp.WithString("topic_name", mcp.Required(), mcp.Description("Desired topic name")),
@@ -28,7 +28,7 @@ func (s *Server) registerTopicPortalTools() {
 		action:       "create",
 	}, s.handleTopicRequest))
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_topic_approve",
+	s.addTool(mcp.NewTool("kafka_topic_approve",
 		withCategory("provisioning"),
 		mcp.WithDescription("Approve a pending topic provisioning request."),
 		mcp.WithString("request_id", mcp.Required(), mcp.Description("Request ID to approve")),
@@ -39,7 +39,7 @@ func (s *Server) registerTopicPortalTools() {
 		action:       "write",
 	}, s.handleTopicApprove))
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_topic_request_status",
+	s.addTool(mcp.NewTool("kafka_topic_request_status",
 		withCategory("provisioning"),
 		mcp.WithDescription("Check the status of topic provisioning requests."),
 		mcp.WithString("request_id", mcp.Description("Specific request ID (omit to list all)")),
@@ -51,7 +51,7 @@ func (s *Server) registerTopicPortalTools() {
 		action:       "read",
 	}, s.handleTopicRequestStatus))
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_topic_reject",
+	s.addTool(mcp.NewTool("kafka_topic_reject",
 		withCategory("provisioning"),
 		mcp.WithDescription("Reject a pending topic provisioning request."),
 		mcp.WithString("request_id", mcp.Required(), mcp.Description("Request ID to reject")),

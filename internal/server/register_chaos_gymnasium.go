@@ -3,8 +3,9 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerChaosGymnasiumTools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_chaos_gymnasium",
+	s.addTool(mcp.NewTool("kafka_chaos_gymnasium",
 		withCategory("training"),
+		withTier(TierExperimental),
 		mcp.WithDescription("Gamified chaos engineering training for AI agents. Actions: list_challenges, get_challenge, start_challenge, complete_objective, finish_attempt, progress, leaderboard."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: list_challenges, get_challenge, start_challenge, complete_objective, finish_attempt, progress, leaderboard")),
 		mcp.WithString("challenge_id", mcp.Description("Challenge ID (for get_challenge, start_challenge)")),

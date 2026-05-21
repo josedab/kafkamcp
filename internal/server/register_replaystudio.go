@@ -3,7 +3,7 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerReplayStudioTools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_replay_record",
+	s.addTool(mcp.NewTool("kafka_replay_record",
 		withCategory("testing"),
 		mcp.WithDescription("Record production message sequences for replay. Start, stop, or manage recording sessions."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: start, stop, get, list")),
@@ -14,7 +14,7 @@ func (s *Server) registerReplayStudioTools() {
 		mcp.WithNumber("max_messages", mcp.Description("Max messages to record. Default: 1000")),
 	), s.handleReplayRecord)
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_replay_run",
+	s.addTool(mcp.NewTool("kafka_replay_run",
 		withCategory("testing"),
 		mcp.WithDescription("Replay a recording in a sandboxed environment with time dilation and assertion checking."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: create, run, get, list")),
@@ -25,7 +25,7 @@ func (s *Server) registerReplayStudioTools() {
 		mcp.WithString("sandbox_id", mcp.Description("Sandbox ID for isolated replay")),
 	), s.handleReplayRun)
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_replay_regression",
+	s.addTool(mcp.NewTool("kafka_replay_regression",
 		withCategory("testing"),
 		mcp.WithDescription("Create and run regression test suites against recorded message sequences."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: create_suite, run_suite")),

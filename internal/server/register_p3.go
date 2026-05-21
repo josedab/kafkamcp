@@ -3,7 +3,7 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerP3Tools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_watch",
+	s.addTool(mcp.NewTool("kafka_watch",
 		withCategory("streaming"),
 		mcp.WithDescription("Register or manage event-driven watch subscriptions on topic patterns. When matching messages arrive, notifications are pushed via webhooks or MCP sampling."),
 		mcp.WithString("action", mcp.Description("Action: subscribe, unsubscribe, list. Default: subscribe")),
@@ -14,7 +14,7 @@ func (s *Server) registerP3Tools() {
 		mcp.WithString("subscription_id", mcp.Description("Subscription ID (required for unsubscribe)")),
 	), s.handleWatch)
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_remediate_dlq",
+	s.addTool(mcp.NewTool("kafka_remediate_dlq",
 		withCategory("streaming"),
 		mcp.WithDescription("Auto-remediate DLQ messages: retry with backoff, route to correction topic, or generate fix suggestions using schema context."),
 		mcp.WithString("topic", mcp.Required(), mcp.Description("DLQ topic name")),
@@ -25,8 +25,8 @@ func (s *Server) registerP3Tools() {
 	), s.handleRemediateDLQ)
 
 	if s.hasSchemaRegistry() {
-		s.mcpServer.AddTool(mcp.NewTool("kafka_schema_diff",
-		withCategory("streaming"),
+		s.addTool(mcp.NewTool("kafka_schema_diff",
+			withCategory("streaming"),
 			mcp.WithDescription("Compute a field-by-field diff between two schema versions showing additions, removals, and changes."),
 			mcp.WithString("subject", mcp.Required(), mcp.Description("Schema subject name")),
 			mcp.WithString("version_from", mcp.Required(), mcp.Description("Source version number")),

@@ -9,7 +9,7 @@ func (s *Server) registerSandboxTools() {
 		return
 	}
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_sandbox_create",
+	s.addTool(mcp.NewTool("kafka_sandbox_create",
 		withCategory("ops"),
 		mcp.WithDescription("Create an isolated sandbox environment for safe experimentation with Kafka operations. Sandboxes have resource quotas and auto-expire."),
 		mcp.WithString("name", mcp.Required(), mcp.Description("Sandbox name")),
@@ -22,9 +22,9 @@ func (s *Server) registerSandboxTools() {
 		action:       "write",
 	}, s.handleSandboxCreate))
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_sandbox_exec",
+	s.addTool(mcp.NewTool("kafka_sandbox_exec",
 		withCategory("ops"),
-		mcp.WithDescription("Execute a Kafka tool within a sandbox. All operations are tracked with resource accounting."),
+		mcp.WithDescription("Record a sandbox operation against the in-process resource ledger. NOTE: this tool does NOT actually invoke another Kafka tool in an isolated context — it only registers the intended call and returns a 'simulated' status so callers can build dry-run dashboards. Real per-tool isolation/quotas are not implemented."),
 		mcp.WithString("sandbox_id", mcp.Required(), mcp.Description("Sandbox ID")),
 		mcp.WithString("tool", mcp.Required(), mcp.Description("Tool to execute (e.g., kafka_create_topic, kafka_produce)")),
 		mcp.WithObject("args", mcp.Description("Tool arguments")),
@@ -34,7 +34,7 @@ func (s *Server) registerSandboxTools() {
 		action:       "write",
 	}, s.handleSandboxExec))
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_sandbox_destroy",
+	s.addTool(mcp.NewTool("kafka_sandbox_destroy",
 		withCategory("ops"),
 		mcp.WithDescription("Destroy a sandbox, list sandboxes, get details, or generate a promotion report."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: destroy, list, get, promotion_report")),

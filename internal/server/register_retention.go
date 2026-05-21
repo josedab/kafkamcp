@@ -13,7 +13,7 @@ func (s *Server) registerRetentionTools() {
 		return
 	}
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_retention_policy",
+	s.addTool(mcp.NewTool("kafka_retention_policy",
 		withCategory("governance"),
 		mcp.WithDescription("Get or set the intelligent retention policy for a topic, including compliance constraints (GDPR, HIPAA, SOX)."),
 		mcp.WithString("topic", mcp.Required(), mcp.Description("Topic name")),
@@ -26,7 +26,7 @@ func (s *Server) registerRetentionTools() {
 		action:       "write",
 	}, s.handleRetentionPolicy))
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_retention_recommendations",
+	s.addTool(mcp.NewTool("kafka_retention_recommendations",
 		withCategory("governance"),
 		mcp.WithDescription("Get AI-powered retention recommendations based on usage patterns, compliance, and cost analysis."),
 	), s.withToolAuth(toolAuthConfig{
@@ -35,7 +35,7 @@ func (s *Server) registerRetentionTools() {
 		action:       "read",
 	}, s.handleRetentionRecommendations))
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_retention_change_request",
+	s.addTool(mcp.NewTool("kafka_retention_change_request",
 		withCategory("governance"),
 		mcp.WithDescription("Request a retention change with approval workflow. Reducing retention requires approval and grace period."),
 		mcp.WithString("topic", mcp.Required(), mcp.Description("Topic name")),
@@ -47,7 +47,7 @@ func (s *Server) registerRetentionTools() {
 		action:       "write",
 	}, s.handleRetentionChangeRequest))
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_retention_approve",
+	s.addTool(mcp.NewTool("kafka_retention_approve",
 		withCategory("governance"),
 		mcp.WithDescription("Approve a pending retention change request."),
 		mcp.WithString("request_id", mcp.Required(), mcp.Description("Change request ID")),

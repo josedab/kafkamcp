@@ -3,7 +3,7 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerDigitalTwinPlaygroundTools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_twin_playground",
+	s.addTool(mcp.NewTool("kafka_twin_playground",
 		withCategory("ops"),
 		mcp.WithDescription("Safe simulation playground for Kafka topologies. Actions: create, run_scenario, analyze_impact, list_scenarios, reset."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: create, run_scenario, analyze_impact, list_scenarios, reset")),

@@ -3,7 +3,7 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerConnectBridgeTools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_connect_bridge",
+	s.addTool(mcp.NewTool("kafka_connect_bridge",
 		withCategory("streaming"),
 		mcp.WithDescription("Unified Kafka Connect MCP bridge. Manage connectors through a single tool: list, describe, create, update, pause, resume, restart, delete, and health check."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: list, describe, create, update, pause, resume, restart, delete, health")),

@@ -3,7 +3,7 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerEventTranslatorTools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_event_translate",
+	s.addTool(mcp.NewTool("kafka_event_translate",
 		withCategory("gateway"),
 		mcp.WithDescription("Cross-platform event translator between Kafka and other messaging systems (Pulsar, EventHubs, Kinesis, NATS, RabbitMQ). Actions: create_rule, list_rules, execute, pause, resume, delete, stats, dry_run, protocol_map."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action to perform")),

@@ -13,7 +13,7 @@ func (s *Server) registerEventSourcingTools() {
 		return
 	}
 
-	s.mcpServer.AddTool(mcp.NewTool("agent_action_replay",
+	s.addTool(mcp.NewTool("agent_action_replay",
 		withCategory("observability"),
 		mcp.WithDescription("Replay an agent session showing all tool calls, parameters, results, and timing."),
 		mcp.WithString("session_id", mcp.Required(), mcp.Description("Agent session ID to replay")),
@@ -23,7 +23,7 @@ func (s *Server) registerEventSourcingTools() {
 		action:       "read",
 	}, s.handleActionReplay))
 
-	s.mcpServer.AddTool(mcp.NewTool("agent_action_analytics",
+	s.addTool(mcp.NewTool("agent_action_analytics",
 		withCategory("observability"),
 		mcp.WithDescription("Get tool usage analytics including call counts, error rates, latency percentiles, and unique agent counts."),
 	), s.withToolAuth(toolAuthConfig{
@@ -32,7 +32,7 @@ func (s *Server) registerEventSourcingTools() {
 		action:       "read",
 	}, s.handleActionAnalytics))
 
-	s.mcpServer.AddTool(mcp.NewTool("agent_action_export",
+	s.addTool(mcp.NewTool("agent_action_export",
 		withCategory("observability"),
 		mcp.WithDescription("Export agent actions as JSONL for LLM fine-tuning on domain-specific Kafka operations."),
 		mcp.WithString("agent_id", mcp.Description("Filter by agent ID")),
@@ -45,7 +45,7 @@ func (s *Server) registerEventSourcingTools() {
 		action:       "read",
 	}, s.handleActionExport))
 
-	s.mcpServer.AddTool(mcp.NewTool("agent_action_stats",
+	s.addTool(mcp.NewTool("agent_action_stats",
 		withCategory("observability"),
 		mcp.WithDescription("Get event sourcing engine statistics."),
 	), s.withToolAuth(toolAuthConfig{
@@ -77,7 +77,7 @@ func (s *Server) handleActionAnalytics(ctx context.Context, request mcp.CallTool
 	usage := s.eventSourcingEngine.GetToolUsage()
 	s.logAudit(agentID, "agent_action_analytics", args, "", "success", len(usage), nil, start)
 	return marshalResult(map[string]any{
-		"tool_usage": usage,
+		"tool_usage":  usage,
 		"total_tools": len(usage),
 	})
 }

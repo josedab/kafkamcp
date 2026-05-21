@@ -9,7 +9,7 @@ func (s *Server) registerStreamSQLTools() {
 		return
 	}
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_sql_execute",
+	s.addTool(mcp.NewTool("kafka_sql_execute",
 		withCategory("streaming"),
 		mcp.WithDescription("Execute a streaming SQL query against Kafka topics. Supports SELECT, WHERE, GROUP BY, aggregations (COUNT/SUM/AVG/MIN/MAX), and WINDOW (TUMBLING/SLIDING/SESSION) clauses."),
 		mcp.WithString("sql", mcp.Required(), mcp.Description("SQL query (e.g., SELECT * FROM topic WHERE field > 100 WINDOW TUMBLING 5m GROUP BY region)")),
@@ -21,7 +21,7 @@ func (s *Server) registerStreamSQLTools() {
 		action:       "read",
 	}, s.handleSQLExecute))
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_sql_explain",
+	s.addTool(mcp.NewTool("kafka_sql_explain",
 		withCategory("streaming"),
 		mcp.WithDescription("Explain a streaming SQL query plan without executing it. Shows execution steps and estimated cost."),
 		mcp.WithString("sql", mcp.Required(), mcp.Description("SQL query to explain")),
@@ -31,7 +31,7 @@ func (s *Server) registerStreamSQLTools() {
 		action:       "read",
 	}, s.handleSQLExplain))
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_sql_manage",
+	s.addTool(mcp.NewTool("kafka_sql_manage",
 		withCategory("streaming"),
 		mcp.WithDescription("Manage SQL queries. Actions: list, get, delete."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: list, get, delete")),

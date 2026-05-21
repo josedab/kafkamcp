@@ -3,7 +3,7 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerPerfGuardTools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_perf_guard",
+	s.addTool(mcp.NewTool("kafka_perf_guard",
 		withCategory("observability"),
 		mcp.WithDescription("Automated performance regression guard. Continuously benchmark Kafka operations, detect regressions via CUSUM change-point detection, and auto-throttle misbehaving agents."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: record, baseline, regressions, throttle_status, unthrottle, reset_baseline, stats")),

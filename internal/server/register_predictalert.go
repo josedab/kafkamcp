@@ -3,7 +3,7 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerPredictAlertTools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_predict_alert",
+	s.addTool(mcp.NewTool("kafka_predict_alert",
 		withCategory("ops"),
 		mcp.WithDescription("Predictive consumer group alerting. Analyzes lag trends, consumption rates, and partition assignment patterns to forecast potential issues before they occur."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: analyze, record, alerts, acknowledge")),

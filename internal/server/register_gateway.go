@@ -13,7 +13,7 @@ func (s *Server) registerGatewayTools() {
 		return
 	}
 
-	s.mcpServer.AddTool(mcp.NewTool("gateway_list_backends",
+	s.addTool(mcp.NewTool("gateway_list_backends",
 		withCategory("streaming"),
 		mcp.WithDescription("List all registered multi-protocol streaming backends (Pulsar, RabbitMQ, NATS) and their health status."),
 	), s.withToolAuth(toolAuthConfig{
@@ -22,7 +22,7 @@ func (s *Server) registerGatewayTools() {
 		action:       "read",
 	}, s.handleGatewayListBackends))
 
-	s.mcpServer.AddTool(mcp.NewTool("gateway_produce",
+	s.addTool(mcp.NewTool("gateway_produce",
 		withCategory("streaming"),
 		mcp.WithDescription("Produce a message through a named streaming backend (Pulsar, RabbitMQ, NATS)."),
 		mcp.WithString("backend", mcp.Required(), mcp.Description("Backend name")),
@@ -41,7 +41,7 @@ func (s *Server) registerGatewayTools() {
 		},
 	}, s.handleGatewayProduce))
 
-	s.mcpServer.AddTool(mcp.NewTool("gateway_consume",
+	s.addTool(mcp.NewTool("gateway_consume",
 		withCategory("streaming"),
 		mcp.WithDescription("Consume messages from a named streaming backend (Pulsar, RabbitMQ, NATS)."),
 		mcp.WithString("backend", mcp.Required(), mcp.Description("Backend name")),
@@ -60,7 +60,7 @@ func (s *Server) registerGatewayTools() {
 		},
 	}, s.handleGatewayConsume))
 
-	s.mcpServer.AddTool(mcp.NewTool("gateway_list_topics",
+	s.addTool(mcp.NewTool("gateway_list_topics",
 		withCategory("streaming"),
 		mcp.WithDescription("List topics/queues/subjects on a named streaming backend."),
 		mcp.WithString("backend", mcp.Required(), mcp.Description("Backend name")),
@@ -70,7 +70,7 @@ func (s *Server) registerGatewayTools() {
 		action:       "read",
 	}, s.handleGatewayListTopics))
 
-	s.mcpServer.AddTool(mcp.NewTool("gateway_create_topic",
+	s.addTool(mcp.NewTool("gateway_create_topic",
 		withCategory("streaming"),
 		mcp.WithDescription("Create a topic/queue/subject on a named streaming backend."),
 		mcp.WithString("backend", mcp.Required(), mcp.Description("Backend name")),

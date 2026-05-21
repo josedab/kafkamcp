@@ -13,9 +13,9 @@ func (s *Server) registerCodecTools() {
 		return
 	}
 
-	s.mcpServer.AddTool(mcp.NewTool("codec_decode",
+	s.addTool(mcp.NewTool("codec_decode",
 		withCategory("codec"),
-		mcp.WithDescription("Decode a wire-format message (Confluent Schema Registry format with Avro/Protobuf support, auto-detect with JSON fallback)."),
+		mcp.WithDescription("Decode a Confluent wire-format message. Supports JSON natively; Avro/Protobuf require a real codec to be registered — by default the server returns codec_no_avro_codec / codec_no_protobuf_codec rather than silently corrupting data."),
 		mcp.WithString("data", mcp.Required(), mcp.Description("Base64-encoded message data or raw JSON string")),
 	), s.withToolAuth(toolAuthConfig{
 		tool:         "codec_decode",
@@ -23,9 +23,9 @@ func (s *Server) registerCodecTools() {
 		action:       "read",
 	}, s.handleCodecDecode))
 
-	s.mcpServer.AddTool(mcp.NewTool("codec_encode",
+	s.addTool(mcp.NewTool("codec_encode",
 		withCategory("codec"),
-		mcp.WithDescription("Encode a message using Confluent wire format (magic byte + schema ID + Avro/Protobuf/JSON payload)."),
+		mcp.WithDescription("Encode a message using Confluent wire format. JSON is fully supported. Avro/Protobuf encoding requires a registered codec library; the default build refuses these formats rather than producing bytes that would not deserialize against a standards-compliant consumer."),
 		mcp.WithString("value", mcp.Required(), mcp.Description("JSON value to encode")),
 		mcp.WithNumber("schema_id", mcp.Required(), mcp.Description("Schema Registry schema ID")),
 		mcp.WithString("format", mcp.Description("Encoding format: avro, protobuf, json. Default: json")),
@@ -35,7 +35,7 @@ func (s *Server) registerCodecTools() {
 		action:       "write",
 	}, s.handleCodecEncode))
 
-	s.mcpServer.AddTool(mcp.NewTool("codec_detect_format",
+	s.addTool(mcp.NewTool("codec_detect_format",
 		withCategory("codec"),
 		mcp.WithDescription("Detect the serialization format of a message (Confluent wire format, JSON, or raw bytes)."),
 		mcp.WithString("data", mcp.Required(), mcp.Description("Base64-encoded message data or raw string")),

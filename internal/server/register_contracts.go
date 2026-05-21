@@ -3,7 +3,7 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerContractTools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_contract_violations",
+	s.addTool(mcp.NewTool("kafka_contract_violations",
 		withCategory("governance"),
 		mcp.WithDescription("View contract violations, enforce contracts on messages, set enforcement mode, or infer contracts from samples. Actions: violations (get violation summary), enforce (validate with enforcement), set_mode (set enforcement mode: warn/reject/quarantine), infer (generate contract from samples)."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: violations, enforce, set_mode, infer")),

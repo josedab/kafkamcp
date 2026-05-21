@@ -3,7 +3,7 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerSessionReplayTools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_session_replay",
+	s.addTool(mcp.NewTool("kafka_session_replay",
 		withCategory("debugging"),
 		mcp.WithDescription("Record and replay AI agent sessions for debugging. Captures tool call traces, timing, and response payloads."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: start, record, end, get, list, replay, delete")),

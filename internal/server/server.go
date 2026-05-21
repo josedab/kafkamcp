@@ -1,11 +1,12 @@
 package server
 
 import (
-"context"
-"fmt"
-"log/slog"
-"sync"
-"time"
+	"context"
+	"errors"
+	"fmt"
+	"log/slog"
+	"sync"
+	"time"
 
 	"github.com/kafkamcp/kafkamcp/internal/config"
 	"github.com/kafkamcp/kafkamcp/internal/kafka"
@@ -22,13 +23,18 @@ type Server struct {
 	// Core fields
 	config         *config.Config
 	kafkaManager   kafka.KafkaManager
-	schemaClients  map[string]*schema.Client      // per-cluster schema clients
+	schemaClients  map[string]*schema.Client // per-cluster schema clients
 	connectMu      sync.RWMutex
 	connectClients map[string]*kafka.ConnectClient // cached per-cluster Connect clients
 	metrics        *metrics.Metrics
 	logger         *slog.Logger
 	mcpServer      *server.MCPServer
 	expensiveOps   chan struct{} // semaphore for expensive operations (aggregate, join, search)
+
+	// Tool surface management
+	toolPackFilter   *ToolPackFilter
+	registeredTools  map[string]string // name -> tier, populated as tools are registered
+	skippedToolCount int               // count of tools filtered out by the active pack
 
 	// Composite subsystems (embedded for direct field access)
 	Analytics
@@ -40,60 +46,74 @@ type Server struct {
 // New creates a new KafkaMCP server. Functional options override default
 // subsystem instances (e.g., WithMetrics, WithAuditLogger).
 func New(cfg *config.Config, kafkaManager kafka.KafkaManager, logger *slog.Logger, version string, opts ...Option) (*Server, error) {
-// Per-cluster schema registry clients
-schemaClients := make(map[string]*schema.Client)
-for _, cl := range cfg.Clusters {
-	if cl.SchemaRegistry.URL != "" {
-		sc, err := schema.NewClient(
-			cl.SchemaRegistry.URL,
-			cl.SchemaRegistry.Auth.Username,
-			cl.SchemaRegistry.Auth.Password,
-			cfg.SchemaCache.MaxEntries,
-			cfg.SchemaCache.TTLSeconds,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("schema registry for cluster %s: %w", cl.Name, err)
+	// Per-cluster schema registry clients
+	schemaClients := make(map[string]*schema.Client)
+	for _, cl := range cfg.Clusters {
+		if cl.SchemaRegistry.URL != "" {
+			sc, err := schema.NewClient(
+				cl.SchemaRegistry.URL,
+				cl.SchemaRegistry.Auth.Username,
+				cl.SchemaRegistry.Auth.Password,
+				cfg.SchemaCache.MaxEntries,
+				cfg.SchemaCache.TTLSeconds,
+			)
+			if err != nil {
+				return nil, fmt.Errorf("schema registry for cluster %s: %w", cl.Name, err)
+			}
+			schemaClients[cl.Name] = sc
 		}
-		schemaClients[cl.Name] = sc
 	}
-}
 
-gov, err := newGovernance(cfg, logger)
-if err != nil {
-	return nil, fmt.Errorf("creating governance subsystem: %w", err)
-}
+	gov, err := newGovernance(cfg, logger)
+	if err != nil {
+		return nil, fmt.Errorf("creating governance subsystem: %w", err)
+	}
 
-s := &Server{
-config:         cfg,
-kafkaManager:   kafkaManager,
-schemaClients:  schemaClients,
-connectClients: make(map[string]*kafka.ConnectClient),
-metrics:        metrics.New(),
-logger:         logger,
-expensiveOps:   make(chan struct{}, 5),
-Analytics:      newAnalytics(logger),
-Governance:     gov,
-Streaming:      newStreaming(logger),
-Platform:       newPlatform(logger),
-}
+	s := &Server{
+		config:          cfg,
+		kafkaManager:    kafkaManager,
+		schemaClients:   schemaClients,
+		connectClients:  make(map[string]*kafka.ConnectClient),
+		metrics:         metrics.New(),
+		logger:          logger,
+		expensiveOps:    make(chan struct{}, 5),
+		toolPackFilter:  NewToolPackFilter(cfg.Server.ToolPacks),
+		registeredTools: make(map[string]string),
+		Analytics:       newAnalytics(logger),
+		Governance:      gov,
+		Streaming:       newStreaming(logger),
+		Platform:        newPlatform(logger),
+	}
 
-// Apply functional options, overriding defaults
-for _, opt := range opts {
-	opt(s)
-}
+	// Apply functional options, overriding defaults
+	for _, opt := range opts {
+		opt(s)
+	}
 
-mcpServer := server.NewMCPServer(
-"KafkaMCP",
-version,
-server.WithToolCapabilities(true),
-server.WithResourceCapabilities(true, true),
-)
+	mcpServer := server.NewMCPServer(
+		"KafkaMCP",
+		version,
+		server.WithToolCapabilities(true),
+		server.WithResourceCapabilities(true, true),
+	)
 
-s.mcpServer = mcpServer
-s.registerTools()
-s.registerResources()
+	s.mcpServer = mcpServer
+	s.registerTools()
+	s.registerResources()
 
-return s, nil
+	if s.toolPackFilter != nil {
+		if s.toolPackFilter.AllAllowed() {
+			logger.Info("tool packs: all tools registered",
+				"registered", len(s.registeredTools))
+		} else {
+			logger.Info("tool packs active",
+				"packs", s.toolPackFilter.Packs(),
+				"registered", len(s.registeredTools),
+				"skipped", s.skippedToolCount)
+		}
+	}
+
+	return s, nil
 }
 
 // MCPServer returns the underlying MCP server.
@@ -112,49 +132,56 @@ func (s *Server) SetOTelProvider(p *telemetry.Provider) {
 	s.otelProvider = p
 }
 
-// Close shuts down the server and all subsystems.
+// Close shuts down the server and all subsystems. All shutdown errors are
+// joined together so the caller (or supervisor) sees every failure rather
+// than only the last one.
 func (s *Server) Close() error {
-s.kafkaManager.Close()
-if s.watchManager != nil {
-	s.watchManager.Close()
-}
-if s.anomalyDetector != nil {
-	s.anomalyDetector.Stop()
-}
-if s.otelProvider != nil {
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := s.otelProvider.Shutdown(shutdownCtx); err != nil {
-		s.logger.Error("failed to shutdown OTel provider", "error", err)
+	var errs []error
+	s.kafkaManager.Close()
+	if s.watchManager != nil {
+		s.watchManager.Close()
 	}
-}
-if s.pluginRegistry != nil {
-	s.pluginRegistry.Close()
-}
-if s.chaosEngine != nil {
-	s.chaosEngine.Close()
-}
-return s.auditLogger.Close()
+	if s.anomalyDetector != nil {
+		s.anomalyDetector.Stop()
+	}
+	if s.otelProvider != nil {
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		if err := s.otelProvider.Shutdown(shutdownCtx); err != nil {
+			s.logger.Error("failed to shutdown OTel provider", "error", err)
+			errs = append(errs, fmt.Errorf("otel provider: %w", err))
+		}
+		cancel()
+	}
+	if s.pluginRegistry != nil {
+		s.pluginRegistry.Close()
+	}
+	if s.chaosEngine != nil {
+		s.chaosEngine.Close()
+	}
+	if err := s.auditLogger.Close(); err != nil {
+		errs = append(errs, fmt.Errorf("audit logger: %w", err))
+	}
+	return errors.Join(errs...)
 }
 
 // getSchemaClient returns the schema client for a cluster, falling back to default.
 func (s *Server) getSchemaClient(cluster string) *schema.Client {
-name := cluster
-if name == "" {
-	name = s.kafkaManager.DefaultClusterName()
-}
-if c, ok := s.schemaClients[name]; ok {
-	return c
-}
-// Fall back to default cluster's client
-if c, ok := s.schemaClients[s.kafkaManager.DefaultClusterName()]; ok {
-	return c
-}
-return nil
+	name := cluster
+	if name == "" {
+		name = s.kafkaManager.DefaultClusterName()
+	}
+	if c, ok := s.schemaClients[name]; ok {
+		return c
+	}
+	// Fall back to default cluster's client
+	if c, ok := s.schemaClients[s.kafkaManager.DefaultClusterName()]; ok {
+		return c
+	}
+	return nil
 }
 
 func (s *Server) hasSchemaRegistry() bool {
-return len(s.schemaClients) > 0
+	return len(s.schemaClients) > 0
 }
 
 // getConnectClient returns a cached ConnectClient for the given cluster config.

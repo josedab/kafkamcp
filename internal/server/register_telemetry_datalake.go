@@ -3,7 +3,7 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerTelemetryDataLakeTools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_telemetry_lake",
+	s.addTool(mcp.NewTool("kafka_telemetry_lake",
 		withCategory("observability"),
 		mcp.WithDescription("Agent telemetry data lake for observability and analytics. Actions: stats, agent_report, query, export."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: stats, agent_report, query, export")),

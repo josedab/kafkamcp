@@ -13,7 +13,7 @@ func (s *Server) registerSemanticTools() {
 		return
 	}
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_semantic_index",
+	s.addTool(mcp.NewTool("kafka_semantic_index",
 		withCategory("streaming"),
 		mcp.WithDescription("Index Kafka messages for semantic search. Consumes recent messages from a topic and adds them to the vector index for meaning-based retrieval."),
 		mcp.WithString("topic", mcp.Required(), mcp.Description("Topic to index messages from")),
@@ -31,7 +31,7 @@ func (s *Server) registerSemanticTools() {
 		},
 	}, s.handleSemanticIndex))
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_semantic_search",
+	s.addTool(mcp.NewTool("kafka_semantic_search",
 		withCategory("streaming"),
 		mcp.WithDescription("Search indexed Kafka messages by meaning using semantic similarity. Returns the most relevant messages matching the query intent."),
 		mcp.WithString("query", mcp.Required(), mcp.Description("Natural language search query")),
@@ -43,7 +43,7 @@ func (s *Server) registerSemanticTools() {
 		action:       "read",
 	}, s.handleSemanticSearch))
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_rag_context",
+	s.addTool(mcp.NewTool("kafka_rag_context",
 		withCategory("streaming"),
 		mcp.WithDescription("Build RAG (Retrieval-Augmented Generation) context from indexed Kafka messages. Returns relevant message fragments optimized for LLM context windows."),
 		mcp.WithString("query", mcp.Required(), mcp.Description("Query to build context for")),
@@ -55,7 +55,7 @@ func (s *Server) registerSemanticTools() {
 		action:       "read",
 	}, s.handleRAGContext))
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_semantic_stats",
+	s.addTool(mcp.NewTool("kafka_semantic_stats",
 		withCategory("streaming"),
 		mcp.WithDescription("Get statistics about the semantic search index including document counts, topic distribution, and vocabulary size."),
 	), s.withToolAuth(toolAuthConfig{
@@ -101,9 +101,9 @@ func (s *Server) handleSemanticIndex(ctx context.Context, request mcp.CallToolRe
 
 	s.logAudit(agentID, "kafka_semantic_index", args, cluster, "success", indexed, nil, start)
 	return marshalResult(map[string]any{
-		"indexed":    indexed,
-		"topic":      topic,
-		"stats":      s.semanticEngine.GetStats(),
+		"indexed": indexed,
+		"topic":   topic,
+		"stats":   s.semanticEngine.GetStats(),
 	})
 }
 

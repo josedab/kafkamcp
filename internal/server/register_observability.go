@@ -3,7 +3,7 @@ package server
 import "github.com/mark3labs/mcp-go/mcp"
 
 func (s *Server) registerObservabilityTools() {
-	s.mcpServer.AddTool(mcp.NewTool("kafka_dashboard_create",
+	s.addTool(mcp.NewTool("kafka_dashboard_create",
 		withCategory("ops"),
 		mcp.WithDescription("Auto-provision Kafka monitoring dashboards for Grafana, Datadog, or custom providers. Creates pre-configured panels for cluster, topic, or consumer group metrics."),
 		mcp.WithString("name", mcp.Required(), mcp.Description("Dashboard name")),
@@ -12,7 +12,7 @@ func (s *Server) registerObservabilityTools() {
 		mcp.WithString("target", mcp.Description("Target resource (topic name or group ID)")),
 	), s.handleDashboardCreate)
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_alert_create",
+	s.addTool(mcp.NewTool("kafka_alert_create",
 		withCategory("ops"),
 		mcp.WithDescription("Create an alerting rule for Kafka metrics. Supports consumer lag, throughput, error rate, and partition metrics with configurable thresholds and notification channels."),
 		mcp.WithString("name", mcp.Required(), mcp.Description("Alert rule name")),
@@ -25,12 +25,12 @@ func (s *Server) registerObservabilityTools() {
 		mcp.WithString("group_id", mcp.Description("Consumer group to monitor")),
 	), s.handleAlertCreate)
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_alert_list",
+	s.addTool(mcp.NewTool("kafka_alert_list",
 		withCategory("ops"),
 		mcp.WithDescription("List all configured alerting rules."),
 	), s.handleAlertList)
 
-	s.mcpServer.AddTool(mcp.NewTool("kafka_alert_delete",
+	s.addTool(mcp.NewTool("kafka_alert_delete",
 		withCategory("ops"),
 		mcp.WithDescription("Delete an alerting rule by ID."),
 		mcp.WithString("alert_id", mcp.Required(), mcp.Description("Alert rule ID to delete")),

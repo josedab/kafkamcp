@@ -13,7 +13,7 @@ func (s *Server) registerOperatorTools() {
 		return
 	}
 
-	s.mcpServer.AddTool(mcp.NewTool("k8s_operator_manage",
+	s.addTool(mcp.NewTool("k8s_operator_manage",
 		withCategory("ops"),
 		mcp.WithDescription("Manage KafkaMCP Kubernetes operator instances. Actions: create, get, list, update, delete, scale, manifest, crd."),
 		mcp.WithString("action", mcp.Required(), mcp.Description("Action: create, get, list, update, delete, scale, manifest, crd")),
