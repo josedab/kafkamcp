@@ -170,6 +170,11 @@ func newPlatform(logger *slog.Logger, be enginebackend.Backend) Platform {
 		logger.Error("viewstore: failed to restore from persistence, continuing with empty state", "error", err)
 		viewStoreEngine = viewstore.NewEngine(logger)
 	}
+	agentMemoryEngine, err := agentmemory.NewEngineWithBackend(context.Background(), logger, be)
+	if err != nil {
+		logger.Error("agentmemory: failed to restore from persistence, continuing with empty state", "error", err)
+		agentMemoryEngine = agentmemory.NewEngine(logger)
+	}
 	p := Platform{
 		pluginRegistry:       plugin.NewRegistry(logger),
 		agentRegistry:        kafka.NewAgentRegistry(),
@@ -193,7 +198,7 @@ func newPlatform(logger *slog.Logger, be enginebackend.Backend) Platform {
 		agentProfiler:        profiler.NewProfiler(),
 		dagWorkflowEngine:    dagworkflow.NewEngine(logger),
 		viewStoreEngine:      viewStoreEngine,
-		agentMemoryEngine:    agentmemory.NewEngine(logger),
+		agentMemoryEngine:    agentMemoryEngine,
 		taskQueueEngine:      taskqueue.NewEngine(logger),
 		streamSQLEngine:      streamsql.NewEngine(logger),
 		catalogEngine:        catalog.NewEngine(logger),

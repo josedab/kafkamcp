@@ -3,6 +3,7 @@
 package agentmemory
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"math"
@@ -10,20 +11,23 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/kafkamcp/kafkamcp/internal/engine"
+	"github.com/kafkamcp/kafkamcp/internal/engine/backend"
 )
 
 // MemoryEntry represents a single memory item stored by an agent.
 type MemoryEntry struct {
-	Key       string         `json:"key"`
-	Value     any            `json:"value"`
-	Category  string         `json:"category,omitempty"` // preference, schema, query_history, context, note
-	Tags      []string       `json:"tags,omitempty"`
-	AgentID   string         `json:"agent_id"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	ExpiresAt *time.Time     `json:"expires_at,omitempty"`
-	AccessCount int64        `json:"access_count"`
-	Metadata  map[string]string `json:"metadata,omitempty"`
+	Key         string            `json:"key"`
+	Value       any               `json:"value"`
+	Category    string            `json:"category,omitempty"` // preference, schema, query_history, context, note
+	Tags        []string          `json:"tags,omitempty"`
+	AgentID     string            `json:"agent_id"`
+	CreatedAt   time.Time         `json:"created_at"`
+	UpdatedAt   time.Time         `json:"updated_at"`
+	ExpiresAt   *time.Time        `json:"expires_at,omitempty"`
+	AccessCount int64             `json:"access_count"`
+	Metadata    map[string]string `json:"metadata,omitempty"`
 }
 
 // SearchResult is a memory entry with relevance score.
@@ -35,12 +39,12 @@ type SearchResult struct {
 
 // MemoryStats contains statistics about an agent's memory store.
 type MemoryStats struct {
-	AgentID      string            `json:"agent_id"`
-	TotalEntries int               `json:"total_entries"`
-	Categories   map[string]int    `json:"categories"`
-	OldestEntry  time.Time         `json:"oldest_entry"`
-	NewestEntry  time.Time         `json:"newest_entry"`
-	Expiringsoon int              `json:"expiring_soon"`
+	AgentID      string         `json:"agent_id"`
+	TotalEntries int            `json:"total_entries"`
+	Categories   map[string]int `json:"categories"`
+	OldestEntry  time.Time      `json:"oldest_entry"`
+	NewestEntry  time.Time      `json:"newest_entry"`
+	Expiringsoon int            `json:"expiring_soon"`
 }
 
 // Engine manages agent memory storage and retrieval.
@@ -48,13 +52,98 @@ type Engine struct {
 	mu      sync.RWMutex
 	entries map[string]map[string]*MemoryEntry // agentID -> key -> entry
 	logger  *slog.Logger
+
+	// store optionally persists every entry across restarts. Composite
+	// key is agentID + "\x00" + entryKey.
+	store *engine.Store[MemoryEntry]
 }
 
-// NewEngine creates a new agent memory engine.
+// NewEngine creates a new in-memory agent memory engine.
 func NewEngine(logger *slog.Logger) *Engine {
 	return &Engine{
 		entries: make(map[string]map[string]*MemoryEntry),
 		logger:  logger,
+	}
+}
+
+// NewEngineWithBackend creates an agent memory engine backed by be.
+// Previously-stored entries are loaded eagerly during construction;
+// every subsequent Store/Delete propagates to the backend so memory
+// survives restarts.
+//
+// Expired entries are dropped on load (they would be filtered on read
+// anyway, but cleaning them up keeps the backend tidy).
+//
+// When be is nil this is equivalent to [NewEngine].
+func NewEngineWithBackend(ctx context.Context, logger *slog.Logger, be backend.Backend) (*Engine, error) {
+	e := NewEngine(logger)
+	if be == nil {
+		return e, nil
+	}
+	e.store = engine.NewStore[MemoryEntry](be, "agentmemory.entries")
+	if err := e.load(ctx); err != nil {
+		return nil, fmt.Errorf("agentmemory: load persisted state: %w", err)
+	}
+	return e, nil
+}
+
+func memoryKey(agentID, key string) string { return agentID + "\x00" + key }
+
+func splitMemoryKey(s string) (agentID, key string, ok bool) {
+	i := strings.IndexByte(s, '\x00')
+	if i < 0 {
+		return "", "", false
+	}
+	return s[:i], s[i+1:], true
+}
+
+func (e *Engine) load(ctx context.Context) error {
+	all, err := e.store.List(ctx, "")
+	if err != nil {
+		return err
+	}
+
+	now := time.Now()
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	for composite, entry := range all {
+		agentID, key, ok := splitMemoryKey(composite)
+		if !ok {
+			e.logger.Warn("agentmemory: skipping malformed persisted key", "key", composite)
+			continue
+		}
+		if entry.ExpiresAt != nil && entry.ExpiresAt.Before(now) {
+			// Garbage-collect expired entries opportunistically.
+			if err := e.store.Delete(ctx, composite); err != nil {
+				e.logger.Warn("agentmemory: GC expired entry failed", "key", composite, "error", err)
+			}
+			continue
+		}
+		copy := entry
+		if _, ok := e.entries[agentID]; !ok {
+			e.entries[agentID] = make(map[string]*MemoryEntry)
+		}
+		e.entries[agentID][key] = &copy
+	}
+	e.logger.Info("agentmemory: restored from persistence", "agents", len(e.entries))
+	return nil
+}
+
+func (e *Engine) persistLocked(entry *MemoryEntry) {
+	if e.store == nil {
+		return
+	}
+	if err := e.store.Set(context.Background(), memoryKey(entry.AgentID, entry.Key), *entry); err != nil {
+		e.logger.Warn("agentmemory: persist failed", "agent", entry.AgentID, "key", entry.Key, "error", err)
+	}
+}
+
+func (e *Engine) deletePersistedLocked(agentID, key string) {
+	if e.store == nil {
+		return
+	}
+	if err := e.store.Delete(context.Background(), memoryKey(agentID, key)); err != nil {
+		e.logger.Warn("agentmemory: delete persisted failed", "agent", agentID, "key", key, "error", err)
 	}
 }
 
@@ -95,6 +184,7 @@ func (e *Engine) Store(agentID, key string, value any, category string, tags []s
 	}
 
 	e.entries[agentID][key] = entry
+	e.persistLocked(entry)
 	e.logger.Debug("memory stored", "agent", agentID, "key", key, "category", category)
 	return entry, nil
 }
@@ -117,10 +207,12 @@ func (e *Engine) Recall(agentID, key string) (*MemoryEntry, error) {
 	// Check expiration
 	if entry.ExpiresAt != nil && entry.ExpiresAt.Before(time.Now()) {
 		delete(agentEntries, key)
+		e.deletePersistedLocked(agentID, key)
 		return nil, fmt.Errorf("key %q has expired", key)
 	}
 
 	entry.AccessCount++
+	e.persistLocked(entry)
 	return entry, nil
 }
 
@@ -139,6 +231,7 @@ func (e *Engine) Delete(agentID, key string) error {
 	}
 
 	delete(agentEntries, key)
+	e.deletePersistedLocked(agentID, key)
 	return nil
 }
 
@@ -302,10 +395,11 @@ func (e *Engine) CleanExpired() int {
 
 	now := time.Now()
 	cleaned := 0
-	for _, agentEntries := range e.entries {
+	for agentID, agentEntries := range e.entries {
 		for key, entry := range agentEntries {
 			if entry.ExpiresAt != nil && entry.ExpiresAt.Before(now) {
 				delete(agentEntries, key)
+				e.deletePersistedLocked(agentID, key)
 				cleaned++
 			}
 		}

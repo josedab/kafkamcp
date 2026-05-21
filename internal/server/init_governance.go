@@ -12,6 +12,7 @@ import (
 	"github.com/kafkamcp/kafkamcp/internal/compliance"
 	"github.com/kafkamcp/kafkamcp/internal/config"
 	"github.com/kafkamcp/kafkamcp/internal/contracts"
+	enginebackend "github.com/kafkamcp/kafkamcp/internal/engine/backend"
 	"github.com/kafkamcp/kafkamcp/internal/masking"
 	"github.com/kafkamcp/kafkamcp/internal/persona"
 	"github.com/kafkamcp/kafkamcp/internal/ratelimit"
@@ -36,11 +37,13 @@ type Governance struct {
 	retentionEngine  *retention.Engine         // intelligent retention policy
 }
 
-// newGovernance initializes all governance subsystems.
-func newGovernance(cfg *config.Config, logger *slog.Logger) (Governance, error) {
+// newGovernance initializes all governance subsystems. be is the
+// shared persistence backend; passing nil keeps audit + rate-limiting
+// state in-memory (legacy behaviour).
+func newGovernance(cfg *config.Config, logger *slog.Logger, be enginebackend.Backend) (Governance, error) {
 	policyEngine := auth.NewPolicyEngine(cfg.Policies)
 
-	auditLogger, err := audit.NewLogger(context.Background(), cfg.Audit.Enabled, cfg.Audit.MaxEntries, cfg.Audit.LogFile, logger)
+	auditLogger, err := audit.NewLoggerWithBackend(context.Background(), cfg.Audit.Enabled, cfg.Audit.MaxEntries, cfg.Audit.LogFile, logger, be)
 	if err != nil {
 		return Governance{}, err
 	}
@@ -50,7 +53,10 @@ func newGovernance(cfg *config.Config, logger *slog.Logger) (Governance, error) 
 		return Governance{}, fmt.Errorf("building identity provider: %w", err)
 	}
 
-	rl := ratelimit.New(cfg.Policies.GlobalRateLimitPerMinute)
+	rl, err := ratelimit.NewWithBackend(context.Background(), cfg.Policies.GlobalRateLimitPerMinute, be, logger)
+	if err != nil {
+		return Governance{}, fmt.Errorf("creating rate limiter: %w", err)
+	}
 	for _, agent := range cfg.Policies.Agents {
 		if agent.RateLimit.RequestsPerMinute > 0 {
 			rl.SetAgentLimit(agent.ID, agent.RateLimit.RequestsPerMinute)

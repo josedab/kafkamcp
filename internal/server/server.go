@@ -70,17 +70,17 @@ func New(cfg *config.Config, kafkaManager kafka.KafkaManager, logger *slog.Logge
 		}
 	}
 
-	gov, err := newGovernance(cfg, logger)
-	if err != nil {
-		return nil, fmt.Errorf("creating governance subsystem: %w", err)
-	}
-
 	engineBackend, err := engine.Open(engine.Config{
 		Backend: cfg.Server.Persistence.Backend,
 		Path:    cfg.Server.Persistence.Path,
 	}, logger)
 	if err != nil {
 		return nil, fmt.Errorf("opening engine persistence backend: %w", err)
+	}
+
+	gov, err := newGovernance(cfg, logger, engineBackend)
+	if err != nil {
+		return nil, fmt.Errorf("creating governance subsystem: %w", err)
 	}
 
 	s := &Server{

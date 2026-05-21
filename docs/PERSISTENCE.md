@@ -34,6 +34,9 @@ server:
 | Telemetry / traces | Exported live to the configured OTLP endpoint. The server keeps no local copy. |
 | Prometheus metrics | Scraped over HTTP. Counters reset on restart by design. |
 | **Materialised views** (when `backend: sqlite`) | View definitions and view records are persisted in the SQLite `kv` table under namespaces `viewstore.definitions` and `viewstore.records`. Restored on next start. |
+| **Audit ring-buffer** (when `backend: sqlite`) | The in-memory tail of recent audit entries is mirrored to namespace `audit.entries` so the recent history survives a restart. The `audit.log_file` append stream is still the long-term durable copy. |
+| **Rate-limit token buckets** (when `backend: sqlite`) | Global and per-agent token-bucket state is persisted under namespace `ratelimit.buckets`. Restarting no longer hands every agent a free fresh quota. |
+| **Agent memory** (when `backend: sqlite`) | Per-agent KV entries (`internal/agentmemory`) are persisted under namespace `agentmemory.entries`. Expired entries are GC'd on load. |
 
 ## What is volatile (lost on restart)
 
@@ -45,18 +48,12 @@ the engine backend, one PR at a time, following the pattern documented in
 
 - **Encryption** — keys, agent policies, field-encryption configs, key
   versions. Restart → all encrypted data becomes undecryptable.
-- **Audit (ring buffer)** — the in-memory tail of the audit log. The `log_file`
-  on disk is the only durable copy.
-- **Rate limiting** — token-bucket state per agent and globally. Restart =
-  fresh quota.
 - **Streaming sessions** — open consumer sessions (`kafka_stream`). Restart
   drops all of them.
 - **Chaos experiments** — recorded in `chaos.Engine` and never written out.
   (Experimental; see below.)
 - **WASM plugin runtime** — uploaded modules, their sandbox configs, run
   counters. (Experimental.)
-- **Agent memory** — per-agent memory entries (`internal/agentmemory`).
-  Restoration after migration is straightforward; tracked as a follow-up.
 - **Digital twin / replay / replay-studio / dag-workflow / task queue /
   state machine / persona / tenant / collaboration / config-VCS /
   cost-attribution / sandbox / catalog / etc.**

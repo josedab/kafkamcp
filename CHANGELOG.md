@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ```
   Ships with two drivers: `inmem` (legacy in-memory, default) and `sqlite` (embedded pure-Go SQLite via `modernc.org/sqlite`, WAL mode, no cgo). A generic `engine.Store[T]` JSON helper makes it cheap for engines to opt in. See [ADR-006](docs/adr/006-persistent-engine-store.md).
 - **Materialised view store now persists across restarts** when `server.persistence.backend: sqlite`. View definitions and view records are restored from disk on next start; `DeleteView` removes them durably.
+- **Audit ring-buffer, rate-limit token buckets, and agent memory now persist** when `server.persistence.backend: sqlite`. Each engine ships a `NewLoggerWithBackend` / `NewWithBackend` / `NewEngineWithBackend` constructor that mirrors in-memory state to the shared `engine.Backend`. Restarts now retain the most recent audit ring-buffer window, in-flight token-bucket quotas (so an attacker can't restart their way to a fresh quota), and per-agent KV memory. Backwards-compatible: passing `nil` as the backend keeps the legacy in-memory behaviour, and the file-mode `audit.log_file` append stream is unchanged. See [docs/PERSISTENCE.md](docs/PERSISTENCE.md).
 - **Agent identity verification** (`internal/auth/identity/`). New `policy.identity` config block adds three pluggable identity providers:
   - `none` (default) — legacy `X-Agent-ID` header behaviour, no migration cost.
   - `static` — shared-secret bearer tokens map to fixed agent IDs.
