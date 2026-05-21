@@ -16,6 +16,7 @@ import (
 	"github.com/kafkamcp/kafkamcp/internal/chat"
 	"github.com/kafkamcp/kafkamcp/internal/clouddeploy"
 	"github.com/kafkamcp/kafkamcp/internal/codec"
+	codecavro "github.com/kafkamcp/kafkamcp/internal/codec/avro"
 	"github.com/kafkamcp/kafkamcp/internal/collaboration"
 	"github.com/kafkamcp/kafkamcp/internal/configvcs"
 	"github.com/kafkamcp/kafkamcp/internal/controlplane"
@@ -209,7 +210,7 @@ func newPlatform(logger *slog.Logger, be enginebackend.Backend) Platform {
 		cloudDeployGenerator: clouddeploy.NewGenerator(logger),
 		vectorSyncEngine:     vectorsync.NewEngine(logger),
 		finOpsDashboard:      finops.NewDashboard(logger),
-		codecEngine:          codec.NewEngine(nil),
+		codecEngine:          codec.NewEngineWithAvro(nil, codecavro.New()),
 		eventSourcingEngine:  eventsourcing.NewEngine(logger),
 		topicPortalEngine:    topicportal.NewEngine(topicportal.DefaultApprovalChainConfig(), logger),
 		gitopsReconciler:     gitops.NewReconciler(gitops.DefaultReconcilerConfig(), gitops.NewManager(logger), logger),

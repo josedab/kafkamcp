@@ -1,11 +1,14 @@
 package codec
 
 import (
-	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/kafkamcp/kafkamcp/internal/codec/avro"
+	"github.com/kafkamcp/kafkamcp/internal/codec/wire"
 )
 
 // Format identifies the serialization format of a message.
@@ -19,7 +22,30 @@ const (
 )
 
 // confluentMagicByte is the first byte in Confluent Schema Registry wire format.
-const confluentMagicByte byte = 0x00
+//
+// Deprecated: prefer [wire.Magic] from `internal/codec/wire`. Kept as a
+// package-level alias so any out-of-package callers that referenced the old
+// name still compile.
+const confluentMagicByte byte = wire.Magic
+
+// Sentinel errors returned by the engine when it cannot fulfil a request
+// because the supporting infrastructure (Schema Registry, real Avro/Protobuf
+// codec) is not wired in.
+var (
+	// ErrNoSchemaProvider is returned by Decode when a wire-format message
+	// references a schema ID but the engine has no Schema Registry provider
+	// to resolve the schema.
+	ErrNoSchemaProvider = errors.New("codec: no schema registry provider configured")
+
+	// ErrNoAvroCodec is returned by Encode/Decode for FormatAvro when no real
+	// Avro codec is registered. The current engine only supports JSON; Avro
+	// encoding requires a real codec (e.g. linkedin/goavro). Set
+	// AllowJSONFallback for development-only JSON-in-Avro-wire-format behaviour.
+	ErrNoAvroCodec = errors.New("codec: avro encoding not available — no avro codec registered")
+
+	// ErrNoProtobufCodec is the protobuf counterpart of ErrNoAvroCodec.
+	ErrNoProtobufCodec = errors.New("codec: protobuf encoding not available — no protobuf codec registered")
+)
 
 // SchemaProvider resolves schemas by ID from a Schema Registry.
 type SchemaProvider interface {
@@ -43,26 +69,76 @@ type DecodedMessage struct {
 
 // codecEntry caches a compiled codec.
 type codecEntry struct {
-	schema    string
-	format    Format
-	createdAt time.Time
+	schema     string
+	format     Format
+	createdAt  time.Time
+	lastAccess time.Time
 }
 
 // Engine provides encoding/decoding with Confluent wire format support.
+//
+// By default the engine refuses to encode Avro/Protobuf because no real codec
+// is registered. Setting AllowJSONFallback (via NewEngineWithFallback) wraps
+// JSON payloads in the Confluent wire-format header — useful for development
+// and contract-tests, but the resulting bytes are NOT valid Avro/Protobuf and
+// will NOT be readable by standards-compliant consumers.
+//
+// Pass a non-nil [avro.Codec] (via [NewEngineWithAvro] or [WithAvroCodec]) to
+// enable real Avro encoding/decoding via github.com/hamba/avro/v2.
 type Engine struct {
-	mu       sync.RWMutex
-	provider SchemaProvider
-	cache    map[int]*codecEntry
-	maxCache int
+	mu                sync.RWMutex
+	provider          SchemaProvider
+	cache             map[int]*codecEntry
+	maxCache          int
+	allowJSONFallback bool
+	avroCodec         *avro.Codec
 }
 
-// NewEngine creates a new codec engine.
+// NewEngine creates a new codec engine with strict semantics: Avro/Protobuf
+// operations fail with ErrNoAvroCodec / ErrNoProtobufCodec when no real codec
+// is registered.
 func NewEngine(provider SchemaProvider) *Engine {
 	return &Engine{
 		provider: provider,
 		cache:    make(map[int]*codecEntry),
 		maxCache: 1000,
 	}
+}
+
+// NewEngineWithFallback creates a codec engine that wraps JSON payloads in
+// the Confluent wire-format header when asked for Avro/Protobuf. Use only in
+// development. The produced bytes are NOT valid Avro/Protobuf.
+func NewEngineWithFallback(provider SchemaProvider) *Engine {
+	e := NewEngine(provider)
+	e.allowJSONFallback = true
+	return e
+}
+
+// NewEngineWithAvro creates a codec engine that performs real Avro
+// encoding/decoding via the supplied [avro.Codec]. JSON fallback is
+// disabled by default; combine with [Engine.SetAllowJSONFallback] if
+// you need both. Pass a nil avroCodec to fall back to [NewEngine]
+// semantics (Avro operations return [ErrNoAvroCodec]).
+func NewEngineWithAvro(provider SchemaProvider, avroCodec *avro.Codec) *Engine {
+	e := NewEngine(provider)
+	e.avroCodec = avroCodec
+	return e
+}
+
+// SetAllowJSONFallback toggles the JSON-in-wire-format fallback at runtime.
+// Use sparingly; primarily for tests that want to swap a strict engine into
+// permissive mode.
+func (e *Engine) SetAllowJSONFallback(allow bool) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.allowJSONFallback = allow
+}
+
+// AvroCodec returns the engine's registered Avro codec (may be nil).
+func (e *Engine) AvroCodec() *avro.Codec {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+	return e.avroCodec
 }
 
 // Encode serializes a value using the Confluent wire format (magic byte + schema ID + payload).
@@ -94,12 +170,11 @@ func (e *Engine) Encode(value any, schemaID int, format Format) (*EncodedMessage
 	}
 
 	// Wrap in Confluent wire format: [magic_byte][4-byte schema_id][payload]
-	wire := make([]byte, 5+len(payload))
-	wire[0] = confluentMagicByte
-	binary.BigEndian.PutUint32(wire[1:5], uint32(schemaID))
-	copy(wire[5:], payload)
-
-	return &EncodedMessage{Data: wire, SchemaID: schemaID, Format: format}, nil
+	if schemaID < 0 {
+		return nil, fmt.Errorf("codec: schema ID must be non-negative, got %d", schemaID)
+	}
+	wireBytes := wire.Encode(uint32(schemaID), payload)
+	return &EncodedMessage{Data: wireBytes, SchemaID: schemaID, Format: format}, nil
 }
 
 // Decode deserializes a wire-format message, auto-detecting format with JSON fallback.
@@ -109,9 +184,12 @@ func (e *Engine) Decode(data []byte) (*DecodedMessage, error) {
 	}
 
 	// Check for Confluent wire format
-	if len(data) >= 5 && data[0] == confluentMagicByte {
-		schemaID := int(binary.BigEndian.Uint32(data[1:5]))
-		payload := data[5:]
+	if wire.IsWireFormat(data) {
+		schemaIDU32, payload, err := wire.Decode(data)
+		if err != nil {
+			return nil, fmt.Errorf("codec: %w", err)
+		}
+		schemaID := int(schemaIDU32)
 
 		format, err := e.resolveFormat(schemaID)
 		if err != nil {
@@ -148,7 +226,7 @@ func (e *Engine) Decode(data []byte) (*DecodedMessage, error) {
 
 // DetectFormat inspects message bytes and returns the detected format.
 func DetectFormat(data []byte) Format {
-	if len(data) >= 5 && data[0] == confluentMagicByte {
+	if wire.IsWireFormat(data) {
 		return FormatAvro // Could be Avro or Protobuf; need schema lookup
 	}
 	if len(data) > 0 && (data[0] == '{' || data[0] == '[') {
@@ -161,16 +239,23 @@ func DetectFormat(data []byte) Format {
 }
 
 // resolveFormat looks up the schema format by ID, caching results.
+// Returns ErrNoSchemaProvider when no Schema Registry provider is configured
+// (unless AllowJSONFallback is enabled, in which case it returns FormatAvro
+// — the historical default — so round-trips through the dev shim succeed).
 func (e *Engine) resolveFormat(schemaID int) (Format, error) {
 	e.mu.RLock()
 	if entry, ok := e.cache[schemaID]; ok {
+		e.touchLocked(schemaID, entry)
 		e.mu.RUnlock()
 		return entry.format, nil
 	}
 	e.mu.RUnlock()
 
 	if e.provider == nil {
-		return FormatAvro, nil // Default to Avro when no provider configured
+		if e.allowJSONFallback {
+			return FormatAvro, nil
+		}
+		return "", ErrNoSchemaProvider
 	}
 
 	_, format, err := e.provider.GetSchemaByID(schemaID)
@@ -180,44 +265,65 @@ func (e *Engine) resolveFormat(schemaID int) (Format, error) {
 
 	e.mu.Lock()
 	defer e.mu.Unlock()
-	if len(e.cache) >= e.maxCache {
-		// Evict oldest entries
-		for k := range e.cache {
-			delete(e.cache, k)
-			break
-		}
-	}
-	e.cache[schemaID] = &codecEntry{format: format, createdAt: time.Now()}
+	e.evictIfFullLocked()
+	e.cache[schemaID] = &codecEntry{format: format, createdAt: time.Now(), lastAccess: time.Now()}
 	return format, nil
 }
 
 // encodeAvro serializes a value as Avro binary using the schema from the registry.
+//
+// Prefers the registered [avro.Codec] when one is set (real Avro binary
+// output that's interoperable with kafka-avro-serializer consumers).
+// Falls back to JSON-in-wire-format when AllowJSONFallback is set, or
+// returns ErrNoAvroCodec when neither is available.
 func (e *Engine) encodeAvro(value any, schemaID int) ([]byte, error) {
-	schema, err := e.getSchema(schemaID)
+	schemaStr, err := e.getSchema(schemaID)
 	if err != nil {
 		return nil, fmt.Errorf("codec: avro encode: %w", err)
 	}
 
-	// Use JSON-to-Avro encoding: marshal to JSON first, then convert to Avro binary.
-	// In production, this would use linkedin/goavro codec.
+	codec := e.AvroCodec()
+	if codec != nil && schemaStr != "" && schemaStr != "{}" {
+		out, err := codec.Encode(schemaStr, value)
+		if err != nil {
+			return nil, fmt.Errorf("codec: avro encode: %w", err)
+		}
+		return out, nil
+	}
+
+	if !e.allowJSONFallback {
+		return nil, ErrNoAvroCodec
+	}
 	jsonBytes, err := json.Marshal(value)
 	if err != nil {
 		return nil, fmt.Errorf("codec: avro marshal: %w", err)
 	}
-
-	// Encode as Avro binary-compatible format (length-prefixed JSON for now)
-	_ = schema
 	return jsonBytes, nil
 }
 
 // decodeAvro deserializes Avro binary data using the schema from the registry.
+//
+// Prefers the registered [avro.Codec] when one is set. Falls back to
+// JSON-in-wire-format when AllowJSONFallback is set, or returns
+// ErrNoAvroCodec when neither is available.
 func (e *Engine) decodeAvro(data []byte, schemaID int) (any, error) {
-	schema, err := e.getSchema(schemaID)
+	schemaStr, err := e.getSchema(schemaID)
 	if err != nil {
 		return nil, fmt.Errorf("codec: avro decode: %w", err)
 	}
 
-	_ = schema
+	codec := e.AvroCodec()
+	if codec != nil && schemaStr != "" && schemaStr != "{}" {
+		val, err := codec.Decode(schemaStr, data)
+		if err != nil {
+			return nil, fmt.Errorf("codec: avro decode: %w", err)
+		}
+		return val, nil
+	}
+
+	if !e.allowJSONFallback {
+		return nil, ErrNoAvroCodec
+	}
 	var result any
 	if err := json.Unmarshal(data, &result); err != nil {
 		return nil, fmt.Errorf("codec: avro decode payload: %w", err)
@@ -226,38 +332,38 @@ func (e *Engine) decodeAvro(data []byte, schemaID int) (any, error) {
 }
 
 // encodeProtobuf serializes a value as Protobuf binary.
+//
+// See encodeAvro for the JSON-fallback caveat.
 func (e *Engine) encodeProtobuf(value any, schemaID int) ([]byte, error) {
-	schema, err := e.getSchema(schemaID)
-	if err != nil {
+	if !e.allowJSONFallback {
+		return nil, ErrNoProtobufCodec
+	}
+	if _, err := e.getSchema(schemaID); err != nil {
 		return nil, fmt.Errorf("codec: protobuf encode: %w", err)
 	}
-
-	// Dynamic protobuf encoding: marshal to JSON representation
 	jsonBytes, err := json.Marshal(value)
 	if err != nil {
 		return nil, fmt.Errorf("codec: protobuf marshal: %w", err)
 	}
-
-	_ = schema
-	// Protobuf message index (varint 0 for first message in schema)
-	prefix := []byte{0x00}
+	prefix := []byte{0x00} // Protobuf message index varint (first message)
 	return append(prefix, jsonBytes...), nil
 }
 
 // decodeProtobuf deserializes Protobuf binary data.
+//
+// See decodeAvro for the JSON-fallback caveat.
 func (e *Engine) decodeProtobuf(data []byte, schemaID int) (any, error) {
-	schema, err := e.getSchema(schemaID)
-	if err != nil {
+	if !e.allowJSONFallback {
+		return nil, ErrNoProtobufCodec
+	}
+	if _, err := e.getSchema(schemaID); err != nil {
 		return nil, fmt.Errorf("codec: protobuf decode: %w", err)
 	}
 
-	_ = schema
-	// Skip message index varint prefix
 	payload := data
 	if len(data) > 0 {
 		payload = data[1:]
 	}
-
 	var result any
 	if err := json.Unmarshal(payload, &result); err != nil {
 		return nil, fmt.Errorf("codec: protobuf decode payload: %w", err)
@@ -269,6 +375,7 @@ func (e *Engine) decodeProtobuf(data []byte, schemaID int) (any, error) {
 func (e *Engine) getSchema(schemaID int) (string, error) {
 	e.mu.RLock()
 	if entry, ok := e.cache[schemaID]; ok && entry.schema != "" {
+		e.touchLocked(schemaID, entry)
 		e.mu.RUnlock()
 		return entry.schema, nil
 	}
@@ -285,6 +392,40 @@ func (e *Engine) getSchema(schemaID int) (string, error) {
 
 	e.mu.Lock()
 	defer e.mu.Unlock()
-	e.cache[schemaID] = &codecEntry{schema: schemaStr, format: format, createdAt: time.Now()}
+	e.evictIfFullLocked()
+	e.cache[schemaID] = &codecEntry{
+		schema:     schemaStr,
+		format:     format,
+		createdAt:  time.Now(),
+		lastAccess: time.Now(),
+	}
 	return schemaStr, nil
+}
+
+// touchLocked records an access for LRU bookkeeping. The caller may hold
+// either RLock or Lock; we only update lastAccess (a write to a non-shared
+// field on the entry pointer). Concurrent racy updates to lastAccess are
+// acceptable here — the field is only consulted at eviction time, and any
+// observed access from "around now" is fine for LRU purposes.
+func (e *Engine) touchLocked(_ int, entry *codecEntry) {
+	entry.lastAccess = time.Now()
+}
+
+// evictIfFullLocked removes the least-recently-used entry when the cache is
+// at capacity. Caller must hold the write lock.
+func (e *Engine) evictIfFullLocked() {
+	if len(e.cache) < e.maxCache {
+		return
+	}
+	var oldestID int
+	var oldestTime time.Time
+	first := true
+	for id, entry := range e.cache {
+		if first || entry.lastAccess.Before(oldestTime) {
+			oldestID = id
+			oldestTime = entry.lastAccess
+			first = false
+		}
+	}
+	delete(e.cache, oldestID)
 }
