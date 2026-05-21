@@ -2,15 +2,82 @@ package server
 
 import (
 	"context"
+	"errors"
+	"net/http"
 	"time"
 
 	"github.com/kafkamcp/kafkamcp/internal/auth"
+	"github.com/kafkamcp/kafkamcp/internal/auth/identity"
 	"github.com/kafkamcp/kafkamcp/internal/metrics"
 	"github.com/mark3labs/mcp-go/mcp"
 	otelTrace "go.opentelemetry.io/otel/trace"
 )
 
-// extractAgentID gets the agent ID from the MCP request headers or defaults.
+// identityCtxKey is the context key that carries the verified
+// AgentIdentity for downstream handlers (audit log enrichment etc.).
+type identityCtxKey struct{}
+
+// withIdentity returns a derived context carrying the verified identity.
+func withIdentity(ctx context.Context, ident *identity.AgentIdentity) context.Context {
+	if ident == nil {
+		return ctx
+	}
+	return context.WithValue(ctx, identityCtxKey{}, ident)
+}
+
+// identityFromContext returns the verified identity attached to ctx, or
+// nil when none is present.
+func identityFromContext(ctx context.Context) *identity.AgentIdentity {
+	v, _ := ctx.Value(identityCtxKey{}).(*identity.AgentIdentity)
+	return v
+}
+
+// resolveAgentIdentity runs the configured identity provider against
+// the request headers and returns the resolved agent ID plus the
+// verified AgentIdentity (which may be nil). It falls back to legacy
+// X-Agent-ID / X-Client-ID headers when no provider is configured or
+// when the request carried no verifiable credentials.
+func (s *Server) resolveAgentIdentity(ctx context.Context, header http.Header) (string, *identity.AgentIdentity) {
+	if s.identityProvider != nil && header != nil {
+		ident, err := s.identityProvider.Verify(ctx, header)
+		switch {
+		case err == nil && ident != nil && ident.ID != "":
+			return sanitizeAgentID(ident.ID), ident
+		case errors.Is(err, identity.ErrNoCredentials):
+			// fall through to header-based behaviour
+		case err != nil:
+			s.logger.Warn("agent identity verification failed",
+				"provider", s.identityProvider.Name(),
+				"error", err.Error())
+		}
+	}
+	if header != nil {
+		if id := header.Get("X-Agent-ID"); id != "" {
+			return sanitizeAgentID(id), nil
+		}
+		if id := header.Get("X-Client-ID"); id != "" {
+			return sanitizeAgentID(id), nil
+		}
+	}
+	return "anonymous", nil
+}
+
+// extractAgentID gets the agent ID from the MCP request (with identity
+// verification when configured).
+func (s *Server) extractAgentID(ctx context.Context, request mcp.CallToolRequest) string {
+	id, _ := s.resolveAgentIdentity(ctx, request.Header)
+	return id
+}
+
+// extractAgentIDFromResource gets the agent ID from a resource request.
+func (s *Server) extractAgentIDFromResource(ctx context.Context, request mcp.ReadResourceRequest) string {
+	id, _ := s.resolveAgentIdentity(ctx, request.Header)
+	return id
+}
+
+// extractAgentID is the package-level shim used by tests and pre-existing
+// call sites that don't have access to the Server. It mirrors the old
+// behaviour (header-only).
 func extractAgentID(request mcp.CallToolRequest) string {
 	if request.Header != nil {
 		if id := request.Header.Get("X-Agent-ID"); id != "" {
@@ -23,7 +90,8 @@ func extractAgentID(request mcp.CallToolRequest) string {
 	return "anonymous"
 }
 
-// extractAgentIDFromResource gets the agent ID from a resource request.
+// extractAgentIDFromResource is the package-level shim for resource
+// handlers in legacy code paths.
 func extractAgentIDFromResource(request mcp.ReadResourceRequest) string {
 	if request.Header != nil {
 		if id := request.Header.Get("X-Agent-ID"); id != "" {
@@ -95,7 +163,10 @@ type toolHandler func(ctx context.Context, request mcp.CallToolRequest, agentID 
 func (s *Server) withToolAuth(cfg toolAuthConfig, handler toolHandler) func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		start := time.Now()
-		agentID := extractAgentID(request)
+		agentID, ident := s.resolveAgentIdentity(ctx, request.Header)
+		if ident != nil {
+			ctx = withIdentity(ctx, ident)
+		}
 		args := request.GetArguments()
 
 		// Start OTel span if provider is configured

@@ -18,6 +18,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ```
   Ships with two drivers: `inmem` (legacy in-memory, default) and `sqlite` (embedded pure-Go SQLite via `modernc.org/sqlite`, WAL mode, no cgo). A generic `engine.Store[T]` JSON helper makes it cheap for engines to opt in. See [ADR-006](docs/adr/006-persistent-engine-store.md).
 - **Materialised view store now persists across restarts** when `server.persistence.backend: sqlite`. View definitions and view records are restored from disk on next start; `DeleteView` removes them durably.
+- **Agent identity verification** (`internal/auth/identity/`). New `policy.identity` config block adds three pluggable identity providers:
+  - `none` (default) — legacy `X-Agent-ID` header behaviour, no migration cost.
+  - `static` — shared-secret bearer tokens map to fixed agent IDs.
+  - `oidc` — JWT bearer tokens verified against an OIDC issuer's JWKS using `github.com/coreos/go-oidc/v3`. Configurable `agent_id_claim`, `groups_claim`, `email_claim`, optional `jwks_url` override.
+
+  The verified identity is attached to the request context and used by the policy engine in place of the unverified header. See [docs/AGENT_IDENTITY.md](docs/AGENT_IDENTITY.md) and [ADR-007](docs/adr/007-agent-identity-oidc.md).
+- `audit.Entry` schema extended with `identity_method` and `issuer` fields (populated by a follow-up that adds `ctx` to `s.logAudit`; schema is forward-compatible today).
 
 ### Changed
 - `internal/server`: every `mcp.NewTool` registration now flows through the new `s.addTool` wrapper which consults the active `ToolPackFilter`. Experimental tools (`kafka_chaos_*`, `kafka_wasm_*`, `kafka_proxy`, `kafka_controlplane_*`, `kafka_migration_plan`, `kafka_autopilot_execute/rollback`, `kafka_plugin_install`) are now tagged with tier `experimental` and only register when the `experimental` (or `all`) pack is active.

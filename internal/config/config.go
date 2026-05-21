@@ -100,9 +100,55 @@ type CacheConfig struct {
 
 // PolicyConfig defines the access-control policy applied to MCP agents.
 type PolicyConfig struct {
-	DefaultDeny              bool          `yaml:"default_deny" json:"default_deny"`                                                     // When true, deny access unless explicitly allowed
-	Agents                   []AgentPolicy `yaml:"agents" json:"agents"`                                                                 // Per-agent permission definitions
-	GlobalRateLimitPerMinute int           `yaml:"global_rate_limit_per_minute,omitempty" json:"global_rate_limit_per_minute,omitempty"` // Shared cap across all agents (0 = unlimited)
+	DefaultDeny              bool           `yaml:"default_deny" json:"default_deny"`                                                     // When true, deny access unless explicitly allowed
+	Agents                   []AgentPolicy  `yaml:"agents" json:"agents"`                                                                 // Per-agent permission definitions
+	GlobalRateLimitPerMinute int            `yaml:"global_rate_limit_per_minute,omitempty" json:"global_rate_limit_per_minute,omitempty"` // Shared cap across all agents (0 = unlimited)
+	Identity                 IdentityConfig `yaml:"identity,omitempty" json:"identity,omitempty"`                                         // Cryptographic identity verification for the X-Agent-ID claim.
+}
+
+// IdentityConfig configures how KafkaMCP verifies the claimed agent
+// identity carried in each request. The default ("none") preserves the
+// historical X-Agent-ID-only behaviour; "static" and "oidc" let
+// deployments cryptographically verify the caller before the policy
+// engine matches.
+type IdentityConfig struct {
+	// Provider selects the verification method:
+	//   - "" / "none" (default): trust X-Agent-ID header
+	//   - "static": verify Authorization: Bearer <token> against an
+	//     inline token table
+	//   - "oidc": verify Authorization: Bearer <jwt> against an
+	//     OIDC issuer's JWKS
+	Provider string `yaml:"provider,omitempty" json:"provider,omitempty"`
+
+	// Static is consulted when Provider == "static".
+	Static StaticIdentityConfig `yaml:"static,omitempty" json:"static,omitempty"`
+
+	// OIDC is consulted when Provider == "oidc".
+	OIDC OIDCIdentityConfig `yaml:"oidc,omitempty" json:"oidc,omitempty"`
+}
+
+// StaticIdentityConfig describes the inline shared-secret token table.
+type StaticIdentityConfig struct {
+	Tokens []StaticTokenConfig `yaml:"tokens,omitempty" json:"tokens,omitempty"`
+}
+
+// StaticTokenConfig binds a shared-secret bearer token to an agent
+// identifier and optional groups.
+type StaticTokenConfig struct {
+	Token   string   `yaml:"token" json:"-"`                                 // Secret bearer token (env-expanded)
+	AgentID string   `yaml:"agent_id" json:"agent_id"`                       // Policy-engine identifier
+	Groups  []string `yaml:"groups,omitempty" json:"groups,omitempty"`       // Optional group labels surfaced on audit logs
+}
+
+// OIDCIdentityConfig configures the OIDC bearer-token verifier.
+type OIDCIdentityConfig struct {
+	IssuerURL      string `yaml:"issuer_url" json:"issuer_url"`                                 // OIDC issuer (discovery base)
+	ClientID       string `yaml:"client_id" json:"client_id"`                                   // Expected audience
+	AgentIDClaim   string `yaml:"agent_id_claim,omitempty" json:"agent_id_claim,omitempty"`     // Defaults to "sub"
+	GroupsClaim    string `yaml:"groups_claim,omitempty" json:"groups_claim,omitempty"`         // Defaults to "groups"
+	EmailClaim     string `yaml:"email_claim,omitempty" json:"email_claim,omitempty"`           // Defaults to "email"
+	SkipExpiry     bool   `yaml:"skip_expiry_check,omitempty" json:"skip_expiry_check,omitempty"` // Tests only
+	SkipAudience   bool   `yaml:"skip_audience_check,omitempty" json:"skip_audience_check,omitempty"` // Tests only
 }
 
 // ExperimentalConfig gates subsystems whose current implementation is a stub
@@ -323,6 +369,32 @@ func (c *Config) validate() error {
 		if (backend == "sqlite" || backend == "sqlite3") && strings.TrimSpace(c.Server.Persistence.Path) == "" {
 			return fmt.Errorf("server.persistence.path is required when server.persistence.backend=%q", c.Server.Persistence.Backend)
 		}
+	}
+
+	switch strings.ToLower(strings.TrimSpace(c.Policies.Identity.Provider)) {
+	case "", "none", "disabled":
+		// no-op
+	case "static":
+		if len(c.Policies.Identity.Static.Tokens) == 0 {
+			return fmt.Errorf("policies.identity.static.tokens is required when provider=static")
+		}
+		for i, t := range c.Policies.Identity.Static.Tokens {
+			if strings.TrimSpace(t.Token) == "" {
+				return fmt.Errorf("policies.identity.static.tokens[%d].token must not be empty", i)
+			}
+			if strings.TrimSpace(t.AgentID) == "" {
+				return fmt.Errorf("policies.identity.static.tokens[%d].agent_id must not be empty", i)
+			}
+		}
+	case "oidc":
+		if strings.TrimSpace(c.Policies.Identity.OIDC.IssuerURL) == "" {
+			return fmt.Errorf("policies.identity.oidc.issuer_url is required when provider=oidc")
+		}
+		if strings.TrimSpace(c.Policies.Identity.OIDC.ClientID) == "" {
+			return fmt.Errorf("policies.identity.oidc.client_id is required when provider=oidc")
+		}
+	default:
+		return fmt.Errorf("invalid policies.identity.provider %q; must be one of: none, static, oidc", c.Policies.Identity.Provider)
 	}
 
 	return nil

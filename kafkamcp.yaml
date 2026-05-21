@@ -71,6 +71,24 @@ schema_cache:
 #       rate_limit:
 #         requests_per_minute: 600
 
+# Agent identity verification (recommended for multi-tenant deployments).
+# When unset, the server falls back to the legacy `X-Agent-ID` header.
+# See docs/AGENT_IDENTITY.md for full examples (Auth0, Okta, Keycloak, Azure AD).
+# policy:
+#   identity:
+#     provider: oidc        # none | static | oidc
+#     static:
+#       tokens:
+#         - token: "${KAFKAMCP_CI_TOKEN}"
+#           agent_id: "ci-runner"
+#     oidc:
+#       issuer: "https://auth.example.com/realms/agents"
+#       audience: "kafkamcp"
+#       agent_id_claim: "sub"     # default: sub
+#       groups_claim: "groups"    # optional
+#       email_claim: "email"      # optional
+#       # jwks_url: "https://auth.example.com/realms/agents/protocol/openid-connect/certs"
+
 # Audit Logging
 audit:
   enabled: true

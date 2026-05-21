@@ -13,6 +13,7 @@
 # Infrastructure tier (cross-cutting concerns)
 # ──────────────────────────────────────────────
 /internal/auth/ @kafkamcp/security
+/internal/auth/identity/ @kafkamcp/security
 /internal/audit/ @kafkamcp/security
 /internal/masking/ @kafkamcp/security
 /internal/compliance/ @kafkamcp/security

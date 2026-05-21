@@ -15,14 +15,16 @@ import (
 
 // Entry represents a single audit log entry.
 type Entry struct {
-	Timestamp    string         `json:"timestamp"`
-	AgentID      string         `json:"agent_id"`
-	Tool         string         `json:"tool"`
-	Parameters   map[string]any `json:"parameters,omitempty"`
-	Cluster      string         `json:"cluster,omitempty"`
-	Result       Result         `json:"result"`
-	LatencyMs    int64          `json:"latency_ms"`
-	PolicyMatched string        `json:"policy_matched,omitempty"`
+	Timestamp      string         `json:"timestamp"`
+	AgentID        string         `json:"agent_id"`
+	IdentityMethod string         `json:"identity_method,omitempty"` // How AgentID was verified ("none", "static", "oidc")
+	Issuer         string         `json:"issuer,omitempty"`          // OIDC issuer URL (when IdentityMethod == "oidc")
+	Tool           string         `json:"tool"`
+	Parameters     map[string]any `json:"parameters,omitempty"`
+	Cluster        string         `json:"cluster,omitempty"`
+	Result         Result         `json:"result"`
+	LatencyMs      int64          `json:"latency_ms"`
+	PolicyMatched  string         `json:"policy_matched,omitempty"`
 }
 
 // Result describes the outcome of a tool call.
