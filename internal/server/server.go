@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/kafkamcp/kafkamcp/internal/config"
+	"github.com/kafkamcp/kafkamcp/internal/engine"
+	enginebackend "github.com/kafkamcp/kafkamcp/internal/engine/backend"
 	"github.com/kafkamcp/kafkamcp/internal/kafka"
 	"github.com/kafkamcp/kafkamcp/internal/match"
 	"github.com/kafkamcp/kafkamcp/internal/metrics"
@@ -35,6 +37,10 @@ type Server struct {
 	toolPackFilter   *ToolPackFilter
 	registeredTools  map[string]string // name -> tier, populated as tools are registered
 	skippedToolCount int               // count of tools filtered out by the active pack
+
+	// Persistence: shared backend for engines that need durable state.
+	// May be nil only in tests; New() always sets it.
+	engineBackend enginebackend.Backend
 
 	// Composite subsystems (embedded for direct field access)
 	Analytics
@@ -69,6 +75,14 @@ func New(cfg *config.Config, kafkaManager kafka.KafkaManager, logger *slog.Logge
 		return nil, fmt.Errorf("creating governance subsystem: %w", err)
 	}
 
+	engineBackend, err := engine.Open(engine.Config{
+		Backend: cfg.Server.Persistence.Backend,
+		Path:    cfg.Server.Persistence.Path,
+	}, logger)
+	if err != nil {
+		return nil, fmt.Errorf("opening engine persistence backend: %w", err)
+	}
+
 	s := &Server{
 		config:          cfg,
 		kafkaManager:    kafkaManager,
@@ -79,10 +93,11 @@ func New(cfg *config.Config, kafkaManager kafka.KafkaManager, logger *slog.Logge
 		expensiveOps:    make(chan struct{}, 5),
 		toolPackFilter:  NewToolPackFilter(cfg.Server.ToolPacks),
 		registeredTools: make(map[string]string),
+		engineBackend:   engineBackend,
 		Analytics:       newAnalytics(logger),
 		Governance:      gov,
 		Streaming:       newStreaming(logger),
-		Platform:        newPlatform(logger),
+		Platform:        newPlatform(logger, engineBackend),
 	}
 
 	// Apply functional options, overriding defaults
@@ -161,8 +176,17 @@ func (s *Server) Close() error {
 	if err := s.auditLogger.Close(); err != nil {
 		errs = append(errs, fmt.Errorf("audit logger: %w", err))
 	}
+	if s.engineBackend != nil {
+		if err := s.engineBackend.Close(); err != nil {
+			errs = append(errs, fmt.Errorf("engine backend: %w", err))
+		}
+	}
 	return errors.Join(errs...)
 }
+
+// EngineBackend returns the shared persistence backend used by KafkaMCP
+// engines. It is non-nil for servers constructed via New().
+func (s *Server) EngineBackend() enginebackend.Backend { return s.engineBackend }
 
 // getSchemaClient returns the schema client for a cluster, falling back to default.
 func (s *Server) getSchemaClient(cluster string) *schema.Client {

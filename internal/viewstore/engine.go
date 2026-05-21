@@ -3,12 +3,16 @@
 package viewstore
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"sort"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/kafkamcp/kafkamcp/internal/engine"
+	"github.com/kafkamcp/kafkamcp/internal/engine/backend"
 )
 
 // ViewDefinition defines a materialized view over a Kafka topic.
@@ -80,15 +84,96 @@ type Engine struct {
 	store  map[string]map[string]*ViewRecord // viewID -> key -> record
 	logger *slog.Logger
 	nextID int64
+
+	// persisted state. defStore holds view definitions keyed by viewID;
+	// recStore holds records keyed by viewID + "\x00" + recordKey. Both
+	// are nil when no backend was supplied — in that case the engine
+	// runs entirely in-process (legacy behaviour).
+	defStore *engine.Store[ViewDefinition]
+	recStore *engine.Store[ViewRecord]
 }
 
-// NewEngine creates a new view store engine.
+// NewEngine creates a new view store engine without persistence. The
+// engine's state is lost when the process exits.
 func NewEngine(logger *slog.Logger) *Engine {
 	return &Engine{
 		views:  make(map[string]*ViewDefinition),
 		store:  make(map[string]map[string]*ViewRecord),
 		logger: logger,
 	}
+}
+
+// NewEngineWithBackend creates a view store engine backed by be. State is
+// loaded synchronously from the backend during construction; subsequent
+// mutations are persisted asynchronously to the backend on each write.
+//
+// When be is nil this is equivalent to [NewEngine].
+func NewEngineWithBackend(ctx context.Context, logger *slog.Logger, be backend.Backend) (*Engine, error) {
+	e := NewEngine(logger)
+	if be == nil {
+		return e, nil
+	}
+	e.defStore = engine.NewStore[ViewDefinition](be, "viewstore.definitions")
+	e.recStore = engine.NewStore[ViewRecord](be, "viewstore.records")
+	if err := e.load(ctx); err != nil {
+		return nil, fmt.Errorf("viewstore: load persisted state: %w", err)
+	}
+	return e, nil
+}
+
+func (e *Engine) load(ctx context.Context) error {
+	defs, err := e.defStore.List(ctx, "")
+	if err != nil {
+		return err
+	}
+	recs, err := e.recStore.List(ctx, "")
+	if err != nil {
+		return err
+	}
+
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	for id, v := range defs {
+		copy := v
+		e.views[id] = &copy
+		e.store[id] = make(map[string]*ViewRecord)
+		if id > "" {
+			// Bump nextID past any restored view IDs so subsequent
+			// CreateView calls don't collide.
+			var n int64
+			if _, err := fmt.Sscanf(id, "view_%d", &n); err == nil && n > e.nextID {
+				e.nextID = n
+			}
+		}
+	}
+	for compositeKey, rec := range recs {
+		viewID, recKey, ok := splitCompositeKey(compositeKey)
+		if !ok {
+			e.logger.Warn("viewstore: skipping malformed persisted record key", "key", compositeKey)
+			continue
+		}
+		ns, ok := e.store[viewID]
+		if !ok {
+			// Orphan record (view definition missing). Drop it; we
+			// could log louder but this is rare and not worth blocking
+			// start-up over.
+			continue
+		}
+		copy := rec
+		ns[recKey] = &copy
+	}
+	e.logger.Info("viewstore: restored from persistence", "views", len(defs), "records", len(recs))
+	return nil
+}
+
+func compositeKey(viewID, key string) string { return viewID + "\x00" + key }
+
+func splitCompositeKey(s string) (viewID, key string, ok bool) {
+	i := strings.IndexByte(s, '\x00')
+	if i < 0 {
+		return "", "", false
+	}
+	return s[:i], s[i+1:], true
 }
 
 // CreateView creates a new materialized view definition.
@@ -139,7 +224,26 @@ func (e *Engine) CreateView(name, sourceTopic, keyField, aggType, windowType str
 	e.store[id] = make(map[string]*ViewRecord)
 
 	e.logger.Info("view created", "id", id, "name", name, "source", sourceTopic)
+	e.persistViewLocked(view)
 	return view, nil
+}
+
+func (e *Engine) persistViewLocked(view *ViewDefinition) {
+	if e.defStore == nil {
+		return
+	}
+	if err := e.defStore.Set(context.Background(), view.ID, *view); err != nil {
+		e.logger.Warn("viewstore: persist view definition failed", "id", view.ID, "error", err)
+	}
+}
+
+func (e *Engine) persistRecordLocked(viewID string, rec *ViewRecord) {
+	if e.recStore == nil {
+		return
+	}
+	if err := e.recStore.Set(context.Background(), compositeKey(viewID, rec.Key), *rec); err != nil {
+		e.logger.Warn("viewstore: persist record failed", "view", viewID, "key", rec.Key, "error", err)
+	}
 }
 
 // IngestRecord upserts a record into a materialized view.
@@ -173,6 +277,16 @@ func (e *Engine) IngestRecord(viewID, key string, value map[string]any, offset i
 
 	view.LastOffset = offset
 	view.UpdatedAt = time.Now()
+
+	// Persist after mutation. We do this synchronously while holding the
+	// engine lock so that a crash between the in-memory update and the
+	// persistence call cannot leave the two out of sync.
+	if exists {
+		e.persistRecordLocked(viewID, existing)
+	} else {
+		e.persistRecordLocked(viewID, records[key])
+	}
+	e.persistViewLocked(view)
 	return nil
 }
 
@@ -312,8 +426,21 @@ func (e *Engine) DeleteView(id string) error {
 	if _, ok := e.views[id]; !ok {
 		return fmt.Errorf("view %q not found", id)
 	}
+	records := e.store[id]
 	delete(e.views, id)
 	delete(e.store, id)
+
+	if e.defStore != nil {
+		ctx := context.Background()
+		if err := e.defStore.Delete(ctx, id); err != nil {
+			e.logger.Warn("viewstore: delete view definition failed", "id", id, "error", err)
+		}
+		for k := range records {
+			if err := e.recStore.Delete(ctx, compositeKey(id, k)); err != nil {
+				e.logger.Warn("viewstore: delete record failed", "view", id, "key", k, "error", err)
+			}
+		}
+	}
 	return nil
 }
 

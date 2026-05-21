@@ -13,6 +13,7 @@ ADRs document significant architectural decisions made during the project's deve
 | [ADR-003](003-policy-engine.md) | YAML-Based Policy Engine | Accepted |
 | [ADR-004](004-subsystem-grouping.md) | Subsystem Grouping Architecture | Accepted |
 | [ADR-005](005-engine-pattern.md) | Shared Engine Store Pattern | Accepted |
+| [ADR-006](006-persistent-engine-store.md) | Persistent Engine Store with Pluggable Backend | Accepted |
 
 ## Format
 

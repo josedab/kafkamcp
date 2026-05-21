@@ -29,9 +29,19 @@ type ServerConfig struct {
 	Port           int      `yaml:"port" json:"port"`                                 // Listen port (default 3100)
 	LogLevel       string   `yaml:"log_level" json:"log_level"`                       // Log verbosity: "debug", "info", "warn", "error"
 	MaxMessageSize int      `yaml:"max_message_size" json:"max_message_size"`         // Max MCP message size in bytes (default 1 MB)
-	TLSCert        string   `yaml:"tls_cert,omitempty" json:"tls_cert,omitempty"`     // Path to TLS certificate file
-	TLSKey         string   `yaml:"tls_key,omitempty" json:"tls_key,omitempty"`       // Path to TLS private key file
-	ToolPacks      []string `yaml:"tool_packs,omitempty" json:"tool_packs,omitempty"` // Adaptive tool surface: any of essential, ops, analytics, governance, streaming, experimental, all. Default: ["essential"].
+	TLSCert        string            `yaml:"tls_cert,omitempty" json:"tls_cert,omitempty"`         // Path to TLS certificate file
+	TLSKey         string            `yaml:"tls_key,omitempty" json:"tls_key,omitempty"`           // Path to TLS private key file
+	ToolPacks      []string          `yaml:"tool_packs,omitempty" json:"tool_packs,omitempty"`     // Adaptive tool surface: any of essential, ops, analytics, governance, streaming, experimental, all. Default: ["essential"].
+	Persistence    PersistenceConfig `yaml:"persistence,omitempty" json:"persistence,omitempty"`   // Where engine state (agent memory, materialised views, ...) is stored.
+}
+
+// PersistenceConfig selects the storage backend used by KafkaMCP's
+// persistent engines (agent memory, materialised views, rate-limit
+// budgets). When omitted, an in-memory backend is used and all state is
+// lost on restart.
+type PersistenceConfig struct {
+	Backend string `yaml:"backend,omitempty" json:"backend,omitempty"` // "inmem" (default) or "sqlite"
+	Path    string `yaml:"path,omitempty" json:"path,omitempty"`       // On-disk path for sqlite backend
 }
 
 // Address returns the "host:port" listen address, using defaults if not set.
@@ -305,6 +315,16 @@ func (c *Config) validate() error {
 		return fmt.Errorf("invalid transport %q; must be one of: stdio, sse, streamable-http", transport)
 	}
 
+	if backend := strings.ToLower(strings.TrimSpace(c.Server.Persistence.Backend)); backend != "" {
+		validBackends := map[string]bool{"inmem": true, "memory": true, "in-memory": true, "sqlite": true, "sqlite3": true}
+		if !validBackends[backend] {
+			return fmt.Errorf("invalid server.persistence.backend %q; must be one of: inmem, sqlite", c.Server.Persistence.Backend)
+		}
+		if (backend == "sqlite" || backend == "sqlite3") && strings.TrimSpace(c.Server.Persistence.Path) == "" {
+			return fmt.Errorf("server.persistence.path is required when server.persistence.backend=%q", c.Server.Persistence.Backend)
+		}
+	}
+
 	return nil
 }
 
@@ -325,6 +345,12 @@ func (c *Config) applyDefaults() {
 		// Default to the essential pack: keeps the advertised tool surface
 		// under the ~40–60 ceiling where LLM tool-routing degrades.
 		c.Server.ToolPacks = []string{"essential"}
+	}
+	if c.Server.Persistence.Backend == "" {
+		// Preserve the historical behaviour: in-memory state, lost on
+		// restart. Operators opt into durability by setting
+		// server.persistence.backend: sqlite.
+		c.Server.Persistence.Backend = "inmem"
 	}
 	if c.SchemaCache.MaxEntries == 0 {
 		c.SchemaCache.MaxEntries = 10000

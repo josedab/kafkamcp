@@ -119,6 +119,8 @@
 /internal/plugin/ @kafkamcp/maintainers
 /internal/sandbox/ @kafkamcp/maintainers
 /internal/viewstore/ @kafkamcp/kafka
+/internal/engine/ @kafkamcp/maintainers
+/internal/engine/backend/ @kafkamcp/maintainers
 /internal/watch/ @kafkamcp/kafka
 /internal/ide/ @kafkamcp/sdk
 

@@ -9,10 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Adaptive tool surface: register tools by **tier** (`essential`, `advanced`, `experimental`) and **pack** (`essential`, `ops`, `analytics`, `governance`, `streaming`, `experimental`, `all`). Configure via `server.tool_packs` in `kafkamcp.yaml`; defaults to `[essential]` so the advertised surface stays under the ~40–60 tool ceiling where LLM tool-routing degrades. Full catalog still ~317 tools — opt in to additional packs as needed.
+- **Pluggable engine persistence backend** (`internal/engine/`, `internal/engine/backend/`). New `server.persistence` config:
+  ```yaml
+  server:
+    persistence:
+      backend: sqlite          # or "inmem" (default)
+      path: /var/lib/kafkamcp/state.db
+  ```
+  Ships with two drivers: `inmem` (legacy in-memory, default) and `sqlite` (embedded pure-Go SQLite via `modernc.org/sqlite`, WAL mode, no cgo). A generic `engine.Store[T]` JSON helper makes it cheap for engines to opt in. See [ADR-006](docs/adr/006-persistent-engine-store.md).
+- **Materialised view store now persists across restarts** when `server.persistence.backend: sqlite`. View definitions and view records are restored from disk on next start; `DeleteView` removes them durably.
 
 ### Changed
 - `internal/server`: every `mcp.NewTool` registration now flows through the new `s.addTool` wrapper which consults the active `ToolPackFilter`. Experimental tools (`kafka_chaos_*`, `kafka_wasm_*`, `kafka_proxy`, `kafka_controlplane_*`, `kafka_migration_plan`, `kafka_autopilot_execute/rollback`, `kafka_plugin_install`) are now tagged with tier `experimental` and only register when the `experimental` (or `all`) pack is active.
 - `docs/tool-reference.md` is grouped by tier; the generator (`cmd/gen-tool-docs`) now reads tier annotations and the `essentialPackTools` allow-list to render per-tier sections.
+- `docs/PERSISTENCE.md` rewritten to reflect the new pluggable backend and migration roadmap.
 
 ## [0.1.0] - 2026-05-03
 

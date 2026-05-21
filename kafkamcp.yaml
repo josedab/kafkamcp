@@ -6,6 +6,14 @@ server:
   port: 3100                # For SSE/HTTP transports
   log_level: info           # debug | info | warn | error
 
+  # Optional: persist engine state (materialised views today, more
+  # engines being migrated incrementally — see docs/PERSISTENCE.md).
+  # When omitted, KafkaMCP runs entirely in-memory and state is lost
+  # on restart.
+  # persistence:
+  #   backend: sqlite                       # "inmem" (default) or "sqlite"
+  #   path: /var/lib/kafkamcp/state.db      # required when backend=sqlite
+
 clusters:
   - name: local
     bootstrap_servers: "localhost:9092"
