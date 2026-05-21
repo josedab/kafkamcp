@@ -50,7 +50,7 @@ func (s *Server) handleAnomalies(ctx context.Context, request mcp.CallToolReques
 		alerts := s.anomalyDetector.GetAlerts(since, severity, metric, limit)
 		status := s.anomalyDetector.GetStatus()
 
-		s.logAudit(agentID, "kafka_anomalies", args, "", "success", len(alerts), nil, start)
+		s.logAudit(ctx, agentID, "kafka_anomalies", args, "", "success", len(alerts), nil, start)
 		return marshalResult(map[string]any{
 			"alerts":      alerts,
 			"alert_count": len(alerts),
@@ -92,7 +92,7 @@ func (s *Server) handleIngestAnomaly(ctx context.Context, request mcp.CallToolRe
 		}
 		s.anomalyDetector.IngestPoint(dp)
 
-		s.logAudit(agentID, "kafka_anomaly_ingest", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_anomaly_ingest", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]any{"status": "ingested", "data_point": dp})
 	})(ctx, request)
 }

@@ -37,7 +37,7 @@ func (s *Server) handleTimeSeriesQuery(ctx context.Context, request mcp.CallTool
 			return s.toolError("Query failed", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_timeseries_query", args, "", "success", result.Stats.Count, nil, start)
+		s.logAudit(ctx, agentID, "kafka_timeseries_query", args, "", "success", result.Stats.Count, nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }
@@ -74,7 +74,7 @@ func (s *Server) handleTimeSeriesCompare(ctx context.Context, request mcp.CallTo
 			return s.toolError("Comparison failed", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_timeseries_compare", args, "", "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_timeseries_compare", args, "", "success", 0, nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }
@@ -111,7 +111,7 @@ func (s *Server) handleTimeSeriesBaseline(ctx context.Context, request mcp.CallT
 			return s.toolError("Baseline analysis failed", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_timeseries_baseline", args, "", "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_timeseries_baseline", args, "", "success", 0, nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }
@@ -125,7 +125,7 @@ func (s *Server) handleTimeSeriesList(ctx context.Context, request mcp.CallToolR
 		series := s.timeseriesEngine.ListSeries()
 		windows := s.timeseriesEngine.GetWindows()
 
-		s.logAudit(agentID, "kafka_timeseries_list", args, "", "success", len(series), nil, start)
+		s.logAudit(ctx, agentID, "kafka_timeseries_list", args, "", "success", len(series), nil, start)
 		return marshalResult(map[string]any{
 			"series":  series,
 			"windows": windows,

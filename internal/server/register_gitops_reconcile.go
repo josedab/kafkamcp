@@ -65,11 +65,11 @@ func (s *Server) handleGitOpsReconcile(ctx context.Context, request mcp.CallTool
 	live := gitops.LiveState{Topics: make(map[string]gitops.TopicSpec)}
 	result, err := s.gitopsReconciler.Reconcile(ctx, live, dryRun)
 	if err != nil {
-		s.logAudit(agentID, "gitops_reconcile", args, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "gitops_reconcile", args, "", "error", 0, err, start)
 		return s.toolError("reconciliation failed", err), nil
 	}
 
-	s.logAudit(agentID, "gitops_reconcile", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "gitops_reconcile", args, "", "success", 1, nil, start)
 	return marshalResult(result)
 }
 
@@ -86,11 +86,11 @@ func (s *Server) handleGitOpsSetState(ctx context.Context, request mcp.CallToolR
 
 	err := s.gitopsReconciler.SetDesiredState(state)
 	if err != nil {
-		s.logAudit(agentID, "gitops_set_desired_state", args, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "gitops_set_desired_state", args, "", "error", 0, err, start)
 		return s.toolError("failed to set desired state", err), nil
 	}
 
-	s.logAudit(agentID, "gitops_set_desired_state", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "gitops_set_desired_state", args, "", "success", 1, nil, start)
 	return marshalResult(map[string]any{
 		"status": "desired_state_updated",
 	})
@@ -106,7 +106,7 @@ func (s *Server) handleGitOpsHistory(ctx context.Context, request mcp.CallToolRe
 	}
 
 	results := s.gitopsReconciler.GetResults(limit)
-	s.logAudit(agentID, "gitops_reconcile_history", args, "", "success", len(results), nil, start)
+	s.logAudit(ctx, agentID, "gitops_reconcile_history", args, "", "success", len(results), nil, start)
 	return marshalResult(map[string]any{
 		"results": results,
 		"total":   len(results),
@@ -127,19 +127,19 @@ func (s *Server) handleGitOpsWebhook(ctx context.Context, request mcp.CallToolRe
 
 	result, err := s.gitopsReconciler.HandleWebhook(event)
 	if err != nil {
-		s.logAudit(agentID, "gitops_webhook", args, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "gitops_webhook", args, "", "error", 0, err, start)
 		return s.toolError("webhook processing failed", err), nil
 	}
 
 	if result == nil {
-		s.logAudit(agentID, "gitops_webhook", args, "", "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "gitops_webhook", args, "", "success", 0, nil, start)
 		return marshalResult(map[string]any{
 			"status":  "no_action",
 			"message": "Webhook event did not trigger reconciliation",
 		})
 	}
 
-	s.logAudit(agentID, "gitops_webhook", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "gitops_webhook", args, "", "success", 1, nil, start)
 	return marshalResult(result)
 }
 

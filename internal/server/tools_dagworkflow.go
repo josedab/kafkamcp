@@ -54,7 +54,7 @@ func (s *Server) handleDAGWorkflowCreate(ctx context.Context, request mcp.CallTo
 		return s.toolError("failed to create workflow", err), nil
 	}
 
-	s.logAudit(agentID, "kafka_workflow_create", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "kafka_workflow_create", args, "", "success", 1, nil, start)
 	return marshalResult(wf)
 }
 
@@ -87,7 +87,7 @@ func (s *Server) handleDAGWorkflowRun(ctx context.Context, request mcp.CallToolR
 		})
 	}
 
-	s.logAudit(agentID, "kafka_workflow_run", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "kafka_workflow_run", args, "", "success", 1, nil, start)
 	return marshalResult(map[string]any{
 		"run":         run,
 		"ready_steps": readyInfo,
@@ -112,7 +112,7 @@ func (s *Server) handleDAGWorkflowStatus(ctx context.Context, request mcp.CallTo
 		for _, s := range readySteps {
 			readyIDs = append(readyIDs, s.ID)
 		}
-		s.logAudit(agentID, "kafka_workflow_status", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_workflow_status", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]any{
 			"run":         run,
 			"ready_steps": readyIDs,
@@ -122,7 +122,7 @@ func (s *Server) handleDAGWorkflowStatus(ctx context.Context, request mcp.CallTo
 		templateID, _ := args["template_id"].(string)
 		workflows := s.dagWorkflowEngine.ListWorkflows()
 		runs := s.dagWorkflowEngine.ListRuns(templateID, 50)
-		s.logAudit(agentID, "kafka_workflow_status", args, "", "success", len(workflows), nil, start)
+		s.logAudit(ctx, agentID, "kafka_workflow_status", args, "", "success", len(workflows), nil, start)
 		return marshalResult(map[string]any{
 			"workflows": workflows,
 			"runs":      runs,
@@ -142,7 +142,7 @@ func (s *Server) handleDAGWorkflowStatus(ctx context.Context, request mcp.CallTo
 		if err != nil {
 			return s.toolError("failed to retrieve workflow versions", err), nil
 		}
-		s.logAudit(agentID, "kafka_workflow_status", args, "", "success", len(versions), nil, start)
+		s.logAudit(ctx, agentID, "kafka_workflow_status", args, "", "success", len(versions), nil, start)
 		return marshalResult(map[string]any{"versions": versions})
 
 	case "cancel":
@@ -153,7 +153,7 @@ func (s *Server) handleDAGWorkflowStatus(ctx context.Context, request mcp.CallTo
 		if err := s.dagWorkflowEngine.CancelRun(runID); err != nil {
 			return s.toolError("failed to cancel workflow run", err), nil
 		}
-		s.logAudit(agentID, "kafka_workflow_status", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_workflow_status", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]string{"status": "cancelled"})
 
 	case "complete_step":
@@ -187,7 +187,7 @@ func (s *Server) handleDAGWorkflowStatus(ctx context.Context, request mcp.CallTo
 			}
 		}
 
-		s.logAudit(agentID, "kafka_workflow_status", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_workflow_status", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]any{
 			"run":         run,
 			"ready_steps": readyInfo,
@@ -213,7 +213,7 @@ func (s *Server) handleDAGWorkflowStatus(ctx context.Context, request mcp.CallTo
 				"args":    resolvedArgs,
 			})
 		}
-		s.logAudit(agentID, "kafka_workflow_status", args, "", "success", len(readySteps), nil, start)
+		s.logAudit(ctx, agentID, "kafka_workflow_status", args, "", "success", len(readySteps), nil, start)
 		return marshalResult(map[string]any{"ready_steps": readyInfo})
 
 	default:

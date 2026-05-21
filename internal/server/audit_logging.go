@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -9,7 +10,15 @@ import (
 )
 
 // logAudit records a tool call in the audit log and increments Prometheus metrics.
-func (s *Server) logAudit(agentID, tool string, params map[string]any, cluster, status string, count int, err error, start time.Time) {
+//
+// ctx is consulted for a verified [identity.AgentIdentity] attached by
+// the auth middleware (see internal/server/auth_middleware.go). When
+// present, the entry's IdentityMethod / Issuer / Subject fields are
+// populated so audit consumers can distinguish a header-asserted
+// agent ID (legacy / dev) from one verified by OIDC, static-token, or
+// mTLS. ctx may be context.Background() — the identity fields then
+// remain empty, matching the pre-identity-verification behaviour.
+func (s *Server) logAudit(ctx context.Context, agentID, tool string, params map[string]any, cluster, status string, count int, err error, start time.Time) {
 	latency := time.Since(start)
 	entry := audit.Entry{
 		AgentID:    agentID,
@@ -18,6 +27,11 @@ func (s *Server) logAudit(agentID, tool string, params map[string]any, cluster, 
 		Cluster:    s.resolveClusterName(cluster),
 		Result:     audit.Result{Status: status, MessageCount: count},
 		LatencyMs:  latency.Milliseconds(),
+	}
+	if ident := identityFromContext(ctx); ident != nil {
+		entry.IdentityMethod = ident.Method
+		entry.Issuer = ident.Issuer
+		entry.Subject = ident.Subject
 	}
 	if err != nil {
 		entry.Result.Error = categorizeError(err)

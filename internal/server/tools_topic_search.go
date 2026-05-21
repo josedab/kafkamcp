@@ -26,7 +26,7 @@ func (s *Server) handleTopicSearch(ctx context.Context, request mcp.CallToolRequ
 				limit = int(l)
 			}
 			results := s.semanticEngine.TopicIndex().SearchTopics(query, limit)
-			s.logAudit(agentID, "kafka_topic_search", args, "", "success", len(results), nil, start)
+			s.logAudit(ctx, agentID, "kafka_topic_search", args, "", "success", len(results), nil, start)
 			return marshalResult(map[string]any{
 				"query":   query,
 				"results": results,
@@ -48,7 +48,7 @@ func (s *Server) handleTopicSearch(ctx context.Context, request mcp.CallToolRequ
 				}
 			}
 			s.semanticEngine.TopicIndex().IndexTopic(topic, description, tags, nil, 0, nil)
-			s.logAudit(agentID, "kafka_topic_search", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_topic_search", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{
 				"indexed": topic,
 				"total":   s.semanticEngine.TopicIndex().Count(),
@@ -59,7 +59,7 @@ func (s *Server) handleTopicSearch(ctx context.Context, request mcp.CallToolRequ
 			cluster = s.resolveClusterName(cluster)
 			topics, err := s.kafkaManager.ListTopics(ctx, cluster, false)
 			if err != nil {
-				s.logAudit(agentID, "kafka_topic_search", args, cluster, "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_topic_search", args, cluster, "error", 0, err, start)
 				return s.toolError("failed to list topics", err), nil
 			}
 			indexed := 0
@@ -68,7 +68,7 @@ func (s *Server) handleTopicSearch(ctx context.Context, request mcp.CallToolRequ
 				s.semanticEngine.TopicIndex().IndexTopic(t.Name, desc, nil, nil, t.MessageCount, nil)
 				indexed++
 			}
-			s.logAudit(agentID, "kafka_topic_search", args, cluster, "success", indexed, nil, start)
+			s.logAudit(ctx, agentID, "kafka_topic_search", args, cluster, "success", indexed, nil, start)
 			return marshalResult(map[string]any{
 				"indexed": indexed,
 				"cluster": cluster,
@@ -77,7 +77,7 @@ func (s *Server) handleTopicSearch(ctx context.Context, request mcp.CallToolRequ
 
 		case "list_indexed":
 			profiles := s.semanticEngine.TopicIndex().ListProfiles()
-			s.logAudit(agentID, "kafka_topic_search", args, "", "success", len(profiles), nil, start)
+			s.logAudit(ctx, agentID, "kafka_topic_search", args, "", "success", len(profiles), nil, start)
 			return marshalResult(map[string]any{
 				"profiles": profiles,
 				"total":    len(profiles),

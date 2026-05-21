@@ -29,7 +29,7 @@ func (s *Server) handleEncryptionKey(ctx context.Context, request mcp.CallToolRe
 			if err != nil {
 				return s.toolError("failed to create key", err), nil
 			}
-			s.logAudit(agentID, "kafka_encryption_key", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_encryption_key", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"key": key, "message": "Key created successfully"})
 
 		case "rotate":
@@ -40,7 +40,7 @@ func (s *Server) handleEncryptionKey(ctx context.Context, request mcp.CallToolRe
 			if err != nil {
 				return s.toolError("rotation failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_encryption_key", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_encryption_key", args, "", "success", 1, nil, start)
 			return marshalResult(result)
 
 		case "revoke":
@@ -137,7 +137,7 @@ func (s *Server) handleEncryptionProcess(ctx context.Context, request mcp.CallTo
 			if err != nil {
 				return s.toolError("encryption failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_encryption_process", args, "", "success", result.EncryptedFields, nil, start)
+			s.logAudit(ctx, agentID, "kafka_encryption_process", args, "", "success", result.EncryptedFields, nil, start)
 			return marshalResult(result)
 
 		case "decrypt":
@@ -145,7 +145,7 @@ func (s *Server) handleEncryptionProcess(ctx context.Context, request mcp.CallTo
 			if err != nil {
 				return s.toolError("decryption failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_encryption_process", args, "", "success", result.DecryptedFields, nil, start)
+			s.logAudit(ctx, agentID, "kafka_encryption_process", args, "", "success", result.DecryptedFields, nil, start)
 			return marshalResult(result)
 
 		default:

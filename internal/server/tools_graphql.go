@@ -16,12 +16,12 @@ func (s *Server) handleGraphQLSchema(ctx context.Context, request mcp.CallToolRe
 
 		if format == "sdl" {
 			sdl := s.graphqlEngine.GetSchemaSDL()
-			s.logAudit(agentID, "kafka_graphql_schema", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_graphql_schema", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"format": "sdl", "schema": sdl})
 		}
 
 		schema := s.graphqlEngine.GetSchema()
-		s.logAudit(agentID, "kafka_graphql_schema", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_graphql_schema", args, "", "success", 1, nil, start)
 		return marshalResult(schema)
 	})(ctx, request)
 }
@@ -39,7 +39,7 @@ func (s *Server) handleGraphQLQuery(ctx context.Context, request mcp.CallToolReq
 		}
 
 		result := s.graphqlEngine.ExecuteQuery(query, nil)
-		s.logAudit(agentID, "kafka_graphql_query", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_graphql_query", args, "", "success", 1, nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }
@@ -61,7 +61,7 @@ func (s *Server) handleGraphQLSubscribe(ctx context.Context, request mcp.CallToo
 			if err != nil {
 				return s.toolError("subscription failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_graphql_subscribe", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_graphql_subscribe", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"subscriber": subscriber, "message": "Subscribed successfully"})
 
 		case "unsubscribe":
@@ -72,7 +72,7 @@ func (s *Server) handleGraphQLSubscribe(ctx context.Context, request mcp.CallToo
 			if err := s.graphqlEngine.Unsubscribe(subID); err != nil {
 				return s.toolError("unsubscribe failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_graphql_subscribe", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_graphql_subscribe", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "unsubscribed"})
 
 		default:

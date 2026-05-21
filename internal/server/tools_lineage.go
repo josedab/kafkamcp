@@ -50,7 +50,7 @@ func (s *Server) handleTraceLineage(ctx context.Context, request mcp.CallToolReq
 			}
 
 			result := s.lineageTracker.TraceLineage(topic)
-			s.logAudit(agentID, "kafka_trace_lineage", args, cluster, "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_trace_lineage", args, cluster, "success", 1, nil, start)
 			return marshalResult(result)
 
 		case "annotate_pii":
@@ -71,7 +71,7 @@ func (s *Server) handleTraceLineage(ctx context.Context, request mcp.CallToolReq
 			s.lineageTracker.AnnotatePII(lineage.PIIAnnotation{
 				Topic: topic, Field: field, PIIType: piiType, DetectedBy: "manual",
 			})
-			s.logAudit(agentID, "kafka_trace_lineage", args, cluster, "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_trace_lineage", args, cluster, "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "annotated", "topic": topic, "field": field, "pii_type": piiType})
 
 		case "detect_pii":
@@ -83,7 +83,7 @@ func (s *Server) handleTraceLineage(ctx context.Context, request mcp.CallToolReq
 			for _, pii := range detected {
 				s.lineageTracker.AnnotatePII(pii)
 			}
-			s.logAudit(agentID, "kafka_trace_lineage", args, cluster, "success", len(detected), nil, start)
+			s.logAudit(ctx, agentID, "kafka_trace_lineage", args, cluster, "success", len(detected), nil, start)
 			return marshalResult(map[string]any{"topic": topic, "detected": detected, "count": len(detected)})
 
 		case "compliance_report":
@@ -92,7 +92,7 @@ func (s *Server) handleTraceLineage(ctx context.Context, request mcp.CallToolReq
 				return deny, nil
 			}
 			report := s.lineageTracker.GenerateComplianceReport(framework)
-			s.logAudit(agentID, "kafka_trace_lineage", args, cluster, "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_trace_lineage", args, cluster, "success", 1, nil, start)
 			return marshalResult(report)
 
 		default:

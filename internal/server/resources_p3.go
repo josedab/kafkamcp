@@ -20,16 +20,16 @@ func (s *Server) handleReplicationStatus(ctx context.Context, request mcp.ReadRe
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
 	if err := s.validateResourceAgentID(agentID); err != nil {
-		s.logAudit(agentID, "resource:kafka://replication/status", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://replication/status", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if err := s.checkResourceRateLimit(agentID, "resource:kafka://replication/status"); err != nil {
-		s.logAudit(agentID, "resource:kafka://replication/status", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://replication/status", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceCluster, "", auth.ActionRead) {
 		err := fmt.Errorf("unauthorized: agent %q cannot access replication status", agentID)
-		s.logAudit(agentID, "resource:kafka://replication/status", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://replication/status", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 
@@ -40,7 +40,7 @@ func (s *Server) handleReplicationStatus(ctx context.Context, request mcp.ReadRe
 	}
 
 	status := s.replicationMon.GetStatus(ctx)
-	s.logAudit(agentID, "resource:kafka://replication/status", nil, "", "success", status.TotalLinks, nil, start)
+	s.logAudit(ctx, agentID, "resource:kafka://replication/status", nil, "", "success", status.TotalLinks, nil, start)
 	return marshalResourceJSON("kafka://replication/status", status)
 }
 
@@ -49,16 +49,16 @@ func (s *Server) handlePluginRegistry(ctx context.Context, request mcp.ReadResou
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
 	if err := s.validateResourceAgentID(agentID); err != nil {
-		s.logAudit(agentID, "resource:kafka://plugins", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://plugins", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if err := s.checkResourceRateLimit(agentID, "resource:kafka://plugins"); err != nil {
-		s.logAudit(agentID, "resource:kafka://plugins", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://plugins", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceCluster, "", auth.ActionRead) {
 		err := fmt.Errorf("unauthorized: agent %q cannot access plugins", agentID)
-		s.logAudit(agentID, "resource:kafka://plugins", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://plugins", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 
@@ -67,7 +67,7 @@ func (s *Server) handlePluginRegistry(ctx context.Context, request mcp.ReadResou
 	}
 
 	plugins := s.pluginRegistry.List()
-	s.logAudit(agentID, "resource:kafka://plugins", nil, "", "success", len(plugins), nil, start)
+	s.logAudit(ctx, agentID, "resource:kafka://plugins", nil, "", "success", len(plugins), nil, start)
 	return marshalResourceJSON("kafka://plugins", map[string]any{
 		"plugins":     plugins,
 		"total_count": len(plugins),
@@ -79,16 +79,16 @@ func (s *Server) handleWatchSubscriptionsResource(ctx context.Context, request m
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
 	if err := s.validateResourceAgentID(agentID); err != nil {
-		s.logAudit(agentID, "resource:kafka://watch/subscriptions", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://watch/subscriptions", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if err := s.checkResourceRateLimit(agentID, "resource:kafka://watch/subscriptions"); err != nil {
-		s.logAudit(agentID, "resource:kafka://watch/subscriptions", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://watch/subscriptions", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceCluster, "", auth.ActionRead) {
 		err := fmt.Errorf("unauthorized: agent %q cannot access watch subscriptions", agentID)
-		s.logAudit(agentID, "resource:kafka://watch/subscriptions", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://watch/subscriptions", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 
@@ -99,7 +99,7 @@ func (s *Server) handleWatchSubscriptionsResource(ctx context.Context, request m
 	}
 
 	subs := s.watchManager.ListSubscriptions("")
-	s.logAudit(agentID, "resource:kafka://watch/subscriptions", nil, "", "success", len(subs), nil, start)
+	s.logAudit(ctx, agentID, "resource:kafka://watch/subscriptions", nil, "", "success", len(subs), nil, start)
 	return marshalResourceJSON("kafka://watch/subscriptions", map[string]any{
 		"subscriptions": subs,
 		"total_count":   len(subs),

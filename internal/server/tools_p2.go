@@ -60,11 +60,11 @@ func (s *Server) handleAggregate(ctx context.Context, request mcp.CallToolReques
 			WindowMs: clampInt64(int64(request.GetInt("window_ms", 300000)), 1, 3600000),
 		})
 		if err != nil {
-			s.logAudit(agentID, "kafka_aggregate", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_aggregate", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to aggregate", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_aggregate", args, cluster, "success", result.MessageCount, nil, start)
+		s.logAudit(ctx, agentID, "kafka_aggregate", args, cluster, "success", result.MessageCount, nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }
@@ -100,7 +100,7 @@ func (s *Server) handleSuggestSchemaEvolution(ctx context.Context, request mcp.C
 		}
 
 		suggestions := kafka.SuggestSchemaEvolution(currentSchema, change)
-		s.logAudit(agentID, "kafka_suggest_schema_evolution", args, "", "success", len(suggestions), nil, start)
+		s.logAudit(ctx, agentID, "kafka_suggest_schema_evolution", args, "", "success", len(suggestions), nil, start)
 		return marshalResult(map[string]any{
 			"subject":     subject,
 			"change":      change,
@@ -124,7 +124,7 @@ func (s *Server) handleListConnectors(ctx context.Context, request mcp.CallToolR
 
 		client, err := s.getConnectClient(clCfg)
 		if err != nil {
-			s.logAudit(agentID, "kafka_list_connectors", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_list_connectors", args, cluster, "error", 0, err, start)
 			return s.toolError("Connect client error", err), nil
 		}
 		if client == nil {
@@ -133,11 +133,11 @@ func (s *Server) handleListConnectors(ctx context.Context, request mcp.CallToolR
 
 		connectors, err := client.ListConnectors(ctx)
 		if err != nil {
-			s.logAudit(agentID, "kafka_list_connectors", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_list_connectors", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to list connectors", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_list_connectors", args, cluster, "success", len(connectors), nil, start)
+		s.logAudit(ctx, agentID, "kafka_list_connectors", args, cluster, "success", len(connectors), nil, start)
 		return marshalResult(map[string]any{"connectors": connectors, "total_count": len(connectors)})
 	})(ctx, request)
 }
@@ -164,7 +164,7 @@ func (s *Server) handleDescribeConnector(ctx context.Context, request mcp.CallTo
 
 		client, err := s.getConnectClient(clCfg)
 		if err != nil {
-			s.logAudit(agentID, "kafka_describe_connector", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_describe_connector", args, cluster, "error", 0, err, start)
 			return s.toolError("Connect client error", err), nil
 		}
 		if client == nil {
@@ -173,11 +173,11 @@ func (s *Server) handleDescribeConnector(ctx context.Context, request mcp.CallTo
 
 		detail, err := client.DescribeConnector(ctx, name)
 		if err != nil {
-			s.logAudit(agentID, "kafka_describe_connector", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_describe_connector", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to describe connector", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_describe_connector", args, cluster, "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_describe_connector", args, cluster, "success", 0, nil, start)
 		return marshalResult(detail)
 	})(ctx, request)
 }
@@ -226,11 +226,11 @@ func (s *Server) handleJoin(ctx context.Context, request mcp.CallToolRequest) (*
 			Limit:      int(clampInt64(int64(request.GetInt("limit", 100)), 1, MaxJoinLimit)),
 		})
 		if err != nil {
-			s.logAudit(agentID, "kafka_join", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_join", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to join", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_join", args, cluster, "success", result.MatchCount, nil, start)
+		s.logAudit(ctx, agentID, "kafka_join", args, cluster, "success", result.MatchCount, nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }
@@ -253,7 +253,7 @@ func (s *Server) handleNaturalLanguageQuery(ctx context.Context, request mcp.Cal
 		// Get topic list for matching
 		topics, err := s.kafkaManager.ListTopics(ctx, cluster, false)
 		if err != nil {
-			s.logAudit(agentID, "kafka_query", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_query", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to list topics", err), nil
 		}
 
@@ -270,11 +270,11 @@ func (s *Server) handleNaturalLanguageQuery(ctx context.Context, request mcp.Cal
 
 		result, err := s.kafkaManager.NaturalLanguageQuery(ctx, cluster, query, topics)
 		if err != nil {
-			s.logAudit(agentID, "kafka_query", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_query", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to execute query", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_query", args, cluster, "success", result.Count, nil, start)
+		s.logAudit(ctx, agentID, "kafka_query", args, cluster, "success", result.Count, nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }

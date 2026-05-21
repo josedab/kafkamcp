@@ -30,7 +30,7 @@ func (s *Server) handleRunbook(ctx context.Context, request mcp.CallToolRequest)
 				return deny, nil
 			}
 			runbooks := s.runbookEngine.ListRunbooks(category)
-			s.logAudit(agentID, "kafka_runbook", args, "", "success", len(runbooks), nil, start)
+			s.logAudit(ctx, agentID, "kafka_runbook", args, "", "success", len(runbooks), nil, start)
 			return marshalResult(map[string]any{"runbooks": runbooks, "total": len(runbooks)})
 
 		case "get":
@@ -55,7 +55,7 @@ func (s *Server) handleRunbook(ctx context.Context, request mcp.CallToolRequest)
 			if err != nil {
 				return s.toolError("Failed to create runbook", err), nil
 			}
-			s.logAudit(agentID, "kafka_runbook", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_runbook", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "created", "runbook": rb})
 
 		case "execute":
@@ -65,10 +65,10 @@ func (s *Server) handleRunbook(ctx context.Context, request mcp.CallToolRequest)
 			params := extractStringMapArg(request, "params")
 			exec, err := s.runbookEngine.Execute(id, agentID, params)
 			if err != nil {
-				s.logAudit(agentID, "kafka_runbook", args, "", "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_runbook", args, "", "error", 0, err, start)
 				return s.toolError("Failed to execute runbook", err), nil
 			}
-			s.logAudit(agentID, "kafka_runbook", args, "", "success", len(exec.Steps), nil, start)
+			s.logAudit(ctx, agentID, "kafka_runbook", args, "", "success", len(exec.Steps), nil, start)
 			return marshalResult(map[string]any{"status": "executing", "execution": exec})
 
 		case "status":
@@ -112,7 +112,7 @@ func (s *Server) handleRunbook(ctx context.Context, request mcp.CallToolRequest)
 			if err := s.runbookEngine.CompleteStep(id, stepIndex, stepStatus, output, stepError); err != nil {
 				return s.toolError("Failed to complete step", err), nil
 			}
-			s.logAudit(agentID, "kafka_runbook", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_runbook", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "step_completed", "execution_id": id, "step_index": stepIndex})
 
 		case "executions":
@@ -145,7 +145,7 @@ func (s *Server) handleRunbook(ctx context.Context, request mcp.CallToolRequest)
 			if err := s.runbookEngine.DeleteRunbook(id); err != nil {
 				return s.toolError("Failed to delete runbook", err), nil
 			}
-			s.logAudit(agentID, "kafka_runbook", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_runbook", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "deleted", "id": id})
 
 		default:

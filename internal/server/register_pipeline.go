@@ -77,7 +77,7 @@ func (s *Server) handlePipelineCreate(ctx context.Context, request mcp.CallToolR
 		return s.toolError("failed to create pipeline", err), nil
 	}
 
-	s.logAudit(agentID, "kafka_pipeline_create", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "kafka_pipeline_create", args, "", "success", 1, nil, start)
 	return marshalResult(pipe)
 }
 
@@ -106,7 +106,7 @@ func (s *Server) handlePipelineExecute(ctx context.Context, request mcp.CallTool
 	// Consume from source topic
 	messages, err := s.kafkaManager.Consume(ctx, cluster, pipe.SourceTopic, -1, "latest", limit, 10000, "")
 	if err != nil {
-		s.logAudit(agentID, "kafka_pipeline_execute", args, cluster, "error", 0, err, start)
+		s.logAudit(ctx, agentID, "kafka_pipeline_execute", args, cluster, "error", 0, err, start)
 		return s.toolError("failed to consume source messages", err), nil
 	}
 
@@ -125,11 +125,11 @@ func (s *Server) handlePipelineExecute(ctx context.Context, request mcp.CallTool
 	// Execute pipeline
 	run, output, err := s.pipelineEngine.Execute(pipelineID, pipeMessages)
 	if err != nil {
-		s.logAudit(agentID, "kafka_pipeline_execute", args, cluster, "error", 0, err, start)
+		s.logAudit(ctx, agentID, "kafka_pipeline_execute", args, cluster, "error", 0, err, start)
 		return s.toolError("pipeline execution failed", err), nil
 	}
 
-	s.logAudit(agentID, "kafka_pipeline_execute", args, cluster, "success", run.OutputCount, nil, start)
+	s.logAudit(ctx, agentID, "kafka_pipeline_execute", args, cluster, "success", run.OutputCount, nil, start)
 	return marshalResult(map[string]any{
 		"run":    run,
 		"output": output,
@@ -143,7 +143,7 @@ func (s *Server) handlePipelineManage(ctx context.Context, request mcp.CallToolR
 	switch action {
 	case "list":
 		pipelines := s.pipelineEngine.ListPipelines()
-		s.logAudit(agentID, "kafka_pipeline_manage", args, "", "success", len(pipelines), nil, start)
+		s.logAudit(ctx, agentID, "kafka_pipeline_manage", args, "", "success", len(pipelines), nil, start)
 		return marshalResult(map[string]any{"pipelines": pipelines, "total": len(pipelines)})
 
 	case "get":
@@ -154,7 +154,7 @@ func (s *Server) handlePipelineManage(ctx context.Context, request mcp.CallToolR
 		if err != nil {
 			return s.toolError("pipeline not found", err), nil
 		}
-		s.logAudit(agentID, "kafka_pipeline_manage", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_pipeline_manage", args, "", "success", 1, nil, start)
 		return marshalResult(pipe)
 
 	case "delete":
@@ -165,12 +165,12 @@ func (s *Server) handlePipelineManage(ctx context.Context, request mcp.CallToolR
 		if err != nil {
 			return s.toolError("failed to delete pipeline", err), nil
 		}
-		s.logAudit(agentID, "kafka_pipeline_manage", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_pipeline_manage", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]string{"status": "deleted"})
 
 	case "runs":
 		runs := s.pipelineEngine.ListRuns(pipelineID, 50)
-		s.logAudit(agentID, "kafka_pipeline_manage", args, "", "success", len(runs), nil, start)
+		s.logAudit(ctx, agentID, "kafka_pipeline_manage", args, "", "success", len(runs), nil, start)
 		return marshalResult(map[string]any{"runs": runs, "total": len(runs)})
 
 	default:

@@ -54,11 +54,11 @@ func (s *Server) handleCodecDecode(ctx context.Context, request mcp.CallToolRequ
 
 	result, err := s.codecEngine.Decode([]byte(data))
 	if err != nil {
-		s.logAudit(agentID, "codec_decode", args, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "codec_decode", args, "", "error", 0, err, start)
 		return s.toolError("failed to decode message", err), nil
 	}
 
-	s.logAudit(agentID, "codec_decode", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "codec_decode", args, "", "success", 1, nil, start)
 	return marshalResult(result)
 }
 
@@ -80,11 +80,11 @@ func (s *Server) handleCodecEncode(ctx context.Context, request mcp.CallToolRequ
 
 	result, err := s.codecEngine.Encode(value, schemaID, format)
 	if err != nil {
-		s.logAudit(agentID, "codec_encode", args, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "codec_encode", args, "", "error", 0, err, start)
 		return s.toolError("failed to encode message", err), nil
 	}
 
-	s.logAudit(agentID, "codec_encode", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "codec_encode", args, "", "success", 1, nil, start)
 	return marshalResult(map[string]any{
 		"schema_id": result.SchemaID,
 		"format":    result.Format,
@@ -99,7 +99,7 @@ func (s *Server) handleCodecDetectFormat(ctx context.Context, request mcp.CallTo
 	}
 
 	detected := codec.DetectFormat([]byte(data))
-	s.logAudit(agentID, "codec_detect_format", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "codec_detect_format", args, "", "success", 1, nil, start)
 	return marshalResult(map[string]any{
 		"format": detected,
 	})

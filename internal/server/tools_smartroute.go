@@ -25,13 +25,13 @@ func (s *Server) handleSmartRoute(ctx context.Context, request mcp.CallToolReque
 
 		plan, err := s.smartRouter.ClassifyAndPlan(req)
 		if err != nil {
-			s.logAudit(agentID, "kafka_smart_route", args, "", "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_smart_route", args, "", "error", 0, err, start)
 			return s.toolError("Failed to create execution plan", err), nil
 		}
 
 		nextSteps, _ := s.smartRouter.GetNextSteps(plan.ID)
 
-		s.logAudit(agentID, "kafka_smart_route", args, "", "success", len(plan.Steps), nil, start)
+		s.logAudit(ctx, agentID, "kafka_smart_route", args, "", "success", len(plan.Steps), nil, start)
 		return marshalResult(map[string]any{
 			"plan":       plan,
 			"next_steps": nextSteps,
@@ -63,7 +63,7 @@ func (s *Server) handleSmartRouteStatus(ctx context.Context, request mcp.CallToo
 				return s.toolError("Plan not found", err), nil
 			}
 			result, _ := s.smartRouter.GetResult(planID)
-			s.logAudit(agentID, "kafka_smart_route_status", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_smart_route_status", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"plan": plan, "result": result})
 
 		case "next_steps":
@@ -74,7 +74,7 @@ func (s *Server) handleSmartRouteStatus(ctx context.Context, request mcp.CallToo
 			if err != nil {
 				return s.toolError("Failed to get next steps", err), nil
 			}
-			s.logAudit(agentID, "kafka_smart_route_status", args, "", "success", len(steps), nil, start)
+			s.logAudit(ctx, agentID, "kafka_smart_route_status", args, "", "success", len(steps), nil, start)
 			return marshalResult(map[string]any{"next_steps": steps, "count": len(steps)})
 
 		case "complete_step":
@@ -108,7 +108,7 @@ func (s *Server) handleSmartRouteStatus(ctx context.Context, request mcp.CallToo
 			}
 
 			nextSteps, _ := s.smartRouter.GetNextSteps(planID)
-			s.logAudit(agentID, "kafka_smart_route_status", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_smart_route_status", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{
 				"status":     "step_recorded",
 				"next_steps": nextSteps,
@@ -117,12 +117,12 @@ func (s *Server) handleSmartRouteStatus(ctx context.Context, request mcp.CallToo
 
 		case "graph":
 			graph := s.smartRouter.GetToolGraph()
-			s.logAudit(agentID, "kafka_smart_route_status", args, "", "success", len(graph), nil, start)
+			s.logAudit(ctx, agentID, "kafka_smart_route_status", args, "", "success", len(graph), nil, start)
 			return marshalResult(map[string]any{"tool_graph": graph, "total": len(graph)})
 
 		default:
 			plans := s.smartRouter.ListPlans()
-			s.logAudit(agentID, "kafka_smart_route_status", args, "", "success", len(plans), nil, start)
+			s.logAudit(ctx, agentID, "kafka_smart_route_status", args, "", "success", len(plans), nil, start)
 			return marshalResult(map[string]any{"plans": plans, "total": len(plans)})
 		}
 	})(ctx, request)

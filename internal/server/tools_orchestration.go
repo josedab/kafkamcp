@@ -35,11 +35,11 @@ func (s *Server) handleOrchestrationCreate(ctx context.Context, request mcp.Call
 
 		orch, err := s.orchestrationEngine.CreateOrchestration(name, description, agentID, steps)
 		if err != nil {
-			s.logAudit(agentID, "kafka_orchestration_create", args, "", "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_orchestration_create", args, "", "error", 0, err, start)
 			return s.toolError("Failed to create orchestration", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_orchestration_create", args, "", "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_orchestration_create", args, "", "success", 0, nil, start)
 		return marshalResult(map[string]any{
 			"status":        "created",
 			"orchestration": orch,
@@ -63,7 +63,7 @@ func (s *Server) handleOrchestrationStatus(ctx context.Context, request mcp.Call
 
 		if orchID == "" {
 			orchs := s.orchestrationEngine.ListOrchestrations()
-			s.logAudit(agentID, "kafka_orchestration_status", args, "", "success", len(orchs), nil, start)
+			s.logAudit(ctx, agentID, "kafka_orchestration_status", args, "", "success", len(orchs), nil, start)
 			return marshalResult(map[string]any{"orchestrations": orchs, "total": len(orchs)})
 		}
 
@@ -73,23 +73,23 @@ func (s *Server) handleOrchestrationStatus(ctx context.Context, request mcp.Call
 			if err != nil {
 				return s.toolError("Failed to get ready steps", err), nil
 			}
-			s.logAudit(agentID, "kafka_orchestration_status", args, "", "success", len(steps), nil, start)
+			s.logAudit(ctx, agentID, "kafka_orchestration_status", args, "", "success", len(steps), nil, start)
 			return marshalResult(map[string]any{"ready_steps": steps, "count": len(steps)})
 
 		case "context":
-			ctx, err := s.orchestrationEngine.GetSharedContext(orchID)
+			sharedCtx, err := s.orchestrationEngine.GetSharedContext(orchID)
 			if err != nil {
 				return s.toolError("Failed to get context", err), nil
 			}
-			s.logAudit(agentID, "kafka_orchestration_status", args, "", "success", 0, nil, start)
-			return marshalResult(map[string]any{"shared_context": ctx})
+			s.logAudit(ctx, agentID, "kafka_orchestration_status", args, "", "success", 0, nil, start)
+			return marshalResult(map[string]any{"shared_context": sharedCtx})
 
 		default:
 			orch, err := s.orchestrationEngine.GetOrchestration(orchID)
 			if err != nil {
 				return s.toolError("Orchestration not found", err), nil
 			}
-			s.logAudit(agentID, "kafka_orchestration_status", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_orchestration_status", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"orchestration": orch})
 		}
 	})(ctx, request)
@@ -124,14 +124,14 @@ func (s *Server) handleOrchestrationCompleteStep(ctx context.Context, request mc
 
 		err := s.orchestrationEngine.CompleteStep(orchID, stepID, agentID, status, nil, errMsg)
 		if err != nil {
-			s.logAudit(agentID, "kafka_orchestration_complete_step", args, "", "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_orchestration_complete_step", args, "", "error", 0, err, start)
 			return s.toolError("Failed to complete step", err), nil
 		}
 
 		// Get next ready steps
 		ready, _ := s.orchestrationEngine.GetReadySteps(orchID)
 
-		s.logAudit(agentID, "kafka_orchestration_complete_step", args, "", "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_orchestration_complete_step", args, "", "success", 0, nil, start)
 		return marshalResult(map[string]any{
 			"status":      "step_completed",
 			"step_id":     stepID,
@@ -166,11 +166,11 @@ func (s *Server) handleOrchestrationHandoff(ctx context.Context, request mcp.Cal
 
 		handoff, err := s.orchestrationEngine.CreateHandoff(fromAgent, toAgent, message, nil)
 		if err != nil {
-			s.logAudit(agentID, "kafka_orchestration_handoff", args, "", "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_orchestration_handoff", args, "", "error", 0, err, start)
 			return s.toolError("Failed to create handoff", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_orchestration_handoff", args, "", "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_orchestration_handoff", args, "", "success", 0, nil, start)
 		return marshalResult(map[string]any{"status": "handoff_created", "handoff": handoff})
 	})(ctx, request)
 }
@@ -203,7 +203,7 @@ func (s *Server) handleOrchestrationAgents(ctx context.Context, request mcp.Call
 			if err != nil {
 				return s.toolError("Failed to register agent", err), nil
 			}
-			s.logAudit(agentID, "kafka_orchestration_agents", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_orchestration_agents", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"status": "registered", "agent": agent})
 
 		case "heartbeat":
@@ -211,12 +211,12 @@ func (s *Server) handleOrchestrationAgents(ctx context.Context, request mcp.Call
 			if err := s.orchestrationEngine.AgentHeartbeat(id); err != nil {
 				return s.toolError("Heartbeat failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_orchestration_agents", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_orchestration_agents", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"status": "ok", "agent_id": id})
 
 		default:
 			agents := s.orchestrationEngine.ListAgents()
-			s.logAudit(agentID, "kafka_orchestration_agents", args, "", "success", len(agents), nil, start)
+			s.logAudit(ctx, agentID, "kafka_orchestration_agents", args, "", "success", len(agents), nil, start)
 			return marshalResult(map[string]any{"agents": agents, "total": len(agents)})
 		}
 	})(ctx, request)

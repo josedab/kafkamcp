@@ -93,7 +93,7 @@ func (s *Server) handleBenchmark(ctx context.Context, request mcp.CallToolReques
 			}
 
 			result, _ := s.benchmarkEngine.GetResult(bench.ID)
-			s.logAudit(agentID, "kafka_benchmark", args, cluster, "success", cfg.MessageCount, nil, start)
+			s.logAudit(ctx, agentID, "kafka_benchmark", args, cluster, "success", cfg.MessageCount, nil, start)
 			return marshalResult(result)
 
 		case "status":

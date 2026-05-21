@@ -42,7 +42,7 @@ func (s *Server) handleOpenAPISpec(ctx context.Context, request mcp.CallToolRequ
 			},
 		}
 
-		s.logAudit(agentID, "kafka_openapi_spec", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_openapi_spec", args, "", "success", 1, nil, start)
 		return marshalResult(spec)
 	})(ctx, request)
 }

@@ -20,12 +20,12 @@ func (s *Server) handleFinOpsSummary(ctx context.Context, request mcp.CallToolRe
 		switch action {
 		case "summary":
 			summary := s.finOpsDashboard.GetSummary()
-			s.logAudit(agentID, "kafka_finops_summary", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_finops_summary", args, "", "success", 0, nil, start)
 			return marshalResult(summary)
 
 		case "snapshot":
 			snap := s.finOpsDashboard.TakeSnapshot("default")
-			s.logAudit(agentID, "kafka_finops_summary", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_finops_summary", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"snapshot": snap})
 
 		case "recommendations":
@@ -34,7 +34,7 @@ func (s *Server) handleFinOpsSummary(ctx context.Context, request mcp.CallToolRe
 			for _, r := range recs {
 				totalSavings += r.Savings
 			}
-			s.logAudit(agentID, "kafka_finops_summary", args, "", "success", len(recs), nil, start)
+			s.logAudit(ctx, agentID, "kafka_finops_summary", args, "", "success", len(recs), nil, start)
 			return marshalResult(map[string]any{
 				"recommendations": recs,
 				"total":           len(recs),
@@ -44,12 +44,12 @@ func (s *Server) handleFinOpsSummary(ctx context.Context, request mcp.CallToolRe
 		case "forecast":
 			months := int(request.GetFloat("months", 6))
 			forecast := s.finOpsDashboard.ForecastSpend(months)
-			s.logAudit(agentID, "kafka_finops_summary", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_finops_summary", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"forecast": forecast})
 
 		case "budgets":
 			budgets := s.finOpsDashboard.GetBudgets()
-			s.logAudit(agentID, "kafka_finops_summary", args, "", "success", len(budgets), nil, start)
+			s.logAudit(ctx, agentID, "kafka_finops_summary", args, "", "success", len(budgets), nil, start)
 			return marshalResult(map[string]any{"budgets": budgets, "total": len(budgets)})
 
 		default:
@@ -73,11 +73,11 @@ func (s *Server) handleFinOpsBudget(ctx context.Context, request mcp.CallToolReq
 
 		alert, err := s.finOpsDashboard.SetBudget(name, threshold)
 		if err != nil {
-			s.logAudit(agentID, "kafka_finops_budget", args, "", "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_finops_budget", args, "", "error", 0, err, start)
 			return s.toolError("Failed to set budget", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_finops_budget", args, "", "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_finops_budget", args, "", "success", 0, nil, start)
 		return marshalResult(map[string]any{
 			"status": "budget_set",
 			"alert":  alert,
@@ -106,7 +106,7 @@ func (s *Server) handleFinOpsRecordCost(ctx context.Context, request mcp.CallToo
 
 		s.finOpsDashboard.RecordTopicCost(topic, monthlyCost, storageGB, partitions, msgsPerSec)
 
-		s.logAudit(agentID, "kafka_finops_record_cost", args, "", "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_finops_record_cost", args, "", "success", 0, nil, start)
 		return marshalResult(map[string]any{
 			"status":  "recorded",
 			"topic":   topic,

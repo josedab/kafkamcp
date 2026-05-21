@@ -38,12 +38,12 @@ func (s *Server) handleConfigHistory(ctx context.Context, request mcp.CallToolRe
 		if err != nil {
 			return s.toolError("failed to generate audit report", err), nil
 		}
-		s.logAudit(agentID, "kafka_config_history", args, "", "success", report.TotalChanges, nil, start)
+		s.logAudit(ctx, agentID, "kafka_config_history", args, "", "success", report.TotalChanges, nil, start)
 		return marshalResult(report)
 	}
 
 	history := s.configVCSEngine.History(resource, resourceID, limit)
-	s.logAudit(agentID, "kafka_config_history", args, "", "success", len(history), nil, start)
+	s.logAudit(ctx, agentID, "kafka_config_history", args, "", "success", len(history), nil, start)
 	return marshalResult(map[string]any{"history": history, "total": len(history)})
 }
 
@@ -78,7 +78,7 @@ func (s *Server) handleConfigRollback(ctx context.Context, request mcp.CallToolR
 		return s.toolError("config rollback failed", err), nil
 	}
 
-	s.logAudit(agentID, "kafka_config_rollback", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "kafka_config_rollback", args, "", "success", 1, nil, start)
 	return marshalResult(result)
 }
 
@@ -113,7 +113,7 @@ func (s *Server) handleConfigCompare(ctx context.Context, request mcp.CallToolRe
 		return s.toolError("config comparison failed", err), nil
 	}
 
-	s.logAudit(agentID, "kafka_config_compare", args, "", "success", len(result.Differences), nil, start)
+	s.logAudit(ctx, agentID, "kafka_config_compare", args, "", "success", len(result.Differences), nil, start)
 	return marshalResult(result)
 }
 
@@ -126,12 +126,12 @@ func (s *Server) handleCostLive(ctx context.Context, request mcp.CallToolRequest
 		if err != nil {
 			return s.toolError("failed to retrieve cost data", err), nil
 		}
-		s.logAudit(agentID, "kafka_cost_live", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_cost_live", args, "", "success", 1, nil, start)
 		return marshalResult(cost)
 	}
 
 	costs := s.costAttrEngine.GetAllLiveCosts()
-	s.logAudit(agentID, "kafka_cost_live", args, "", "success", len(costs), nil, start)
+	s.logAudit(ctx, agentID, "kafka_cost_live", args, "", "success", len(costs), nil, start)
 	return marshalResult(map[string]any{"costs": costs, "total": len(costs)})
 }
 
@@ -171,12 +171,12 @@ func (s *Server) handleCostAllocate(ctx context.Context, request mcp.CallToolReq
 		if err != nil {
 			return s.toolError("failed to create cost allocation", err), nil
 		}
-		s.logAudit(agentID, "kafka_cost_allocate", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_cost_allocate", args, "", "success", 1, nil, start)
 		return marshalResult(alloc)
 
 	case "list":
 		allocs := s.costAttrEngine.GetAllocations()
-		s.logAudit(agentID, "kafka_cost_allocate", args, "", "success", len(allocs), nil, start)
+		s.logAudit(ctx, agentID, "kafka_cost_allocate", args, "", "success", len(allocs), nil, start)
 		return marshalResult(map[string]any{"allocations": allocs, "total": len(allocs)})
 
 	default:
@@ -225,12 +225,12 @@ func (s *Server) handleCostBudget(ctx context.Context, request mcp.CallToolReque
 		if err != nil {
 			return s.toolError("failed to create budget", err), nil
 		}
-		s.logAudit(agentID, "kafka_cost_budget", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_cost_budget", args, "", "success", 1, nil, start)
 		return marshalResult(budget)
 
 	case "list":
 		budgets := s.costAttrEngine.GetBudgets()
-		s.logAudit(agentID, "kafka_cost_budget", args, "", "success", len(budgets), nil, start)
+		s.logAudit(ctx, agentID, "kafka_cost_budget", args, "", "success", len(budgets), nil, start)
 		return marshalResult(map[string]any{"budgets": budgets, "total": len(budgets)})
 
 	default:
@@ -275,7 +275,7 @@ func (s *Server) handleSandboxCreate(ctx context.Context, request mcp.CallToolRe
 		return s.toolError("failed to create sandbox", err), nil
 	}
 
-	s.logAudit(agentID, "kafka_sandbox_create", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "kafka_sandbox_create", args, "", "success", 1, nil, start)
 	return marshalResult(sb)
 }
 
@@ -303,7 +303,7 @@ func (s *Server) handleSandboxExec(ctx context.Context, request mcp.CallToolRequ
 		return s.toolError("sandbox execution failed", err), nil
 	}
 
-	s.logAudit(agentID, "kafka_sandbox_exec", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "kafka_sandbox_exec", args, "", "success", 1, nil, start)
 	return marshalResult(op)
 }
 
@@ -323,12 +323,12 @@ func (s *Server) handleSandboxManage(ctx context.Context, request mcp.CallToolRe
 		if err := s.sandboxEngine.Destroy(sandboxID); err != nil {
 			return s.toolError("failed to destroy sandbox", err), nil
 		}
-		s.logAudit(agentID, "kafka_sandbox_destroy", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_sandbox_destroy", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]string{"status": "destroyed"})
 
 	case "list":
 		sandboxes := s.sandboxEngine.List(agentID)
-		s.logAudit(agentID, "kafka_sandbox_destroy", args, "", "success", len(sandboxes), nil, start)
+		s.logAudit(ctx, agentID, "kafka_sandbox_destroy", args, "", "success", len(sandboxes), nil, start)
 		return marshalResult(map[string]any{"sandboxes": sandboxes, "total": len(sandboxes)})
 
 	case "get":
@@ -339,7 +339,7 @@ func (s *Server) handleSandboxManage(ctx context.Context, request mcp.CallToolRe
 		if err != nil {
 			return s.toolError("sandbox not found", err), nil
 		}
-		s.logAudit(agentID, "kafka_sandbox_destroy", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_sandbox_destroy", args, "", "success", 1, nil, start)
 		return marshalResult(sb)
 
 	case "promotion_report":
@@ -350,7 +350,7 @@ func (s *Server) handleSandboxManage(ctx context.Context, request mcp.CallToolRe
 		if err != nil {
 			return s.toolError("failed to generate promotion report", err), nil
 		}
-		s.logAudit(agentID, "kafka_sandbox_destroy", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_sandbox_destroy", args, "", "success", 1, nil, start)
 		return marshalResult(report)
 
 	default:

@@ -30,7 +30,7 @@ func (s *Server) handleGroupHealth(ctx context.Context, request mcp.CallToolRequ
 
 		groupDetail, err := s.kafkaManager.DescribeConsumerGroup(ctx, cluster, groupID)
 		if err != nil {
-			s.logAudit(agentID, "kafka_group_health", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_group_health", args, cluster, "error", 0, err, start)
 			return s.toolError("failed to describe consumer group", err), nil
 		}
 
@@ -42,7 +42,7 @@ func (s *Server) handleGroupHealth(ctx context.Context, request mcp.CallToolRequ
 			0, // rebalance count not directly available
 		)
 
-		s.logAudit(agentID, "kafka_group_health", args, cluster, "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_group_health", args, cluster, "success", 1, nil, start)
 		return marshalResult(health)
 	})(ctx, request)
 }
@@ -69,7 +69,7 @@ func (s *Server) handlePersona(ctx context.Context, request mcp.CallToolRequest)
 			if active != nil {
 				activeName = active.Name
 			}
-			s.logAudit(agentID, "kafka_persona", args, "", "success", len(personas), nil, start)
+			s.logAudit(ctx, agentID, "kafka_persona", args, "", "success", len(personas), nil, start)
 			return marshalResult(map[string]any{"personas": personas, "active": activeName, "total": len(personas)})
 
 		case "get":
@@ -80,7 +80,7 @@ func (s *Server) handlePersona(ctx context.Context, request mcp.CallToolRequest)
 			if err != nil {
 				return s.toolError("persona not found", err), nil
 			}
-			s.logAudit(agentID, "kafka_persona", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_persona", args, "", "success", 1, nil, start)
 			return marshalResult(p)
 
 		case "activate":
@@ -90,7 +90,7 @@ func (s *Server) handlePersona(ctx context.Context, request mcp.CallToolRequest)
 			if err := s.personaEngine.SetActive(personaName); err != nil {
 				return s.toolError("persona activation failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_persona", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_persona", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "activated", "persona": personaName})
 
 		default:
@@ -125,7 +125,7 @@ func (s *Server) handleForecast(ctx context.Context, request mcp.CallToolRequest
 		// Record current metrics for the topic
 		detail, err := s.kafkaManager.DescribeTopic(ctx, cluster, topic)
 		if err != nil {
-			s.logAudit(agentID, "kafka_forecast", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_forecast", args, cluster, "error", 0, err, start)
 			return s.toolError("failed to describe topic", err), nil
 		}
 
@@ -139,11 +139,11 @@ func (s *Server) handleForecast(ctx context.Context, request mcp.CallToolRequest
 
 		result, err := s.forecaster.ForecastTopic(topic, metricName, horizonDays)
 		if err != nil {
-			s.logAudit(agentID, "kafka_forecast", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_forecast", args, cluster, "error", 0, err, start)
 			return s.toolError("forecast failed", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_forecast", args, cluster, "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_forecast", args, cluster, "success", 1, nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }

@@ -26,7 +26,7 @@ func (s *Server) handleReplayRecord(ctx context.Context, request mcp.CallToolReq
 			maxMessages := int(request.GetFloat("max_messages", 1000))
 
 			rec := s.replayEngine.CreateRecording(name, topic, cluster, maxMessages)
-			s.logAudit(agentID, "kafka_replay_record", args, cluster, "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_replay_record", args, cluster, "success", 1, nil, start)
 			return marshalResult(map[string]any{
 				"recording": rec,
 				"message":   "Recording started. Messages will be captured. Use action=stop to finish.",
@@ -96,7 +96,7 @@ func (s *Server) handleReplayRun(ctx context.Context, request mcp.CallToolReques
 			if err != nil {
 				return s.toolError("replay failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_replay_run", args, "", "success", session.MessagesReplayed, nil, start)
+			s.logAudit(ctx, agentID, "kafka_replay_run", args, "", "success", session.MessagesReplayed, nil, start)
 			return marshalResult(session)
 
 		case "get":
@@ -155,7 +155,7 @@ func (s *Server) handleReplayRegression(ctx context.Context, request mcp.CallToo
 			if err != nil {
 				return s.toolError("regression run failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_replay_regression", args, "", "success", result.TotalTests, nil, start)
+			s.logAudit(ctx, agentID, "kafka_replay_regression", args, "", "success", result.TotalTests, nil, start)
 			return marshalResult(result)
 
 		default:

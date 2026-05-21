@@ -85,7 +85,7 @@ func (s *Server) registerGatewayTools() {
 
 func (s *Server) handleGatewayListBackends(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 	backends := s.gatewayManager.ListBackends()
-	s.logAudit(agentID, "gateway_list_backends", args, "", "success", len(backends), nil, start)
+	s.logAudit(ctx, agentID, "gateway_list_backends", args, "", "success", len(backends), nil, start)
 	return marshalResult(map[string]any{
 		"backends": backends,
 		"total":    len(backends),
@@ -108,11 +108,11 @@ func (s *Server) handleGatewayProduce(ctx context.Context, request mcp.CallToolR
 		Value: []byte(value),
 	})
 	if err != nil {
-		s.logAudit(agentID, "gateway_produce", args, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "gateway_produce", args, "", "error", 0, err, start)
 		return s.toolError("failed to produce via gateway", err), nil
 	}
 
-	s.logAudit(agentID, "gateway_produce", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "gateway_produce", args, "", "success", 1, nil, start)
 	return marshalResult(result)
 }
 
@@ -139,11 +139,11 @@ func (s *Server) handleGatewayConsume(ctx context.Context, request mcp.CallToolR
 		Limit: limit,
 	})
 	if err != nil {
-		s.logAudit(agentID, "gateway_consume", args, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "gateway_consume", args, "", "error", 0, err, start)
 		return s.toolError("failed to consume via gateway", err), nil
 	}
 
-	s.logAudit(agentID, "gateway_consume", args, "", "success", len(messages), nil, start)
+	s.logAudit(ctx, agentID, "gateway_consume", args, "", "success", len(messages), nil, start)
 	return marshalResult(map[string]any{
 		"messages": messages,
 		"count":    len(messages),
@@ -158,11 +158,11 @@ func (s *Server) handleGatewayListTopics(ctx context.Context, request mcp.CallTo
 
 	topics, err := s.gatewayManager.ListTopics(ctx, backendName)
 	if err != nil {
-		s.logAudit(agentID, "gateway_list_topics", args, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "gateway_list_topics", args, "", "error", 0, err, start)
 		return s.toolError("failed to list gateway topics", err), nil
 	}
 
-	s.logAudit(agentID, "gateway_list_topics", args, "", "success", len(topics), nil, start)
+	s.logAudit(ctx, agentID, "gateway_list_topics", args, "", "success", len(topics), nil, start)
 	return marshalResult(map[string]any{
 		"topics": topics,
 		"total":  len(topics),
@@ -186,11 +186,11 @@ func (s *Server) handleGatewayCreateTopic(ctx context.Context, request mcp.CallT
 
 	err := s.gatewayManager.CreateTopic(ctx, backendName, topic, partitions, nil)
 	if err != nil {
-		s.logAudit(agentID, "gateway_create_topic", args, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "gateway_create_topic", args, "", "error", 0, err, start)
 		return s.toolError("failed to create gateway topic", err), nil
 	}
 
-	s.logAudit(agentID, "gateway_create_topic", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "gateway_create_topic", args, "", "success", 1, nil, start)
 	return marshalResult(map[string]any{
 		"status":  "created",
 		"topic":   topic,

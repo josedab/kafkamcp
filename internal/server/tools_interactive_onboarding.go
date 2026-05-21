@@ -19,7 +19,7 @@ func (s *Server) handleInteractiveOnboarding(ctx context.Context, request mcp.Ca
 		switch action {
 		case "start":
 			session := s.onboardingEngine.Interactive().StartSession(ctx, agentID)
-			s.logAudit(agentID, "kafka_onboard_interactive", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_onboard_interactive", args, "", "success", 1, nil, start)
 
 			firstStep := session.Steps[0]
 			help := onboarding.GenerateContextualHelp(firstStep, session.Context)
@@ -39,7 +39,7 @@ func (s *Server) handleInteractiveOnboarding(ctx context.Context, request mcp.Ca
 			}
 			session, _ := s.onboardingEngine.Interactive().GetSession(sessionID)
 			help := onboarding.GenerateContextualHelp(*step, session.Context)
-			s.logAudit(agentID, "kafka_onboard_interactive", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_onboard_interactive", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"step": step, "guidance": help})
 
 		case "advance":
@@ -51,7 +51,7 @@ func (s *Server) handleInteractiveOnboarding(ctx context.Context, request mcp.Ca
 			if err != nil {
 				return s.toolError("failed to advance step", err), nil
 			}
-			s.logAudit(agentID, "kafka_onboard_interactive", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_onboard_interactive", args, "", "success", 1, nil, start)
 			return marshalResult(advResult)
 
 		case "skip":
@@ -62,7 +62,7 @@ func (s *Server) handleInteractiveOnboarding(ctx context.Context, request mcp.Ca
 			if err != nil {
 				return s.toolError("failed to skip step", err), nil
 			}
-			s.logAudit(agentID, "kafka_onboard_interactive", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_onboard_interactive", args, "", "success", 1, nil, start)
 			return marshalResult(skipResult)
 
 		case "progress":
@@ -70,7 +70,7 @@ func (s *Server) handleInteractiveOnboarding(ctx context.Context, request mcp.Ca
 				return mcp.NewToolResultError("session_id is required"), nil
 			}
 			progress := s.onboardingEngine.Interactive().GetProgress(sessionID)
-			s.logAudit(agentID, "kafka_onboard_interactive", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_onboard_interactive", args, "", "success", 1, nil, start)
 			return marshalResult(progress)
 
 		case "help":
@@ -83,7 +83,7 @@ func (s *Server) handleInteractiveOnboarding(ctx context.Context, request mcp.Ca
 			}
 			session, _ := s.onboardingEngine.Interactive().GetSession(sessionID)
 			help := onboarding.GenerateContextualHelp(*step, session.Context)
-			s.logAudit(agentID, "kafka_onboard_interactive", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_onboard_interactive", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"help": help, "step": step})
 
 		default:

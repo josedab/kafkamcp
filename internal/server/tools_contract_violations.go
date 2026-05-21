@@ -32,7 +32,7 @@ func (s *Server) handleContractViolations(ctx context.Context, request mcp.CallT
 			if err != nil {
 				return s.toolError("Failed to get violation summary", err), nil
 			}
-			s.logAudit(agentID, "kafka_contract_violations", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_contract_violations", args, "", "success", 0, nil, start)
 			return marshalResult(summary)
 
 		case "enforce":
@@ -44,7 +44,7 @@ func (s *Server) handleContractViolations(ctx context.Context, request mcp.CallT
 			if result == nil {
 				return marshalResult(map[string]any{"message": "no contract registered for this topic"})
 			}
-			s.logAudit(agentID, "kafka_contract_violations", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_contract_violations", args, "", "success", 0, nil, start)
 			return marshalResult(result)
 
 		case "set_mode":
@@ -59,7 +59,7 @@ func (s *Server) handleContractViolations(ctx context.Context, request mcp.CallT
 			if err := s.contractEngine.SetEnforcementMode(topic, enfMode); err != nil {
 				return s.toolError("Failed to set enforcement mode", err), nil
 			}
-			s.logAudit(agentID, "kafka_contract_violations", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_contract_violations", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"status": "updated", "topic": topic, "mode": mode})
 
 		case "infer":
@@ -84,7 +84,7 @@ func (s *Server) handleContractViolations(ctx context.Context, request mcp.CallT
 				return mcp.NewToolResultError("no valid message samples provided"), nil
 			}
 			inferred := s.contractEngine.InferContract(topic, samples)
-			s.logAudit(agentID, "kafka_contract_violations", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_contract_violations", args, "", "success", 0, nil, start)
 			return marshalResult(inferred)
 
 		default:

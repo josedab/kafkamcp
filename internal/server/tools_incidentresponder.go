@@ -25,7 +25,7 @@ func (s *Server) handleIncidentRespond(ctx context.Context, request mcp.CallTool
 			if err != nil {
 				return s.toolError("incident response failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_incident_respond", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_incident_respond", args, "", "success", 1, nil, start)
 			return marshalResult(result)
 
 		case "hypothesize":
@@ -59,7 +59,7 @@ func (s *Server) handleIncidentRespond(ctx context.Context, request mcp.CallTool
 			if err != nil {
 				return s.toolError("approval failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_incident_respond", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_incident_respond", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"runbook": runbook, "message": "Runbook approved. Use action=execute_runbook to run."})
 
 		case "execute_runbook":
@@ -70,7 +70,7 @@ func (s *Server) handleIncidentRespond(ctx context.Context, request mcp.CallTool
 			if err != nil {
 				return s.toolError("execution failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_incident_respond", args, "", "success", len(logs), nil, start)
+			s.logAudit(ctx, agentID, "kafka_incident_respond", args, "", "success", len(logs), nil, start)
 			return marshalResult(map[string]any{"execution_logs": logs, "total_actions": len(logs)})
 
 		case "get_runbook":

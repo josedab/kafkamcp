@@ -65,7 +65,7 @@ func (s *Server) handleOperatorManage(ctx context.Context, request mcp.CallToolR
 		if err != nil {
 			return s.toolError("failed to create operator instance", err), nil
 		}
-		s.logAudit(agentID, "k8s_operator_manage", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "k8s_operator_manage", args, "", "success", 1, nil, start)
 		return marshalResult(inst)
 
 	case "get":
@@ -76,12 +76,12 @@ func (s *Server) handleOperatorManage(ctx context.Context, request mcp.CallToolR
 		if err != nil {
 			return s.toolError("operator instance not found", err), nil
 		}
-		s.logAudit(agentID, "k8s_operator_manage", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "k8s_operator_manage", args, "", "success", 1, nil, start)
 		return marshalResult(inst)
 
 	case "list":
 		instances := s.operatorController.ListInstances(namespace)
-		s.logAudit(agentID, "k8s_operator_manage", args, "", "success", len(instances), nil, start)
+		s.logAudit(ctx, agentID, "k8s_operator_manage", args, "", "success", len(instances), nil, start)
 		return marshalResult(map[string]any{"instances": instances, "total": len(instances)})
 
 	case "delete":
@@ -92,7 +92,7 @@ func (s *Server) handleOperatorManage(ctx context.Context, request mcp.CallToolR
 		if err != nil {
 			return s.toolError("failed to delete operator instance", err), nil
 		}
-		s.logAudit(agentID, "k8s_operator_manage", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "k8s_operator_manage", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]string{"status": "deleted"})
 
 	case "scale":
@@ -107,7 +107,7 @@ func (s *Server) handleOperatorManage(ctx context.Context, request mcp.CallToolR
 		if err != nil {
 			return s.toolError("failed to scale operator instance", err), nil
 		}
-		s.logAudit(agentID, "k8s_operator_manage", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "k8s_operator_manage", args, "", "success", 1, nil, start)
 		return marshalResult(inst)
 
 	case "manifest":
@@ -119,12 +119,12 @@ func (s *Server) handleOperatorManage(ctx context.Context, request mcp.CallToolR
 			return s.toolError("operator instance not found", err), nil
 		}
 		manifest := s.operatorController.GenerateDeploymentManifest(inst)
-		s.logAudit(agentID, "k8s_operator_manage", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "k8s_operator_manage", args, "", "success", 1, nil, start)
 		return mcp.NewToolResultText(manifest), nil
 
 	case "crd":
 		crd := operator.GenerateCRD()
-		s.logAudit(agentID, "k8s_operator_manage", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "k8s_operator_manage", args, "", "success", 1, nil, start)
 		return mcp.NewToolResultText(crd), nil
 
 	default:

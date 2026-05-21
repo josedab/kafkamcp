@@ -27,7 +27,7 @@ func (s *Server) handleEventBus(ctx context.Context, request mcp.CallToolRequest
 			if err != nil {
 				return s.toolError("Failed to subscribe", err), nil
 			}
-			s.logAudit(agentID, "kafka_event_bus", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_event_bus", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{
 				"status":          "subscribed",
 				"subscription_id": sub.ID,
@@ -42,7 +42,7 @@ func (s *Server) handleEventBus(ctx context.Context, request mcp.CallToolRequest
 			if err := s.eventBus.Unsubscribe(subID); err != nil {
 				return s.toolError("Failed to unsubscribe", err), nil
 			}
-			s.logAudit(agentID, "kafka_event_bus", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_event_bus", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "unsubscribed", "subscription_id": subID})
 
 		case "publish":
@@ -67,7 +67,7 @@ func (s *Server) handleEventBus(ctx context.Context, request mcp.CallToolRequest
 			filter := buildEventFilter(request)
 			limit := int(request.GetInt("limit", 100))
 			events := s.eventBus.Replay(filter, limit)
-			s.logAudit(agentID, "kafka_event_bus", args, "", "success", len(events), nil, start)
+			s.logAudit(ctx, agentID, "kafka_event_bus", args, "", "success", len(events), nil, start)
 			return marshalResult(map[string]any{
 				"events": events,
 				"total":  len(events),

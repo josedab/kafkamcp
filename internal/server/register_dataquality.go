@@ -77,7 +77,7 @@ func (s *Server) handleQualityScore(ctx context.Context, request mcp.CallToolReq
 
 	// Check cached score first
 	if score, ok := s.dataQualityEngine.GetScore(topic); ok {
-		s.logAudit(agentID, "kafka_quality_score", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_quality_score", args, "", "success", 1, nil, start)
 		return marshalResult(score)
 	}
 
@@ -88,7 +88,7 @@ func (s *Server) handleQualityScore(ctx context.Context, request mcp.CallToolReq
 		SampleSize:      0,
 	})
 
-	s.logAudit(agentID, "kafka_quality_score", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "kafka_quality_score", args, "", "success", 1, nil, start)
 	return marshalResult(score)
 }
 
@@ -108,12 +108,12 @@ func (s *Server) handleQualityReport(ctx context.Context, request mcp.CallToolRe
 		})
 		report, err = s.dataQualityEngine.GetReport(topic)
 		if err != nil {
-			s.logAudit(agentID, "kafka_quality_report", args, "", "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_quality_report", args, "", "error", 0, err, start)
 			return s.toolError("failed to generate quality report", err), nil
 		}
 	}
 
-	s.logAudit(agentID, "kafka_quality_report", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "kafka_quality_report", args, "", "success", 1, nil, start)
 	return marshalResult(report)
 }
 
@@ -129,12 +129,12 @@ func (s *Server) handleSLAStatus(ctx context.Context, request mcp.CallToolReques
 				"message": "No SLA configured for this topic",
 			})
 		}
-		s.logAudit(agentID, "kafka_sla_status", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_sla_status", args, "", "success", 1, nil, start)
 		return marshalResult(status)
 	}
 
 	slas := s.dataQualityEngine.ListSLAs()
-	s.logAudit(agentID, "kafka_sla_status", args, "", "success", len(slas), nil, start)
+	s.logAudit(ctx, agentID, "kafka_sla_status", args, "", "success", len(slas), nil, start)
 	return marshalResult(map[string]any{
 		"slas":  slas,
 		"total": len(slas),
@@ -166,11 +166,11 @@ func (s *Server) handleSLAConfigure(ctx context.Context, request mcp.CallToolReq
 
 	err := s.dataQualityEngine.SetSLA(cfg)
 	if err != nil {
-		s.logAudit(agentID, "kafka_sla_configure", args, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "kafka_sla_configure", args, "", "error", 0, err, start)
 		return s.toolError("failed to configure SLA", err), nil
 	}
 
-	s.logAudit(agentID, "kafka_sla_configure", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "kafka_sla_configure", args, "", "success", 1, nil, start)
 	return marshalResult(map[string]any{
 		"status": "configured",
 		"topic":  topic,

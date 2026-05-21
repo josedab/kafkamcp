@@ -46,7 +46,7 @@ func (s *Server) handleDataContract(ctx context.Context, request mcp.CallToolReq
 			if err := s.contractEngine.RegisterContract(c); err != nil {
 				return s.toolError("failed to register contract", err), nil
 			}
-			s.logAudit(agentID, "kafka_validate_contract", args, cluster, "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_validate_contract", args, cluster, "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "registered", "contract": c.Name, "topic": c.Topic})
 
 		case "validate":
@@ -62,7 +62,7 @@ func (s *Server) handleDataContract(ctx context.Context, request mcp.CallToolReq
 				return mcp.NewToolResultError("message must be a JSON object"), nil
 			}
 			result := s.contractEngine.ValidateMessage(topic, msgMap)
-			s.logAudit(agentID, "kafka_validate_contract", args, cluster, "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_validate_contract", args, cluster, "success", 1, nil, start)
 			return marshalResult(result)
 
 		case "get":
@@ -73,12 +73,12 @@ func (s *Server) handleDataContract(ctx context.Context, request mcp.CallToolReq
 			if err != nil {
 				return s.toolError("contract not found", err), nil
 			}
-			s.logAudit(agentID, "kafka_validate_contract", args, cluster, "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_validate_contract", args, cluster, "success", 1, nil, start)
 			return marshalResult(c)
 
 		case "list":
 			result := s.contractEngine.ListContracts()
-			s.logAudit(agentID, "kafka_validate_contract", args, cluster, "success", len(result), nil, start)
+			s.logAudit(ctx, agentID, "kafka_validate_contract", args, cluster, "success", len(result), nil, start)
 			return marshalResult(map[string]any{"contracts": result, "total": len(result)})
 
 		case "compliance":
@@ -89,7 +89,7 @@ func (s *Server) handleDataContract(ctx context.Context, request mcp.CallToolReq
 			if err != nil {
 				return s.toolError("compliance report failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_validate_contract", args, cluster, "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_validate_contract", args, cluster, "success", 1, nil, start)
 			return marshalResult(report)
 
 		default:

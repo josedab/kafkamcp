@@ -79,7 +79,7 @@ func (s *Server) handlePolicyEvaluate(ctx context.Context, request mcp.CallToolR
 
 	decision := s.opaPolicyEngine.Evaluate(input)
 	s.opaPolicyEngine.RecordDecision(decision)
-	s.logAudit(agentID, "kafka_policy_evaluate", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "kafka_policy_evaluate", args, "", "success", 1, nil, start)
 	return marshalResult(decision)
 }
 
@@ -104,7 +104,7 @@ func (s *Server) handlePolicySimulate(ctx context.Context, request mcp.CallToolR
 	}
 
 	result := s.opaPolicyEngine.Simulate(input)
-	s.logAudit(agentID, "kafka_policy_simulate", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "kafka_policy_simulate", args, "", "success", 1, nil, start)
 	return marshalResult(result)
 }
 
@@ -114,7 +114,7 @@ func (s *Server) handlePolicyManage(ctx context.Context, request mcp.CallToolReq
 	switch action {
 	case "list":
 		policies := s.opaPolicyEngine.ListPolicies()
-		s.logAudit(agentID, "kafka_policy_manage", args, "", "success", len(policies), nil, start)
+		s.logAudit(ctx, agentID, "kafka_policy_manage", args, "", "success", len(policies), nil, start)
 		return marshalResult(map[string]any{"policies": policies, "total": len(policies)})
 
 	case "register":
@@ -135,7 +135,7 @@ func (s *Server) handlePolicyManage(ctx context.Context, request mcp.CallToolReq
 		if err != nil {
 			return s.toolError("failed to register policy", err), nil
 		}
-		s.logAudit(agentID, "kafka_policy_manage", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_policy_manage", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]string{"status": "registered", "policy_id": policyID})
 
 	case "delete":
@@ -147,7 +147,7 @@ func (s *Server) handlePolicyManage(ctx context.Context, request mcp.CallToolReq
 		if err != nil {
 			return s.toolError("failed to delete policy", err), nil
 		}
-		s.logAudit(agentID, "kafka_policy_manage", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_policy_manage", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]string{"status": "deleted", "policy_id": policyID})
 
 	case "export":
@@ -155,7 +155,7 @@ func (s *Server) handlePolicyManage(ctx context.Context, request mcp.CallToolReq
 		if err != nil {
 			return s.toolError("failed to export policies", err), nil
 		}
-		s.logAudit(agentID, "kafka_policy_manage", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_policy_manage", args, "", "success", 1, nil, start)
 		return mcp.NewToolResultText(exported), nil
 
 	case "decisions":
@@ -167,7 +167,7 @@ func (s *Server) handlePolicyManage(ctx context.Context, request mcp.CallToolReq
 			limit = 1000
 		}
 		decisions := s.opaPolicyEngine.RecentDecisions(limit)
-		s.logAudit(agentID, "kafka_policy_manage", args, "", "success", len(decisions), nil, start)
+		s.logAudit(ctx, agentID, "kafka_policy_manage", args, "", "success", len(decisions), nil, start)
 		return marshalResult(map[string]any{"decisions": decisions, "total": len(decisions)})
 
 	case "validate":
@@ -176,7 +176,7 @@ func (s *Server) handlePolicyManage(ctx context.Context, request mcp.CallToolReq
 			return mcp.NewToolResultError("rego is required for validate"), nil
 		}
 		validation := s.opaPolicyEngine.ValidatePolicy(rego)
-		s.logAudit(agentID, "kafka_policy_manage", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_policy_manage", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]any{"validation": validation})
 
 	case "impact":
@@ -186,12 +186,12 @@ func (s *Server) handlePolicyManage(ctx context.Context, request mcp.CallToolReq
 			return mcp.NewToolResultError("rego is required for impact prediction"), nil
 		}
 		impact := s.opaPolicyEngine.PredictImpact(policyID, rego)
-		s.logAudit(agentID, "kafka_policy_manage", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_policy_manage", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]any{"impact": impact})
 
 	case "bundles":
 		bundles := s.opaPolicyEngine.ListBundles()
-		s.logAudit(agentID, "kafka_policy_manage", args, "", "success", len(bundles), nil, start)
+		s.logAudit(ctx, agentID, "kafka_policy_manage", args, "", "success", len(bundles), nil, start)
 		return marshalResult(map[string]any{"bundles": bundles, "total": len(bundles)})
 
 	case "create_bundle":
@@ -213,7 +213,7 @@ func (s *Server) handlePolicyManage(ctx context.Context, request mcp.CallToolReq
 		if err != nil {
 			return s.toolError("failed to create bundle", err), nil
 		}
-		s.logAudit(agentID, "kafka_policy_manage", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_policy_manage", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]any{"status": "created", "bundle": bundle})
 
 	case "enable_bundle":
@@ -224,7 +224,7 @@ func (s *Server) handlePolicyManage(ctx context.Context, request mcp.CallToolReq
 		if err := s.opaPolicyEngine.EnableBundle(bundleID); err != nil {
 			return s.toolError("failed to enable bundle", err), nil
 		}
-		s.logAudit(agentID, "kafka_policy_manage", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_policy_manage", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]string{"status": "enabled", "bundle_id": bundleID})
 
 	case "disable_bundle":
@@ -235,7 +235,7 @@ func (s *Server) handlePolicyManage(ctx context.Context, request mcp.CallToolReq
 		if err := s.opaPolicyEngine.DisableBundle(bundleID); err != nil {
 			return s.toolError("failed to disable bundle", err), nil
 		}
-		s.logAudit(agentID, "kafka_policy_manage", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_policy_manage", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]string{"status": "disabled", "bundle_id": bundleID})
 
 	default:

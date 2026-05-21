@@ -47,19 +47,19 @@ func (s *Server) handleConnectBridge(ctx context.Context, request mcp.CallToolRe
 		case "list":
 			connectors, err := client.ListConnectors(ctx)
 			if err != nil {
-				s.logAudit(agentID, "kafka_connect_bridge", args, cluster, "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_connect_bridge", args, cluster, "error", 0, err, start)
 				return s.toolError("Failed to list connectors", err), nil
 			}
-			s.logAudit(agentID, "kafka_connect_bridge", args, cluster, "success", len(connectors), nil, start)
+			s.logAudit(ctx, agentID, "kafka_connect_bridge", args, cluster, "success", len(connectors), nil, start)
 			return marshalResult(map[string]any{"connectors": connectors, "total": len(connectors)})
 
 		case "describe":
 			detail, err := client.DescribeConnector(ctx, name)
 			if err != nil {
-				s.logAudit(agentID, "kafka_connect_bridge", args, cluster, "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_connect_bridge", args, cluster, "error", 0, err, start)
 				return s.toolError("Failed to describe connector", err), nil
 			}
-			s.logAudit(agentID, "kafka_connect_bridge", args, cluster, "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_connect_bridge", args, cluster, "success", 1, nil, start)
 			return marshalResult(detail)
 
 		case "create":
@@ -72,10 +72,10 @@ func (s *Server) handleConnectBridge(ctx context.Context, request mcp.CallToolRe
 			}
 			result, err := client.CreateConnector(ctx, name, config)
 			if err != nil {
-				s.logAudit(agentID, "kafka_connect_bridge", args, cluster, "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_connect_bridge", args, cluster, "error", 0, err, start)
 				return s.toolError("Failed to create connector", err), nil
 			}
-			s.logAudit(agentID, "kafka_connect_bridge", args, cluster, "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_connect_bridge", args, cluster, "success", 1, nil, start)
 			return marshalResult(result)
 
 		case "update":
@@ -88,26 +88,26 @@ func (s *Server) handleConnectBridge(ctx context.Context, request mcp.CallToolRe
 			}
 			result, err := client.UpdateConnector(ctx, name, config)
 			if err != nil {
-				s.logAudit(agentID, "kafka_connect_bridge", args, cluster, "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_connect_bridge", args, cluster, "error", 0, err, start)
 				return s.toolError("Failed to update connector", err), nil
 			}
-			s.logAudit(agentID, "kafka_connect_bridge", args, cluster, "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_connect_bridge", args, cluster, "success", 1, nil, start)
 			return marshalResult(result)
 
 		case "pause":
 			if err := client.PauseConnector(ctx, name); err != nil {
-				s.logAudit(agentID, "kafka_connect_bridge", args, cluster, "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_connect_bridge", args, cluster, "error", 0, err, start)
 				return s.toolError("Failed to pause connector", err), nil
 			}
-			s.logAudit(agentID, "kafka_connect_bridge", args, cluster, "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_connect_bridge", args, cluster, "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "paused", "name": name})
 
 		case "resume":
 			if err := client.ResumeConnector(ctx, name); err != nil {
-				s.logAudit(agentID, "kafka_connect_bridge", args, cluster, "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_connect_bridge", args, cluster, "error", 0, err, start)
 				return s.toolError("Failed to resume connector", err), nil
 			}
-			s.logAudit(agentID, "kafka_connect_bridge", args, cluster, "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_connect_bridge", args, cluster, "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "resumed", "name": name})
 
 		case "restart":
@@ -115,27 +115,27 @@ func (s *Server) handleConnectBridge(ctx context.Context, request mcp.CallToolRe
 			failedOnly := request.GetBool("failed_only", false)
 			result, err := client.RestartConnector(ctx, name, taskID, failedOnly)
 			if err != nil {
-				s.logAudit(agentID, "kafka_connect_bridge", args, cluster, "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_connect_bridge", args, cluster, "error", 0, err, start)
 				return s.toolError("Failed to restart connector", err), nil
 			}
-			s.logAudit(agentID, "kafka_connect_bridge", args, cluster, "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_connect_bridge", args, cluster, "success", 1, nil, start)
 			return marshalResult(result)
 
 		case "delete":
 			if err := client.DeleteConnector(ctx, name); err != nil {
-				s.logAudit(agentID, "kafka_connect_bridge", args, cluster, "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_connect_bridge", args, cluster, "error", 0, err, start)
 				return s.toolError("Failed to delete connector", err), nil
 			}
-			s.logAudit(agentID, "kafka_connect_bridge", args, cluster, "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_connect_bridge", args, cluster, "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "deleted", "name": name})
 
 		case "health":
 			health, err := client.ConnectorHealth(ctx, name)
 			if err != nil {
-				s.logAudit(agentID, "kafka_connect_bridge", args, cluster, "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_connect_bridge", args, cluster, "error", 0, err, start)
 				return s.toolError("Failed to get connector health", err), nil
 			}
-			s.logAudit(agentID, "kafka_connect_bridge", args, cluster, "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_connect_bridge", args, cluster, "success", 1, nil, start)
 			return marshalResult(health)
 
 		default:

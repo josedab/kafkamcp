@@ -42,7 +42,7 @@ func (s *Server) handleSchemaPlayground(ctx context.Context, request mcp.CallToo
 			if err != nil {
 				return s.toolError("Failed to create draft", err), nil
 			}
-			s.logAudit(agentID, "kafka_schema_playground", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_schema_playground", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"status": "created", "draft": draft})
 
 		case "update":
@@ -57,7 +57,7 @@ func (s *Server) handleSchemaPlayground(ctx context.Context, request mcp.CallToo
 			if err != nil {
 				return s.toolError("Failed to update draft", err), nil
 			}
-			s.logAudit(agentID, "kafka_schema_playground", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_schema_playground", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"status": "updated", "draft": draft})
 
 		case "test":
@@ -72,7 +72,7 @@ func (s *Server) handleSchemaPlayground(ctx context.Context, request mcp.CallToo
 			if err != nil {
 				return s.toolError("Test failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_schema_playground", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_schema_playground", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"test_result": result})
 
 		case "validate":
@@ -88,7 +88,7 @@ func (s *Server) handleSchemaPlayground(ctx context.Context, request mcp.CallToo
 			if err != nil {
 				return s.toolError("Validation failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_schema_playground", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_schema_playground", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"validation": validation})
 
 		case "evolve":
@@ -103,7 +103,7 @@ func (s *Server) handleSchemaPlayground(ctx context.Context, request mcp.CallToo
 			if err != nil {
 				return s.toolError("Evolution simulation failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_schema_playground", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_schema_playground", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"evolution_impact": impact})
 
 		case "promote":
@@ -114,7 +114,7 @@ func (s *Server) handleSchemaPlayground(ctx context.Context, request mcp.CallToo
 			if err != nil {
 				return s.toolError("Promotion failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_schema_playground", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_schema_playground", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"status": "promoted", "draft": draft})
 
 		case "get":
@@ -125,13 +125,13 @@ func (s *Server) handleSchemaPlayground(ctx context.Context, request mcp.CallToo
 			if err != nil {
 				return s.toolError("Draft not found", err), nil
 			}
-			s.logAudit(agentID, "kafka_schema_playground", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_schema_playground", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"draft": draft})
 
 		default:
 			statusFilter := request.GetString("status_filter", "")
 			drafts := s.schemaPlayground.ListDrafts(statusFilter)
-			s.logAudit(agentID, "kafka_schema_playground", args, "", "success", len(drafts), nil, start)
+			s.logAudit(ctx, agentID, "kafka_schema_playground", args, "", "success", len(drafts), nil, start)
 			return marshalResult(map[string]any{"drafts": drafts, "total": len(drafts)})
 		}
 	})(ctx, request)

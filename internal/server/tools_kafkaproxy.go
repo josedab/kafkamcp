@@ -41,7 +41,7 @@ func (s *Server) handleKafkaProxy(ctx context.Context, request mcp.CallToolReque
 			}
 			s.kafkaProxy = proxy
 
-			s.logAudit(agentID, "kafka_proxy", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_proxy", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{
 				"status":      "started",
 				"listen_addr": proxy.ListenAddr(),
@@ -56,7 +56,7 @@ func (s *Server) handleKafkaProxy(ctx context.Context, request mcp.CallToolReque
 				return s.toolError("Failed to stop proxy", err), nil
 			}
 			s.kafkaProxy = nil
-			s.logAudit(agentID, "kafka_proxy", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_proxy", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "stopped"})
 
 		case "status":

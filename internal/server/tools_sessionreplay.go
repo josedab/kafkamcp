@@ -25,7 +25,7 @@ func (s *Server) handleSessionReplay(ctx context.Context, request mcp.CallToolRe
 				return deny, nil
 			}
 			session := s.sessionReplayEngine.StartSession(targetAgent, map[string]any{"started_by": agentID})
-			s.logAudit(agentID, "kafka_session_replay", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_session_replay", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "recording", "session": session})
 
 		case "record":
@@ -79,7 +79,7 @@ func (s *Server) handleSessionReplay(ctx context.Context, request mcp.CallToolRe
 			if err := s.sessionReplayEngine.EndSession(sessionID); err != nil {
 				return s.toolError("Failed to end session", err), nil
 			}
-			s.logAudit(agentID, "kafka_session_replay", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_session_replay", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "completed", "session_id": sessionID})
 
 		case "get":
@@ -103,7 +103,7 @@ func (s *Server) handleSessionReplay(ctx context.Context, request mcp.CallToolRe
 			}
 			limit := int(clampInt64(int64(request.GetInt("limit", 50)), 1, 1000))
 			sessions := s.sessionReplayEngine.ListSessions(filterAgent, limit)
-			s.logAudit(agentID, "kafka_session_replay", args, "", "success", len(sessions), nil, start)
+			s.logAudit(ctx, agentID, "kafka_session_replay", args, "", "success", len(sessions), nil, start)
 			return marshalResult(map[string]any{"sessions": sessions, "total": len(sessions)})
 
 		case "replay":
@@ -118,7 +118,7 @@ func (s *Server) handleSessionReplay(ctx context.Context, request mcp.CallToolRe
 			if err != nil {
 				return s.toolError("Failed to replay session", err), nil
 			}
-			s.logAudit(agentID, "kafka_session_replay", args, "", "success", result.TotalCalls, nil, start)
+			s.logAudit(ctx, agentID, "kafka_session_replay", args, "", "success", result.TotalCalls, nil, start)
 			return marshalResult(result)
 
 		case "delete":
@@ -132,7 +132,7 @@ func (s *Server) handleSessionReplay(ctx context.Context, request mcp.CallToolRe
 			if err := s.sessionReplayEngine.DeleteSession(sessionID); err != nil {
 				return s.toolError("Failed to delete session", err), nil
 			}
-			s.logAudit(agentID, "kafka_session_replay", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_session_replay", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "deleted", "session_id": sessionID})
 
 		default:

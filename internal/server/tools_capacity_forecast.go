@@ -44,7 +44,7 @@ func (s *Server) handlePredictiveCapacityForecast(ctx context.Context, request m
 		}
 
 		forecast := s.forecaster.PredictiveCapacityPlan(cluster, horizonDays, currentBrokers, maxStorageGB, costPerGB, costPerBroker)
-		s.logAudit(agentID, "kafka_capacity_forecast", args, cluster, "success", len(forecast.TopicForecasts), nil, start)
+		s.logAudit(ctx, agentID, "kafka_capacity_forecast", args, cluster, "success", len(forecast.TopicForecasts), nil, start)
 		return marshalResult(forecast)
 	})(ctx, request)
 }

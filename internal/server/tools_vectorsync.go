@@ -51,11 +51,11 @@ func (s *Server) handleVectorSyncCreate(ctx context.Context, request mcp.CallToo
 
 		bridge, err := s.vectorSyncEngine.CreateBridge(name, sourceTopic, agentID, vdb, emb)
 		if err != nil {
-			s.logAudit(agentID, "kafka_vector_sync_create", args, "", "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_vector_sync_create", args, "", "error", 0, err, start)
 			return s.toolError("Failed to create bridge", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_vector_sync_create", args, "", "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_vector_sync_create", args, "", "success", 0, nil, start)
 		return marshalResult(map[string]any{
 			"status":  "created",
 			"bridge":  bridge,
@@ -87,11 +87,11 @@ func (s *Server) handleVectorSyncSearch(ctx context.Context, request mcp.CallToo
 
 		results, err := s.vectorSyncEngine.SearchSimilar(bridgeID, query, topK)
 		if err != nil {
-			s.logAudit(agentID, "kafka_vector_sync_search", args, "", "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_vector_sync_search", args, "", "error", 0, err, start)
 			return s.toolError("Search failed", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_vector_sync_search", args, "", "success", len(results), nil, start)
+		s.logAudit(ctx, agentID, "kafka_vector_sync_search", args, "", "success", len(results), nil, start)
 		return marshalResult(map[string]any{
 			"results": results,
 			"total":   len(results),
@@ -116,7 +116,7 @@ func (s *Server) handleVectorSyncManage(ctx context.Context, request mcp.CallToo
 		switch action {
 		case "list":
 			bridges := s.vectorSyncEngine.ListBridges()
-			s.logAudit(agentID, "kafka_vector_sync_manage", args, "", "success", len(bridges), nil, start)
+			s.logAudit(ctx, agentID, "kafka_vector_sync_manage", args, "", "success", len(bridges), nil, start)
 			return marshalResult(map[string]any{"bridges": bridges, "total": len(bridges)})
 
 		case "get":

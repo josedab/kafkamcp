@@ -18,11 +18,11 @@ func (s *Server) handleRecommend(ctx context.Context, request mcp.CallToolReques
 
 		result, err := s.kafkaManager.GetRecommendations(ctx, cluster, topic)
 		if err != nil {
-			s.logAudit(agentID, "kafka_recommend", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_recommend", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_recommend", args, cluster, "success", len(result.Recommendations), nil, start)
+		s.logAudit(ctx, agentID, "kafka_recommend", args, cluster, "success", len(result.Recommendations), nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }

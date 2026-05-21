@@ -184,10 +184,13 @@ WARN  agent identity verification failed provider=oidc error="oidc: token is exp
 
 ## Limitations & follow-ups
 
-- **Audit log enrichment** — the `audit.Entry` schema includes
-  `identity_method` / `issuer` fields, but the per-tool call sites do
-  not yet populate them from request context. A follow-up will change
-  `s.logAudit(...)` to take a context and read the identity from it.
+- **Audit log enrichment** — done. Each audit entry now carries
+  `identity_method`, `issuer`, and `subject` populated from the verified
+  identity attached to the request context (see
+  [`audit.Entry`](../internal/audit/logger.go)). Header-asserted callers
+  (legacy `X-Agent-ID`, STDIO transport, `provider: none`) leave those
+  fields empty, which downstream audit consumers can use to distinguish
+  trusted from un-trusted identities.
 - **mTLS / SPIFFE** — not implemented in this iteration. ADR-007 lays
   out why we picked OIDC first. mTLS will be added as a fourth provider
   when the connection-level plumbing is in place.
@@ -195,6 +198,22 @@ WARN  agent identity verification failed provider=oidc error="oidc: token is exp
   signature locally against cached JWKS but does not call the
   introspection endpoint. For very short-lived tokens or revocation
   scenarios use short OIDC `exp` values.
+
+## Audit-log identity fields
+
+When the identity provider verifies a request, the resulting
+[`audit.Entry`](../internal/audit/logger.go) is enriched with:
+
+| Field | Value when verified | Value when un-verified |
+| --- | --- | --- |
+| `identity_method` | `static` / `oidc` / `mtls` (etc.) | empty |
+| `issuer` | `iss` claim (OIDC) or empty (other providers) | empty |
+| `subject` | `sub` claim (OIDC), agent ID (static), URI/CN (mTLS) | empty |
+| `agent_id` | value of the configured `agent_id_claim` (defaults to `sub`) | header-provided value or `anonymous` |
+
+Audit consumers can therefore distinguish a trusted call (any non-empty
+`identity_method`) from a legacy header-asserted call (empty
+`identity_method`).
 
 ## Related docs
 

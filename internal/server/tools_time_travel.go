@@ -44,10 +44,10 @@ func (s *Server) handleTimeTravel(ctx context.Context, request mcp.CallToolReque
 			}
 			result, err := s.kafkaManager.TimeTravelSnapshot(ctx, cluster, topic, ts, maxKeys)
 			if err != nil {
-				s.logAudit(agentID, "kafka_time_travel", args, cluster, "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_time_travel", args, cluster, "error", 0, err, start)
 				return s.toolError("Failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_time_travel", args, cluster, "success", result.KeyCount, nil, start)
+			s.logAudit(ctx, agentID, "kafka_time_travel", args, cluster, "success", result.KeyCount, nil, start)
 			return marshalResult(result)
 
 		case "diff":
@@ -58,10 +58,10 @@ func (s *Server) handleTimeTravel(ctx context.Context, request mcp.CallToolReque
 			}
 			result, err := s.kafkaManager.TimeTravelDiff(ctx, cluster, topic, tsFrom, tsTo, maxKeys)
 			if err != nil {
-				s.logAudit(agentID, "kafka_time_travel", args, cluster, "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_time_travel", args, cluster, "error", 0, err, start)
 				return s.toolError("Failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_time_travel", args, cluster, "success", result.TotalChanges, nil, start)
+			s.logAudit(ctx, agentID, "kafka_time_travel", args, cluster, "success", result.TotalChanges, nil, start)
 			return marshalResult(result)
 
 		default:

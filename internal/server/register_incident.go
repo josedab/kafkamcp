@@ -67,7 +67,7 @@ func (s *Server) handleIncidentList(ctx context.Context, request mcp.CallToolReq
 	}
 
 	incidents := s.incidentCorrelator.GetIncidents(limit)
-	s.logAudit(agentID, "kafka_incident_list", args, "", "success", len(incidents), nil, start)
+	s.logAudit(ctx, agentID, "kafka_incident_list", args, "", "success", len(incidents), nil, start)
 	return marshalResult(map[string]any{
 		"incidents": incidents,
 		"total":     len(incidents),
@@ -82,11 +82,11 @@ func (s *Server) handleIncidentReport(ctx context.Context, request mcp.CallToolR
 
 	report, err := s.incidentCorrelator.GenerateReport(incidentID)
 	if err != nil {
-		s.logAudit(agentID, "kafka_incident_report", args, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "kafka_incident_report", args, "", "error", 0, err, start)
 		return s.toolError("failed to generate incident report", err), nil
 	}
 
-	s.logAudit(agentID, "kafka_incident_report", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "kafka_incident_report", args, "", "success", 1, nil, start)
 	return marshalResult(report)
 }
 
@@ -127,12 +127,12 @@ func (s *Server) handleIncidentIngest(ctx context.Context, request mcp.CallToolR
 		response["blast_radius"] = result.BlastRadius
 	}
 
-	s.logAudit(agentID, "kafka_incident_ingest", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "kafka_incident_ingest", args, "", "success", 1, nil, start)
 	return marshalResult(response)
 }
 
 func (s *Server) handleIncidentStats(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 	stats := s.incidentCorrelator.Stats()
-	s.logAudit(agentID, "kafka_incident_stats", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "kafka_incident_stats", args, "", "success", 1, nil, start)
 	return marshalResult(stats)
 }

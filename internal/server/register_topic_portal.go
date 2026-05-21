@@ -90,11 +90,11 @@ func (s *Server) handleTopicRequest(ctx context.Context, request mcp.CallToolReq
 
 	result, err := s.topicPortalEngine.SubmitRequest(req)
 	if err != nil {
-		s.logAudit(agentID, "kafka_topic_request", args, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "kafka_topic_request", args, "", "error", 0, err, start)
 		return s.toolError("failed to submit topic request", err), nil
 	}
 
-	s.logAudit(agentID, "kafka_topic_request", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "kafka_topic_request", args, "", "success", 1, nil, start)
 	return marshalResult(result)
 }
 
@@ -107,11 +107,11 @@ func (s *Server) handleTopicApprove(ctx context.Context, request mcp.CallToolReq
 
 	err := s.topicPortalEngine.Approve(requestID, agentID, comment)
 	if err != nil {
-		s.logAudit(agentID, "kafka_topic_approve", args, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "kafka_topic_approve", args, "", "error", 0, err, start)
 		return s.toolError("failed to approve request", err), nil
 	}
 
-	s.logAudit(agentID, "kafka_topic_approve", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "kafka_topic_approve", args, "", "success", 1, nil, start)
 	return marshalResult(map[string]any{
 		"status":     "approved",
 		"request_id": requestID,
@@ -126,7 +126,7 @@ func (s *Server) handleTopicRequestStatus(ctx context.Context, request mcp.CallT
 		if !ok {
 			return marshalResult(map[string]any{"request_id": requestID, "status": "not_found"})
 		}
-		s.logAudit(agentID, "kafka_topic_request_status", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_topic_request_status", args, "", "success", 1, nil, start)
 		return marshalResult(req)
 	}
 
@@ -142,7 +142,7 @@ func (s *Server) handleTopicRequestStatus(ctx context.Context, request mcp.CallT
 		limit = MaxDLQMessages
 	}
 	requests := s.topicPortalEngine.ListRequests(status, limit)
-	s.logAudit(agentID, "kafka_topic_request_status", args, "", "success", len(requests), nil, start)
+	s.logAudit(ctx, agentID, "kafka_topic_request_status", args, "", "success", len(requests), nil, start)
 	return marshalResult(map[string]any{
 		"requests": requests,
 		"total":    len(requests),
@@ -158,11 +158,11 @@ func (s *Server) handleTopicReject(ctx context.Context, request mcp.CallToolRequ
 
 	err := s.topicPortalEngine.Reject(requestID, agentID, reason)
 	if err != nil {
-		s.logAudit(agentID, "kafka_topic_reject", args, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "kafka_topic_reject", args, "", "error", 0, err, start)
 		return s.toolError("failed to reject request", err), nil
 	}
 
-	s.logAudit(agentID, "kafka_topic_reject", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "kafka_topic_reject", args, "", "success", 1, nil, start)
 	return marshalResult(map[string]any{
 		"status":     "rejected",
 		"request_id": requestID,

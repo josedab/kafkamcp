@@ -43,7 +43,7 @@ func (s *Server) handleAgentConfigSearch(ctx context.Context, request mcp.CallTo
 			result["tool_bundle_count"] = len(bundles)
 		}
 
-		s.logAudit(agentID, "kafka_agent_config_search", args, "", "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_agent_config_search", args, "", "success", 0, nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }
@@ -67,19 +67,19 @@ func (s *Server) handleAgentConfigGet(ctx context.Context, request mcp.CallToolR
 		if entryType == "bundle" {
 			bundle, err := s.agentConfigStore.GetBundle(name)
 			if err != nil {
-				s.logAudit(agentID, "kafka_agent_config_get", args, "", "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_agent_config_get", args, "", "error", 0, err, start)
 				return s.toolError("Bundle not found", err), nil
 			}
-			s.logAudit(agentID, "kafka_agent_config_get", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_agent_config_get", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"type": "bundle", "bundle": bundle})
 		}
 
 		cfg, err := s.agentConfigStore.GetConfig(name)
 		if err != nil {
-			s.logAudit(agentID, "kafka_agent_config_get", args, "", "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_agent_config_get", args, "", "error", 0, err, start)
 			return s.toolError("Agent config not found", err), nil
 		}
-		s.logAudit(agentID, "kafka_agent_config_get", args, "", "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_agent_config_get", args, "", "success", 0, nil, start)
 		return marshalResult(map[string]any{"type": "config", "config": cfg})
 	})(ctx, request)
 }
@@ -118,10 +118,10 @@ func (s *Server) handleAgentConfigPublish(ctx context.Context, request mcp.CallT
 				Category: category, Author: agentID, Tools: []string{},
 			})
 			if err != nil {
-				s.logAudit(agentID, "kafka_agent_config_publish", args, "", "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_agent_config_publish", args, "", "error", 0, err, start)
 				return s.toolError("Failed to publish bundle", err), nil
 			}
-			s.logAudit(agentID, "kafka_agent_config_publish", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_agent_config_publish", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"status": "published", "type": "bundle", "name": name})
 		}
 
@@ -130,10 +130,10 @@ func (s *Server) handleAgentConfigPublish(ctx context.Context, request mcp.CallT
 			Category: category, Author: agentID,
 		})
 		if err != nil {
-			s.logAudit(agentID, "kafka_agent_config_publish", args, "", "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_agent_config_publish", args, "", "error", 0, err, start)
 			return s.toolError("Failed to publish config", err), nil
 		}
-		s.logAudit(agentID, "kafka_agent_config_publish", args, "", "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_agent_config_publish", args, "", "success", 0, nil, start)
 		return marshalResult(map[string]any{"status": "published", "type": "config", "name": name})
 	})(ctx, request)
 }

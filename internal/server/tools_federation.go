@@ -60,10 +60,10 @@ func (s *Server) handleFederationJoin(ctx context.Context, request mcp.CallToolR
 				Clusters:     clusters,
 			})
 			if err != nil {
-				s.logAudit(agentID, "kafka_federation_join", args, "", "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_federation_join", args, "", "error", 0, err, start)
 				return s.toolError("join failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_federation_join", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_federation_join", args, "", "success", 1, nil, start)
 			return marshalResult(inst)
 
 		case "leave":
@@ -74,7 +74,7 @@ func (s *Server) handleFederationJoin(ctx context.Context, request mcp.CallToolR
 			if err := s.federationCoord.Leave(instanceID); err != nil {
 				return s.toolError("leave failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_federation_join", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_federation_join", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "deregistered", "instance_id": instanceID})
 
 		case "heartbeat":
@@ -117,7 +117,7 @@ func (s *Server) handleFederationQuery(ctx context.Context, request mcp.CallTool
 		}
 
 		query := s.federationCoord.Query(tool, toolArgs, targets)
-		s.logAudit(agentID, "kafka_federation_query", args, "", "success", len(query.Results), nil, start)
+		s.logAudit(ctx, agentID, "kafka_federation_query", args, "", "success", len(query.Results), nil, start)
 		return marshalResult(query)
 	})(ctx, request)
 }
@@ -131,7 +131,7 @@ func (s *Server) handleFederationStatus(ctx context.Context, request mcp.CallToo
 		switch action {
 		case "status":
 			status := s.federationCoord.GetStatus()
-			s.logAudit(agentID, "kafka_federation_status", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_federation_status", args, "", "success", 1, nil, start)
 			return marshalResult(status)
 
 		case "instances":
@@ -155,17 +155,17 @@ func (s *Server) handleFederationStatus(ctx context.Context, request mcp.CallToo
 
 		case "topology":
 			topo := s.federationCoord.GetTopology()
-			s.logAudit(agentID, "kafka_federation_status", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_federation_status", args, "", "success", 1, nil, start)
 			return marshalResult(topo)
 
 		case "discover":
 			services := s.federationCoord.DiscoverServices()
-			s.logAudit(agentID, "kafka_federation_status", args, "", "success", len(services), nil, start)
+			s.logAudit(ctx, agentID, "kafka_federation_status", args, "", "success", len(services), nil, start)
 			return marshalResult(map[string]any{"services": services, "total": len(services)})
 
 		case "routes":
 			rules := s.federationCoord.ListRoutingRules()
-			s.logAudit(agentID, "kafka_federation_status", args, "", "success", len(rules), nil, start)
+			s.logAudit(ctx, agentID, "kafka_federation_status", args, "", "success", len(rules), nil, start)
 			return marshalResult(map[string]any{"routing_rules": rules, "total": len(rules)})
 
 		default:
@@ -205,23 +205,23 @@ func (s *Server) handleFederationRoute(ctx context.Context, request mcp.CallTool
 				Priority:  priority,
 			})
 			if err != nil {
-				s.logAudit(agentID, "kafka_federation_route", args, "", "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_federation_route", args, "", "error", 0, err, start)
 				return s.toolError("failed to add routing rule", err), nil
 			}
 
-			s.logAudit(agentID, "kafka_federation_route", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_federation_route", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "created", "rule": rule})
 
 		case "list":
 			rules := s.federationCoord.ListRoutingRules()
-			s.logAudit(agentID, "kafka_federation_route", args, "", "success", len(rules), nil, start)
+			s.logAudit(ctx, agentID, "kafka_federation_route", args, "", "success", len(rules), nil, start)
 			return marshalResult(map[string]any{"routing_rules": rules, "total": len(rules)})
 
 		case "resolve":
 			toolMatch, _ := args["tool_match"].(string)
 			cluster, _ := args["cluster"].(string)
 			instances := s.federationCoord.ResolveRoute(toolMatch, cluster)
-			s.logAudit(agentID, "kafka_federation_route", args, "", "success", len(instances), nil, start)
+			s.logAudit(ctx, agentID, "kafka_federation_route", args, "", "success", len(instances), nil, start)
 			return marshalResult(map[string]any{"resolved_instances": instances, "total": len(instances)})
 
 		default:

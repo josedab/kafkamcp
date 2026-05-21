@@ -55,11 +55,11 @@ func (s *Server) handleCloudDeployGenerate(ctx context.Context, request mcp.Call
 
 		templates, err := s.cloudDeployGenerator.Generate(cfg)
 		if err != nil {
-			s.logAudit(agentID, "kafka_cloud_deploy_generate", args, "", "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_cloud_deploy_generate", args, "", "error", 0, err, start)
 			return s.toolError("Failed to generate templates", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_cloud_deploy_generate", args, "", "success", len(templates), nil, start)
+		s.logAudit(ctx, agentID, "kafka_cloud_deploy_generate", args, "", "success", len(templates), nil, start)
 		return marshalResult(map[string]any{
 			"templates": templates,
 			"total":     len(templates),
@@ -76,7 +76,7 @@ func (s *Server) handleCloudDeployList(ctx context.Context, request mcp.CallTool
 	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 		templates := s.cloudDeployGenerator.ListTemplates()
 
-		s.logAudit(agentID, "kafka_cloud_deploy_list", args, "", "success", len(templates), nil, start)
+		s.logAudit(ctx, agentID, "kafka_cloud_deploy_list", args, "", "success", len(templates), nil, start)
 		return marshalResult(map[string]any{"templates": templates, "total": len(templates)})
 	})(ctx, request)
 }

@@ -56,7 +56,7 @@ func (s *Server) handleMigrationPlan(ctx context.Context, request mcp.CallToolRe
 			}
 
 			plan := s.migrationPlanner.CreatePlan(sourceCluster, targetCluster, srcInfo, tgtInfo)
-			s.logAudit(agentID, "kafka_migration_plan", args, cluster, "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_migration_plan", args, cluster, "success", 1, nil, start)
 			return marshalResult(plan)
 
 		case "validate":
@@ -66,12 +66,12 @@ func (s *Server) handleMigrationPlan(ctx context.Context, request mcp.CallToolRe
 			}
 			lastPlan := plans[len(plans)-1]
 			warnings := migration.ValidatePlan(&lastPlan)
-			s.logAudit(agentID, "kafka_migration_plan", args, cluster, "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_migration_plan", args, cluster, "success", 1, nil, start)
 			return marshalResult(map[string]any{"plan_id": lastPlan.ID, "warnings": warnings, "valid": len(warnings) == 0})
 
 		case "list":
 			plans := s.migrationPlanner.ListPlans()
-			s.logAudit(agentID, "kafka_migration_plan", args, cluster, "success", len(plans), nil, start)
+			s.logAudit(ctx, agentID, "kafka_migration_plan", args, cluster, "success", len(plans), nil, start)
 			return marshalResult(map[string]any{"plans": plans, "total": len(plans)})
 
 		default:
@@ -99,11 +99,11 @@ func (s *Server) handleMigrationExecute(ctx context.Context, request mcp.CallToo
 
 		result, err := s.migrationPlanner.ExecutePlan(planID, dryRun)
 		if err != nil {
-			s.logAudit(agentID, "kafka_migrate_execute", args, "", "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_migrate_execute", args, "", "error", 0, err, start)
 			return s.toolError("migration execution failed", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_migrate_execute", args, "", "success", result.Executed, nil, start)
+		s.logAudit(ctx, agentID, "kafka_migrate_execute", args, "", "success", result.Executed, nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }
@@ -128,7 +128,7 @@ func (s *Server) handleMigrationStatus(ctx context.Context, request mcp.CallTool
 			if err != nil {
 				return s.toolError("progress not found", err), nil
 			}
-			s.logAudit(agentID, "kafka_migrate_status", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_migrate_status", args, "", "success", 1, nil, start)
 			return marshalResult(progress)
 
 		case "report":
@@ -136,7 +136,7 @@ func (s *Server) handleMigrationStatus(ctx context.Context, request mcp.CallTool
 			if err != nil {
 				return s.toolError("report not found", err), nil
 			}
-			s.logAudit(agentID, "kafka_migrate_status", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_migrate_status", args, "", "success", 1, nil, start)
 			return marshalResult(report)
 
 		default:
@@ -159,11 +159,11 @@ func (s *Server) handleMigrationRollback(ctx context.Context, request mcp.CallTo
 
 		record, err := s.migrationPlanner.Rollback(planID)
 		if err != nil {
-			s.logAudit(agentID, "kafka_migrate_rollback", args, "", "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_migrate_rollback", args, "", "error", 0, err, start)
 			return s.toolError("rollback failed", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_migrate_rollback", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_migrate_rollback", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]any{
 			"status":           "rolled_back",
 			"topics_created":   record.TopicsCreated,

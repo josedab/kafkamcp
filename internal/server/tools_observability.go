@@ -37,11 +37,11 @@ func (s *Server) handleDashboardCreate(ctx context.Context, request mcp.CallTool
 
 		dash, err := s.observabilityMgr.CreateDashboard(name, provider, dashType, target, agentID)
 		if err != nil {
-			s.logAudit(agentID, "kafka_dashboard_create", args, "", "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_dashboard_create", args, "", "error", 0, err, start)
 			return s.toolError("Failed to create dashboard", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_dashboard_create", args, "", "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_dashboard_create", args, "", "success", 0, nil, start)
 		return marshalResult(dash)
 	})(ctx, request)
 }
@@ -97,11 +97,11 @@ func (s *Server) handleAlertCreate(ctx context.Context, request mcp.CallToolRequ
 
 		rule, err := s.observabilityMgr.CreateAlertRule(name, metric, condition, threshold, duration, severity, agentID, nil, topic, groupID)
 		if err != nil {
-			s.logAudit(agentID, "kafka_alert_create", args, "", "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_alert_create", args, "", "error", 0, err, start)
 			return s.toolError("Failed to create alert rule", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_alert_create", args, "", "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_alert_create", args, "", "success", 0, nil, start)
 		return marshalResult(rule)
 	})(ctx, request)
 }
@@ -113,7 +113,7 @@ func (s *Server) handleAlertList(ctx context.Context, request mcp.CallToolReques
 		action:       auth.ActionRead,
 	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 		rules := s.observabilityMgr.ListAlertRules()
-		s.logAudit(agentID, "kafka_alert_list", args, "", "success", len(rules), nil, start)
+		s.logAudit(ctx, agentID, "kafka_alert_list", args, "", "success", len(rules), nil, start)
 		return marshalResult(map[string]any{"alert_rules": rules, "total_count": len(rules)})
 	})(ctx, request)
 }
@@ -133,11 +133,11 @@ func (s *Server) handleAlertDelete(ctx context.Context, request mcp.CallToolRequ
 		}
 
 		if err := s.observabilityMgr.DeleteAlertRule(alertID); err != nil {
-			s.logAudit(agentID, "kafka_alert_delete", args, "", "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_alert_delete", args, "", "error", 0, err, start)
 			return s.toolError("Failed to delete alert rule", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_alert_delete", args, "", "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_alert_delete", args, "", "success", 0, nil, start)
 		return marshalResult(map[string]any{"status": "deleted", "alert_id": alertID})
 	})(ctx, request)
 }

@@ -44,7 +44,7 @@ func (s *Server) handleIntentVerify(ctx context.Context, request mcp.CallToolReq
 				return mcp.NewToolResultError("tool_name is required"), nil
 			}
 			req := s.intentVerifier.RequestConfirmation(agentID, toolName, intent)
-			s.logAudit(agentID, "kafka_intent_verify", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_intent_verify", args, "", "success", 1, nil, start)
 			return marshalResult(req)
 
 		case "resolve":
@@ -60,7 +60,7 @@ func (s *Server) handleIntentVerify(ctx context.Context, request mcp.CallToolReq
 			if approved {
 				status = "confirmed"
 			}
-			s.logAudit(agentID, "kafka_intent_verify", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_intent_verify", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": status, "confirm_id": confirmID})
 
 		case "pending":
@@ -85,7 +85,7 @@ func (s *Server) handleIntentVerify(ctx context.Context, request mcp.CallToolReq
 				RequireConfirmAt: intentverify.RiskDestructive,
 				BlockDestructive: blockDestructive,
 			})
-			s.logAudit(agentID, "kafka_intent_verify", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_intent_verify", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "configured", "agent_id": targetAgent})
 
 		case "stats":

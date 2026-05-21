@@ -49,7 +49,7 @@ func (s *Server) handleTraceMessage(ctx context.Context, request mcp.CallToolReq
 		if len(topicNames) == 0 {
 			topics, err := s.kafkaManager.ListTopics(ctx, cluster, false)
 			if err != nil {
-				s.logAudit(agentID, "kafka_trace_message", args, cluster, "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_trace_message", args, cluster, "error", 0, err, start)
 				return s.toolError("Failed to list topics", err), nil
 			}
 			for _, t := range topics {
@@ -59,11 +59,11 @@ func (s *Server) handleTraceMessage(ctx context.Context, request mcp.CallToolReq
 
 		result, err := s.kafkaManager.TraceMessage(ctx, cluster, correlationID, headerName, topicNames, maxScan)
 		if err != nil {
-			s.logAudit(agentID, "kafka_trace_message", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_trace_message", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_trace_message", args, cluster, "success", len(result.Hops), nil, start)
+		s.logAudit(ctx, agentID, "kafka_trace_message", args, cluster, "success", len(result.Hops), nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }

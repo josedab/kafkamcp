@@ -97,17 +97,17 @@ func (s *Server) handleLLMPipelineCreate(ctx context.Context, request mcp.CallTo
 
 	result, err := s.llmPipelineEngine.CreatePipeline(cfg)
 	if err != nil {
-		s.logAudit(agentID, "llm_pipeline_create", args, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "llm_pipeline_create", args, "", "error", 0, err, start)
 		return s.toolError("failed to create pipeline", err), nil
 	}
 
-	s.logAudit(agentID, "llm_pipeline_create", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "llm_pipeline_create", args, "", "success", 1, nil, start)
 	return marshalResult(result)
 }
 
 func (s *Server) handleLLMPipelineList(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 	pipelines := s.llmPipelineEngine.ListPipelines()
-	s.logAudit(agentID, "llm_pipeline_list", args, "", "success", len(pipelines), nil, start)
+	s.logAudit(ctx, agentID, "llm_pipeline_list", args, "", "success", len(pipelines), nil, start)
 	return marshalResult(map[string]any{
 		"pipelines": pipelines,
 		"total":     len(pipelines),
@@ -129,7 +129,7 @@ func (s *Server) handleLLMPipelineStatus(ctx context.Context, request mcp.CallTo
 		return marshalResult(map[string]any{"pipeline_id": pipelineID, "status": "not_started"})
 	}
 
-	s.logAudit(agentID, "llm_pipeline_status", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "llm_pipeline_status", args, "", "success", 1, nil, start)
 	return marshalResult(result)
 }
 

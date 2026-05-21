@@ -44,7 +44,7 @@ func (s *Server) handleToolCompose(ctx context.Context, request mcp.CallToolRequ
 			if err != nil {
 				return s.toolError("Failed to create composition", err), nil
 			}
-			s.logAudit(agentID, "kafka_tool_compose", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_tool_compose", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "created", "composition": comp})
 
 		case "execute":
@@ -56,7 +56,7 @@ func (s *Server) handleToolCompose(ctx context.Context, request mcp.CallToolRequ
 			if err != nil {
 				return s.toolError("Failed to execute composition", err), nil
 			}
-			s.logAudit(agentID, "kafka_tool_compose", args, "", "success", len(exec.Steps), nil, start)
+			s.logAudit(ctx, agentID, "kafka_tool_compose", args, "", "success", len(exec.Steps), nil, start)
 			return marshalResult(map[string]any{"status": exec.Status, "execution": exec})
 
 		case "status":

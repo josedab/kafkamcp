@@ -26,7 +26,7 @@ func (s *Server) handleAgenticRunbook(ctx context.Context, request mcp.CallToolR
 		case "list":
 			category := request.GetString("category", "")
 			runbooks := s.runbookEngine.ListAgenticRunbooks(category)
-			s.logAudit(agentID, "kafka_agentic_runbook", args, "", "success", len(runbooks), nil, start)
+			s.logAudit(ctx, agentID, "kafka_agentic_runbook", args, "", "success", len(runbooks), nil, start)
 			return marshalResult(map[string]any{"runbooks": runbooks, "total": len(runbooks)})
 
 		case "get":
@@ -51,7 +51,7 @@ func (s *Server) handleAgenticRunbook(ctx context.Context, request mcp.CallToolR
 			if err != nil {
 				return s.toolError("Failed to create agentic runbook", err), nil
 			}
-			s.logAudit(agentID, "kafka_agentic_runbook", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_agentic_runbook", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "created", "runbook": rb})
 
 		case "execute":
@@ -62,10 +62,10 @@ func (s *Server) handleAgenticRunbook(ctx context.Context, request mcp.CallToolR
 			dryRun := request.GetBool("dry_run", false)
 			exec, err := s.runbookEngine.ExecuteAgentic(id, agentID, params, dryRun)
 			if err != nil {
-				s.logAudit(agentID, "kafka_agentic_runbook", args, "", "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_agentic_runbook", args, "", "error", 0, err, start)
 				return s.toolError("Failed to execute agentic runbook", err), nil
 			}
-			s.logAudit(agentID, "kafka_agentic_runbook", args, "", "success", len(exec.Steps), nil, start)
+			s.logAudit(ctx, agentID, "kafka_agentic_runbook", args, "", "success", len(exec.Steps), nil, start)
 			return marshalResult(map[string]any{"status": exec.Status, "execution": exec})
 
 		case "status":
@@ -86,7 +86,7 @@ func (s *Server) handleAgenticRunbook(ctx context.Context, request mcp.CallToolR
 			if err := s.runbookEngine.ApproveStep(id, approver); err != nil {
 				return s.toolError("Failed to approve step", err), nil
 			}
-			s.logAudit(agentID, "kafka_agentic_runbook", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_agentic_runbook", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "approved", "execution_id": id})
 
 		case "reject":
@@ -98,7 +98,7 @@ func (s *Server) handleAgenticRunbook(ctx context.Context, request mcp.CallToolR
 			if err := s.runbookEngine.RejectStep(id, rejector, reason); err != nil {
 				return s.toolError("Failed to reject step", err), nil
 			}
-			s.logAudit(agentID, "kafka_agentic_runbook", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_agentic_runbook", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "rejected", "execution_id": id})
 
 		case "rollback":
@@ -109,7 +109,7 @@ func (s *Server) handleAgenticRunbook(ctx context.Context, request mcp.CallToolR
 			if err != nil {
 				return s.toolError("Failed to rollback", err), nil
 			}
-			s.logAudit(agentID, "kafka_agentic_runbook", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_agentic_runbook", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "rolling_back", "execution": exec})
 
 		case "resume":

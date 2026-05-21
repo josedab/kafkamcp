@@ -43,7 +43,7 @@ func (s *Server) handleStateMachine(ctx context.Context, request mcp.CallToolReq
 			if err != nil {
 				return s.toolError("Failed to create machine", err), nil
 			}
-			s.logAudit(agentID, "kafka_state_machine", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_state_machine", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "created", "machine": m})
 
 		case "create_instance":
@@ -83,7 +83,7 @@ func (s *Server) handleStateMachine(ctx context.Context, request mcp.CallToolReq
 			if err != nil {
 				return s.toolError("Transition failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_state_machine", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_state_machine", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "transitioned", "instance": inst})
 
 		case "valid_transitions":

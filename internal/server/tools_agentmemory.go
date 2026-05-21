@@ -48,7 +48,7 @@ func (s *Server) handleMemoryStore(ctx context.Context, request mcp.CallToolRequ
 		return s.toolError("failed to store memory entry", err), nil
 	}
 
-	s.logAudit(agentID, "kafka_memory_store", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "kafka_memory_store", args, "", "success", 1, nil, start)
 	return marshalResult(entry)
 }
 
@@ -66,13 +66,13 @@ func (s *Server) handleMemoryRecall(ctx context.Context, request mcp.CallToolReq
 		if err != nil {
 			return s.toolError("memory entry not found", err), nil
 		}
-		s.logAudit(agentID, "kafka_memory_recall", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_memory_recall", args, "", "success", 1, nil, start)
 		return marshalResult(entry)
 
 	case "list":
 		entries := s.agentMemoryEngine.ListEntries(agentID, category)
 		stats := s.agentMemoryEngine.Stats(agentID)
-		s.logAudit(agentID, "kafka_memory_recall", args, "", "success", len(entries), nil, start)
+		s.logAudit(ctx, agentID, "kafka_memory_recall", args, "", "success", len(entries), nil, start)
 		return marshalResult(map[string]any{
 			"entries": entries,
 			"stats":   stats,
@@ -85,7 +85,7 @@ func (s *Server) handleMemoryRecall(ctx context.Context, request mcp.CallToolReq
 		if err := s.agentMemoryEngine.Delete(agentID, key); err != nil {
 			return s.toolError("failed to delete memory entry", err), nil
 		}
-		s.logAudit(agentID, "kafka_memory_recall", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_memory_recall", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]string{"status": "deleted"})
 
 	default:
@@ -111,7 +111,7 @@ func (s *Server) handleMemorySearch(ctx context.Context, request mcp.CallToolReq
 
 	results := s.agentMemoryEngine.Search(agentID, query, category, limit)
 
-	s.logAudit(agentID, "kafka_memory_search", args, "", "success", len(results), nil, start)
+	s.logAudit(ctx, agentID, "kafka_memory_search", args, "", "success", len(results), nil, start)
 	return marshalResult(map[string]any{
 		"results": results,
 		"total":   len(results),

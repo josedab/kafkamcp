@@ -27,7 +27,7 @@ func (s *Server) handleStream(ctx context.Context, request mcp.CallToolRequest) 
 		case "pause", "resume", "stop":
 			return s.handleStreamControl(ctx, request, agentID, args, start, action)
 		case "list":
-			return s.handleStreamList(agentID, args, start)
+			return s.handleStreamList(ctx, agentID, args, start)
 		default:
 			return mcp.NewToolResultError(fmt.Sprintf("unknown action %q; must be: start, poll, pause, resume, stop, list", action)), nil
 		}
@@ -72,15 +72,15 @@ func (s *Server) handleStreamStart(ctx context.Context, request mcp.CallToolRequ
 
 	result, err := s.kafkaManager.StartStream(ctx, cluster, cfg)
 	if err != nil {
-		s.logAudit(agentID, "kafka_stream", args, cluster, "error", 0, err, start)
+		s.logAudit(ctx, agentID, "kafka_stream", args, cluster, "error", 0, err, start)
 		return s.toolError("Failed to start stream", err), nil
 	}
 
-	s.logAudit(agentID, "kafka_stream", args, cluster, "success", 0, nil, start)
+	s.logAudit(ctx, agentID, "kafka_stream", args, cluster, "success", 0, nil, start)
 	return marshalResult(result)
 }
 
-func (s *Server) handleStreamPoll(_ context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+func (s *Server) handleStreamPoll(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 	sessionID := request.GetString("session_id", "")
 	if sessionID == "" {
 		return mcp.NewToolResultError("session_id is required for poll action"), nil
@@ -107,15 +107,15 @@ func (s *Server) handleStreamPoll(_ context.Context, request mcp.CallToolRequest
 	}
 	result, err := s.kafkaManager.PollStream(sessionID, timeoutMs)
 	if err != nil {
-		s.logAudit(agentID, "kafka_stream", args, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "kafka_stream", args, "", "error", 0, err, start)
 		return s.toolError("Failed to poll stream", err), nil
 	}
 
-	s.logAudit(agentID, "kafka_stream", args, "", "success", result.Count, nil, start)
+	s.logAudit(ctx, agentID, "kafka_stream", args, "", "success", result.Count, nil, start)
 	return marshalResult(result)
 }
 
-func (s *Server) handleStreamControl(_ context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time, action string) (*mcp.CallToolResult, error) {
+func (s *Server) handleStreamControl(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time, action string) (*mcp.CallToolResult, error) {
 	sessionID := request.GetString("session_id", "")
 	if sessionID == "" {
 		return mcp.NewToolResultError("session_id is required"), nil
@@ -135,24 +135,25 @@ func (s *Server) handleStreamControl(_ context.Context, request mcp.CallToolRequ
 
 	result, err := s.kafkaManager.ControlStream(sessionID, action)
 	if err != nil {
-		s.logAudit(agentID, "kafka_stream", args, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "kafka_stream", args, "", "error", 0, err, start)
 		return s.toolError(fmt.Sprintf("Failed to %s stream", action), err), nil
 	}
 
-	s.logAudit(agentID, "kafka_stream", args, "", "success", 0, nil, start)
+	s.logAudit(ctx, agentID, "kafka_stream", args, "", "success", 0, nil, start)
 	return marshalResult(result)
 }
 
-func (s *Server) handleStreamList(agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+func (s *Server) handleStreamList(ctx context.Context, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 	allSessions := s.kafkaManager.ListStreams()
 	// Filter sessions to only those owned by the calling agent
-	var sessions []kafka.StreamSession
-	for _, sess := range allSessions {
+	sessions := make([]kafka.StreamSessionSnapshot, 0, len(allSessions))
+	for i := range allSessions {
+		sess := allSessions[i]
 		if sess.AgentID == "" || sess.AgentID == agentID {
 			sessions = append(sessions, sess)
 		}
 	}
-	s.logAudit(agentID, "kafka_stream", args, "", "success", len(sessions), nil, start)
+	s.logAudit(ctx, agentID, "kafka_stream", args, "", "success", len(sessions), nil, start)
 	return marshalResult(map[string]any{
 		"sessions":    sessions,
 		"total_count": len(sessions),

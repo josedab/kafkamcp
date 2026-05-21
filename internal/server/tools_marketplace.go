@@ -21,7 +21,7 @@ func (s *Server) handlePluginSearch(ctx context.Context, request mcp.CallToolReq
 
 		results := s.marketplace.Search(query, category, verifiedOnly)
 
-		s.logAudit(agentID, "kafka_plugin_search", args, "", "success", len(results), nil, start)
+		s.logAudit(ctx, agentID, "kafka_plugin_search", args, "", "success", len(results), nil, start)
 		return marshalResult(map[string]any{
 			"plugins":     results,
 			"total_count": len(results),
@@ -47,11 +47,11 @@ func (s *Server) handlePluginInstall(ctx context.Context, request mcp.CallToolRe
 
 		entry, err := s.marketplace.Install(name)
 		if err != nil {
-			s.logAudit(agentID, "kafka_plugin_install", args, "", "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_plugin_install", args, "", "error", 0, err, start)
 			return s.toolError("Failed to install plugin", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_plugin_install", args, "", "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_plugin_install", args, "", "success", 0, nil, start)
 		return marshalResult(map[string]any{
 			"status":  "installed",
 			"plugin":  entry,
@@ -68,7 +68,7 @@ func (s *Server) handlePluginList(ctx context.Context, request mcp.CallToolReque
 	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 		plugins := s.pluginRegistry.List()
 
-		s.logAudit(agentID, "kafka_plugin_list", args, "", "success", len(plugins), nil, start)
+		s.logAudit(ctx, agentID, "kafka_plugin_list", args, "", "success", len(plugins), nil, start)
 		return marshalResult(map[string]any{
 			"installed_plugins": plugins,
 			"total_count":       len(plugins),

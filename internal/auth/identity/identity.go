@@ -107,3 +107,33 @@ var (
 	// verification (bad signature, expired, wrong audience, ...).
 	ErrInvalidToken = errors.New("identity: invalid token")
 )
+
+// contextKey is an unexported type used to key the verified identity
+// stored on request contexts. Using an unexported struct guarantees no
+// collisions with other packages.
+type contextKey struct{}
+
+// WithIdentity returns a derived context carrying the verified
+// [AgentIdentity]. A nil identity is treated as a no-op and returns ctx
+// unchanged so callers don't have to special-case the unverified path.
+func WithIdentity(ctx context.Context, ident *AgentIdentity) context.Context {
+	if ident == nil {
+		return ctx
+	}
+	return context.WithValue(ctx, contextKey{}, ident)
+}
+
+// FromContext returns the verified [AgentIdentity] attached to ctx, or
+// (nil, false) when none is present. Downstream layers (audit log,
+// policy enforcement, rate-limit accounting) use this to read who is
+// actually making the call without re-verifying.
+func FromContext(ctx context.Context) (*AgentIdentity, bool) {
+	if ctx == nil {
+		return nil, false
+	}
+	v, ok := ctx.Value(contextKey{}).(*AgentIdentity)
+	if !ok || v == nil {
+		return nil, false
+	}
+	return v, true
+}

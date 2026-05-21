@@ -31,7 +31,7 @@ func (s *Server) handleGovernanceRequest(ctx context.Context, request mcp.CallTo
 			if err != nil {
 				return s.toolError("failed to submit request", err), nil
 			}
-			s.logAudit(agentID, "kafka_governance_request", args, cluster, "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_governance_request", args, cluster, "success", 1, nil, start)
 			return marshalResult(map[string]any{
 				"request": req,
 				"message": "Request submitted. Pending approval.",
@@ -49,7 +49,7 @@ func (s *Server) handleGovernanceRequest(ctx context.Context, request mcp.CallTo
 			if err != nil {
 				return s.toolError("review failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_governance_request", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_governance_request", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"request": req, "message": "Review recorded."})
 
 		case "get":
@@ -77,7 +77,7 @@ func (s *Server) handleGovernanceDashboard(ctx context.Context, request mcp.Call
 		tool: "kafka_governance_dashboard", resourceType: auth.ResourceCluster, action: auth.ActionRead,
 	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 		dashboard := s.portalEngine.GetDashboard()
-		s.logAudit(agentID, "kafka_governance_dashboard", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_governance_dashboard", args, "", "success", 1, nil, start)
 		return marshalResult(dashboard)
 	})(ctx, request)
 }

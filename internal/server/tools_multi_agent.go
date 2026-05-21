@@ -42,7 +42,7 @@ func (s *Server) handleMultiAgentOrchestrate(ctx context.Context, request mcp.Ca
 			if err != nil {
 				return s.toolError("failed to assign steps", err), nil
 			}
-			s.logAudit(agentID, "kafka_multi_agent_orchestrate", args, "", "success", len(assignments), nil, start)
+			s.logAudit(ctx, agentID, "kafka_multi_agent_orchestrate", args, "", "success", len(assignments), nil, start)
 			return marshalResult(mar)
 
 		case "handoff":
@@ -54,7 +54,7 @@ func (s *Server) handleMultiAgentOrchestrate(ctx context.Context, request mcp.Ca
 			if err != nil {
 				return s.toolError("failed to record handoff", err), nil
 			}
-			s.logAudit(agentID, "kafka_multi_agent_orchestrate", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_multi_agent_orchestrate", args, "", "success", 1, nil, start)
 			return marshalResult(handoff)
 
 		case "agent_steps":
@@ -63,7 +63,7 @@ func (s *Server) handleMultiAgentOrchestrate(ctx context.Context, request mcp.Ca
 			if err != nil {
 				return s.toolError("failed to get agent steps", err), nil
 			}
-			s.logAudit(agentID, "kafka_multi_agent_orchestrate", args, "", "success", len(steps), nil, start)
+			s.logAudit(ctx, agentID, "kafka_multi_agent_orchestrate", args, "", "success", len(steps), nil, start)
 			return marshalResult(map[string]any{"agent_id": targetAgent, "steps": steps, "total": len(steps)})
 
 		case "agent_ready":
@@ -72,7 +72,7 @@ func (s *Server) handleMultiAgentOrchestrate(ctx context.Context, request mcp.Ca
 			if err != nil {
 				return s.toolError("failed to get ready steps", err), nil
 			}
-			s.logAudit(agentID, "kafka_multi_agent_orchestrate", args, "", "success", len(steps), nil, start)
+			s.logAudit(ctx, agentID, "kafka_multi_agent_orchestrate", args, "", "success", len(steps), nil, start)
 			return marshalResult(map[string]any{"agent_id": targetAgent, "ready_steps": steps, "total": len(steps)})
 
 		case "status":
@@ -80,7 +80,7 @@ func (s *Server) handleMultiAgentOrchestrate(ctx context.Context, request mcp.Ca
 			if err != nil {
 				return s.toolError("failed to get status", err), nil
 			}
-			s.logAudit(agentID, "kafka_multi_agent_orchestrate", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_multi_agent_orchestrate", args, "", "success", 1, nil, start)
 			return marshalResult(mar)
 
 		default:

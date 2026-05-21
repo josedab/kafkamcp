@@ -55,7 +55,7 @@ func (s *Server) handleThreatAlerts(ctx context.Context, request mcp.CallToolReq
 	}
 
 	alerts := s.threatDetector.GetAlerts(filterAgent, limit)
-	s.logAudit(agentID, "agent_threat_alerts", args, "", "success", len(alerts), nil, start)
+	s.logAudit(ctx, agentID, "agent_threat_alerts", args, "", "success", len(alerts), nil, start)
 	return marshalResult(map[string]any{
 		"alerts": alerts,
 		"total":  len(alerts),
@@ -77,13 +77,13 @@ func (s *Server) handleThreatProfile(ctx context.Context, request mcp.CallToolRe
 		})
 	}
 
-	s.logAudit(agentID, "agent_threat_profile", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "agent_threat_profile", args, "", "success", 1, nil, start)
 	return marshalResult(profile)
 }
 
 func (s *Server) handleThreatStats(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 	stats := s.threatDetector.Stats()
-	s.logAudit(agentID, "agent_threat_stats", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "agent_threat_stats", args, "", "success", 1, nil, start)
 	return marshalResult(stats)
 }
 

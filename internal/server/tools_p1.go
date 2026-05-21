@@ -74,11 +74,11 @@ func (s *Server) handleCreateTopic(ctx context.Context, request mcp.CallToolRequ
 			Name: name, Partitions: partitions, ReplicationFactor: replFactor, Configs: configs,
 		})
 		if err != nil {
-			s.logAudit(agentID, "kafka_create_topic", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_create_topic", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to create topic", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_create_topic", args, cluster, "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_create_topic", args, cluster, "success", 0, nil, start)
 		return marshalResult(map[string]any{"status": "created", "topic": name, "partitions": partitions, "replication_factor": replFactor})
 	})(ctx, request)
 }
@@ -127,11 +127,11 @@ func (s *Server) handleAlterTopic(ctx context.Context, request mcp.CallToolReque
 
 		err := s.kafkaManager.AlterTopic(ctx, cluster, kafka.AlterTopicRequest{Name: name, Configs: configs})
 		if err != nil {
-			s.logAudit(agentID, "kafka_alter_topic", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_alter_topic", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to alter topic", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_alter_topic", args, cluster, "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_alter_topic", args, cluster, "success", 0, nil, start)
 		return marshalResult(map[string]any{"status": "altered", "topic": name, "configs": configs})
 	})(ctx, request)
 }
@@ -154,11 +154,11 @@ func (s *Server) handleDeleteTopic(ctx context.Context, request mcp.CallToolRequ
 
 		err := s.kafkaManager.DeleteTopic(ctx, cluster, name)
 		if err != nil {
-			s.logAudit(agentID, "kafka_delete_topic", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_delete_topic", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to delete topic", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_delete_topic", args, cluster, "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_delete_topic", args, cluster, "success", 0, nil, start)
 		return marshalResult(map[string]any{"status": "deleted", "topic": name})
 	})(ctx, request)
 }
@@ -215,11 +215,11 @@ func (s *Server) handleSearch(ctx context.Context, request mcp.CallToolRequest) 
 
 		matched, scanned, err := s.kafkaManager.SearchMessages(ctx, cluster, req)
 		if err != nil {
-			s.logAudit(agentID, "kafka_search", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_search", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to search", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_search", args, cluster, "success", len(matched), nil, start)
+		s.logAudit(ctx, agentID, "kafka_search", args, cluster, "success", len(matched), nil, start)
 		return marshalResult(map[string]any{
 			"messages":      matched,
 			"matched_count": len(matched),
@@ -264,11 +264,11 @@ func (s *Server) handleResetOffsets(ctx context.Context, request mcp.CallToolReq
 			GroupID: groupID, Topic: topic, Strategy: strategy, Value: value, DryRun: dryRun,
 		})
 		if err != nil {
-			s.logAudit(agentID, "kafka_reset_offsets", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_reset_offsets", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to reset offsets", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_reset_offsets", args, cluster, "success", len(result.Offsets), nil, start)
+		s.logAudit(ctx, agentID, "kafka_reset_offsets", args, cluster, "success", len(result.Offsets), nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }
@@ -296,11 +296,11 @@ func (s *Server) handleCheckSchemaCompatibility(ctx context.Context, request mcp
 
 		result, err := s.getSchemaClient("").CheckCompatibility(ctx, subject, version, schemaStr, schemaType)
 		if err != nil {
-			s.logAudit(agentID, "kafka_check_schema_compatibility", args, "", "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_check_schema_compatibility", args, "", "error", 0, err, start)
 			return s.toolError("Failed to check compatibility", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_check_schema_compatibility", args, "", "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_check_schema_compatibility", args, "", "success", 0, nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }
@@ -327,11 +327,11 @@ func (s *Server) handleAnalyzeDLQ(ctx context.Context, request mcp.CallToolReque
 
 		result, err := s.kafkaManager.AnalyzeDLQ(ctx, cluster, topic, limit)
 		if err != nil {
-			s.logAudit(agentID, "kafka_analyze_dlq", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_analyze_dlq", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to analyze DLQ", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_analyze_dlq", args, cluster, "success", result.TotalMessages, nil, start)
+		s.logAudit(ctx, agentID, "kafka_analyze_dlq", args, cluster, "success", result.TotalMessages, nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }
@@ -386,12 +386,12 @@ func (s *Server) handleSubscribe(ctx context.Context, request mcp.CallToolReques
 			Deserializer: deserializer,
 		})
 		if err != nil {
-			s.logAudit(agentID, "kafka_subscribe", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_subscribe", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to subscribe", err), nil
 		}
 
 		s.metrics.MessagesConsumed.WithLabelValues(metrics.SanitizeTopicLabel(topic), metrics.SanitizeAgentLabel(agentID), s.resolveClusterName(cluster)).Add(float64(result.Count))
-		s.logAudit(agentID, "kafka_subscribe", args, cluster, "success", result.Count, nil, start)
+		s.logAudit(ctx, agentID, "kafka_subscribe", args, cluster, "success", result.Count, nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }

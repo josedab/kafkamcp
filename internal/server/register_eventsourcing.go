@@ -69,13 +69,13 @@ func (s *Server) handleActionReplay(ctx context.Context, request mcp.CallToolReq
 		})
 	}
 
-	s.logAudit(agentID, "agent_action_replay", args, "", "success", session.TotalActions, nil, start)
+	s.logAudit(ctx, agentID, "agent_action_replay", args, "", "success", session.TotalActions, nil, start)
 	return marshalResult(session)
 }
 
 func (s *Server) handleActionAnalytics(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 	usage := s.eventSourcingEngine.GetToolUsage()
-	s.logAudit(agentID, "agent_action_analytics", args, "", "success", len(usage), nil, start)
+	s.logAudit(ctx, agentID, "agent_action_analytics", args, "", "success", len(usage), nil, start)
 	return marshalResult(map[string]any{
 		"tool_usage":  usage,
 		"total_tools": len(usage),
@@ -104,11 +104,11 @@ func (s *Server) handleActionExport(ctx context.Context, request mcp.CallToolReq
 
 	lines, err := s.eventSourcingEngine.ExportJSONL(filter)
 	if err != nil {
-		s.logAudit(agentID, "agent_action_export", args, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "agent_action_export", args, "", "error", 0, err, start)
 		return s.toolError("failed to export actions", err), nil
 	}
 
-	s.logAudit(agentID, "agent_action_export", args, "", "success", len(lines), nil, start)
+	s.logAudit(ctx, agentID, "agent_action_export", args, "", "success", len(lines), nil, start)
 	return marshalResult(map[string]any{
 		"lines":  len(lines),
 		"format": "jsonl",
@@ -117,6 +117,6 @@ func (s *Server) handleActionExport(ctx context.Context, request mcp.CallToolReq
 
 func (s *Server) handleActionStats(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 	stats := s.eventSourcingEngine.Stats()
-	s.logAudit(agentID, "agent_action_stats", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "agent_action_stats", args, "", "success", 1, nil, start)
 	return marshalResult(stats)
 }

@@ -29,7 +29,7 @@ func (s *Server) handleFlowDebug(ctx context.Context, request mcp.CallToolReques
 			}
 
 			graph := s.flowDebugger.GetCurrentGraph()
-			s.logAudit(agentID, "kafka_flow_debug", args, cluster, "success", len(graph.Nodes), nil, start)
+			s.logAudit(ctx, agentID, "kafka_flow_debug", args, cluster, "success", len(graph.Nodes), nil, start)
 			return marshalResult(graph)
 
 		case "snapshots":
@@ -43,7 +43,7 @@ func (s *Server) handleFlowDebug(ctx context.Context, request mcp.CallToolReques
 			}
 			since := time.Now().Add(-time.Duration(sinceMinutes) * time.Minute)
 			snapshots := s.flowDebugger.GetSnapshots(since, time.Time{}, limit)
-			s.logAudit(agentID, "kafka_flow_debug", args, cluster, "success", len(snapshots), nil, start)
+			s.logAudit(ctx, agentID, "kafka_flow_debug", args, cluster, "success", len(snapshots), nil, start)
 			return marshalResult(map[string]any{"snapshots": snapshots, "total": len(snapshots)})
 
 		case "config":
@@ -71,7 +71,7 @@ func (s *Server) handleFlowDebug(ctx context.Context, request mcp.CallToolReques
 					cfg.ThroughputMinMsg = v
 				}
 				s.flowDebugger.SetBottleneckConfig(cfg)
-				s.logAudit(agentID, "kafka_flow_debug", args, cluster, "success", 1, nil, start)
+				s.logAudit(ctx, agentID, "kafka_flow_debug", args, cluster, "success", 1, nil, start)
 				return marshalResult(map[string]any{"status": "updated", "config": cfg})
 			}
 			cfg := s.flowDebugger.GetBottleneckConfig()
@@ -79,11 +79,11 @@ func (s *Server) handleFlowDebug(ctx context.Context, request mcp.CallToolReques
 
 		case "collect":
 			if err := s.collectFlowMetrics(ctx, cluster); err != nil {
-				s.logAudit(agentID, "kafka_flow_debug", args, cluster, "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_flow_debug", args, cluster, "error", 0, err, start)
 				return s.toolError("failed to collect flow metrics", err), nil
 			}
 			graph := s.flowDebugger.GetCurrentGraph()
-			s.logAudit(agentID, "kafka_flow_debug", args, cluster, "success", len(graph.Nodes), nil, start)
+			s.logAudit(ctx, agentID, "kafka_flow_debug", args, cluster, "success", len(graph.Nodes), nil, start)
 			return marshalResult(map[string]any{"status": "collected", "nodes": len(graph.Nodes), "edges": len(graph.Edges)})
 
 		default:
@@ -119,7 +119,7 @@ func (s *Server) handleFlowBottlenecks(ctx context.Context, request mcp.CallTool
 			filtered = append(filtered, b)
 		}
 
-		s.logAudit(agentID, "kafka_flow_bottlenecks", args, cluster, "success", len(filtered), nil, start)
+		s.logAudit(ctx, agentID, "kafka_flow_bottlenecks", args, cluster, "success", len(filtered), nil, start)
 		return marshalResult(map[string]any{
 			"bottlenecks": filtered,
 			"total":       len(filtered),

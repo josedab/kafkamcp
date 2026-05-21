@@ -43,7 +43,7 @@ func (s *Server) handleCorrelationIngest(ctx context.Context, request mcp.CallTo
 
 		s.correlationEngine.IngestSignal(signal)
 
-		s.logAudit(agentID, "kafka_correlation_ingest", args, "", "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_correlation_ingest", args, "", "success", 0, nil, start)
 		return marshalResult(map[string]any{
 			"status": "ingested",
 			"source": source,
@@ -74,7 +74,7 @@ func (s *Server) handleCorrelationAnalyze(ctx context.Context, request mcp.CallT
 
 		result := s.correlationEngine.Correlate(duration, metric)
 
-		s.logAudit(agentID, "kafka_correlation_analyze", args, "", "success", result.SignalCount, nil, start)
+		s.logAudit(ctx, agentID, "kafka_correlation_analyze", args, "", "success", result.SignalCount, nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }
@@ -111,12 +111,12 @@ func (s *Server) handleCorrelationEndpoints(ctx context.Context, request mcp.Cal
 				Active: true,
 			})
 
-			s.logAudit(agentID, "kafka_correlation_endpoints", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_correlation_endpoints", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"status": "registered", "source": source})
 
 		default:
 			endpoints := s.correlationEngine.ListEndpoints()
-			s.logAudit(agentID, "kafka_correlation_endpoints", args, "", "success", len(endpoints), nil, start)
+			s.logAudit(ctx, agentID, "kafka_correlation_endpoints", args, "", "success", len(endpoints), nil, start)
 			return marshalResult(map[string]any{"endpoints": endpoints, "total": len(endpoints)})
 		}
 	})(ctx, request)

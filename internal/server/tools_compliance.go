@@ -30,12 +30,12 @@ func (s *Server) handleComplianceScan(ctx context.Context, request mcp.CallToolR
 
 		topicData, err := s.collectComplianceData(ctx, cluster, topicFilter)
 		if err != nil {
-			s.logAudit(agentID, "kafka_compliance_scan", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_compliance_scan", args, cluster, "error", 0, err, start)
 			return s.toolError("failed to collect topic data", err), nil
 		}
 
 		result := s.complianceEngine.Scan(s.resolveClusterName(cluster), regulation, topicData)
-		s.logAudit(agentID, "kafka_compliance_scan", args, cluster, "success", len(result.Violations), nil, start)
+		s.logAudit(ctx, agentID, "kafka_compliance_scan", args, cluster, "success", len(result.Violations), nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }
@@ -59,12 +59,12 @@ func (s *Server) handleComplianceReport(ctx context.Context, request mcp.CallToo
 
 		topicData, err := s.collectComplianceData(ctx, cluster, "")
 		if err != nil {
-			s.logAudit(agentID, "kafka_compliance_report", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_compliance_report", args, cluster, "error", 0, err, start)
 			return s.toolError("failed to collect topic data", err), nil
 		}
 
 		report := s.complianceEngine.GenerateReport(s.resolveClusterName(cluster), regulation, topicData)
-		s.logAudit(agentID, "kafka_compliance_report", args, cluster, "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_compliance_report", args, cluster, "success", 1, nil, start)
 		return marshalResult(report)
 	})(ctx, request)
 }
@@ -84,7 +84,7 @@ func (s *Server) handleComplianceViolations(ctx context.Context, request mcp.Cal
 		}
 
 		violations := s.complianceEngine.GetViolations(regulation, severity)
-		s.logAudit(agentID, "kafka_compliance_violations", args, "", "success", len(violations), nil, start)
+		s.logAudit(ctx, agentID, "kafka_compliance_violations", args, "", "success", len(violations), nil, start)
 		return marshalResult(map[string]any{"violations": violations, "total": len(violations)})
 	})(ctx, request)
 }
@@ -147,7 +147,7 @@ func (s *Server) handleComplianceAuditReport(ctx context.Context, request mcp.Ca
 		// Collect compliance data and run scan
 		topicData, err := s.collectComplianceData(ctx, cluster, "")
 		if err != nil {
-			s.logAudit(agentID, "kafka_compliance_audit_report", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_compliance_audit_report", args, cluster, "error", 0, err, start)
 			return s.toolError("failed to collect topic data", err), nil
 		}
 
@@ -178,7 +178,7 @@ func (s *Server) handleComplianceAuditReport(ctx context.Context, request mcp.Ca
 			return s.toolError("failed to generate audit report", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_compliance_audit_report", args, cluster, "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_compliance_audit_report", args, cluster, "success", 1, nil, start)
 		return marshalResult(auditReport)
 	})(ctx, request)
 }

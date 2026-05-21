@@ -22,7 +22,7 @@ func (s *Server) handleGitOpsDiff(ctx context.Context, request mcp.CallToolReque
 		// Get live state from cluster
 		topics, err := s.kafkaManager.ListTopics(ctx, cluster, false)
 		if err != nil {
-			s.logAudit(agentID, "kafka_gitops_diff", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_gitops_diff", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to list topics", err), nil
 		}
 
@@ -75,13 +75,13 @@ func (s *Server) handleGitOpsDiff(ctx context.Context, request mcp.CallToolReque
 
 		diff, err := s.gitopsManager.Diff(desired, live)
 		if err != nil {
-			s.logAudit(agentID, "kafka_gitops_diff", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_gitops_diff", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to compute diff", err), nil
 		}
 
 		plan := s.gitopsManager.GeneratePlan(diff, true)
 
-		s.logAudit(agentID, "kafka_gitops_diff", args, cluster, "success", diff.TotalChanges, nil, start)
+		s.logAudit(ctx, agentID, "kafka_gitops_diff", args, cluster, "success", diff.TotalChanges, nil, start)
 		return marshalResult(map[string]any{
 			"diff":    diff,
 			"plan":    plan,

@@ -36,7 +36,7 @@ func (s *Server) handleNegotiateCapabilities(ctx context.Context, request mcp.Ca
 
 		result := s.capabilityNegotiator.Negotiate(agentID, role, contextHints)
 
-		s.logAudit(agentID, "kafka_negotiate_capabilities", args, "", "success", result.FilteredTools, nil, start)
+		s.logAudit(ctx, agentID, "kafka_negotiate_capabilities", args, "", "success", result.FilteredTools, nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }
@@ -54,13 +54,13 @@ func (s *Server) handleDiscoverTools(ctx context.Context, request mcp.CallToolRe
 		if category == "" {
 			// Return all categories
 			cats := s.capabilityNegotiator.ListCategories()
-			s.logAudit(agentID, "kafka_discover_tools", args, "", "success", len(cats), nil, start)
+			s.logAudit(ctx, agentID, "kafka_discover_tools", args, "", "success", len(cats), nil, start)
 			return marshalResult(map[string]any{"categories": cats})
 		}
 
 		result := s.capabilityNegotiator.DiscoverTools(agentID, category)
 
-		s.logAudit(agentID, "kafka_discover_tools", args, "", "success", result.Total, nil, start)
+		s.logAudit(ctx, agentID, "kafka_discover_tools", args, "", "success", result.Total, nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }
@@ -79,7 +79,7 @@ func (s *Server) handleCapabilityProfile(ctx context.Context, request mcp.CallTo
 			})
 		}
 
-		s.logAudit(agentID, "kafka_capability_profile", args, "", "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_capability_profile", args, "", "success", 0, nil, start)
 		return marshalResult(map[string]any{
 			"profile":      profile,
 			"tools_count":  len(profile.AllowedTools),

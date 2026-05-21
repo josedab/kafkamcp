@@ -29,7 +29,7 @@ func (s *Server) handlePlaybookList(ctx context.Context, request mcp.CallToolReq
 			playbooks = filtered
 		}
 
-		s.logAudit(agentID, "kafka_playbook_list", args, "", "success", len(playbooks), nil, start)
+		s.logAudit(ctx, agentID, "kafka_playbook_list", args, "", "success", len(playbooks), nil, start)
 		return marshalResult(map[string]any{"playbooks": playbooks, "total": len(playbooks)})
 	})(ctx, request)
 }
@@ -50,11 +50,11 @@ func (s *Server) handlePlaybookExecute(ctx context.Context, request mcp.CallTool
 
 		exec, err := s.playbookEngine.Execute(playbookID, agentID, map[string]any{"triggered_by": agentID})
 		if err != nil {
-			s.logAudit(agentID, "kafka_playbook_execute", args, "", "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_playbook_execute", args, "", "error", 0, err, start)
 			return s.toolError("Failed to execute playbook", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_playbook_execute", args, "", "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_playbook_execute", args, "", "success", 0, nil, start)
 		return marshalResult(map[string]any{
 			"status":    "executing",
 			"execution": exec,
@@ -74,7 +74,7 @@ func (s *Server) handlePlaybookMatch(ctx context.Context, request mcp.CallToolRe
 
 		matches := s.playbookEngine.MatchTrigger(playbook.TriggerType(triggerType), value)
 
-		s.logAudit(agentID, "kafka_playbook_match", args, "", "success", len(matches), nil, start)
+		s.logAudit(ctx, agentID, "kafka_playbook_match", args, "", "success", len(matches), nil, start)
 		return marshalResult(map[string]any{
 			"matches":      matches,
 			"total":        len(matches),

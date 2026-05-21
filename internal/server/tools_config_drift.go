@@ -40,10 +40,10 @@ func (s *Server) handleConfigDrift(ctx context.Context, request mcp.CallToolRequ
 			}
 			result, err := s.kafkaManager.CompareConfigs(ctx, sourceCluster, targetCluster, topic)
 			if err != nil {
-				s.logAudit(agentID, "kafka_config_drift", args, cluster, "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_config_drift", args, cluster, "error", 0, err, start)
 				return s.toolError("Failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_config_drift", args, cluster, "success", len(result.Diffs), nil, start)
+			s.logAudit(ctx, agentID, "kafka_config_drift", args, cluster, "success", len(result.Diffs), nil, start)
 			return marshalResult(result)
 
 		case "audit":
@@ -54,10 +54,10 @@ func (s *Server) handleConfigDrift(ctx context.Context, request mcp.CallToolRequ
 			template := extractStringMapArg(request, "template")
 			result, err := s.kafkaManager.AuditConfigs(ctx, cluster, topic, template)
 			if err != nil {
-				s.logAudit(agentID, "kafka_config_drift", args, cluster, "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_config_drift", args, cluster, "error", 0, err, start)
 				return s.toolError("Failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_config_drift", args, cluster, "success", len(result.Deviations), nil, start)
+			s.logAudit(ctx, agentID, "kafka_config_drift", args, cluster, "success", len(result.Deviations), nil, start)
 			return marshalResult(result)
 
 		default:

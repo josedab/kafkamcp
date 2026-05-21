@@ -34,7 +34,7 @@ func (s *Server) handlePredictAlert(ctx context.Context, request mcp.CallToolReq
 			memberCount := int(clampInt64(int64(request.GetInt("member_count", 0)), 0, 100000))
 
 			s.predictAlertEngine.RecordSample(groupID, totalLag, memberCount)
-			s.logAudit(agentID, "kafka_predict_alert", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_predict_alert", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "recorded", "group_id": groupID})
 
 		case "analyze":
@@ -49,7 +49,7 @@ func (s *Server) handlePredictAlert(ctx context.Context, request mcp.CallToolReq
 				return deny, nil
 			}
 			analysis := s.predictAlertEngine.Analyze(groupID)
-			s.logAudit(agentID, "kafka_predict_alert", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_predict_alert", args, "", "success", 1, nil, start)
 			return marshalResult(analysis)
 
 		case "alerts":
@@ -62,7 +62,7 @@ func (s *Server) handlePredictAlert(ctx context.Context, request mcp.CallToolReq
 				limit = MaxDLQMessages
 			}
 			alerts := s.predictAlertEngine.ListAlerts(groupID, limit)
-			s.logAudit(agentID, "kafka_predict_alert", args, "", "success", len(alerts), nil, start)
+			s.logAudit(ctx, agentID, "kafka_predict_alert", args, "", "success", len(alerts), nil, start)
 			return marshalResult(map[string]any{"alerts": alerts, "total": len(alerts)})
 
 		case "acknowledge":
@@ -76,7 +76,7 @@ func (s *Server) handlePredictAlert(ctx context.Context, request mcp.CallToolReq
 			if err := s.predictAlertEngine.AcknowledgeAlert(alertID); err != nil {
 				return s.toolError("Failed to acknowledge alert", err), nil
 			}
-			s.logAudit(agentID, "kafka_predict_alert", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_predict_alert", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "acknowledged", "alert_id": alertID})
 
 		default:

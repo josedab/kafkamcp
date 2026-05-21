@@ -43,7 +43,7 @@ func (s *Server) handleWASMLoad(ctx context.Context, request mcp.CallToolRequest
 			return s.toolError("failed to load WASM plugin", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_wasm_load", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_wasm_load", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]any{
 			"plugin":  plugin,
 			"message": "WASM plugin loaded. Use kafka_wasm_execute to run exported functions.",
@@ -71,7 +71,7 @@ func (s *Server) handleWASMExecute(ctx context.Context, request mcp.CallToolRequ
 			return s.toolError("WASM execution failed", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_wasm_execute", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_wasm_execute", args, "", "success", 1, nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }
@@ -101,7 +101,7 @@ func (s *Server) handleWASMManage(ctx context.Context, request mcp.CallToolReque
 			if err := s.wasmEngine.UnloadPlugin(pluginID); err != nil {
 				return s.toolError("failed to unload plugin", err), nil
 			}
-			s.logAudit(agentID, "kafka_wasm_manage", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_wasm_manage", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "unloaded", "plugin_id": pluginID})
 
 		default:

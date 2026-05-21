@@ -25,11 +25,11 @@ func (s *Server) handleNLPipelineBuild(ctx context.Context, request mcp.CallTool
 
 		spec, err := s.nlPipelineBuilder.Generate(description, agentID)
 		if err != nil {
-			s.logAudit(agentID, "kafka_nl_pipeline_build", args, "", "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_nl_pipeline_build", args, "", "error", 0, err, start)
 			return s.toolError("Failed to build pipeline", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_nl_pipeline_build", args, "", "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_nl_pipeline_build", args, "", "success", 0, nil, start)
 		return marshalResult(map[string]any{
 			"status":   "generated",
 			"pipeline": spec,
@@ -58,7 +58,7 @@ func (s *Server) handleNLPipelineManage(ctx context.Context, request mcp.CallToo
 		switch action {
 		case "list":
 			pipelines := s.nlPipelineBuilder.ListPipelines()
-			s.logAudit(agentID, "kafka_nl_pipeline_manage", args, "", "success", len(pipelines), nil, start)
+			s.logAudit(ctx, agentID, "kafka_nl_pipeline_manage", args, "", "success", len(pipelines), nil, start)
 			return marshalResult(map[string]any{"pipelines": pipelines, "total": len(pipelines)})
 
 		case "get":
@@ -69,7 +69,7 @@ func (s *Server) handleNLPipelineManage(ctx context.Context, request mcp.CallToo
 			if err != nil {
 				return s.toolError("Pipeline not found", err), nil
 			}
-			s.logAudit(agentID, "kafka_nl_pipeline_manage", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_nl_pipeline_manage", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"pipeline": spec})
 
 		case "validate":
@@ -80,7 +80,7 @@ func (s *Server) handleNLPipelineManage(ctx context.Context, request mcp.CallToo
 			if err != nil {
 				return s.toolError("Validation failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_nl_pipeline_manage", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_nl_pipeline_manage", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"valid": len(issues) == 0, "issues": issues})
 
 		case "deploy":
@@ -90,7 +90,7 @@ func (s *Server) handleNLPipelineManage(ctx context.Context, request mcp.CallToo
 			if err := s.nlPipelineBuilder.Deploy(pipelineID); err != nil {
 				return s.toolError("Deploy failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_nl_pipeline_manage", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_nl_pipeline_manage", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"status": "deployed", "pipeline_id": pipelineID})
 
 		case "delete":
@@ -100,7 +100,7 @@ func (s *Server) handleNLPipelineManage(ctx context.Context, request mcp.CallToo
 			if err := s.nlPipelineBuilder.DeletePipeline(pipelineID); err != nil {
 				return s.toolError("Delete failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_nl_pipeline_manage", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_nl_pipeline_manage", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"status": "deleted", "pipeline_id": pipelineID})
 
 		case "parse":
@@ -108,7 +108,7 @@ func (s *Server) handleNLPipelineManage(ctx context.Context, request mcp.CallToo
 				return mcp.NewToolResultError("description is required for parse action"), nil
 			}
 			result := s.nlPipelineBuilder.Parse(description)
-			s.logAudit(agentID, "kafka_nl_pipeline_manage", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_nl_pipeline_manage", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"parse_result": result})
 
 		default:

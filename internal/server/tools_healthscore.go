@@ -26,7 +26,7 @@ func (s *Server) handleHealthScore(ctx context.Context, request mcp.CallToolRequ
 
 			meta, err := s.kafkaManager.GetClusterMetadata(ctx, cluster)
 			if err != nil {
-				s.logAudit(agentID, "kafka_health_score", args, cluster, "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_health_score", args, cluster, "error", 0, err, start)
 				return s.toolError("Failed to get cluster metadata", err), nil
 			}
 
@@ -40,14 +40,14 @@ func (s *Server) handleHealthScore(ctx context.Context, request mcp.CallToolRequ
 
 			report := s.healthScoreEngine.Evaluate(cluster, input)
 
-			s.logAudit(agentID, "kafka_health_score", args, cluster, "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_health_score", args, cluster, "success", 1, nil, start)
 			return marshalResult(report)
 
 		case "history":
 			limit := int(clampInt64(int64(request.GetInt("history_limit", 20)), 1, 1000))
 			history := s.healthScoreEngine.GetHistory(cluster, limit)
 
-			s.logAudit(agentID, "kafka_health_score", args, cluster, "success", len(history), nil, start)
+			s.logAudit(ctx, agentID, "kafka_health_score", args, cluster, "success", len(history), nil, start)
 			return marshalResult(map[string]any{"cluster": cluster, "history": history, "total": len(history)})
 
 		default:

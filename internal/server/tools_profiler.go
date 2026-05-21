@@ -27,7 +27,7 @@ func (s *Server) handleAgentProfile(ctx context.Context, request mcp.CallToolReq
 		switch action {
 		case "profile":
 			profile := s.agentProfiler.ProfileAgent(targetAgent, sinceHours)
-			s.logAudit(agentID, "kafka_agent_profile", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_agent_profile", args, "", "success", 1, nil, start)
 			return marshalResult(profile)
 
 		case "slow_queries":
@@ -36,12 +36,12 @@ func (s *Server) handleAgentProfile(ctx context.Context, request mcp.CallToolReq
 				thresholdMs = t
 			}
 			slow := s.agentProfiler.GetSlowQueries(targetAgent, thresholdMs)
-			s.logAudit(agentID, "kafka_agent_profile", args, "", "success", len(slow), nil, start)
+			s.logAudit(ctx, agentID, "kafka_agent_profile", args, "", "success", len(slow), nil, start)
 			return marshalResult(map[string]any{"slow_queries": slow, "total": len(slow), "threshold_ms": thresholdMs})
 
 		case "list_agents":
 			agents := s.agentProfiler.ListAgents()
-			s.logAudit(agentID, "kafka_agent_profile", args, "", "success", len(agents), nil, start)
+			s.logAudit(ctx, agentID, "kafka_agent_profile", args, "", "success", len(agents), nil, start)
 			return marshalResult(map[string]any{"agents": agents, "total": len(agents), "total_calls": s.agentProfiler.GetCallCount()})
 
 		default:
@@ -64,7 +64,7 @@ func (s *Server) handleAgentOptimize(ctx context.Context, request mcp.CallToolRe
 		}
 
 		profile := s.agentProfiler.ProfileAgent(targetAgent, sinceHours)
-		s.logAudit(agentID, "kafka_agent_optimize", args, "", "success", len(profile.Optimizations), nil, start)
+		s.logAudit(ctx, agentID, "kafka_agent_optimize", args, "", "success", len(profile.Optimizations), nil, start)
 		return marshalResult(map[string]any{
 			"agent_id":        targetAgent,
 			"efficiency_score": profile.EfficiencyScore,
@@ -91,7 +91,7 @@ func (s *Server) handleAgentReport(ctx context.Context, request mcp.CallToolRequ
 
 		if targetAgent != "" {
 			profile := s.agentProfiler.ProfileAgent(targetAgent, sinceHours)
-			s.logAudit(agentID, "kafka_agent_report", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_agent_report", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{
 				"agent_id":         targetAgent,
 				"profile":          profile,
@@ -113,7 +113,7 @@ func (s *Server) handleAgentReport(ctx context.Context, request mcp.CallToolRequ
 			})
 		}
 
-		s.logAudit(agentID, "kafka_agent_report", args, "", "success", len(profiles), nil, start)
+		s.logAudit(ctx, agentID, "kafka_agent_report", args, "", "success", len(profiles), nil, start)
 		return marshalResult(map[string]any{
 			"agents":        profiles,
 			"total_agents":  len(profiles),

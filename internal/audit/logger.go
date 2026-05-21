@@ -17,8 +17,9 @@ import (
 type Entry struct {
 	Timestamp      string         `json:"timestamp"`
 	AgentID        string         `json:"agent_id"`
-	IdentityMethod string         `json:"identity_method,omitempty"` // How AgentID was verified ("none", "static", "oidc")
+	IdentityMethod string         `json:"identity_method,omitempty"` // How AgentID was verified ("none", "static", "oidc", "mtls")
 	Issuer         string         `json:"issuer,omitempty"`          // OIDC issuer URL (when IdentityMethod == "oidc")
+	Subject        string         `json:"subject,omitempty"`         // JWT sub claim or static agent ID; differs from AgentID when agent_id_claim overrides sub
 	Tool           string         `json:"tool"`
 	Parameters     map[string]any `json:"parameters,omitempty"`
 	Cluster        string         `json:"cluster,omitempty"`

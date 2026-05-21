@@ -44,7 +44,7 @@ func (s *Server) handleMessageSample(ctx context.Context, request mcp.CallToolRe
 
 			messages, err := s.kafkaManager.Consume(ctx, cluster, topic, -1, "latest", sampleSize, 5000, "auto")
 			if err != nil {
-				s.logAudit(agentID, "kafka_message_sample", args, cluster, "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_message_sample", args, cluster, "error", 0, err, start)
 				return s.toolError("Failed to consume sample messages", err), nil
 			}
 
@@ -74,7 +74,7 @@ func (s *Server) handleMessageSample(ctx context.Context, request mcp.CallToolRe
 			}
 
 			result := s.msgSamplingEngine.Profile(topic, samples)
-			s.logAudit(agentID, "kafka_message_sample", args, cluster, "success", len(samples), nil, start)
+			s.logAudit(ctx, agentID, "kafka_message_sample", args, cluster, "success", len(samples), nil, start)
 			return marshalResult(result)
 
 		case "cached":

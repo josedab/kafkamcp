@@ -29,10 +29,10 @@ func (s *Server) handleTraceFlow(ctx context.Context, request mcp.CallToolReques
 
 			trace, err := s.messageTracer.GetTrace(traceID)
 			if err != nil {
-				s.logAudit(agentID, "kafka_trace_flow", args, "", "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_trace_flow", args, "", "error", 0, err, start)
 				return s.toolError("Trace not found", err), nil
 			}
-			s.logAudit(agentID, "kafka_trace_flow", args, "", "success", len(trace.Spans), nil, start)
+			s.logAudit(ctx, agentID, "kafka_trace_flow", args, "", "success", len(trace.Spans), nil, start)
 			return marshalResult(trace)
 
 		case "record":
@@ -80,7 +80,7 @@ func (s *Server) handleTraceFlow(ctx context.Context, request mcp.CallToolReques
 			}
 
 			s.messageTracer.RecordSpan(span)
-			s.logAudit(agentID, "kafka_trace_flow", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_trace_flow", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{
 				"status":   "recorded",
 				"trace_id": traceID,
@@ -108,7 +108,7 @@ func (s *Server) handleTraceFlow(ctx context.Context, request mcp.CallToolReques
 					return s.toolError("failed to generate trace context", err), nil
 				}
 			}
-			s.logAudit(agentID, "kafka_trace_flow", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_trace_flow", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{
 				"trace_context": tc,
 				"traceparent":   tc.FormatTraceparent(),
@@ -121,7 +121,7 @@ func (s *Server) handleTraceFlow(ctx context.Context, request mcp.CallToolReques
 				limit = int(l)
 			}
 			traces := s.messageTracer.ListTraces(limit)
-			s.logAudit(agentID, "kafka_trace_flow", args, "", "success", len(traces), nil, start)
+			s.logAudit(ctx, agentID, "kafka_trace_flow", args, "", "success", len(traces), nil, start)
 			return marshalResult(map[string]any{"traces": traces, "total_count": len(traces)})
 
 		default:

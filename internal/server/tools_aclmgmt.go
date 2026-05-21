@@ -38,10 +38,10 @@ func (s *Server) handleACLManage(ctx context.Context, request mcp.CallToolReques
 
 			result, err := s.kafkaManager.ListACLs(ctx, cluster, principal, resourceType, true)
 			if err != nil {
-				s.logAudit(agentID, "kafka_acl_manage", args, cluster, "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_acl_manage", args, cluster, "error", 0, err, start)
 				return s.toolError("Failed to list ACLs", err), nil
 			}
-			s.logAudit(agentID, "kafka_acl_manage", args, cluster, "success", result.TotalACLs, nil, start)
+			s.logAudit(ctx, agentID, "kafka_acl_manage", args, cluster, "success", result.TotalACLs, nil, start)
 			return marshalResult(result)
 
 		case "audit":
@@ -61,7 +61,7 @@ func (s *Server) handleACLManage(ctx context.Context, request mcp.CallToolReques
 
 			result, err := s.kafkaManager.ListACLs(ctx, cluster, principal, resourceType, false)
 			if err != nil {
-				s.logAudit(agentID, "kafka_acl_manage", args, cluster, "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_acl_manage", args, cluster, "error", 0, err, start)
 				return s.toolError("Failed to list ACLs", err), nil
 			}
 
@@ -80,7 +80,7 @@ func (s *Server) handleACLManage(ctx context.Context, request mcp.CallToolReques
 			}
 
 			audit := s.aclMgmtEngine.Audit(rules)
-			s.logAudit(agentID, "kafka_acl_manage", args, cluster, "success", audit.TotalACLs, nil, start)
+			s.logAudit(ctx, agentID, "kafka_acl_manage", args, cluster, "success", audit.TotalACLs, nil, start)
 			return marshalResult(audit)
 
 		case "set_desired":
@@ -111,7 +111,7 @@ func (s *Server) handleACLManage(ctx context.Context, request mcp.CallToolReques
 			}
 
 			s.aclMgmtEngine.SetDesiredState(principal, rules)
-			s.logAudit(agentID, "kafka_acl_manage", args, "", "success", len(rules), nil, start)
+			s.logAudit(ctx, agentID, "kafka_acl_manage", args, "", "success", len(rules), nil, start)
 			return marshalResult(map[string]any{"status": "desired_state_set", "principal": principal, "rules": len(rules)})
 
 		case "diff":
@@ -151,7 +151,7 @@ func (s *Server) handleACLManage(ctx context.Context, request mcp.CallToolReques
 			}
 
 			diff := s.aclMgmtEngine.ComputeDiff(desired, actual)
-			s.logAudit(agentID, "kafka_acl_manage", args, cluster, "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_acl_manage", args, cluster, "success", 1, nil, start)
 			return marshalResult(diff)
 
 		case "dry_run":
@@ -191,7 +191,7 @@ func (s *Server) handleACLManage(ctx context.Context, request mcp.CallToolReques
 			}
 
 			dryRun := s.aclMgmtEngine.DryRun(desired, actual)
-			s.logAudit(agentID, "kafka_acl_manage", args, cluster, "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_acl_manage", args, cluster, "success", 1, nil, start)
 			return marshalResult(dryRun)
 
 		case "principals":

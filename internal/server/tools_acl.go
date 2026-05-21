@@ -31,11 +31,11 @@ func (s *Server) handleListACLs(ctx context.Context, request mcp.CallToolRequest
 
 		result, err := s.kafkaManager.ListACLs(ctx, cluster, principal, resourceType, includeAnalysis)
 		if err != nil {
-			s.logAudit(agentID, "kafka_list_acls", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_list_acls", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_list_acls", args, cluster, "success", result.TotalACLs, nil, start)
+		s.logAudit(ctx, agentID, "kafka_list_acls", args, cluster, "success", result.TotalACLs, nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }

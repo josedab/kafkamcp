@@ -30,7 +30,7 @@ func (s *Server) handleCapacityPlan(ctx context.Context, request mcp.CallToolReq
 
 		plan := s.forecaster.GenerateCapacityPlan(resolvedCluster, horizonDays, maxStorageGB)
 
-		s.logAudit(agentID, "kafka_capacity_plan", args, cluster, "success", len(plan.Topics), nil, start)
+		s.logAudit(ctx, agentID, "kafka_capacity_plan", args, cluster, "success", len(plan.Topics), nil, start)
 		return marshalResult(plan)
 	})(ctx, request)
 }
@@ -63,7 +63,7 @@ func (s *Server) handleCapacityForecast(ctx context.Context, request mcp.CallToo
 		if err != nil {
 			history := s.forecaster.GetMetricHistory(topic, metric)
 			if len(history) < 2 {
-				s.logAudit(agentID, "kafka_capacity_forecast", args, cluster, "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_capacity_forecast", args, cluster, "error", 0, err, start)
 				return s.toolError("Insufficient data for forecast", err), nil
 			}
 			values := make([]float64, len(history))
@@ -79,11 +79,11 @@ func (s *Server) handleCapacityForecast(ctx context.Context, request mcp.CallToo
 				"predicted_values": smoothed,
 				"data_points":      len(history),
 			}
-			s.logAudit(agentID, "kafka_capacity_forecast", args, cluster, "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_capacity_forecast", args, cluster, "success", 0, nil, start)
 			return marshalResult(result)
 		}
 
-		s.logAudit(agentID, "kafka_capacity_forecast", args, cluster, "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_capacity_forecast", args, cluster, "success", 0, nil, start)
 		return marshalResult(fc)
 	})(ctx, request)
 }

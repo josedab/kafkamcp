@@ -33,7 +33,7 @@ func (s *Server) handleWorkflows(ctx context.Context, request mcp.CallToolReques
 		switch action {
 		case "list":
 			templates := s.workflowEngine.ListTemplates(category)
-			s.logAudit(agentID, "kafka_workflows", args, "", "success", len(templates), nil, start)
+			s.logAudit(ctx, agentID, "kafka_workflows", args, "", "success", len(templates), nil, start)
 			return marshalResult(map[string]any{"templates": templates, "total_count": len(templates)})
 
 		case "describe":
@@ -73,7 +73,7 @@ func (s *Server) handleWorkflows(ctx context.Context, request mcp.CallToolReques
 			if err != nil {
 				s.logger.Warn("failed to get workflow template for response", "template", templateName, "error", err)
 			}
-			s.logAudit(agentID, "kafka_workflows", args, "", "success", exec.TotalSteps, nil, start)
+			s.logAudit(ctx, agentID, "kafka_workflows", args, "", "success", exec.TotalSteps, nil, start)
 			return marshalResult(map[string]any{
 				"execution":   exec,
 				"next_steps":  tmpl.Steps,

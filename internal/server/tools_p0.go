@@ -31,7 +31,7 @@ func (s *Server) handleListTopics(ctx context.Context, request mcp.CallToolReque
 
 		topics, err := s.kafkaManager.ListTopics(ctx, cluster, includeInternal)
 		if err != nil {
-			s.logAudit(agentID, "kafka_list_topics", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_list_topics", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to list topics", err), nil
 		}
 
@@ -57,7 +57,7 @@ func (s *Server) handleListTopics(ctx context.Context, request mcp.CallToolReque
 		}
 
 		result := map[string]any{"topics": topics, "total_count": len(topics), "cluster": s.resolveClusterName(cluster)}
-		s.logAudit(agentID, "kafka_list_topics", args, cluster, "success", len(topics), nil, start)
+		s.logAudit(ctx, agentID, "kafka_list_topics", args, cluster, "success", len(topics), nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }
@@ -80,11 +80,11 @@ func (s *Server) handleDescribeTopic(ctx context.Context, request mcp.CallToolRe
 
 		detail, err := s.kafkaManager.DescribeTopic(ctx, cluster, topic)
 		if err != nil {
-			s.logAudit(agentID, "kafka_describe_topic", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_describe_topic", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to describe topic", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_describe_topic", args, cluster, "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_describe_topic", args, cluster, "success", 0, nil, start)
 		return marshalResult(detail)
 	})(ctx, request)
 }
@@ -134,12 +134,12 @@ func (s *Server) handleConsume(ctx context.Context, request mcp.CallToolRequest)
 		}
 		messages, err := s.kafkaManager.Consume(ctx, cluster, topic, partition, offset, limit, timeoutMs, deserializer)
 		if err != nil {
-			s.logAudit(agentID, "kafka_consume", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_consume", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to consume", err), nil
 		}
 
 		s.metrics.MessagesConsumed.WithLabelValues(metrics.SanitizeTopicLabel(topic), metrics.SanitizeAgentLabel(agentID), s.resolveClusterName(cluster)).Add(float64(len(messages)))
-		s.logAudit(agentID, "kafka_consume", args, cluster, "success", len(messages), nil, start)
+		s.logAudit(ctx, agentID, "kafka_consume", args, cluster, "success", len(messages), nil, start)
 		return marshalResult(map[string]any{"messages": messages, "count": len(messages), "topic": topic, "deserialization": deserializer})
 	})(ctx, request)
 }
@@ -223,12 +223,12 @@ func (s *Server) handleProduce(ctx context.Context, request mcp.CallToolRequest)
 			Acks: acks, Serializer: serializer, SchemaID: schemaID,
 		})
 		if err != nil {
-			s.logAudit(agentID, "kafka_produce", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_produce", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to produce", err), nil
 		}
 
 		s.metrics.MessagesProduced.WithLabelValues(metrics.SanitizeTopicLabel(topic), metrics.SanitizeAgentLabel(agentID), s.resolveClusterName(cluster)).Add(float64(len(deliveries)))
-		s.logAudit(agentID, "kafka_produce", args, cluster, "success", len(deliveries), nil, start)
+		s.logAudit(ctx, agentID, "kafka_produce", args, cluster, "success", len(deliveries), nil, start)
 		return marshalResult(map[string]any{"deliveries": deliveries, "count": len(deliveries), "topic": topic, "serialization": serializer, "acks": acks})
 	})(ctx, request)
 }
@@ -246,13 +246,13 @@ func (s *Server) handleListSchemas(ctx context.Context, request mcp.CallToolRequ
 
 		sc := s.getSchemaClient("")
 		if sc == nil {
-			s.logAudit(agentID, "kafka_list_schemas", args, "", "error", 0, fmt.Errorf("no schema registry configured"), start)
+			s.logAudit(ctx, agentID, "kafka_list_schemas", args, "", "error", 0, fmt.Errorf("no schema registry configured"), start)
 			return mcp.NewToolResultError("No schema registry configured for this cluster"), nil
 		}
 
 		subjects, err := sc.ListSubjectsDetailed(ctx)
 		if err != nil {
-			s.logAudit(agentID, "kafka_list_schemas", args, "", "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_list_schemas", args, "", "error", 0, err, start)
 			return s.toolError("Failed to list schemas", err), nil
 		}
 
@@ -266,7 +266,7 @@ func (s *Server) handleListSchemas(ctx context.Context, request mcp.CallToolRequ
 			subjects = filtered
 		}
 
-		s.logAudit(agentID, "kafka_list_schemas", args, "", "success", len(subjects), nil, start)
+		s.logAudit(ctx, agentID, "kafka_list_schemas", args, "", "success", len(subjects), nil, start)
 		return marshalResult(map[string]any{"subjects": subjects, "total_count": len(subjects)})
 	})(ctx, request)
 }
@@ -288,11 +288,11 @@ func (s *Server) handleGetSchema(ctx context.Context, request mcp.CallToolReques
 
 		info, err := s.getSchemaClient("").GetSchema(ctx, subject, version)
 		if err != nil {
-			s.logAudit(agentID, "kafka_get_schema", args, "", "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_get_schema", args, "", "error", 0, err, start)
 			return s.toolError("Failed to get schema", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_get_schema", args, "", "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_get_schema", args, "", "success", 0, nil, start)
 		return marshalResult(info)
 	})(ctx, request)
 }
@@ -317,11 +317,11 @@ func (s *Server) handleDescribeConsumerGroup(ctx context.Context, request mcp.Ca
 
 		detail, err := s.kafkaManager.DescribeConsumerGroup(ctx, cluster, groupID)
 		if err != nil {
-			s.logAudit(agentID, "kafka_describe_consumer_group", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_describe_consumer_group", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to describe group", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_describe_consumer_group", args, cluster, "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_describe_consumer_group", args, cluster, "success", 0, nil, start)
 		return marshalResult(detail)
 	})(ctx, request)
 }
@@ -340,7 +340,7 @@ func (s *Server) handleListConsumerGroups(ctx context.Context, request mcp.CallT
 
 		groups, err := s.kafkaManager.ListConsumerGroups(ctx, cluster)
 		if err != nil {
-			s.logAudit(agentID, "kafka_list_consumer_groups", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_list_consumer_groups", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to list groups", err), nil
 		}
 
@@ -354,7 +354,7 @@ func (s *Server) handleListConsumerGroups(ctx context.Context, request mcp.CallT
 			groups = filtered
 		}
 
-		s.logAudit(agentID, "kafka_list_consumer_groups", args, cluster, "success", len(groups), nil, start)
+		s.logAudit(ctx, agentID, "kafka_list_consumer_groups", args, cluster, "success", len(groups), nil, start)
 		return marshalResult(map[string]any{"groups": groups, "total_count": len(groups), "cluster": s.resolveClusterName(cluster)})
 	})(ctx, request)
 }

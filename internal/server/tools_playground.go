@@ -27,10 +27,10 @@ func (s *Server) handlePlayground(ctx context.Context, request mcp.CallToolReque
 			partitions := int32(clampInt64(int64(request.GetInt("partitions", 3)), 1, 12))
 			result, err := s.kafkaManager.PlaygroundCreate(ctx, cluster, agentID, name, partitions)
 			if err != nil {
-				s.logAudit(agentID, "kafka_playground", args, cluster, "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_playground", args, cluster, "error", 0, err, start)
 				return s.toolError("Failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_playground", args, cluster, "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_playground", args, cluster, "success", 0, nil, start)
 			return marshalResult(result)
 
 		case "produce_sample":
@@ -39,28 +39,28 @@ func (s *Server) handlePlayground(ctx context.Context, request mcp.CallToolReque
 			count := int(clampInt64(int64(request.GetInt("count", 10)), 1, 100))
 			result, err := s.kafkaManager.PlaygroundProduceSample(ctx, cluster, agentID, name, pattern, count)
 			if err != nil {
-				s.logAudit(agentID, "kafka_playground", args, cluster, "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_playground", args, cluster, "error", 0, err, start)
 				return s.toolError("Failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_playground", args, cluster, "success", count, nil, start)
+			s.logAudit(ctx, agentID, "kafka_playground", args, cluster, "success", count, nil, start)
 			return marshalResult(result)
 
 		case "list":
 			topics, err := s.kafkaManager.PlaygroundList(ctx, cluster, agentID)
 			if err != nil {
-				s.logAudit(agentID, "kafka_playground", args, cluster, "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_playground", args, cluster, "error", 0, err, start)
 				return s.toolError("Failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_playground", args, cluster, "success", len(topics), nil, start)
+			s.logAudit(ctx, agentID, "kafka_playground", args, cluster, "success", len(topics), nil, start)
 			return marshalResult(map[string]any{"playground_topics": topics, "count": len(topics)})
 
 		case "cleanup":
 			count, err := s.kafkaManager.PlaygroundCleanup(ctx, cluster, agentID)
 			if err != nil {
-				s.logAudit(agentID, "kafka_playground", args, cluster, "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_playground", args, cluster, "error", 0, err, start)
 				return s.toolError("Failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_playground", args, cluster, "success", count, nil, start)
+			s.logAudit(ctx, agentID, "kafka_playground", args, cluster, "success", count, nil, start)
 			return marshalResult(map[string]any{"status": "cleaned_up", "topics_deleted": count})
 
 		default:

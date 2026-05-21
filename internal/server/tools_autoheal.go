@@ -30,7 +30,7 @@ func (s *Server) handleGroupHeal(ctx context.Context, request mcp.CallToolReques
 
 		detail, err := s.kafkaManager.DescribeConsumerGroup(ctx, resolvedCluster, groupID)
 		if err != nil {
-			s.logAudit(agentID, "kafka_group_heal", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_group_heal", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to describe consumer group", err), nil
 		}
 
@@ -59,7 +59,7 @@ func (s *Server) handleGroupHeal(ctx context.Context, request mcp.CallToolReques
 
 		healResult := s.selfHealMon.Heal(groupID, totalLag, memberCount, commitRate, rebalanceCount, autoExecute)
 
-		s.logAudit(agentID, "kafka_group_heal", args, cluster, "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_group_heal", args, cluster, "success", 0, nil, start)
 		return marshalResult(healResult)
 	})(ctx, request)
 }

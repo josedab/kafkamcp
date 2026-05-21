@@ -44,7 +44,7 @@ func (s *Server) handleAutopilotAssess(ctx context.Context, request mcp.CallTool
 			return s.toolError("assessment failed", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_autopilot_assess", args, sourceCluster, "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_autopilot_assess", args, sourceCluster, "success", 1, nil, start)
 		return marshalResult(map[string]any{
 			"session":    session,
 			"message":    "Assessment complete. Use kafka_autopilot_plan with session_id to generate a migration plan.",
@@ -80,7 +80,7 @@ func (s *Server) handleAutopilotPlan(ctx context.Context, request mcp.CallToolRe
 			return s.toolError("plan generation failed", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_autopilot_plan", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_autopilot_plan", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]any{
 			"session": session,
 			"message": "Migration plan generated. Use kafka_autopilot_dryrun to simulate, or kafka_autopilot_execute to run.",
@@ -138,7 +138,7 @@ func (s *Server) handleAutopilotDryRun(ctx context.Context, request mcp.CallTool
 			return s.toolError("dry-run failed", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_autopilot_dryrun", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_autopilot_dryrun", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]any{
 			"session": session,
 			"message": "Dry-run complete. Review results and use kafka_autopilot_execute to proceed.",
@@ -164,11 +164,11 @@ func (s *Server) handleAutopilotExecute(ctx context.Context, request mcp.CallToo
 
 		session, err := s.autopilotEngine.Execute(sessionID, dryRun)
 		if err != nil {
-			s.logAudit(agentID, "kafka_autopilot_execute", args, "", "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_autopilot_execute", args, "", "error", 0, err, start)
 			return s.toolError("execution failed", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_autopilot_execute", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_autopilot_execute", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]any{
 			"session": session,
 			"message": "Migration execution complete.",
@@ -192,7 +192,7 @@ func (s *Server) handleAutopilotRollback(ctx context.Context, request mcp.CallTo
 			return s.toolError("rollback failed", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_autopilot_rollback", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_autopilot_rollback", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]any{
 			"session": session,
 			"message": "Migration rolled back successfully.",
@@ -213,12 +213,12 @@ func (s *Server) handleAutopilotStatus(ctx context.Context, request mcp.CallTool
 			if err != nil {
 				return s.toolError("session not found", err), nil
 			}
-			s.logAudit(agentID, "kafka_autopilot_status", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_autopilot_status", args, "", "success", 1, nil, start)
 			return marshalResult(session)
 		}
 
 		sessions := s.autopilotEngine.ListSessions()
-		s.logAudit(agentID, "kafka_autopilot_status", args, "", "success", len(sessions), nil, start)
+		s.logAudit(ctx, agentID, "kafka_autopilot_status", args, "", "success", len(sessions), nil, start)
 		return marshalResult(map[string]any{
 			"sessions": sessions,
 			"total":    len(sessions),

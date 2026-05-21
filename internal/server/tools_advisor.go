@@ -29,7 +29,7 @@ func (s *Server) handleAdvisorScan(ctx context.Context, request mcp.CallToolRequ
 
 		metrics, err := s.collectTopicMetrics(ctx, cluster)
 		if err != nil {
-			s.logAudit(agentID, "kafka_advisor_scan", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_advisor_scan", args, cluster, "error", 0, err, start)
 			return s.toolError("failed to collect topic metrics", err), nil
 		}
 
@@ -50,7 +50,7 @@ func (s *Server) handleAdvisorScan(ctx context.Context, request mcp.CallToolRequ
 			result.Recommendations = filtered
 		}
 
-		s.logAudit(agentID, "kafka_advisor_scan", args, cluster, "success", len(result.Recommendations), nil, start)
+		s.logAudit(ctx, agentID, "kafka_advisor_scan", args, cluster, "success", len(result.Recommendations), nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }
@@ -67,12 +67,12 @@ func (s *Server) handleAdvisorReport(ctx context.Context, request mcp.CallToolRe
 
 		metrics, err := s.collectTopicMetrics(ctx, cluster)
 		if err != nil {
-			s.logAudit(agentID, "kafka_advisor_report", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_advisor_report", args, cluster, "error", 0, err, start)
 			return s.toolError("failed to collect topic metrics", err), nil
 		}
 
 		report := s.advisorEngine.GenerateReport(s.resolveClusterName(cluster), metrics)
-		s.logAudit(agentID, "kafka_advisor_report", args, cluster, "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_advisor_report", args, cluster, "success", 1, nil, start)
 		return marshalResult(report)
 	})(ctx, request)
 }

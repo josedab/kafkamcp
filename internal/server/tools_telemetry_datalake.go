@@ -18,7 +18,7 @@ func (s *Server) handleTelemetryDataLake(ctx context.Context, request mcp.CallTo
 		switch action {
 		case "stats":
 			stats := s.telemetryDataLake.GetStats()
-			s.logAudit(agentID, "kafka_telemetry_lake", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_telemetry_lake", args, "", "success", 1, nil, start)
 			return marshalResult(stats)
 
 		case "agent_report":
@@ -27,7 +27,7 @@ func (s *Server) handleTelemetryDataLake(ctx context.Context, request mcp.CallTo
 				targetAgent = agentID
 			}
 			report := s.telemetryDataLake.AgentReport(targetAgent)
-			s.logAudit(agentID, "kafka_telemetry_lake", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_telemetry_lake", args, "", "success", 1, nil, start)
 			return marshalResult(report)
 
 		case "query":
@@ -40,7 +40,7 @@ func (s *Server) handleTelemetryDataLake(ctx context.Context, request mcp.CallTo
 				limit = int(l)
 			}
 			records := s.telemetryDataLake.Query(filterAgent, filterTool, filterCluster, filterStatus, limit)
-			s.logAudit(agentID, "kafka_telemetry_lake", args, "", "success", len(records), nil, start)
+			s.logAudit(ctx, agentID, "kafka_telemetry_lake", args, "", "success", len(records), nil, start)
 			return marshalResult(map[string]any{"records": records, "total": len(records)})
 
 		case "export":
@@ -59,7 +59,7 @@ func (s *Server) handleTelemetryDataLake(ctx context.Context, request mcp.CallTo
 			if err != nil {
 				return s.toolError("export failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_telemetry_lake", args, "", "success", result.RecordCount, nil, start)
+			s.logAudit(ctx, agentID, "kafka_telemetry_lake", args, "", "success", result.RecordCount, nil, start)
 			return marshalResult(result)
 
 		default:

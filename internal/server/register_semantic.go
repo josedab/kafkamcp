@@ -84,7 +84,7 @@ func (s *Server) handleSemanticIndex(ctx context.Context, request mcp.CallToolRe
 
 	messages, err := s.kafkaManager.Consume(ctx, cluster, topic, -1, "latest", limit, 10000, "")
 	if err != nil {
-		s.logAudit(agentID, "kafka_semantic_index", args, cluster, "error", 0, err, start)
+		s.logAudit(ctx, agentID, "kafka_semantic_index", args, cluster, "error", 0, err, start)
 		return s.toolError("failed to consume messages for indexing", err), nil
 	}
 
@@ -99,7 +99,7 @@ func (s *Server) handleSemanticIndex(ctx context.Context, request mcp.CallToolRe
 		indexed++
 	}
 
-	s.logAudit(agentID, "kafka_semantic_index", args, cluster, "success", indexed, nil, start)
+	s.logAudit(ctx, agentID, "kafka_semantic_index", args, cluster, "success", indexed, nil, start)
 	return marshalResult(map[string]any{
 		"indexed": indexed,
 		"topic":   topic,
@@ -123,7 +123,7 @@ func (s *Server) handleSemanticSearch(ctx context.Context, request mcp.CallToolR
 	}
 
 	results := s.semanticEngine.Search(query, topicFilter, limit)
-	s.logAudit(agentID, "kafka_semantic_search", args, "", "success", len(results), nil, start)
+	s.logAudit(ctx, agentID, "kafka_semantic_search", args, "", "success", len(results), nil, start)
 
 	return marshalResult(map[string]any{
 		"query":   query,
@@ -148,13 +148,13 @@ func (s *Server) handleRAGContext(ctx context.Context, request mcp.CallToolReque
 	}
 
 	ragCtx := s.semanticEngine.BuildRAGContext(query, topicFilter, maxTokens)
-	s.logAudit(agentID, "kafka_rag_context", args, "", "success", len(ragCtx.Results), nil, start)
+	s.logAudit(ctx, agentID, "kafka_rag_context", args, "", "success", len(ragCtx.Results), nil, start)
 
 	return marshalResult(ragCtx)
 }
 
 func (s *Server) handleSemanticStats(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 	stats := s.semanticEngine.GetStats()
-	s.logAudit(agentID, "kafka_semantic_stats", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "kafka_semantic_stats", args, "", "success", 1, nil, start)
 	return marshalResult(stats)
 }

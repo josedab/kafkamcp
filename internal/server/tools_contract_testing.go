@@ -24,7 +24,7 @@ func (s *Server) handleContractTest(ctx context.Context, request mcp.CallToolReq
 			}
 			consumerIDs := extractStrings(args, "consumer_ids")
 			pair := s.contractTester.RegisterPair(topic, producerID, consumerIDs)
-			s.logAudit(agentID, "kafka_contract_test", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_contract_test", args, "", "success", 1, nil, start)
 			return marshalResult(pair)
 
 		case "register_schema":
@@ -40,7 +40,7 @@ func (s *Server) handleContractTest(ctx context.Context, request mcp.CallToolReq
 			} else {
 				s.contractTester.RegisterConsumerSchema(topic, serviceID, fields)
 			}
-			s.logAudit(agentID, "kafka_contract_test", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_contract_test", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"registered": serviceID, "topic": topic, "role": role, "fields": len(fields)})
 
 		case "test_compatibility":
@@ -49,7 +49,7 @@ func (s *Server) handleContractTest(ctx context.Context, request mcp.CallToolReq
 				return mcp.NewToolResultError("topic is required"), nil
 			}
 			result := s.contractTester.TestCompatibility(topic)
-			s.logAudit(agentID, "kafka_contract_test", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_contract_test", args, "", "success", 1, nil, start)
 			return marshalResult(result)
 
 		case "create_suite":
@@ -76,7 +76,7 @@ func (s *Server) handleContractTest(ctx context.Context, request mcp.CallToolReq
 				testCases = append(testCases, tc)
 			}
 			suite := s.contractTester.CreateTestSuite(suiteName, topic, testCases)
-			s.logAudit(agentID, "kafka_contract_test", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_contract_test", args, "", "success", 1, nil, start)
 			return marshalResult(suite)
 
 		case "run_suite":
@@ -88,24 +88,24 @@ func (s *Server) handleContractTest(ctx context.Context, request mcp.CallToolReq
 			if err != nil {
 				return s.toolError("failed to run test suite", err), nil
 			}
-			s.logAudit(agentID, "kafka_contract_test", args, "", "success", result.Total, nil, start)
+			s.logAudit(ctx, agentID, "kafka_contract_test", args, "", "success", result.Total, nil, start)
 			return marshalResult(result)
 
 		case "detect_changes":
 			oldFields := extractStrings(args, "old_fields")
 			newFields := extractStrings(args, "new_fields")
 			issues := contracts.DetectBreakingChanges(oldFields, newFields)
-			s.logAudit(agentID, "kafka_contract_test", args, "", "success", len(issues), nil, start)
+			s.logAudit(ctx, agentID, "kafka_contract_test", args, "", "success", len(issues), nil, start)
 			return marshalResult(map[string]any{"issues": issues, "breaking": len(issues) > 0, "total": len(issues)})
 
 		case "list_pairs":
 			pairs := s.contractTester.ListPairs()
-			s.logAudit(agentID, "kafka_contract_test", args, "", "success", len(pairs), nil, start)
+			s.logAudit(ctx, agentID, "kafka_contract_test", args, "", "success", len(pairs), nil, start)
 			return marshalResult(map[string]any{"pairs": pairs, "total": len(pairs)})
 
 		case "list_suites":
 			suites := s.contractTester.ListTestSuites()
-			s.logAudit(agentID, "kafka_contract_test", args, "", "success", len(suites), nil, start)
+			s.logAudit(ctx, agentID, "kafka_contract_test", args, "", "success", len(suites), nil, start)
 			return marshalResult(map[string]any{"suites": suites, "total": len(suites)})
 
 		default:

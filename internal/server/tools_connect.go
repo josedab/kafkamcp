@@ -53,13 +53,13 @@ func (s *Server) handleCreateConnector(ctx context.Context, request mcp.CallTool
 
 		result, err := client.CreateConnector(ctx, name, config)
 		if err != nil {
-			s.logAudit(agentID, "kafka_create_connector", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_create_connector", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to create connector", err), nil
 		}
 
 		_, redactedConfig := validateConnectorConfig(config)
 		s.logger.Info("connector created", "name", name, "config", redactedConfig)
-		s.logAudit(agentID, "kafka_create_connector", args, cluster, "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_create_connector", args, cluster, "success", 0, nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }
@@ -105,13 +105,13 @@ func (s *Server) handleUpdateConnector(ctx context.Context, request mcp.CallTool
 
 		result, err := client.UpdateConnector(ctx, name, config)
 		if err != nil {
-			s.logAudit(agentID, "kafka_update_connector", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_update_connector", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to update connector", err), nil
 		}
 
 		_, redactedConfig := validateConnectorConfig(config)
 		s.logger.Info("connector updated", "name", name, "config", redactedConfig)
-		s.logAudit(agentID, "kafka_update_connector", args, cluster, "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_update_connector", args, cluster, "success", 0, nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }
@@ -148,11 +148,11 @@ func (s *Server) handleDeleteConnector(ctx context.Context, request mcp.CallTool
 		}
 
 		if err := client.DeleteConnector(ctx, name); err != nil {
-			s.logAudit(agentID, "kafka_delete_connector", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_delete_connector", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to delete connector", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_delete_connector", args, cluster, "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_delete_connector", args, cluster, "success", 0, nil, start)
 		return marshalResult(map[string]any{"status": "deleted", "name": name})
 	})(ctx, request)
 }
@@ -193,11 +193,11 @@ func (s *Server) handleRestartConnector(ctx context.Context, request mcp.CallToo
 
 		result, err := client.RestartConnector(ctx, name, taskID, failedOnly)
 		if err != nil {
-			s.logAudit(agentID, "kafka_restart_connector", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_restart_connector", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to restart", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_restart_connector", args, cluster, "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_restart_connector", args, cluster, "success", 0, nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }
@@ -235,11 +235,11 @@ func (s *Server) handleConnectorHealth(ctx context.Context, request mcp.CallTool
 
 		health, err := client.ConnectorHealth(ctx, name)
 		if err != nil {
-			s.logAudit(agentID, "kafka_connector_health", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_connector_health", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to get health", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_connector_health", args, cluster, "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_connector_health", args, cluster, "success", 0, nil, start)
 		return marshalResult(health)
 	})(ctx, request)
 }

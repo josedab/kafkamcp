@@ -30,7 +30,7 @@ func (s *Server) handleDiagnoseLag(ctx context.Context, request mcp.CallToolRequ
 		// Get current group details for lag info
 		groupDetail, err := s.kafkaManager.DescribeConsumerGroup(ctx, cluster, groupID)
 		if err != nil {
-			s.logAudit(agentID, "kafka_diagnose_lag", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_diagnose_lag", args, cluster, "error", 0, err, start)
 			return s.toolError("failed to describe consumer group", err), nil
 		}
 
@@ -49,7 +49,7 @@ func (s *Server) handleDiagnoseLag(ctx context.Context, request mcp.CallToolRequ
 
 		diagnosis := s.lagAnalyzer.Diagnose(groupID, groupDetail.TotalLag, partitionLags)
 
-		s.logAudit(agentID, "kafka_diagnose_lag", args, cluster, "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_diagnose_lag", args, cluster, "success", 1, nil, start)
 		return marshalResult(diagnosis)
 	})(ctx, request)
 }

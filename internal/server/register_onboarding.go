@@ -60,7 +60,7 @@ func (s *Server) handleQuickstart(ctx context.Context, request mcp.CallToolReque
 		}
 
 		guide := s.onboardingEngine.GenerateQuickstart(clusterFound, topicCount)
-		s.logAudit(agentID, "kafka_quickstart", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_quickstart", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]any{
 			"guide":     guide,
 			"discovery": discovery,
@@ -72,7 +72,7 @@ func (s *Server) handleQuickstart(ctx context.Context, request mcp.CallToolReque
 
 func (s *Server) handleDiscoverClusters(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 	result := s.onboardingEngine.DiscoverClusters(ctx)
-	s.logAudit(agentID, "kafka_discover_clusters", args, "", "success", len(result.Clusters), nil, start)
+	s.logAudit(ctx, agentID, "kafka_discover_clusters", args, "", "success", len(result.Clusters), nil, start)
 	return marshalResult(result)
 }
 
@@ -88,6 +88,6 @@ func (s *Server) handleSuggestRBAC(ctx context.Context, request mcp.CallToolRequ
 	}
 
 	suggestion := s.onboardingEngine.SuggestRBAC(topicNames)
-	s.logAudit(agentID, "kafka_suggest_rbac", args, cluster, "success", len(suggestion.AgentPolicies), nil, start)
+	s.logAudit(ctx, agentID, "kafka_suggest_rbac", args, cluster, "success", len(suggestion.AgentPolicies), nil, start)
 	return marshalResult(suggestion)
 }

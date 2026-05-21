@@ -39,7 +39,7 @@ func (s *Server) handleControlPlaneOrg(ctx context.Context, request mcp.CallTool
 			if err != nil {
 				return s.toolError("Failed to create organization", err), nil
 			}
-			s.logAudit(agentID, "kafka_controlplane_org", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_controlplane_org", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"status": "created", "organization": org})
 
 		case "get":
@@ -50,7 +50,7 @@ func (s *Server) handleControlPlaneOrg(ctx context.Context, request mcp.CallTool
 			if err != nil {
 				return s.toolError("Organization not found", err), nil
 			}
-			s.logAudit(agentID, "kafka_controlplane_org", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_controlplane_org", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"organization": org})
 
 		case "add_member":
@@ -71,7 +71,7 @@ func (s *Server) handleControlPlaneOrg(ctx context.Context, request mcp.CallTool
 			if err := s.controlPlane.AddMember(orgID, email, email, role); err != nil {
 				return s.toolError("Failed to add member", err), nil
 			}
-			s.logAudit(agentID, "kafka_controlplane_org", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_controlplane_org", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"status": "member_added", "email": email, "role": role})
 
 		case "create_api_key":
@@ -83,12 +83,12 @@ func (s *Server) handleControlPlaneOrg(ctx context.Context, request mcp.CallTool
 			if err != nil {
 				return s.toolError("Failed to create API key", err), nil
 			}
-			s.logAudit(agentID, "kafka_controlplane_org", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_controlplane_org", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"status": "api_key_created", "api_key": key})
 
 		default:
 			orgs := s.controlPlane.ListOrganizations()
-			s.logAudit(agentID, "kafka_controlplane_org", args, "", "success", len(orgs), nil, start)
+			s.logAudit(ctx, agentID, "kafka_controlplane_org", args, "", "success", len(orgs), nil, start)
 			return marshalResult(map[string]any{"organizations": orgs, "total": len(orgs)})
 		}
 	})(ctx, request)
@@ -140,7 +140,7 @@ func (s *Server) handleControlPlaneInstance(ctx context.Context, request mcp.Cal
 			if err != nil {
 				return s.toolError("Failed to provision instance", err), nil
 			}
-			s.logAudit(agentID, "kafka_controlplane_instance", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_controlplane_instance", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"status": "provisioning", "instance": inst})
 
 		case "get":
@@ -151,7 +151,7 @@ func (s *Server) handleControlPlaneInstance(ctx context.Context, request mcp.Cal
 			if err != nil {
 				return s.toolError("Instance not found", err), nil
 			}
-			s.logAudit(agentID, "kafka_controlplane_instance", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_controlplane_instance", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"instance": inst})
 
 		case "start":
@@ -161,7 +161,7 @@ func (s *Server) handleControlPlaneInstance(ctx context.Context, request mcp.Cal
 			if err := s.controlPlane.StartInstance(instanceID); err != nil {
 				return s.toolError("Failed to start", err), nil
 			}
-			s.logAudit(agentID, "kafka_controlplane_instance", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_controlplane_instance", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"status": "started", "instance_id": instanceID})
 
 		case "stop":
@@ -171,7 +171,7 @@ func (s *Server) handleControlPlaneInstance(ctx context.Context, request mcp.Cal
 			if err := s.controlPlane.StopInstance(instanceID); err != nil {
 				return s.toolError("Failed to stop", err), nil
 			}
-			s.logAudit(agentID, "kafka_controlplane_instance", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_controlplane_instance", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"status": "stopped", "instance_id": instanceID})
 
 		case "terminate":
@@ -181,12 +181,12 @@ func (s *Server) handleControlPlaneInstance(ctx context.Context, request mcp.Cal
 			if err := s.controlPlane.TerminateInstance(instanceID); err != nil {
 				return s.toolError("Failed to terminate", err), nil
 			}
-			s.logAudit(agentID, "kafka_controlplane_instance", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_controlplane_instance", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"status": "terminated", "instance_id": instanceID})
 
 		default:
 			instances := s.controlPlane.ListInstances(orgID)
-			s.logAudit(agentID, "kafka_controlplane_instance", args, "", "success", len(instances), nil, start)
+			s.logAudit(ctx, agentID, "kafka_controlplane_instance", args, "", "success", len(instances), nil, start)
 			return marshalResult(map[string]any{"instances": instances, "total": len(instances)})
 		}
 	})(ctx, request)
@@ -212,7 +212,7 @@ func (s *Server) handleControlPlaneUsage(ctx context.Context, request mcp.CallTo
 		}
 
 		summary := s.controlPlane.GetUsageSummary(orgID, period)
-		s.logAudit(agentID, "kafka_controlplane_usage", args, "", "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_controlplane_usage", args, "", "success", 0, nil, start)
 		return marshalResult(summary)
 	})(ctx, request)
 }

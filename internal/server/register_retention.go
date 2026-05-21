@@ -79,10 +79,10 @@ func (s *Server) handleRetentionPolicy(ctx context.Context, request mcp.CallTool
 			CriticalityTag:     criticality,
 		})
 		if err != nil {
-			s.logAudit(agentID, "kafka_retention_policy", args, "", "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_retention_policy", args, "", "error", 0, err, start)
 			return s.toolError("failed to set retention policy", err), nil
 		}
-		s.logAudit(agentID, "kafka_retention_policy", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_retention_policy", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]any{"status": "policy_set", "topic": topic})
 	}
 
@@ -91,13 +91,13 @@ func (s *Server) handleRetentionPolicy(ctx context.Context, request mcp.CallTool
 	if !ok {
 		return marshalResult(map[string]any{"topic": topic, "status": "no_policy"})
 	}
-	s.logAudit(agentID, "kafka_retention_policy", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "kafka_retention_policy", args, "", "success", 1, nil, start)
 	return marshalResult(policy)
 }
 
 func (s *Server) handleRetentionRecommendations(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 	recs := s.retentionEngine.GetRecommendations()
-	s.logAudit(agentID, "kafka_retention_recommendations", args, "", "success", len(recs), nil, start)
+	s.logAudit(ctx, agentID, "kafka_retention_recommendations", args, "", "success", len(recs), nil, start)
 	return marshalResult(map[string]any{
 		"recommendations": recs,
 		"total":           len(recs),
@@ -115,11 +115,11 @@ func (s *Server) handleRetentionChangeRequest(ctx context.Context, request mcp.C
 
 	req, err := s.retentionEngine.RequestChange(topic, int64(targetMs), reason)
 	if err != nil {
-		s.logAudit(agentID, "kafka_retention_change_request", args, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "kafka_retention_change_request", args, "", "error", 0, err, start)
 		return s.toolError("failed to create change request", err), nil
 	}
 
-	s.logAudit(agentID, "kafka_retention_change_request", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "kafka_retention_change_request", args, "", "success", 1, nil, start)
 	return marshalResult(req)
 }
 
@@ -131,10 +131,10 @@ func (s *Server) handleRetentionApprove(ctx context.Context, request mcp.CallToo
 
 	err := s.retentionEngine.ApproveChange(requestID, agentID)
 	if err != nil {
-		s.logAudit(agentID, "kafka_retention_approve", args, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "kafka_retention_approve", args, "", "error", 0, err, start)
 		return s.toolError("failed to approve change", err), nil
 	}
 
-	s.logAudit(agentID, "kafka_retention_approve", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "kafka_retention_approve", args, "", "success", 1, nil, start)
 	return marshalResult(map[string]any{"status": "approved", "request_id": requestID})
 }

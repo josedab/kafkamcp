@@ -31,7 +31,7 @@ func (s *Server) handleTopicTemplate(ctx context.Context, request mcp.CallToolRe
 			if err != nil {
 				return s.toolError("Failed to parse template", err), nil
 			}
-			s.logAudit(agentID, "kafka_topic_template", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_topic_template", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "valid", "template": tmpl})
 
 		case "save":
@@ -50,7 +50,7 @@ func (s *Server) handleTopicTemplate(ctx context.Context, request mcp.CallToolRe
 			if err := s.topicTemplateEngine.SaveTemplate(tmpl, agentID); err != nil {
 				return s.toolError("Failed to save template", err), nil
 			}
-			s.logAudit(agentID, "kafka_topic_template", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_topic_template", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "saved", "name": tmpl.Metadata.Name})
 
 		case "get":
@@ -66,7 +66,7 @@ func (s *Server) handleTopicTemplate(ctx context.Context, request mcp.CallToolRe
 
 		case "list":
 			templates := s.topicTemplateEngine.ListTemplates()
-			s.logAudit(agentID, "kafka_topic_template", args, "", "success", len(templates), nil, start)
+			s.logAudit(ctx, agentID, "kafka_topic_template", args, "", "success", len(templates), nil, start)
 			return marshalResult(map[string]any{"templates": templates, "total": len(templates)})
 
 		case "delete":
@@ -77,7 +77,7 @@ func (s *Server) handleTopicTemplate(ctx context.Context, request mcp.CallToolRe
 			if err := s.topicTemplateEngine.DeleteTemplate(name); err != nil {
 				return s.toolError("Failed to delete template", err), nil
 			}
-			s.logAudit(agentID, "kafka_topic_template", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_topic_template", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "deleted", "name": name})
 
 		case "diff", "plan":
@@ -108,10 +108,10 @@ func (s *Server) handleTopicTemplate(ctx context.Context, request mcp.CallToolRe
 
 			if action == "plan" {
 				plan := s.topicTemplateEngine.ComputePlan(diff)
-				s.logAudit(agentID, "kafka_topic_template", args, cluster, "success", len(plan.Changes), nil, start)
+				s.logAudit(ctx, agentID, "kafka_topic_template", args, cluster, "success", len(plan.Changes), nil, start)
 				return marshalResult(plan)
 			}
-			s.logAudit(agentID, "kafka_topic_template", args, cluster, "success", len(diff.Changes), nil, start)
+			s.logAudit(ctx, agentID, "kafka_topic_template", args, cluster, "success", len(diff.Changes), nil, start)
 			return marshalResult(diff)
 
 		case "export":

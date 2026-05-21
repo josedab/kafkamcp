@@ -19,7 +19,7 @@ func (s *Server) handleChaosGymnasium(ctx context.Context, request mcp.CallToolR
 			difficulty := request.GetString("difficulty", "")
 			category := request.GetString("category", "")
 			challenges := s.chaosEngine.Gymnasium().ListChallenges(difficulty, category)
-			s.logAudit(agentID, "kafka_chaos_gymnasium", args, "", "success", len(challenges), nil, start)
+			s.logAudit(ctx, agentID, "kafka_chaos_gymnasium", args, "", "success", len(challenges), nil, start)
 			return marshalResult(map[string]any{"challenges": challenges, "total": len(challenges)})
 
 		case "get_challenge":
@@ -31,7 +31,7 @@ func (s *Server) handleChaosGymnasium(ctx context.Context, request mcp.CallToolR
 			if err != nil {
 				return s.toolError("challenge not found", err), nil
 			}
-			s.logAudit(agentID, "kafka_chaos_gymnasium", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_chaos_gymnasium", args, "", "success", 1, nil, start)
 			return marshalResult(ch)
 
 		case "start_challenge":
@@ -43,7 +43,7 @@ func (s *Server) handleChaosGymnasium(ctx context.Context, request mcp.CallToolR
 			if err != nil {
 				return s.toolError("failed to start challenge", err), nil
 			}
-			s.logAudit(agentID, "kafka_chaos_gymnasium", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_chaos_gymnasium", args, "", "success", 1, nil, start)
 			return marshalResult(attempt)
 
 		case "complete_objective":
@@ -56,7 +56,7 @@ func (s *Server) handleChaosGymnasium(ctx context.Context, request mcp.CallToolR
 			if err != nil {
 				return s.toolError("failed to complete objective", err), nil
 			}
-			s.logAudit(agentID, "kafka_chaos_gymnasium", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_chaos_gymnasium", args, "", "success", 1, nil, start)
 			return marshalResult(attempt)
 
 		case "finish_attempt":
@@ -68,12 +68,12 @@ func (s *Server) handleChaosGymnasium(ctx context.Context, request mcp.CallToolR
 			if err != nil {
 				return s.toolError("failed to finish attempt", err), nil
 			}
-			s.logAudit(agentID, "kafka_chaos_gymnasium", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_chaos_gymnasium", args, "", "success", 1, nil, start)
 			return marshalResult(attempt)
 
 		case "progress":
 			progress := s.chaosEngine.Gymnasium().GetProgress(agentID)
-			s.logAudit(agentID, "kafka_chaos_gymnasium", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_chaos_gymnasium", args, "", "success", 1, nil, start)
 			return marshalResult(progress)
 
 		case "leaderboard":
@@ -82,7 +82,7 @@ func (s *Server) handleChaosGymnasium(ctx context.Context, request mcp.CallToolR
 				limit = int(l)
 			}
 			lb := s.chaosEngine.Gymnasium().GetLeaderboard(limit)
-			s.logAudit(agentID, "kafka_chaos_gymnasium", args, "", "success", len(lb.Entries), nil, start)
+			s.logAudit(ctx, agentID, "kafka_chaos_gymnasium", args, "", "success", len(lb.Entries), nil, start)
 			return marshalResult(lb)
 
 		default:

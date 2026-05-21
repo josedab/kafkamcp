@@ -30,7 +30,7 @@ func (s *Server) handleTimeTravelRecord(ctx context.Context, request mcp.CallToo
 		}
 
 		s.timeTravelEngine.RecordSnapshot(key, snapType, state)
-		s.logAudit(agentID, "kafka_timetravel_record", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_timetravel_record", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]any{"status": "recorded", "key": key, "type": snapType})
 	})(ctx, request)
 }
@@ -62,11 +62,11 @@ func (s *Server) handleTimeTravelQuery(ctx context.Context, request mcp.CallTool
 			Timestamp: ts,
 		})
 		if err != nil {
-			s.logAudit(agentID, "kafka_timetravel_query", args, "", "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_timetravel_query", args, "", "error", 0, err, start)
 			return s.toolError("Failed to query time-travel state", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_timetravel_query", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_timetravel_query", args, "", "success", 1, nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }
@@ -99,11 +99,11 @@ func (s *Server) handleTimeTravelRange(ctx context.Context, request mcp.CallTool
 
 		snapshots, err := s.timeTravelEngine.QueryRange(key, snapType, from, to)
 		if err != nil {
-			s.logAudit(agentID, "kafka_timetravel_range", args, "", "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_timetravel_range", args, "", "error", 0, err, start)
 			return s.toolError("Failed to query time-travel range", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_timetravel_range", args, "", "success", len(snapshots), nil, start)
+		s.logAudit(ctx, agentID, "kafka_timetravel_range", args, "", "success", len(snapshots), nil, start)
 		return marshalResult(snapshots)
 	})(ctx, request)
 }
@@ -136,11 +136,11 @@ func (s *Server) handleTimeTravelDiff(ctx context.Context, request mcp.CallToolR
 
 		changes, err := s.timeTravelEngine.DiffAt(key, snapType, t1, t2)
 		if err != nil {
-			s.logAudit(agentID, "kafka_timetravel_diff", args, "", "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_timetravel_diff", args, "", "error", 0, err, start)
 			return s.toolError("Failed to diff time-travel state", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_timetravel_diff", args, "", "success", len(changes), nil, start)
+		s.logAudit(ctx, agentID, "kafka_timetravel_diff", args, "", "success", len(changes), nil, start)
 		return marshalResult(changes)
 	})(ctx, request)
 }
@@ -154,7 +154,7 @@ func (s *Server) handleTimeTravelList(ctx context.Context, request mcp.CallToolR
 		snapType := request.GetString("type", "")
 
 		keys := s.timeTravelEngine.ListKeys(snapType)
-		s.logAudit(agentID, "kafka_timetravel_list", args, "", "success", len(keys), nil, start)
+		s.logAudit(ctx, agentID, "kafka_timetravel_list", args, "", "success", len(keys), nil, start)
 		return marshalResult(map[string]any{"keys": keys, "count": len(keys)})
 	})(ctx, request)
 }

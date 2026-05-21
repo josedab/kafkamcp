@@ -37,10 +37,10 @@ func (s *Server) handleTimeSeriesAnalyze(ctx context.Context, request mcp.CallTo
 		case "analyze":
 			analysis, err := s.timeseriesAnalyzer.Analyze(metricType, source, since)
 			if err != nil {
-				s.logAudit(agentID, "kafka_timeseries_analyze", args, "", "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_timeseries_analyze", args, "", "error", 0, err, start)
 				return s.toolError("Failed to analyze time series", err), nil
 			}
-			s.logAudit(agentID, "kafka_timeseries_analyze", args, "", "success", analysis.DataPoints, nil, start)
+			s.logAudit(ctx, agentID, "kafka_timeseries_analyze", args, "", "success", analysis.DataPoints, nil, start)
 			return marshalResult(analysis)
 
 		case "correlate":
@@ -53,7 +53,7 @@ func (s *Server) handleTimeSeriesAnalyze(ctx context.Context, request mcp.CallTo
 			if err != nil {
 				return s.toolError("Failed to correlate metrics", err), nil
 			}
-			s.logAudit(agentID, "kafka_timeseries_analyze", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_timeseries_analyze", args, "", "success", 0, nil, start)
 			return marshalResult(corr)
 
 		case "ingest":
@@ -62,7 +62,7 @@ func (s *Server) handleTimeSeriesAnalyze(ctx context.Context, request mcp.CallTo
 				value = v
 			}
 			s.timeseriesAnalyzer.RecordPoint(metricType, source, value, time.Now())
-			s.logAudit(agentID, "kafka_timeseries_analyze", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_timeseries_analyze", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"status": "ingested", "metric": metric, "source": source, "value": value})
 
 		default:

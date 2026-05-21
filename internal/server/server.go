@@ -264,6 +264,9 @@ func (s *Server) releaseExpensiveOp() {
 // resolveClusterName returns the given cluster name if it maps to a valid
 // configured cluster, otherwise falls back to the default cluster.
 func (s *Server) resolveClusterName(cluster string) string {
+	if s == nil || s.kafkaManager == nil {
+		return cluster
+	}
 	if cluster != "" {
 		if _, err := s.kafkaManager.GetClusterConfig(cluster); err == nil {
 			return cluster

@@ -16,16 +16,16 @@ func (s *Server) handleAnomalyResource(ctx context.Context, request mcp.ReadReso
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
 	if err := s.validateResourceAgentID(agentID); err != nil {
-		s.logAudit(agentID, "resource:kafka://anomalies", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://anomalies", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if err := s.checkResourceRateLimit(agentID, "resource:kafka://anomalies"); err != nil {
-		s.logAudit(agentID, "resource:kafka://anomalies", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://anomalies", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceCluster, "", auth.ActionRead) {
 		err := fmt.Errorf("unauthorized: agent %q cannot access anomalies", agentID)
-		s.logAudit(agentID, "resource:kafka://anomalies", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://anomalies", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 
@@ -39,7 +39,7 @@ func (s *Server) handleAnomalyResource(ctx context.Context, request mcp.ReadReso
 	alerts := s.anomalyDetector.GetAlerts(since, "", "", 100)
 	status := s.anomalyDetector.GetStatus()
 
-	s.logAudit(agentID, "resource:kafka://anomalies", nil, "", "success", len(alerts), nil, start)
+	s.logAudit(ctx, agentID, "resource:kafka://anomalies", nil, "", "success", len(alerts), nil, start)
 	return marshalResourceJSON("kafka://anomalies", map[string]any{
 		"alerts":      alerts,
 		"alert_count": len(alerts),
@@ -52,16 +52,16 @@ func (s *Server) handleWorkflowsResource(ctx context.Context, request mcp.ReadRe
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
 	if err := s.validateResourceAgentID(agentID); err != nil {
-		s.logAudit(agentID, "resource:kafka://workflows", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://workflows", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if err := s.checkResourceRateLimit(agentID, "resource:kafka://workflows"); err != nil {
-		s.logAudit(agentID, "resource:kafka://workflows", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://workflows", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceCluster, "", auth.ActionRead) {
 		err := fmt.Errorf("unauthorized: agent %q cannot access workflows", agentID)
-		s.logAudit(agentID, "resource:kafka://workflows", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://workflows", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 
@@ -86,7 +86,7 @@ func (s *Server) handleWorkflowsResource(ctx context.Context, request mcp.ReadRe
 		})
 	}
 
-	s.logAudit(agentID, "resource:kafka://workflows", nil, "", "success", len(summaries), nil, start)
+	s.logAudit(ctx, agentID, "resource:kafka://workflows", nil, "", "success", len(summaries), nil, start)
 	return marshalResourceJSON("kafka://workflows", map[string]any{
 		"templates":   summaries,
 		"total_count": len(summaries),
@@ -99,16 +99,16 @@ func (s *Server) handleKnowledgeGraphResource(ctx context.Context, request mcp.R
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
 	if err := s.validateResourceAgentID(agentID); err != nil {
-		s.logAudit(agentID, "resource:kafka://knowledge_graph", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://knowledge_graph", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if err := s.checkResourceRateLimit(agentID, "resource:kafka://knowledge_graph"); err != nil {
-		s.logAudit(agentID, "resource:kafka://knowledge_graph", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://knowledge_graph", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceCluster, "", auth.ActionRead) {
 		err := fmt.Errorf("unauthorized: agent %q cannot access knowledge graph", agentID)
-		s.logAudit(agentID, "resource:kafka://knowledge_graph", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://knowledge_graph", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 
@@ -122,12 +122,12 @@ func (s *Server) handleKnowledgeGraphResource(ctx context.Context, request mcp.R
 
 	result, err := s.knowledgeGraph.Query("all")
 	if err != nil {
-		s.logAudit(agentID, "resource:kafka://knowledge_graph", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://knowledge_graph", nil, "", "error", 0, err, start)
 		return nil, fmt.Errorf("querying knowledge graph: %w", err)
 	}
 	graphStats := s.knowledgeGraph.GetStats()
 
-	s.logAudit(agentID, "resource:kafka://knowledge_graph", nil, "", "success", result.TotalNodes, nil, start)
+	s.logAudit(ctx, agentID, "resource:kafka://knowledge_graph", nil, "", "success", result.TotalNodes, nil, start)
 	return marshalResourceJSON("kafka://knowledge_graph", map[string]any{
 		"nodes":       result.Nodes,
 		"edges":       result.Edges,
@@ -142,16 +142,16 @@ func (s *Server) handleFlowGraphResource(ctx context.Context, request mcp.ReadRe
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
 	if err := s.validateResourceAgentID(agentID); err != nil {
-		s.logAudit(agentID, "resource:kafka://flow_graph", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://flow_graph", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if err := s.checkResourceRateLimit(agentID, "resource:kafka://flow_graph"); err != nil {
-		s.logAudit(agentID, "resource:kafka://flow_graph", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://flow_graph", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceCluster, "", auth.ActionRead) {
 		err := fmt.Errorf("unauthorized: agent %q cannot access flow graph", agentID)
-		s.logAudit(agentID, "resource:kafka://flow_graph", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://flow_graph", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 
@@ -203,7 +203,7 @@ func (s *Server) handleFlowGraphResource(ctx context.Context, request mcp.ReadRe
 		}
 	}
 
-	s.logAudit(agentID, "resource:kafka://flow_graph", nil, "", "success", len(nodes), nil, start)
+	s.logAudit(ctx, agentID, "resource:kafka://flow_graph", nil, "", "success", len(nodes), nil, start)
 	return marshalResourceJSON("kafka://flow_graph", map[string]any{
 		"nodes":       nodes,
 		"edges":       edges,
@@ -218,16 +218,16 @@ func (s *Server) handlePlatformResource(ctx context.Context, request mcp.ReadRes
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
 	if err := s.validateResourceAgentID(agentID); err != nil {
-		s.logAudit(agentID, "resource:kafka://platforms", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://platforms", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if err := s.checkResourceRateLimit(agentID, "resource:kafka://platforms"); err != nil {
-		s.logAudit(agentID, "resource:kafka://platforms", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://platforms", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceCluster, "", auth.ActionRead) {
 		err := fmt.Errorf("unauthorized: agent %q cannot access platforms", agentID)
-		s.logAudit(agentID, "resource:kafka://platforms", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://platforms", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 
@@ -243,7 +243,7 @@ func (s *Server) handlePlatformResource(ctx context.Context, request mcp.ReadRes
 		clusterPlatforms = append(clusterPlatforms, entry)
 	}
 
-	s.logAudit(agentID, "resource:kafka://platforms", nil, "", "success", len(platforms), nil, start)
+	s.logAudit(ctx, agentID, "resource:kafka://platforms", nil, "", "success", len(platforms), nil, start)
 	return marshalResourceJSON("kafka://platforms", map[string]any{
 		"platforms":        platforms,
 		"cluster_backends": clusterPlatforms,

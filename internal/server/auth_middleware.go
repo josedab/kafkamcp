@@ -13,22 +13,17 @@ import (
 	otelTrace "go.opentelemetry.io/otel/trace"
 )
 
-// identityCtxKey is the context key that carries the verified
-// AgentIdentity for downstream handlers (audit log enrichment etc.).
-type identityCtxKey struct{}
-
-// withIdentity returns a derived context carrying the verified identity.
+// withIdentity returns a derived context carrying the verified
+// identity. Thin shim over identity.WithIdentity to keep the rest of
+// the server package agnostic of the storage location.
 func withIdentity(ctx context.Context, ident *identity.AgentIdentity) context.Context {
-	if ident == nil {
-		return ctx
-	}
-	return context.WithValue(ctx, identityCtxKey{}, ident)
+	return identity.WithIdentity(ctx, ident)
 }
 
 // identityFromContext returns the verified identity attached to ctx, or
 // nil when none is present.
 func identityFromContext(ctx context.Context) *identity.AgentIdentity {
-	v, _ := ctx.Value(identityCtxKey{}).(*identity.AgentIdentity)
+	v, _ := identity.FromContext(ctx)
 	return v
 }
 

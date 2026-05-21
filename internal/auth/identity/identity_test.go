@@ -141,3 +141,30 @@ func TestBuild(t *testing.T) {
 		t.Fatal("unknown provider expected error")
 	}
 }
+
+func TestContextHelpers(t *testing.T) {
+	ctx := context.Background()
+	if got, ok := FromContext(ctx); got != nil || ok {
+		t.Errorf("empty context: got %v, %v", got, ok)
+	}
+
+	// WithIdentity(nil, ...) is a no-op.
+	if c := WithIdentity(ctx, nil); c != ctx {
+		t.Error("WithIdentity(ctx, nil) must return ctx unchanged")
+	}
+
+	ident := &AgentIdentity{ID: "alice", Method: "static"}
+	ctxWith := WithIdentity(ctx, ident)
+	got, ok := FromContext(ctxWith)
+	if !ok || got == nil {
+		t.Fatalf("expected identity, got %v ok=%v", got, ok)
+	}
+	if got.ID != "alice" || got.Method != "static" {
+		t.Errorf("identity round-trip lost data: %+v", got)
+	}
+
+	// nil context is tolerated.
+	if got, ok := FromContext(nil); got != nil || ok {
+		t.Errorf("nil context: got %v ok=%v", got, ok)
+	}
+}

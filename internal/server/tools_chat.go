@@ -24,7 +24,7 @@ func (s *Server) handleChatSession(ctx context.Context, request mcp.CallToolRequ
 		switch action {
 		case "create":
 			session := s.chatEngine.CreateSession(agentID)
-			s.logAudit(agentID, "kafka_chat_session", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_chat_session", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{
 				"status":     "created",
 				"session_id": session.ID,
@@ -39,7 +39,7 @@ func (s *Server) handleChatSession(ctx context.Context, request mcp.CallToolRequ
 			if err != nil {
 				return s.toolError("Session not found", err), nil
 			}
-			s.logAudit(agentID, "kafka_chat_session", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_chat_session", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{
 				"session":    session,
 				"turn_count": len(session.Turns),
@@ -52,12 +52,12 @@ func (s *Server) handleChatSession(ctx context.Context, request mcp.CallToolRequ
 			if err := s.chatEngine.CloseSession(sessionID); err != nil {
 				return s.toolError("Failed to close session", err), nil
 			}
-			s.logAudit(agentID, "kafka_chat_session", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_chat_session", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"status": "closed", "session_id": sessionID})
 
 		default:
 			sessions := s.chatEngine.ListSessions(agentID)
-			s.logAudit(agentID, "kafka_chat_session", args, "", "success", len(sessions), nil, start)
+			s.logAudit(ctx, agentID, "kafka_chat_session", args, "", "success", len(sessions), nil, start)
 			return marshalResult(map[string]any{"sessions": sessions, "total": len(sessions)})
 		}
 	})(ctx, request)
@@ -107,7 +107,7 @@ func (s *Server) handleChatMessage(ctx context.Context, request mcp.CallToolRequ
 			return s.toolError("Failed to add turn", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_chat_message", args, "", "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_chat_message", args, "", "success", 0, nil, start)
 		return marshalResult(map[string]any{
 			"turn":            turn,
 			"intent":          intent,
@@ -136,7 +136,7 @@ func (s *Server) handleChatContext(ctx context.Context, request mcp.CallToolRequ
 			return s.toolError("Failed to get context", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_chat_context", args, "", "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_chat_context", args, "", "success", 0, nil, start)
 		return marshalResult(map[string]any{"context": sessionCtx, "session_id": sessionID})
 	})(ctx, request)
 }
@@ -167,12 +167,12 @@ func (s *Server) handleChatTemplate(ctx context.Context, request mcp.CallToolReq
 			if err != nil {
 				return s.toolError("Template not found", err), nil
 			}
-			s.logAudit(agentID, "kafka_chat_template", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_chat_template", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"template": tmpl})
 
 		default:
 			templates := s.chatEngine.ListTemplates(category)
-			s.logAudit(agentID, "kafka_chat_template", args, "", "success", len(templates), nil, start)
+			s.logAudit(ctx, agentID, "kafka_chat_template", args, "", "success", len(templates), nil, start)
 			return marshalResult(map[string]any{"templates": templates, "total": len(templates)})
 		}
 	})(ctx, request)

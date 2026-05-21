@@ -33,7 +33,7 @@ func (s *Server) handleReplayCreate(ctx context.Context, request mcp.CallToolReq
 			// Get current offsets from topic
 			detail, err := s.kafkaManager.DescribeTopic(ctx, cluster, topic)
 			if err != nil {
-				s.logAudit(agentID, "kafka_replay_create", args, cluster, "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_replay_create", args, cluster, "error", 0, err, start)
 				return s.toolError("failed to describe topic", err), nil
 			}
 
@@ -68,12 +68,12 @@ func (s *Server) handleReplayCreate(ctx context.Context, request mcp.CallToolReq
 			}
 
 			bookmark := s.replayEngine.CreateBookmark(name, topic, s.resolveClusterName(cluster), offsets, samples, tags)
-			s.logAudit(agentID, "kafka_replay_create", args, cluster, "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_replay_create", args, cluster, "success", 1, nil, start)
 			return marshalResult(bookmark)
 
 		case "list":
 			bookmarks := s.replayEngine.ListBookmarks(topic)
-			s.logAudit(agentID, "kafka_replay_create", args, cluster, "success", len(bookmarks), nil, start)
+			s.logAudit(ctx, agentID, "kafka_replay_create", args, cluster, "success", len(bookmarks), nil, start)
 			return marshalResult(map[string]any{"bookmarks": bookmarks, "total": len(bookmarks)})
 
 		case "get":
@@ -128,11 +128,11 @@ func (s *Server) handleReplayDiff(ctx context.Context, request mcp.CallToolReque
 
 		diff, err := s.replayEngine.Diff(bmA, bmB)
 		if err != nil {
-			s.logAudit(agentID, "kafka_replay_diff", args, "", "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_replay_diff", args, "", "error", 0, err, start)
 			return s.toolError("diff failed", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_replay_diff", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_replay_diff", args, "", "success", 1, nil, start)
 		return marshalResult(diff)
 	})(ctx, request)
 }
@@ -183,7 +183,7 @@ func (s *Server) handleReplaySimulate(ctx context.Context, request mcp.CallToolR
 			}
 
 			sim := s.replayEngine.CreateSimulation(name, topic, groupID, startOffsets, fromBookmark)
-			s.logAudit(agentID, "kafka_replay_simulate", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_replay_simulate", args, "", "success", 1, nil, start)
 			return marshalResult(sim)
 
 		case "run":
@@ -198,7 +198,7 @@ func (s *Server) handleReplaySimulate(ctx context.Context, request mcp.CallToolR
 			if err != nil {
 				return s.toolError("run failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_replay_simulate", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_replay_simulate", args, "", "success", 1, nil, start)
 			return marshalResult(sim)
 
 		case "get":

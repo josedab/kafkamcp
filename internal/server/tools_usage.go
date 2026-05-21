@@ -38,17 +38,17 @@ func (s *Server) handleUsageReport(ctx context.Context, request mcp.CallToolRequ
 		switch action {
 		case "rollup":
 			rollup := s.usageTracker.GenerateRollup(tenantID, period, startTime, end)
-			s.logAudit(agentID, "kafka_usage_report", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_usage_report", args, "", "success", 0, nil, start)
 			return marshalResult(rollup)
 
 		case "chargeback":
 			tenant, err := s.tenantManager.GetTenant(tenantID)
 			if err != nil {
-				s.logAudit(agentID, "kafka_usage_report", args, "", "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_usage_report", args, "", "error", 0, err, start)
 				return s.toolError("Tenant not found", err), nil
 			}
 			report := s.usageTracker.GenerateChargebackReport(tenant, period, startTime, end)
-			s.logAudit(agentID, "kafka_usage_report", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_usage_report", args, "", "success", 0, nil, start)
 			return marshalResult(report)
 
 		case "export_csv":
@@ -56,7 +56,7 @@ func (s *Server) handleUsageReport(ctx context.Context, request mcp.CallToolRequ
 			if err != nil {
 				return s.toolError("Failed to export CSV", err), nil
 			}
-			s.logAudit(agentID, "kafka_usage_report", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_usage_report", args, "", "success", 0, nil, start)
 			return mcp.NewToolResultText(csv), nil
 
 		case "export_json":
@@ -64,7 +64,7 @@ func (s *Server) handleUsageReport(ctx context.Context, request mcp.CallToolRequ
 			if err != nil {
 				return s.toolError("Failed to export JSON", err), nil
 			}
-			s.logAudit(agentID, "kafka_usage_report", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_usage_report", args, "", "success", 0, nil, start)
 			return mcp.NewToolResultText(jsonStr), nil
 
 		default:

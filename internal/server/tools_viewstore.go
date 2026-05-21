@@ -65,7 +65,7 @@ func (s *Server) handleViewCreate(ctx context.Context, request mcp.CallToolReque
 		return s.toolError("failed to create view", err), nil
 	}
 
-	s.logAudit(agentID, "kafka_view_create", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "kafka_view_create", args, "", "success", 1, nil, start)
 	return marshalResult(view)
 }
 
@@ -106,7 +106,7 @@ func (s *Server) handleViewQuery(ctx context.Context, request mcp.CallToolReques
 		return s.toolError("view query failed", err), nil
 	}
 
-	s.logAudit(agentID, "kafka_view_query", args, "", "success", result.TotalCount, nil, start)
+	s.logAudit(ctx, agentID, "kafka_view_query", args, "", "success", result.TotalCount, nil, start)
 	return marshalResult(result)
 }
 
@@ -121,7 +121,7 @@ func (s *Server) handleViewStatus(ctx context.Context, request mcp.CallToolReque
 	switch action {
 	case "list":
 		views := s.viewStoreEngine.ListViews()
-		s.logAudit(agentID, "kafka_view_status", args, "", "success", len(views), nil, start)
+		s.logAudit(ctx, agentID, "kafka_view_status", args, "", "success", len(views), nil, start)
 		return marshalResult(map[string]any{"views": views, "total": len(views)})
 
 	case "get":
@@ -132,7 +132,7 @@ func (s *Server) handleViewStatus(ctx context.Context, request mcp.CallToolReque
 		if err != nil {
 			return s.toolError("view not found", err), nil
 		}
-		s.logAudit(agentID, "kafka_view_status", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_view_status", args, "", "success", 1, nil, start)
 		return marshalResult(view)
 
 	case "delete":
@@ -142,7 +142,7 @@ func (s *Server) handleViewStatus(ctx context.Context, request mcp.CallToolReque
 		if err := s.viewStoreEngine.DeleteView(viewID); err != nil {
 			return s.toolError("failed to delete view", err), nil
 		}
-		s.logAudit(agentID, "kafka_view_status", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_view_status", args, "", "success", 1, nil, start)
 		return marshalResult(map[string]string{"status": "deleted"})
 
 	case "stats":
@@ -153,7 +153,7 @@ func (s *Server) handleViewStatus(ctx context.Context, request mcp.CallToolReque
 		if err != nil {
 			return s.toolError("failed to retrieve view stats", err), nil
 		}
-		s.logAudit(agentID, "kafka_view_status", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_view_status", args, "", "success", 1, nil, start)
 		return marshalResult(stats)
 
 	default:

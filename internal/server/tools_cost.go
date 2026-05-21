@@ -33,7 +33,7 @@ func (s *Server) handleCostAnalyze(ctx context.Context, request mcp.CallToolRequ
 
 		detail, err := s.kafkaManager.DescribeTopic(ctx, cluster, topic)
 		if err != nil {
-			s.logAudit(agentID, "kafka_cost_analyze", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_cost_analyze", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to describe topic", err), nil
 		}
 
@@ -53,11 +53,11 @@ func (s *Server) handleCostAnalyze(ctx context.Context, request mcp.CallToolRequ
 
 		result, err := s.costAnalyzer.AnalyzeTopic(input, provider)
 		if err != nil {
-			s.logAudit(agentID, "kafka_cost_analyze", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_cost_analyze", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to analyze cost", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_cost_analyze", args, cluster, "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_cost_analyze", args, cluster, "success", 1, nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }
@@ -78,7 +78,7 @@ func (s *Server) handleCostWaste(ctx context.Context, request mcp.CallToolReques
 
 		topics, err := s.kafkaManager.ListTopics(ctx, cluster, false)
 		if err != nil {
-			s.logAudit(agentID, "kafka_cost_waste", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_cost_waste", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to list topics", err), nil
 		}
 
@@ -96,11 +96,11 @@ func (s *Server) handleCostWaste(ctx context.Context, request mcp.CallToolReques
 
 		report, err := s.costAnalyzer.DetectWaste(inputs, map[string]time.Time{}, provider)
 		if err != nil {
-			s.logAudit(agentID, "kafka_cost_waste", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_cost_waste", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to detect waste", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_cost_waste", args, cluster, "success", len(topics), nil, start)
+		s.logAudit(ctx, agentID, "kafka_cost_waste", args, cluster, "success", len(topics), nil, start)
 		return marshalResult(report)
 	})(ctx, request)
 }
@@ -128,7 +128,7 @@ func (s *Server) handleCostWhatIf(ctx context.Context, request mcp.CallToolReque
 
 		detail, err := s.kafkaManager.DescribeTopic(ctx, cluster, topic)
 		if err != nil {
-			s.logAudit(agentID, "kafka_cost_whatif", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_cost_whatif", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to describe topic", err), nil
 		}
 
@@ -168,11 +168,11 @@ func (s *Server) handleCostWhatIf(ctx context.Context, request mcp.CallToolReque
 
 		result, err := s.costAnalyzer.WhatIf(current, scenario, provider)
 		if err != nil {
-			s.logAudit(agentID, "kafka_cost_whatif", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_cost_whatif", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to simulate", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_cost_whatif", args, cluster, "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_cost_whatif", args, cluster, "success", 1, nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }

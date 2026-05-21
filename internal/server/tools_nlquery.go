@@ -32,7 +32,7 @@ func (s *Server) handleNLQuery(ctx context.Context, request mcp.CallToolRequest)
 				limit = MaxDLQMessages
 			}
 			history := s.nlQueryEngine.GetHistory(limit)
-			s.logAudit(agentID, "kafka_nl_query", args, cluster, "success", len(history), nil, start)
+			s.logAudit(ctx, agentID, "kafka_nl_query", args, cluster, "success", len(history), nil, start)
 			return marshalResult(map[string]any{"history": history, "total": len(history)})
 		}
 
@@ -55,14 +55,14 @@ func (s *Server) handleNLQuery(ctx context.Context, request mcp.CallToolRequest)
 
 		// Check cache first
 		if cached, ok := s.nlQueryEngine.GetCached(query); ok {
-			s.logAudit(agentID, "kafka_nl_query", args, cluster, "success", cached.TotalCount, nil, start)
+			s.logAudit(ctx, agentID, "kafka_nl_query", args, cluster, "success", cached.TotalCount, nil, start)
 			return marshalResult(cached)
 		}
 
 		// Get available topics for context
 		topics, err := s.kafkaManager.ListTopics(ctx, cluster, false)
 		if err != nil {
-			s.logAudit(agentID, "kafka_nl_query", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_nl_query", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to list topics", err), nil
 		}
 
@@ -74,7 +74,7 @@ func (s *Server) handleNLQuery(ctx context.Context, request mcp.CallToolRequest)
 		// Use semantic parser for richer intent extraction
 		plan, err := s.nlQueryEngine.SemanticParse(query, topicNames)
 		if err != nil {
-			s.logAudit(agentID, "kafka_nl_query", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_nl_query", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to parse query", err), nil
 		}
 
@@ -131,7 +131,7 @@ func (s *Server) handleNLQuery(ctx context.Context, request mcp.CallToolRequest)
 		s.nlQueryEngine.CacheResult(query, queryResult)
 		s.nlQueryEngine.RecordHistory(query, *plan, len(results), durationMs)
 
-		s.logAudit(agentID, "kafka_nl_query", args, cluster, "success", len(results), nil, start)
+		s.logAudit(ctx, agentID, "kafka_nl_query", args, cluster, "success", len(results), nil, start)
 		return marshalResult(queryResult)
 	})(ctx, request)
 }
@@ -331,11 +331,11 @@ func (s *Server) handleKnowledgeGraphQuery(ctx context.Context, request mcp.Call
 
 		result, err := s.knowledgeGraph.Query(queryStr)
 		if err != nil {
-			s.logAudit(agentID, "kafka_knowledge_graph", args, "", "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_knowledge_graph", args, "", "error", 0, err, start)
 			return s.toolError("Query failed", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_knowledge_graph", args, "", "success", result.TotalNodes, nil, start)
+		s.logAudit(ctx, agentID, "kafka_knowledge_graph", args, "", "success", result.TotalNodes, nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }
@@ -394,7 +394,7 @@ func (s *Server) handlePlatformInfo(ctx context.Context, request mcp.CallToolReq
 		action:       auth.ActionRead,
 	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 		platforms := s.platformMgr.ListPlatforms(ctx)
-		s.logAudit(agentID, "kafka_platform_info", args, "", "success", len(platforms), nil, start)
+		s.logAudit(ctx, agentID, "kafka_platform_info", args, "", "success", len(platforms), nil, start)
 		return marshalResult(map[string]any{
 			"platforms":      platforms,
 			"total_count":    len(platforms),
@@ -414,7 +414,7 @@ func (s *Server) handleNLOperate(ctx context.Context, request mcp.CallToolReques
 
 	cmd, err := s.nlQueryEngine.ParseOperational(command)
 	if err != nil {
-		s.logAudit(agentID, "kafka_nl_operate", args, cluster, "error", 0, err, start)
+		s.logAudit(ctx, agentID, "kafka_nl_operate", args, cluster, "error", 0, err, start)
 		return mcp.NewToolResultError(fmt.Sprintf("Could not parse command: %v", err)), nil
 	}
 
@@ -426,7 +426,7 @@ func (s *Server) handleNLOperate(ctx context.Context, request mcp.CallToolReques
 	}
 
 	if dryRun {
-		s.logAudit(agentID, "kafka_nl_operate", args, cmd.Cluster, "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_nl_operate", args, cmd.Cluster, "success", 0, nil, start)
 		return marshalResult(map[string]any{
 			"dry_run": true,
 			"command": cmd,
@@ -436,11 +436,11 @@ func (s *Server) handleNLOperate(ctx context.Context, request mcp.CallToolReques
 
 	result, execErr := s.executeNLCommand(ctx, cmd)
 	if execErr != nil {
-		s.logAudit(agentID, "kafka_nl_operate", args, cmd.Cluster, "error", 0, execErr, start)
+		s.logAudit(ctx, agentID, "kafka_nl_operate", args, cmd.Cluster, "error", 0, execErr, start)
 		return s.toolError("Command execution failed", execErr), nil
 	}
 
-	s.logAudit(agentID, "kafka_nl_operate", args, cmd.Cluster, "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "kafka_nl_operate", args, cmd.Cluster, "success", 1, nil, start)
 	return marshalResult(map[string]any{
 		"command": cmd,
 		"result":  result,

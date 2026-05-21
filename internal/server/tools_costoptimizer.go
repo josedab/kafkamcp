@@ -36,7 +36,7 @@ func (s *Server) handleSQLOptimize(ctx context.Context, request mcp.CallToolRequ
 			return s.toolError("optimization failed", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_sql_optimize", args, "", "success", 1, nil, start)
+		s.logAudit(ctx, agentID, "kafka_sql_optimize", args, "", "success", 1, nil, start)
 		return marshalResult(plan)
 	})(ctx, request)
 }
@@ -54,7 +54,7 @@ func (s *Server) handleSQLBudget(ctx context.Context, request mcp.CallToolReques
 			maxPerHour := request.GetFloat("max_cost_per_hour", 100.0)
 
 			budget := s.streamSQLEngine.CreateBudget(name, maxPerQuery, maxPerHour, 0.8)
-			s.logAudit(agentID, "kafka_sql_budget", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_sql_budget", args, "", "success", 1, nil, start)
 			return marshalResult(budget)
 
 		case "get":

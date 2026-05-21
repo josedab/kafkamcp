@@ -37,11 +37,11 @@ func (s *Server) handleCDCCreateBridge(ctx context.Context, request mcp.CallTool
 
 		bridge, err := s.cdcEngine.CreateBridge(name, sourceTopic, agentID, sink, nil)
 		if err != nil {
-			s.logAudit(agentID, "kafka_cdc_create_bridge", args, "", "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_cdc_create_bridge", args, "", "error", 0, err, start)
 			return s.toolError("Failed to create CDC bridge", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_cdc_create_bridge", args, "", "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_cdc_create_bridge", args, "", "success", 0, nil, start)
 		return marshalResult(map[string]any{
 			"status":  "created",
 			"bridge":  bridge,
@@ -58,7 +58,7 @@ func (s *Server) handleCDCListBridges(ctx context.Context, request mcp.CallToolR
 	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 		bridges := s.cdcEngine.ListBridges()
 
-		s.logAudit(agentID, "kafka_cdc_list_bridges", args, "", "success", len(bridges), nil, start)
+		s.logAudit(ctx, agentID, "kafka_cdc_list_bridges", args, "", "success", len(bridges), nil, start)
 		return marshalResult(map[string]any{
 			"bridges":     bridges,
 			"total_count": len(bridges),
@@ -87,35 +87,35 @@ func (s *Server) handleCDCManageBridge(ctx context.Context, request mcp.CallTool
 			if err != nil {
 				return s.toolError("Bridge not found", err), nil
 			}
-			s.logAudit(agentID, "kafka_cdc_manage_bridge", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_cdc_manage_bridge", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"bridge": bridge})
 
 		case "pause":
 			if err := s.cdcEngine.UpdateBridgeStatus(bridgeID, "paused"); err != nil {
 				return s.toolError("Failed to pause bridge", err), nil
 			}
-			s.logAudit(agentID, "kafka_cdc_manage_bridge", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_cdc_manage_bridge", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"status": "paused", "bridge_id": bridgeID})
 
 		case "resume":
 			if err := s.cdcEngine.UpdateBridgeStatus(bridgeID, "active"); err != nil {
 				return s.toolError("Failed to resume bridge", err), nil
 			}
-			s.logAudit(agentID, "kafka_cdc_manage_bridge", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_cdc_manage_bridge", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"status": "active", "bridge_id": bridgeID})
 
 		case "stop":
 			if err := s.cdcEngine.UpdateBridgeStatus(bridgeID, "stopped"); err != nil {
 				return s.toolError("Failed to stop bridge", err), nil
 			}
-			s.logAudit(agentID, "kafka_cdc_manage_bridge", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_cdc_manage_bridge", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"status": "stopped", "bridge_id": bridgeID})
 
 		case "delete":
 			if err := s.cdcEngine.DeleteBridge(bridgeID); err != nil {
 				return s.toolError("Failed to delete bridge", err), nil
 			}
-			s.logAudit(agentID, "kafka_cdc_manage_bridge", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_cdc_manage_bridge", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"status": "deleted", "bridge_id": bridgeID})
 
 		case "events":
@@ -123,7 +123,7 @@ func (s *Server) handleCDCManageBridge(ctx context.Context, request mcp.CallTool
 			if err != nil {
 				return s.toolError("Failed to get events", err), nil
 			}
-			s.logAudit(agentID, "kafka_cdc_manage_bridge", args, "", "success", len(events), nil, start)
+			s.logAudit(ctx, agentID, "kafka_cdc_manage_bridge", args, "", "success", len(events), nil, start)
 			return marshalResult(map[string]any{"events": events, "count": len(events)})
 
 		default:
@@ -150,7 +150,7 @@ func (s *Server) handleCDCProcess(ctx context.Context, request mcp.CallToolReque
 
 		messages, err := s.kafkaManager.Consume(ctx, cluster, topic, -1, "latest", 100, 5000, "")
 		if err != nil {
-			s.logAudit(agentID, "kafka_cdc_process", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_cdc_process", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to consume messages", err), nil
 		}
 
@@ -165,7 +165,7 @@ func (s *Server) handleCDCProcess(ctx context.Context, request mcp.CallToolReque
 			processed++
 		}
 
-		s.logAudit(agentID, "kafka_cdc_process", args, cluster, "success", processed, nil, start)
+		s.logAudit(ctx, agentID, "kafka_cdc_process", args, cluster, "success", processed, nil, start)
 		return marshalResult(map[string]any{
 			"processed": processed,
 			"total":     len(messages),

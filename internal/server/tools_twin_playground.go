@@ -39,7 +39,7 @@ func (s *Server) handleTwinPlayground(ctx context.Context, request mcp.CallToolR
 			if err != nil {
 				return s.toolError("failed to create playground", err), nil
 			}
-			s.logAudit(agentID, "kafka_twin_playground", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_twin_playground", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"twin": twin, "message": "Playground created. Use twin_id for simulation."})
 
 		case "run_scenario":
@@ -56,7 +56,7 @@ func (s *Server) handleTwinPlayground(ctx context.Context, request mcp.CallToolR
 			if err != nil {
 				return s.toolError("failed to run scenario", err), nil
 			}
-			s.logAudit(agentID, "kafka_twin_playground", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_twin_playground", args, "", "success", 1, nil, start)
 			return marshalResult(result)
 
 		case "analyze_impact":
@@ -86,13 +86,13 @@ func (s *Server) handleTwinPlayground(ctx context.Context, request mcp.CallToolR
 			if err != nil {
 				return s.toolError("failed to analyze impact", err), nil
 			}
-			s.logAudit(agentID, "kafka_twin_playground", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_twin_playground", args, "", "success", 1, nil, start)
 			return marshalResult(analysis)
 
 		case "list_scenarios":
 			category := request.GetString("category", "")
 			scenarios := s.digitalTwin.GetScenarios(category)
-			s.logAudit(agentID, "kafka_twin_playground", args, "", "success", len(scenarios), nil, start)
+			s.logAudit(ctx, agentID, "kafka_twin_playground", args, "", "success", len(scenarios), nil, start)
 			return marshalResult(map[string]any{"scenarios": scenarios, "total": len(scenarios)})
 
 		case "reset":
@@ -104,7 +104,7 @@ func (s *Server) handleTwinPlayground(ctx context.Context, request mcp.CallToolR
 			if err != nil {
 				return s.toolError("failed to reset twin", err), nil
 			}
-			s.logAudit(agentID, "kafka_twin_playground", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_twin_playground", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"twin": twin, "message": "Twin reset to snapshot state"})
 
 		default:

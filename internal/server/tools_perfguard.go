@@ -64,7 +64,7 @@ func (s *Server) handlePerfGuard(ctx context.Context, request mcp.CallToolReques
 			if err := s.perfGuard.UnthrottleAgent(targetAgent); err != nil {
 				return s.toolError("Failed to unthrottle", err), nil
 			}
-			s.logAudit(agentID, "kafka_perf_guard", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_perf_guard", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "unthrottled", "agent_id": targetAgent})
 
 		case "reset_baseline":

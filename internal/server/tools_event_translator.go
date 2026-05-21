@@ -53,12 +53,12 @@ func (s *Server) handleEventTranslate(ctx context.Context, request mcp.CallToolR
 			if err != nil {
 				return s.toolError("failed to create rule", err), nil
 			}
-			s.logAudit(agentID, "kafka_event_translate", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_event_translate", args, "", "success", 1, nil, start)
 			return marshalResult(rule)
 
 		case "list_rules":
 			rules := s.eventTranslator.ListRules("")
-			s.logAudit(agentID, "kafka_event_translate", args, "", "success", len(rules), nil, start)
+			s.logAudit(ctx, agentID, "kafka_event_translate", args, "", "success", len(rules), nil, start)
 			return marshalResult(map[string]any{"rules": rules, "total": len(rules)})
 
 		case "execute":
@@ -74,7 +74,7 @@ func (s *Server) handleEventTranslate(ctx context.Context, request mcp.CallToolR
 			if err != nil {
 				return s.toolError("failed to execute rule", err), nil
 			}
-			s.logAudit(agentID, "kafka_event_translate", args, "", "success", result.MessagesWritten, nil, start)
+			s.logAudit(ctx, agentID, "kafka_event_translate", args, "", "success", result.MessagesWritten, nil, start)
 			return marshalResult(result)
 
 		case "pause":
@@ -82,7 +82,7 @@ func (s *Server) handleEventTranslate(ctx context.Context, request mcp.CallToolR
 			if err := s.eventTranslator.PauseRule(ruleID); err != nil {
 				return s.toolError("failed to pause rule", err), nil
 			}
-			s.logAudit(agentID, "kafka_event_translate", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_event_translate", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "paused", "rule_id": ruleID})
 
 		case "resume":
@@ -90,7 +90,7 @@ func (s *Server) handleEventTranslate(ctx context.Context, request mcp.CallToolR
 			if err := s.eventTranslator.ResumeRule(ruleID); err != nil {
 				return s.toolError("failed to resume rule", err), nil
 			}
-			s.logAudit(agentID, "kafka_event_translate", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_event_translate", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "active", "rule_id": ruleID})
 
 		case "delete":
@@ -98,19 +98,19 @@ func (s *Server) handleEventTranslate(ctx context.Context, request mcp.CallToolR
 			if err := s.eventTranslator.DeleteRule(ruleID); err != nil {
 				return s.toolError("failed to delete rule", err), nil
 			}
-			s.logAudit(agentID, "kafka_event_translate", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_event_translate", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{"status": "deleted", "rule_id": ruleID})
 
 		case "stats":
 			stats := s.eventTranslator.GetStats()
-			s.logAudit(agentID, "kafka_event_translate", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_event_translate", args, "", "success", 1, nil, start)
 			return marshalResult(stats)
 
 		case "protocol_map":
 			srcProto := gateway.Protocol(request.GetString("source_protocol", "kafka"))
 			tgtProto := gateway.Protocol(request.GetString("target_protocol", "pulsar"))
 			mapping := gateway.DescribeProtocolMapping(srcProto, tgtProto)
-			s.logAudit(agentID, "kafka_event_translate", args, "", "success", 1, nil, start)
+			s.logAudit(ctx, agentID, "kafka_event_translate", args, "", "success", 1, nil, start)
 			return marshalResult(mapping)
 
 		default:

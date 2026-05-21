@@ -70,11 +70,11 @@ func (s *Server) handleSchemaPropose(ctx context.Context, request mcp.CallToolRe
 
 		proposal, err := s.schemaWorkflow.Propose(subject, schema, schemaType, agentID, currentSchema, currentVersion, consumerGroups, topicsByGroup)
 		if err != nil {
-			s.logAudit(agentID, "kafka_schema_propose", args, cluster, "error", 0, err, start)
+			s.logAudit(ctx, agentID, "kafka_schema_propose", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to create schema proposal", err), nil
 		}
 
-		s.logAudit(agentID, "kafka_schema_propose", args, cluster, "success", 0, nil, start)
+		s.logAudit(ctx, agentID, "kafka_schema_propose", args, cluster, "success", 0, nil, start)
 		return marshalResult(proposal)
 	})(ctx, request)
 }
@@ -103,7 +103,7 @@ func (s *Server) handleSchemaApply(ctx context.Context, request mcp.CallToolRequ
 			if err != nil {
 				return s.toolError("Failed to review proposal", err), nil
 			}
-			s.logAudit(agentID, "kafka_schema_apply", args, cluster, "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_schema_apply", args, cluster, "success", 0, nil, start)
 			return marshalResult(result)
 
 		case "apply":
@@ -125,7 +125,7 @@ func (s *Server) handleSchemaApply(ctx context.Context, request mcp.CallToolRequ
 
 			newVersion, err := sc.RegisterSchema(ctx, proposal.Subject, proposal.Schema, proposal.SchemaType)
 			if err != nil {
-				s.logAudit(agentID, "kafka_schema_apply", args, cluster, "error", 0, err, start)
+				s.logAudit(ctx, agentID, "kafka_schema_apply", args, cluster, "error", 0, err, start)
 				return s.toolError("Failed to register schema", err), nil
 			}
 
@@ -133,7 +133,7 @@ func (s *Server) handleSchemaApply(ctx context.Context, request mcp.CallToolRequ
 				return s.toolError("Schema registered but failed to update proposal status", err), nil
 			}
 
-			s.logAudit(agentID, "kafka_schema_apply", args, cluster, "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_schema_apply", args, cluster, "success", 0, nil, start)
 			return marshalResult(map[string]any{
 				"status":      "applied",
 				"proposal_id": proposalID,
@@ -149,7 +149,7 @@ func (s *Server) handleSchemaApply(ctx context.Context, request mcp.CallToolRequ
 			if err := s.schemaWorkflow.MarkRolledBack(proposalID); err != nil {
 				return s.toolError("Failed to rollback proposal", err), nil
 			}
-			s.logAudit(agentID, "kafka_schema_apply", args, cluster, "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_schema_apply", args, cluster, "success", 0, nil, start)
 			return marshalResult(map[string]any{
 				"status":      "rolled_back",
 				"proposal_id": proposalID,
@@ -159,7 +159,7 @@ func (s *Server) handleSchemaApply(ctx context.Context, request mcp.CallToolRequ
 		case "list":
 			statusFilter := request.GetString("status_filter", "")
 			proposals := s.schemaWorkflow.ListProposals(statusFilter)
-			s.logAudit(agentID, "kafka_schema_apply", args, cluster, "success", len(proposals), nil, start)
+			s.logAudit(ctx, agentID, "kafka_schema_apply", args, cluster, "success", len(proposals), nil, start)
 			return marshalResult(map[string]any{
 				"proposals":   proposals,
 				"total_count": len(proposals),

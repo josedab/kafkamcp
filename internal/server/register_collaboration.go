@@ -169,7 +169,7 @@ func (s *Server) handleLockAcquire(ctx context.Context, request mcp.CallToolRequ
 	}
 
 	result := s.collaborationCoord.AcquireLock(agentID, resource, ttl, nil)
-	s.logAudit(agentID, "agent_lock_acquire", args, "", boolStatus(result.Acquired), 1, nil, start)
+	s.logAudit(ctx, agentID, "agent_lock_acquire", args, "", boolStatus(result.Acquired), 1, nil, start)
 	return marshalResult(result)
 }
 
@@ -181,17 +181,17 @@ func (s *Server) handleLockRelease(ctx context.Context, request mcp.CallToolRequ
 
 	err := s.collaborationCoord.ReleaseLock(agentID, resource)
 	if err != nil {
-		s.logAudit(agentID, "agent_lock_release", args, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "agent_lock_release", args, "", "error", 0, err, start)
 		return s.toolError("failed to release lock", err), nil
 	}
 
-	s.logAudit(agentID, "agent_lock_release", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "agent_lock_release", args, "", "success", 1, nil, start)
 	return marshalResult(map[string]string{"status": "released", "resource": resource})
 }
 
 func (s *Server) handleLockList(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 	locks := s.collaborationCoord.ListLocks()
-	s.logAudit(agentID, "agent_lock_list", args, "", "success", len(locks), nil, start)
+	s.logAudit(ctx, agentID, "agent_lock_list", args, "", "success", len(locks), nil, start)
 	return marshalResult(map[string]any{"locks": locks, "total": len(locks)})
 }
 
@@ -202,7 +202,7 @@ func (s *Server) handleClockGet(ctx context.Context, request mcp.CallToolRequest
 	}
 
 	clock := s.collaborationCoord.GetClock(resource)
-	s.logAudit(agentID, "agent_clock_get", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "agent_clock_get", args, "", "success", 1, nil, start)
 	return marshalResult(clock)
 }
 
@@ -213,7 +213,7 @@ func (s *Server) handleClockIncrement(ctx context.Context, request mcp.CallToolR
 	}
 
 	clock := s.collaborationCoord.IncrementClock(agentID, resource)
-	s.logAudit(agentID, "agent_clock_increment", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "agent_clock_increment", args, "", "success", 1, nil, start)
 	return marshalResult(clock)
 }
 
@@ -232,11 +232,11 @@ func (s *Server) handleMessageSend(ctx context.Context, request mcp.CallToolRequ
 
 	msg, err := s.collaborationCoord.SendMessage(agentID, to, msgType, subject, body)
 	if err != nil {
-		s.logAudit(agentID, "agent_message_send", args, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "agent_message_send", args, "", "error", 0, err, start)
 		return s.toolError("failed to send message", err), nil
 	}
 
-	s.logAudit(agentID, "agent_message_send", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "agent_message_send", args, "", "success", 1, nil, start)
 	return marshalResult(msg)
 }
 
@@ -244,7 +244,7 @@ func (s *Server) handleMessageInbox(ctx context.Context, request mcp.CallToolReq
 	unreadOnly, _ := args["unread_only"].(bool)
 
 	messages := s.collaborationCoord.GetMessages(agentID, unreadOnly)
-	s.logAudit(agentID, "agent_message_inbox", args, "", "success", len(messages), nil, start)
+	s.logAudit(ctx, agentID, "agent_message_inbox", args, "", "success", len(messages), nil, start)
 	return marshalResult(map[string]any{"messages": messages, "total": len(messages)})
 }
 
@@ -264,13 +264,13 @@ func (s *Server) handleAgentRegister(ctx context.Context, request mcp.CallToolRe
 	}
 
 	state := s.collaborationCoord.RegisterAgent(agentID, status, capabilities, nil)
-	s.logAudit(agentID, "agent_coordinate_register", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "agent_coordinate_register", args, "", "success", 1, nil, start)
 	return marshalResult(state)
 }
 
 func (s *Server) handleAgentList(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 	agents := s.collaborationCoord.ListAgents()
-	s.logAudit(agentID, "agent_coordinate_list", args, "", "success", len(agents), nil, start)
+	s.logAudit(ctx, agentID, "agent_coordinate_list", args, "", "success", len(agents), nil, start)
 	return marshalResult(map[string]any{"agents": agents, "total": len(agents)})
 }
 
@@ -300,7 +300,7 @@ func (s *Server) handleTopicLeaseAcquire(ctx context.Context, request mcp.CallTo
 	}
 
 	result := s.collaborationCoord.AcquireTopicLease(agentID, topic, leaseType, ttl, maxRenewals, permissions, nil)
-	s.logAudit(agentID, "agent_topic_lease_acquire", args, "", boolStatus(result.Acquired), 1, nil, start)
+	s.logAudit(ctx, agentID, "agent_topic_lease_acquire", args, "", boolStatus(result.Acquired), 1, nil, start)
 	return marshalResult(result)
 }
 
@@ -312,11 +312,11 @@ func (s *Server) handleTopicLeaseRelease(ctx context.Context, request mcp.CallTo
 
 	err := s.collaborationCoord.ReleaseTopicLease(agentID, topic)
 	if err != nil {
-		s.logAudit(agentID, "agent_topic_lease_release", args, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "agent_topic_lease_release", args, "", "error", 0, err, start)
 		return s.toolError("failed to release topic lease", err), nil
 	}
 
-	s.logAudit(agentID, "agent_topic_lease_release", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "agent_topic_lease_release", args, "", "success", 1, nil, start)
 	return marshalResult(map[string]string{"status": "released", "topic": topic})
 }
 
@@ -333,17 +333,17 @@ func (s *Server) handleTopicLeaseRenew(ctx context.Context, request mcp.CallTool
 
 	lease, err := s.collaborationCoord.RenewTopicLease(agentID, topic, ttl)
 	if err != nil {
-		s.logAudit(agentID, "agent_topic_lease_renew", args, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "agent_topic_lease_renew", args, "", "error", 0, err, start)
 		return s.toolError("failed to renew topic lease", err), nil
 	}
 
-	s.logAudit(agentID, "agent_topic_lease_renew", args, "", "success", 1, nil, start)
+	s.logAudit(ctx, agentID, "agent_topic_lease_renew", args, "", "success", 1, nil, start)
 	return marshalResult(lease)
 }
 
 func (s *Server) handleTopicLeaseList(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 	leases := s.collaborationCoord.ListTopicLeases()
-	s.logAudit(agentID, "agent_topic_lease_list", args, "", "success", len(leases), nil, start)
+	s.logAudit(ctx, agentID, "agent_topic_lease_list", args, "", "success", len(leases), nil, start)
 	return marshalResult(map[string]any{"leases": leases, "total": len(leases)})
 }
 

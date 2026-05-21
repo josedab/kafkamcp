@@ -58,7 +58,7 @@ func (s *Server) handleTwinSnapshot(ctx context.Context, request mcp.CallToolReq
 
 		snapshot := s.digitalTwin.CaptureSnapshot(clusterName, topics, groups, brokers)
 
-		s.logAudit(agentID, "kafka_twin_snapshot", args, cluster, "success", len(topics), nil, start)
+		s.logAudit(ctx, agentID, "kafka_twin_snapshot", args, cluster, "success", len(topics), nil, start)
 		return marshalResult(map[string]any{
 			"snapshot":    snapshot,
 			"topics":     len(topics),
@@ -94,7 +94,7 @@ func (s *Server) handleTwinSimulate(ctx context.Context, request mcp.CallToolReq
 			if err != nil {
 				return s.toolError("Failed to create twin", err), nil
 			}
-			s.logAudit(agentID, "kafka_twin_simulate", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_twin_simulate", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"status": "created", "twin": twin})
 
 		case "simulate":
@@ -124,7 +124,7 @@ func (s *Server) handleTwinSimulate(ctx context.Context, request mcp.CallToolReq
 			if err != nil {
 				return s.toolError("Simulation failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_twin_simulate", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_twin_simulate", args, "", "success", 0, nil, start)
 			return marshalResult(result)
 
 		case "diff":
@@ -135,7 +135,7 @@ func (s *Server) handleTwinSimulate(ctx context.Context, request mcp.CallToolReq
 			if err != nil {
 				return s.toolError("Diff failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_twin_simulate", args, "", "success", diff.TotalChanges, nil, start)
+			s.logAudit(ctx, agentID, "kafka_twin_simulate", args, "", "success", diff.TotalChanges, nil, start)
 			return marshalResult(diff)
 
 		case "migrate_plan":
@@ -146,7 +146,7 @@ func (s *Server) handleTwinSimulate(ctx context.Context, request mcp.CallToolReq
 			if err != nil {
 				return s.toolError("Migration plan failed", err), nil
 			}
-			s.logAudit(agentID, "kafka_twin_simulate", args, "", "success", len(plan.Steps), nil, start)
+			s.logAudit(ctx, agentID, "kafka_twin_simulate", args, "", "success", len(plan.Steps), nil, start)
 			return marshalResult(plan)
 
 		case "get":
@@ -157,7 +157,7 @@ func (s *Server) handleTwinSimulate(ctx context.Context, request mcp.CallToolReq
 			if err != nil {
 				return s.toolError("Twin not found", err), nil
 			}
-			s.logAudit(agentID, "kafka_twin_simulate", args, "", "success", 0, nil, start)
+			s.logAudit(ctx, agentID, "kafka_twin_simulate", args, "", "success", 0, nil, start)
 			return marshalResult(map[string]any{"twin": twin})
 
 		case "history":
@@ -165,12 +165,12 @@ func (s *Server) handleTwinSimulate(ctx context.Context, request mcp.CallToolReq
 				return mcp.NewToolResultError("twin_id is required"), nil
 			}
 			history := s.digitalTwin.GetSimulationHistory(twinID)
-			s.logAudit(agentID, "kafka_twin_simulate", args, "", "success", len(history), nil, start)
+			s.logAudit(ctx, agentID, "kafka_twin_simulate", args, "", "success", len(history), nil, start)
 			return marshalResult(map[string]any{"history": history, "total": len(history)})
 
 		default:
 			twins := s.digitalTwin.ListTwins()
-			s.logAudit(agentID, "kafka_twin_simulate", args, "", "success", len(twins), nil, start)
+			s.logAudit(ctx, agentID, "kafka_twin_simulate", args, "", "success", len(twins), nil, start)
 			return marshalResult(map[string]any{"twins": twins, "total": len(twins)})
 		}
 	})(ctx, request)
