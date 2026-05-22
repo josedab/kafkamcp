@@ -16,19 +16,19 @@ import (
 
 // Query represents a parsed streaming SQL query.
 type Query struct {
-	ID          string            `json:"id"`
-	SQL         string            `json:"sql"`
-	SourceTopic string            `json:"source_topic"`
-	SelectFields []string         `json:"select_fields"`
-	WhereClause  *WhereClause     `json:"where_clause,omitempty"`
-	GroupBy      []string          `json:"group_by,omitempty"`
-	Window       *WindowSpec       `json:"window,omitempty"`
-	AggFunctions []AggFunction     `json:"agg_functions,omitempty"`
-	Limit        int               `json:"limit,omitempty"`
-	Status       string            `json:"status"` // created, running, completed, error
-	CreatedBy    string            `json:"created_by"`
-	CreatedAt    time.Time         `json:"created_at"`
-	Error        string            `json:"error,omitempty"`
+	ID           string        `json:"id"`
+	SQL          string        `json:"sql"`
+	SourceTopic  string        `json:"source_topic"`
+	SelectFields []string      `json:"select_fields"`
+	WhereClause  *WhereClause  `json:"where_clause,omitempty"`
+	GroupBy      []string      `json:"group_by,omitempty"`
+	Window       *WindowSpec   `json:"window,omitempty"`
+	AggFunctions []AggFunction `json:"agg_functions,omitempty"`
+	Limit        int           `json:"limit,omitempty"`
+	Status       string        `json:"status"` // created, running, completed, error
+	CreatedBy    string        `json:"created_by"`
+	CreatedAt    time.Time     `json:"created_at"`
+	Error        string        `json:"error,omitempty"`
 }
 
 // WhereClause represents a filter condition.
@@ -40,10 +40,10 @@ type WhereClause struct {
 
 // WindowSpec defines a window for streaming aggregation.
 type WindowSpec struct {
-	Type     string `json:"type"` // tumbling, sliding, session
-	SizeMs   int64  `json:"size_ms"`
-	SlideMs  int64  `json:"slide_ms,omitempty"` // for sliding windows
-	GapMs    int64  `json:"gap_ms,omitempty"`   // for session windows
+	Type    string `json:"type"` // tumbling, sliding, session
+	SizeMs  int64  `json:"size_ms"`
+	SlideMs int64  `json:"slide_ms,omitempty"` // for sliding windows
+	GapMs   int64  `json:"gap_ms,omitempty"`   // for session windows
 }
 
 // AggFunction represents an aggregation function.
@@ -100,7 +100,16 @@ func (e *Engine) Parse(sql, createdBy string) (*Query, error) {
 		return nil, fmt.Errorf("SQL query is required")
 	}
 
+	if len(sql) > maxSQLLen {
+		return nil, fmt.Errorf("SQL query exceeds maximum length of %d characters", maxSQLLen)
+	}
+
 	sql = strings.TrimSpace(sql)
+
+	if err := rejectUnsafeSQL(sql); err != nil {
+		return nil, err
+	}
+
 	upperSQL := strings.ToUpper(sql)
 
 	if !strings.HasPrefix(upperSQL, "SELECT") {

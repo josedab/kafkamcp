@@ -152,9 +152,9 @@ func TestListQueriesEmpty(t *testing.T) {
 func TestListQueries(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.Parse("SELECT * FROM t1", "a1")
-	e.Parse("SELECT * FROM t2", "a2")
-	e.Parse("SELECT * FROM t3", "a3")
+	_, _ = e.Parse("SELECT * FROM t1", "a1")
+	_, _ = e.Parse("SELECT * FROM t2", "a2")
+	_, _ = e.Parse("SELECT * FROM t3", "a3")
 
 	result := e.ListQueries(10)
 	if len(result) != 3 {
@@ -165,9 +165,9 @@ func TestListQueries(t *testing.T) {
 func TestListQueriesWithLimit(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.Parse("SELECT * FROM t1", "a1")
-	e.Parse("SELECT * FROM t2", "a2")
-	e.Parse("SELECT * FROM t3", "a3")
+	_, _ = e.Parse("SELECT * FROM t1", "a1")
+	_, _ = e.Parse("SELECT * FROM t2", "a2")
+	_, _ = e.Parse("SELECT * FROM t3", "a3")
 
 	result := e.ListQueries(2)
 	if len(result) != 2 {
@@ -178,7 +178,7 @@ func TestListQueriesWithLimit(t *testing.T) {
 func TestListQueriesDefaultLimit(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.Parse("SELECT * FROM t1", "a1")
+	_, _ = e.Parse("SELECT * FROM t1", "a1")
 
 	result := e.ListQueries(0)
 	if len(result) != 1 {
@@ -217,9 +217,9 @@ func TestDeleteThenList(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
 	q1, _ := e.Parse("SELECT * FROM t1", "a1")
-	e.Parse("SELECT * FROM t2", "a2")
+	_, _ = e.Parse("SELECT * FROM t2", "a2")
 
-	e.DeleteQuery(q1.ID)
+	_ = e.DeleteQuery(q1.ID)
 	result := e.ListQueries(10)
 	if len(result) != 1 {
 		t.Errorf("expected 1 query after delete, got %d", len(result))
