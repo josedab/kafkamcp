@@ -10,7 +10,7 @@ import (
 // [Build].
 type Config struct {
 	// Provider selects the verification method: "none" (default),
-	// "static", or "oidc".
+	// "static", "oidc", or "mtls".
 	Provider string
 
 	// Static is consulted when Provider == "static".
@@ -18,6 +18,9 @@ type Config struct {
 
 	// OIDC is consulted when Provider == "oidc".
 	OIDC OIDCConfig
+
+	// MTLS is consulted when Provider == "mtls".
+	MTLS MTLSConfig
 }
 
 // StaticConfig holds the inline token table for the static provider.
@@ -35,7 +38,9 @@ func Build(ctx context.Context, cfg Config) (Provider, error) {
 		return NewStatic(cfg.Static.Tokens)
 	case "oidc":
 		return NewOIDC(ctx, cfg.OIDC)
+	case "mtls":
+		return NewMTLS(cfg.MTLS), nil
 	default:
-		return nil, fmt.Errorf("identity: unknown provider %q (expected none|static|oidc)", cfg.Provider)
+		return nil, fmt.Errorf("identity: unknown provider %q (expected none|static|oidc|mtls)", cfg.Provider)
 	}
 }

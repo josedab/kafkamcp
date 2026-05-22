@@ -125,6 +125,9 @@ type IdentityConfig struct {
 
 	// OIDC is consulted when Provider == "oidc".
 	OIDC OIDCIdentityConfig `yaml:"oidc,omitempty" json:"oidc,omitempty"`
+
+	// MTLS is consulted when Provider == "mtls".
+	MTLS MTLSIdentityConfig `yaml:"mtls,omitempty" json:"mtls,omitempty"`
 }
 
 // StaticIdentityConfig describes the inline shared-secret token table.
@@ -149,6 +152,34 @@ type OIDCIdentityConfig struct {
 	EmailClaim     string `yaml:"email_claim,omitempty" json:"email_claim,omitempty"`           // Defaults to "email"
 	SkipExpiry     bool   `yaml:"skip_expiry_check,omitempty" json:"skip_expiry_check,omitempty"` // Tests only
 	SkipAudience   bool   `yaml:"skip_audience_check,omitempty" json:"skip_audience_check,omitempty"` // Tests only
+}
+
+// MTLSIdentityConfig configures the mTLS identity provider. The TLS
+// handshake itself (chain validation, expiry) is configured on the
+// server's transport: this block governs which identities derived
+// from the verified peer cert are accepted by KafkaMCP.
+type MTLSIdentityConfig struct {
+	// CABundle is the path to the PEM file of CAs that KafkaMCP will
+	// trust to sign client certificates. When set, the HTTP transport
+	// switches to RequireAndVerifyClientCert. When empty, KafkaMCP
+	// uses the system trust store and still requires a client cert.
+	CABundle string `yaml:"ca_bundle,omitempty" json:"ca_bundle,omitempty"`
+
+	// AllowedSPIFFEIDs, when non-empty, restricts accepted SPIFFE IDs
+	// to the listed values.
+	AllowedSPIFFEIDs []string `yaml:"allowed_spiffe_ids,omitempty" json:"allowed_spiffe_ids,omitempty"`
+
+	// AllowedTrustDomains, when non-empty, restricts the accepted
+	// SPIFFE trust domains (e.g. "example.org").
+	AllowedTrustDomains []string `yaml:"allowed_trust_domains,omitempty" json:"allowed_trust_domains,omitempty"`
+
+	// GroupsFromOUs maps the cert Subject.OrganizationalUnit values
+	// into the identity Groups field.
+	GroupsFromOUs bool `yaml:"groups_from_ous,omitempty" json:"groups_from_ous,omitempty"`
+
+	// AllowCNFallback controls whether the Subject CN may be used as
+	// the agent ID when the cert has no URI SANs. Defaults to true.
+	AllowCNFallback bool `yaml:"allow_cn_fallback,omitempty" json:"allow_cn_fallback,omitempty"`
 }
 
 // ExperimentalConfig gates subsystems whose current implementation is a stub
@@ -393,8 +424,16 @@ func (c *Config) validate() error {
 		if strings.TrimSpace(c.Policies.Identity.OIDC.ClientID) == "" {
 			return fmt.Errorf("policies.identity.oidc.client_id is required when provider=oidc")
 		}
+	case "mtls":
+		// mtls validation is intentionally lenient: a deployment can
+		// turn on the provider before populating CABundle (it will
+		// then trust the system pool), and AllowedSPIFFEIDs /
+		// AllowedTrustDomains are optional. The TLS transport layer
+		// will refuse to start without the server.tls_cert/key pair,
+		// so a misconfigured deployment fails at server start, not
+		// silently at request time.
 	default:
-		return fmt.Errorf("invalid policies.identity.provider %q; must be one of: none, static, oidc", c.Policies.Identity.Provider)
+		return fmt.Errorf("invalid policies.identity.provider %q; must be one of: none, static, oidc, mtls", c.Policies.Identity.Provider)
 	}
 
 	return nil

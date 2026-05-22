@@ -420,6 +420,13 @@ func runServer(cmd *cobra.Command, args []string) error {
 		// Wrap handler with security headers and body size limit (10 MB)
 		secureHandler := http.MaxBytesHandler(securityHeadersMiddleware(handler), 10<<20)
 
+		// When the deployment configures the mTLS identity provider,
+		// the middleware extracts the verified peer cert and attaches
+		// an identity.AgentIdentity to the request context so the MCP
+		// auth middleware sees the verified identity instead of a raw
+		// X-Agent-ID header. No-op when the provider is something else.
+		secureHandler = srv.MTLSIdentityMiddleware(secureHandler)
+
 		httpServer := &http.Server{
 			Addr:              addr,
 			Handler:           secureHandler,
@@ -431,7 +438,15 @@ func runServer(cmd *cobra.Command, args []string) error {
 
 		// TLS support
 		if cfg.Server.TLSCert != "" && cfg.Server.TLSKey != "" {
-			httpServer.TLSConfig = &tls.Config{MinVersion: tls.VersionTLS13}
+			tlsCfg := &tls.Config{MinVersion: tls.VersionTLS13}
+			// If mTLS is the configured identity provider, layer on
+			// RequireAndVerifyClientCert + the configured CA bundle.
+			if mtlsCfg, err := srv.BuildMTLSTLSConfig(cfg.Policies.Identity.MTLS.CABundle); err != nil {
+				return fmt.Errorf("configuring mTLS: %w", err)
+			} else if mtlsCfg != nil {
+				tlsCfg = mtlsCfg
+			}
+			httpServer.TLSConfig = tlsCfg
 			go func() {
 				<-ctx.Done()
 				logger.Info("shutting down HTTPS server")

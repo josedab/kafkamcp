@@ -97,6 +97,18 @@ type Provider interface {
 	Verify(ctx context.Context, headers http.Header) (*AgentIdentity, error)
 }
 
+// RequestVerifier is an optional interface implemented by providers
+// that need access to the full *http.Request (for example to inspect
+// the TLS peer certificates exposed on r.TLS.PeerCertificates).
+//
+// The HTTP transport layer should type-assert the configured
+// [Provider] against [RequestVerifier] and, when supported, prefer
+// VerifyRequest over Verify. Providers that only need headers can
+// safely omit this interface.
+type RequestVerifier interface {
+	VerifyRequest(ctx context.Context, r *http.Request) (*AgentIdentity, error)
+}
+
 // Sentinel errors returned by [Provider.Verify].
 var (
 	// ErrNoCredentials is returned when the request carries no

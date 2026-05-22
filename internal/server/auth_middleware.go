@@ -32,7 +32,15 @@ func identityFromContext(ctx context.Context) *identity.AgentIdentity {
 // verified AgentIdentity (which may be nil). It falls back to legacy
 // X-Agent-ID / X-Client-ID headers when no provider is configured or
 // when the request carried no verifiable credentials.
+//
+// When an identity has already been attached to ctx by an upstream
+// HTTP middleware (e.g. the mTLS middleware that runs against the raw
+// *http.Request before the MCP handler), that identity is preferred
+// and re-verification is skipped.
 func (s *Server) resolveAgentIdentity(ctx context.Context, header http.Header) (string, *identity.AgentIdentity) {
+	if ident, ok := identity.FromContext(ctx); ok && ident != nil && ident.ID != "" {
+		return sanitizeAgentID(ident.ID), ident
+	}
 	if s.identityProvider != nil && header != nil {
 		ident, err := s.identityProvider.Verify(ctx, header)
 		switch {

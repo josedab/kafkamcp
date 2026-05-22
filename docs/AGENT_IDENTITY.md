@@ -23,6 +23,7 @@ against a trusted source before the policy engine ever sees the ID.
 | `none` *(default)* | None — falls back to `X-Agent-ID` header. | Local dev, demos, single-tenant trusted networks. |
 | `static` | Shared-secret bearer tokens defined in config. | Self-hosted single-tenant; tiny upgrade from headers. |
 | `oidc` | JWT bearer tokens verified against an OIDC issuer's JWKS. | Multi-tenant, cloud, SSO-managed deployments. |
+| `mtls` | TLS client certificate presented during the handshake. | Service-mesh / SPIFFE / zero-trust deployments where every workload already has an x509 identity. |
 
 When a provider is configured but the request does not carry a token,
 KafkaMCP **falls back** to the legacy `X-Agent-ID` header. When a token
@@ -118,21 +119,70 @@ and is stable across all of a user's Azure AD logins.
 For every incoming MCP request the middleware applies the following
 order:
 
-1. **Identity provider** — if configured and the request carries an
+1. **mTLS peer certificate** — if `policy.identity.provider == mtls`
+   the HTTP middleware extracts the verified client cert from the TLS
+   handshake (`r.TLS.PeerCertificates[0]`) and derives an
+   `AgentIdentity` before the MCP handler runs. The TLS terminator
+   has already validated the chain against the configured
+   `policy.identity.mtls.ca_bundle`, so the middleware only enforces
+   the identity-extraction allow-lists.
+2. **Identity provider** — if configured and the request carries an
    `Authorization: Bearer ...` header, the provider verifies the token
    and returns an `AgentIdentity`. On success the identity's `ID` is
    used as the agent ID and the full identity is attached to the request
    context so downstream handlers (audit, policy, rate-limits) can read
    it.
-2. **`X-Agent-ID` header** — if no token was present (`ErrNoCredentials`
+3. **`X-Agent-ID` header** — if no token was present (`ErrNoCredentials`
    from the provider) the legacy header is used.
-3. **`X-Client-ID` header** — for backwards compatibility.
-4. **`anonymous`** — used when none of the above applies.
+4. **`X-Client-ID` header** — for backwards compatibility.
+5. **`anonymous`** — used when none of the above applies.
 
-A failed verification (bad signature, expired, wrong audience) is
-**never** silently downgraded to anonymous-via-header; it is logged at
-WARN with the provider name and the agent ID becomes `anonymous`, which
-the policy engine treats as untrusted.
+A failed verification (bad signature, expired, wrong audience, or a
+rejected SPIFFE ID) is **never** silently downgraded to
+anonymous-via-header; it is logged at WARN with the provider name and
+the agent ID becomes `anonymous`, which the policy engine treats as
+untrusted.
+
+## mTLS configuration
+
+```yaml
+server:
+  transport: streamable-http        # or sse — must be one of the HTTP transports
+  tls_cert: /etc/kafkamcp/tls/server.crt
+  tls_key:  /etc/kafkamcp/tls/server.key
+
+policy:
+  enabled: true
+  identity:
+    provider: mtls
+    mtls:
+      ca_bundle: /etc/kafkamcp/tls/client-ca.pem   # CAs that may sign client certs
+      allowed_trust_domains: ["example.org"]       # restrict accepted SPIFFE trust domains
+      allowed_spiffe_ids:                          # exact allow-list (optional, AND'd with trust domains)
+        - spiffe://example.org/agents/billing
+        - spiffe://example.org/agents/reporting
+      groups_from_ous: true                        # map cert OUs into AgentIdentity.Groups
+      allow_cn_fallback: false                     # require URI SAN; refuse CN-only certs
+```
+
+Identity-extraction order from the verified leaf cert:
+
+1. **SPIFFE URI SAN** — `spiffe://<trust-domain>/<path>`. Subject to
+   `allowed_trust_domains` and `allowed_spiffe_ids` allow-lists.
+2. **Any other URI SAN** — e.g. `https://example.com/agents/billing`.
+3. **Subject CN** — only when no URI SAN is present *and*
+   `allow_cn_fallback` is true (the default).
+
+OUs from `Subject.OrganizationalUnit` are surfaced as
+`AgentIdentity.Groups` when `groups_from_ous: true`, so existing
+policy bindings that match on groups continue to work. The cert
+serial, NotAfter, and full URI SAN list are stashed in
+`AgentIdentity.Claims` for advanced policy use.
+
+When `provider: mtls` is set, the HTTP transport switches the TLS
+config to `tls.RequireAndVerifyClientCert` with the configured
+`ca_bundle`. Requests without a client cert are rejected by the TLS
+handshake itself; there is **no header fallback** for mTLS deployments.
 
 ## Bearer token format
 

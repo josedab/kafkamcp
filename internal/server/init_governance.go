@@ -101,6 +101,12 @@ func buildIdentityProvider(cfg *config.Config, logger *slog.Logger) (identity.Pr
 		SkipExpiryCheck:   cfg.Policies.Identity.OIDC.SkipExpiry,
 		SkipClientIDCheck: cfg.Policies.Identity.OIDC.SkipAudience,
 	}
+	idCfg.MTLS = identity.MTLSConfig{
+		AllowedSPIFFEIDs:    cfg.Policies.Identity.MTLS.AllowedSPIFFEIDs,
+		AllowedTrustDomains: cfg.Policies.Identity.MTLS.AllowedTrustDomains,
+		GroupsFromOUs:       cfg.Policies.Identity.MTLS.GroupsFromOUs,
+		AllowCNFallback:     cfg.Policies.Identity.MTLS.AllowCNFallback,
+	}
 	prov, err := identity.Build(context.Background(), idCfg)
 	if err != nil {
 		return nil, err
