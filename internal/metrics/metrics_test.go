@@ -11,10 +11,10 @@ func TestSanitizeAgentLabel(t *testing.T) {
 	m := New()
 
 	tests := []struct {
-		name     string
-		agentID  string
-		want     string
-		setup    func()
+		name    string
+		agentID string
+		want    string
+		setup   func()
 	}{
 		{
 			name:    "new agent within capacity",

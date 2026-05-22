@@ -7,9 +7,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mark3labs/mcp-go/mcp"
+
 	"github.com/kafkamcp/kafkamcp/internal/auth"
 	"github.com/kafkamcp/kafkamcp/internal/kafka"
-	"github.com/mark3labs/mcp-go/mcp"
 )
 
 // ===================== sanitizeAgentID tests =====================
@@ -202,7 +203,7 @@ func TestCheckResourceRateLimit_Exceeded(t *testing.T) {
 	t.Parallel()
 	s := newTestServer(t, withRateLimit)
 
-	s.checkResourceRateLimit("rate-limited-agent", "res")
+	_ = s.checkResourceRateLimit("rate-limited-agent", "res")
 	err := s.checkResourceRateLimit("rate-limited-agent", "res")
 	if err == nil {
 		t.Error("expected rate limit error")

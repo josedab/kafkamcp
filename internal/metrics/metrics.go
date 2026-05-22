@@ -28,17 +28,18 @@ func SanitizeTopicLabel(topic string) string {
 
 // Metrics holds all KafkaMCP Prometheus metrics.
 type Metrics struct {
-	ToolCallsTotal       *prometheus.CounterVec
-	ToolLatencySeconds   *prometheus.HistogramVec
-	MessagesConsumed     *prometheus.CounterVec
-	MessagesProduced     *prometheus.CounterVec
-	SchemaCacheHits      *prometheus.CounterVec
-	SchemaCacheMisses    *prometheus.CounterVec
-	ActiveConnections    *prometheus.GaugeVec
-	KafkaConnErrors      *prometheus.CounterVec
-	AuthzDenials         *prometheus.CounterVec
-	RateLimitDenials     *prometheus.CounterVec
-	Registry             *prometheus.Registry
+	ToolCallsTotal     *prometheus.CounterVec
+	ToolLatencySeconds *prometheus.HistogramVec
+	MessagesConsumed   *prometheus.CounterVec
+	MessagesProduced   *prometheus.CounterVec
+	SchemaCacheHits    *prometheus.CounterVec
+	SchemaCacheMisses  *prometheus.CounterVec
+	ActiveConnections  *prometheus.GaugeVec
+	KafkaConnErrors    *prometheus.CounterVec
+	AuthzDenials       *prometheus.CounterVec
+	RateLimitDenials   *prometheus.CounterVec
+	IdentityConflicts  *prometheus.CounterVec
+	Registry           *prometheus.Registry
 
 	agentMu     sync.RWMutex
 	knownAgents map[string]struct{}
@@ -107,6 +108,11 @@ func New() *Metrics {
 			Name: "kafkamcp_rate_limit_denials_total",
 			Help: "Rate limit denials",
 		}, []string{"agent_id", "tool"}),
+
+		IdentityConflicts: factory.NewCounterVec(prometheus.CounterOpts{
+			Name: "kafkamcp_identity_conflicts_total",
+			Help: "Requests where a verified identity disagreed with a legacy X-Agent-ID / X-Client-ID header. Investigate every increment — strong indicator of caller misconfiguration or an attacker probing the legacy fallback path.",
+		}, []string{"agent_id", "header"}),
 	}
 
 	defaultMetrics.Store(m)

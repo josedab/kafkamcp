@@ -6,11 +6,12 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/mark3labs/mcp-go/mcp"
+	otelTrace "go.opentelemetry.io/otel/trace"
+
 	"github.com/kafkamcp/kafkamcp/internal/auth"
 	"github.com/kafkamcp/kafkamcp/internal/auth/identity"
 	"github.com/kafkamcp/kafkamcp/internal/metrics"
-	"github.com/mark3labs/mcp-go/mcp"
-	otelTrace "go.opentelemetry.io/otel/trace"
 )
 
 // withIdentity returns a derived context carrying the verified
@@ -30,8 +31,12 @@ func identityFromContext(ctx context.Context) *identity.AgentIdentity {
 // resolveAgentIdentity runs the configured identity provider against
 // the request headers and returns the resolved agent ID plus the
 // verified AgentIdentity (which may be nil). It falls back to legacy
-// X-Agent-ID / X-Client-ID headers when no provider is configured or
-// when the request carried no verifiable credentials.
+// X-Agent-ID / X-Client-ID headers only when no provider is configured
+// or when the operator has explicitly opted into header fallback via
+// `policy.identity.allow_header_fallback: true`. For any cryptographic
+// provider (static/oidc/mtls) the default is to NOT fall back —
+// otherwise an attacker can bypass identity verification by simply
+// omitting the bearer token. See [config.IdentityConfig.HeaderFallbackEnabled].
 //
 // When an identity has already been attached to ctx by an upstream
 // HTTP middleware (e.g. the mTLS middleware that runs against the raw
@@ -39,19 +44,29 @@ func identityFromContext(ctx context.Context) *identity.AgentIdentity {
 // and re-verification is skipped.
 func (s *Server) resolveAgentIdentity(ctx context.Context, header http.Header) (string, *identity.AgentIdentity) {
 	if ident, ok := identity.FromContext(ctx); ok && ident != nil && ident.ID != "" {
+		s.warnOnIdentityConflict(ident, header)
 		return sanitizeAgentID(ident.ID), ident
 	}
 	if s.identityProvider != nil && header != nil {
 		ident, err := s.identityProvider.Verify(ctx, header)
 		switch {
 		case err == nil && ident != nil && ident.ID != "":
+			s.warnOnIdentityConflict(ident, header)
 			return sanitizeAgentID(ident.ID), ident
 		case errors.Is(err, identity.ErrNoCredentials):
-			// fall through to header-based behaviour
+			if !s.config.Policies.Identity.HeaderFallbackEnabled() {
+				s.logger.Warn("identity provider returned no credentials and header fallback is disabled; rejecting",
+					"provider", s.identityProvider.Name())
+				return "anonymous", nil
+			}
+			// fall through to header-based behavior (legacy mode)
 		case err != nil:
 			s.logger.Warn("agent identity verification failed",
 				"provider", s.identityProvider.Name(),
 				"error", err.Error())
+			if !s.config.Policies.Identity.HeaderFallbackEnabled() {
+				return "anonymous", nil
+			}
 		}
 	}
 	if header != nil {
@@ -65,22 +80,41 @@ func (s *Server) resolveAgentIdentity(ctx context.Context, header http.Header) (
 	return "anonymous", nil
 }
 
-// extractAgentID gets the agent ID from the MCP request (with identity
-// verification when configured).
-func (s *Server) extractAgentID(ctx context.Context, request mcp.CallToolRequest) string {
-	id, _ := s.resolveAgentIdentity(ctx, request.Header)
-	return id
-}
-
-// extractAgentIDFromResource gets the agent ID from a resource request.
-func (s *Server) extractAgentIDFromResource(ctx context.Context, request mcp.ReadResourceRequest) string {
-	id, _ := s.resolveAgentIdentity(ctx, request.Header)
-	return id
+// warnOnIdentityConflict emits a structured warning when a verified
+// identity is accompanied by a legacy X-Agent-ID / X-Client-ID header
+// asserting a different agent. This is a strong indicator of either a
+// misconfigured caller or an attacker probing whether the legacy
+// fallback path can override the verified identity. We never trust the
+// header in this case, but we surface the conflict so operators can
+// investigate.
+func (s *Server) warnOnIdentityConflict(ident *identity.AgentIdentity, header http.Header) {
+	if ident == nil || header == nil {
+		return
+	}
+	for _, name := range []string{"X-Agent-ID", "X-Client-ID"} {
+		claimed := header.Get(name)
+		if claimed == "" {
+			continue
+		}
+		if claimed == ident.ID {
+			continue
+		}
+		s.logger.Warn("agent identity conflict: header asserts different ID than verified credentials",
+			"verified_id", ident.ID,
+			"verified_method", ident.Method,
+			"verified_issuer", ident.Issuer,
+			"header", name,
+			"header_value", claimed,
+		)
+		if s.metrics != nil && s.metrics.IdentityConflicts != nil {
+			s.metrics.IdentityConflicts.WithLabelValues(metrics.SanitizeAgentLabel(ident.ID), name).Inc()
+		}
+	}
 }
 
 // extractAgentID is the package-level shim used by tests and pre-existing
 // call sites that don't have access to the Server. It mirrors the old
-// behaviour (header-only).
+// behavior (header-only).
 func extractAgentID(request mcp.CallToolRequest) string {
 	if request.Header != nil {
 		if id := request.Header.Get("X-Agent-ID"); id != "" {

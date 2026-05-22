@@ -266,8 +266,8 @@ func TestExpandEnvVarsCommentSkip(t *testing.T) {
 }
 
 func TestExpandEnvVarsSetVarOverridesDefault(t *testing.T) {
-	os.Setenv("TEST_EXPAND_OVERRIDE", "real_value")
-	defer os.Unsetenv("TEST_EXPAND_OVERRIDE")
+	_ = os.Setenv("TEST_EXPAND_OVERRIDE", "real_value")
+	defer func() { _ = os.Unsetenv("TEST_EXPAND_OVERRIDE") }()
 
 	input := "val: ${TEST_EXPAND_OVERRIDE:-fallback}"
 	got, err := expandEnvVars([]byte(input))
@@ -347,8 +347,8 @@ clusters: []
 }
 
 func TestLoadWithEnvVars(t *testing.T) {
-	os.Setenv("TEST_BOOTSTRAP", "kafka:9092")
-	defer os.Unsetenv("TEST_BOOTSTRAP")
+	_ = os.Setenv("TEST_BOOTSTRAP", "kafka:9092")
+	defer func() { _ = os.Unsetenv("TEST_BOOTSTRAP") }()
 
 	content := `
 clusters:

@@ -24,19 +24,19 @@ type Config struct {
 
 // ServerConfig holds network transport and TLS settings for the MCP server.
 type ServerConfig struct {
-	Transport      string   `yaml:"transport" json:"transport"`                       // Protocol: "stdio", "sse", or "streamable-http"
-	Host           string   `yaml:"host" json:"host"`                                 // Bind address (default "0.0.0.0")
-	Port           int      `yaml:"port" json:"port"`                                 // Listen port (default 3100)
-	LogLevel       string   `yaml:"log_level" json:"log_level"`                       // Log verbosity: "debug", "info", "warn", "error"
-	MaxMessageSize int      `yaml:"max_message_size" json:"max_message_size"`         // Max MCP message size in bytes (default 1 MB)
-	TLSCert        string            `yaml:"tls_cert,omitempty" json:"tls_cert,omitempty"`         // Path to TLS certificate file
-	TLSKey         string            `yaml:"tls_key,omitempty" json:"tls_key,omitempty"`           // Path to TLS private key file
-	ToolPacks      []string          `yaml:"tool_packs,omitempty" json:"tool_packs,omitempty"`     // Adaptive tool surface: any of essential, ops, analytics, governance, streaming, experimental, all. Default: ["essential"].
-	Persistence    PersistenceConfig `yaml:"persistence,omitempty" json:"persistence,omitempty"`   // Where engine state (agent memory, materialised views, ...) is stored.
+	Transport      string            `yaml:"transport" json:"transport"`                         // Protocol: "stdio", "sse", or "streamable-http"
+	Host           string            `yaml:"host" json:"host"`                                   // Bind address (default "0.0.0.0")
+	Port           int               `yaml:"port" json:"port"`                                   // Listen port (default 3100)
+	LogLevel       string            `yaml:"log_level" json:"log_level"`                         // Log verbosity: "debug", "info", "warn", "error"
+	MaxMessageSize int               `yaml:"max_message_size" json:"max_message_size"`           // Max MCP message size in bytes (default 1 MB)
+	TLSCert        string            `yaml:"tls_cert,omitempty" json:"tls_cert,omitempty"`       // Path to TLS certificate file
+	TLSKey         string            `yaml:"tls_key,omitempty" json:"tls_key,omitempty"`         // Path to TLS private key file
+	ToolPacks      []string          `yaml:"tool_packs,omitempty" json:"tool_packs,omitempty"`   // Adaptive tool surface: any of essential, ops, analytics, governance, streaming, experimental, all. Default: ["essential"].
+	Persistence    PersistenceConfig `yaml:"persistence,omitempty" json:"persistence,omitempty"` // Where engine state (agent memory, materialized views, ...) is stored.
 }
 
 // PersistenceConfig selects the storage backend used by KafkaMCP's
-// persistent engines (agent memory, materialised views, rate-limit
+// persistent engines (agent memory, materialized views, rate-limit
 // budgets). When omitted, an in-memory backend is used and all state is
 // lost on restart.
 type PersistenceConfig struct {
@@ -108,7 +108,7 @@ type PolicyConfig struct {
 
 // IdentityConfig configures how KafkaMCP verifies the claimed agent
 // identity carried in each request. The default ("none") preserves the
-// historical X-Agent-ID-only behaviour; "static" and "oidc" let
+// historical X-Agent-ID-only behavior; "static" and "oidc" let
 // deployments cryptographically verify the caller before the policy
 // engine matches.
 type IdentityConfig struct {
@@ -120,6 +120,19 @@ type IdentityConfig struct {
 	//     OIDC issuer's JWKS
 	Provider string `yaml:"provider,omitempty" json:"provider,omitempty"`
 
+	// AllowHeaderFallback controls whether requests that fail
+	// provider verification (typically because they carry no
+	// credentials) may fall back to the legacy X-Agent-ID /
+	// X-Client-ID headers. The pointer-bool encoding lets us
+	// distinguish "explicitly false" from "unset"; when unset, the
+	// default is false for any cryptographic provider
+	// (static/oidc/mtls) and true for "none" so existing
+	// deployments are unaffected. Set explicitly when you want to
+	// override the default — for example, a controlled migration
+	// from header-asserted to OIDC where both must temporarily
+	// work.
+	AllowHeaderFallback *bool `yaml:"allow_header_fallback,omitempty" json:"allow_header_fallback,omitempty"`
+
 	// Static is consulted when Provider == "static".
 	Static StaticIdentityConfig `yaml:"static,omitempty" json:"static,omitempty"`
 
@@ -130,6 +143,23 @@ type IdentityConfig struct {
 	MTLS MTLSIdentityConfig `yaml:"mtls,omitempty" json:"mtls,omitempty"`
 }
 
+// HeaderFallbackEnabled reports whether legacy X-Agent-ID header
+// fallback is permitted after provider verification fails. The default
+// is true only when Provider is "" or "none"; for cryptographic
+// providers (static/oidc/mtls) the default is false so an attacker
+// cannot bypass the provider by simply omitting the bearer token.
+func (c IdentityConfig) HeaderFallbackEnabled() bool {
+	if c.AllowHeaderFallback != nil {
+		return *c.AllowHeaderFallback
+	}
+	switch c.Provider {
+	case "", "none":
+		return true
+	default:
+		return false
+	}
+}
+
 // StaticIdentityConfig describes the inline shared-secret token table.
 type StaticIdentityConfig struct {
 	Tokens []StaticTokenConfig `yaml:"tokens,omitempty" json:"tokens,omitempty"`
@@ -138,20 +168,20 @@ type StaticIdentityConfig struct {
 // StaticTokenConfig binds a shared-secret bearer token to an agent
 // identifier and optional groups.
 type StaticTokenConfig struct {
-	Token   string   `yaml:"token" json:"-"`                                 // Secret bearer token (env-expanded)
-	AgentID string   `yaml:"agent_id" json:"agent_id"`                       // Policy-engine identifier
-	Groups  []string `yaml:"groups,omitempty" json:"groups,omitempty"`       // Optional group labels surfaced on audit logs
+	Token   string   `yaml:"token" json:"-"`                           // Secret bearer token (env-expanded)
+	AgentID string   `yaml:"agent_id" json:"agent_id"`                 // Policy-engine identifier
+	Groups  []string `yaml:"groups,omitempty" json:"groups,omitempty"` // Optional group labels surfaced on audit logs
 }
 
 // OIDCIdentityConfig configures the OIDC bearer-token verifier.
 type OIDCIdentityConfig struct {
-	IssuerURL      string `yaml:"issuer_url" json:"issuer_url"`                                 // OIDC issuer (discovery base)
-	ClientID       string `yaml:"client_id" json:"client_id"`                                   // Expected audience
-	AgentIDClaim   string `yaml:"agent_id_claim,omitempty" json:"agent_id_claim,omitempty"`     // Defaults to "sub"
-	GroupsClaim    string `yaml:"groups_claim,omitempty" json:"groups_claim,omitempty"`         // Defaults to "groups"
-	EmailClaim     string `yaml:"email_claim,omitempty" json:"email_claim,omitempty"`           // Defaults to "email"
-	SkipExpiry     bool   `yaml:"skip_expiry_check,omitempty" json:"skip_expiry_check,omitempty"` // Tests only
-	SkipAudience   bool   `yaml:"skip_audience_check,omitempty" json:"skip_audience_check,omitempty"` // Tests only
+	IssuerURL    string `yaml:"issuer_url" json:"issuer_url"`                                       // OIDC issuer (discovery base)
+	ClientID     string `yaml:"client_id" json:"client_id"`                                         // Expected audience
+	AgentIDClaim string `yaml:"agent_id_claim,omitempty" json:"agent_id_claim,omitempty"`           // Defaults to "sub"
+	GroupsClaim  string `yaml:"groups_claim,omitempty" json:"groups_claim,omitempty"`               // Defaults to "groups"
+	EmailClaim   string `yaml:"email_claim,omitempty" json:"email_claim,omitempty"`                 // Defaults to "email"
+	SkipExpiry   bool   `yaml:"skip_expiry_check,omitempty" json:"skip_expiry_check,omitempty"`     // Tests only
+	SkipAudience bool   `yaml:"skip_audience_check,omitempty" json:"skip_audience_check,omitempty"` // Tests only
 }
 
 // MTLSIdentityConfig configures the mTLS identity provider. The TLS
@@ -184,7 +214,7 @@ type MTLSIdentityConfig struct {
 
 // ExperimentalConfig gates subsystems whose current implementation is a stub
 // or a metadata-only simulation. They remain disabled by default so the
-// server never silently advertises behaviour it cannot deliver.
+// server never silently advertises behavior it cannot deliver.
 type ExperimentalConfig struct {
 	// Chaos enables the chaos-injection MCP tool. The current build does not
 	// actually disrupt Kafka traffic; experiments are recorded in-process
@@ -392,6 +422,15 @@ func (c *Config) validate() error {
 		return fmt.Errorf("invalid transport %q; must be one of: stdio, sse, streamable-http", transport)
 	}
 
+	if len(c.Server.ToolPacks) > 0 {
+		for i, p := range c.Server.ToolPacks {
+			norm := strings.ToLower(strings.TrimSpace(p))
+			if !ValidToolPacks[norm] {
+				return fmt.Errorf("server.tool_packs[%d] %q is invalid; must be one of: essential, ops, analytics, governance, streaming, experimental, all", i, p)
+			}
+		}
+	}
+
 	if backend := strings.ToLower(strings.TrimSpace(c.Server.Persistence.Backend)); backend != "" {
 		validBackends := map[string]bool{"inmem": true, "memory": true, "in-memory": true, "sqlite": true, "sqlite3": true}
 		if !validBackends[backend] {
@@ -458,7 +497,7 @@ func (c *Config) applyDefaults() {
 		c.Server.ToolPacks = []string{"essential"}
 	}
 	if c.Server.Persistence.Backend == "" {
-		// Preserve the historical behaviour: in-memory state, lost on
+		// Preserve the historical behavior: in-memory state, lost on
 		// restart. Operators opt into durability by setting
 		// server.persistence.backend: sqlite.
 		c.Server.Persistence.Backend = "inmem"

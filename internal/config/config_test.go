@@ -6,10 +6,10 @@ import (
 )
 
 func TestExpandEnvVars(t *testing.T) {
-	os.Setenv("TEST_KAFKA_USER", "admin")
-	os.Setenv("TEST_KAFKA_PASS", "secret123")
-	defer os.Unsetenv("TEST_KAFKA_USER")
-	defer os.Unsetenv("TEST_KAFKA_PASS")
+	_ = os.Setenv("TEST_KAFKA_USER", "admin")
+	_ = os.Setenv("TEST_KAFKA_PASS", "secret123")
+	defer func() { _ = os.Unsetenv("TEST_KAFKA_USER") }()
+	defer func() { _ = os.Unsetenv("TEST_KAFKA_PASS") }()
 
 	tests := []struct {
 		name    string
