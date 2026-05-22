@@ -14,12 +14,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/kafkamcp/kafkamcp/internal/config"
-	"github.com/kafkamcp/kafkamcp/internal/kafka"
-	mcpserver "github.com/kafkamcp/kafkamcp/internal/server"
 	"github.com/mark3labs/mcp-go/server"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
+
+	"github.com/kafkamcp/kafkamcp/internal/config"
+	"github.com/kafkamcp/kafkamcp/internal/kafka"
+	mcpserver "github.com/kafkamcp/kafkamcp/internal/server"
 )
 
 var (
@@ -302,7 +303,7 @@ func runServer(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("creating server: %w", err)
 	}
-	defer srv.Close()
+	defer func() { _ = srv.Close() }()
 
 	logger.Info("tool packs configured",
 		"packs", cfg.Server.ToolPacks,
@@ -377,6 +378,18 @@ func runServer(cmd *cobra.Command, args []string) error {
 			w.WriteHeader(http.StatusOK)
 			_, _ = w.Write([]byte("ok"))
 		})
+		metricsMux.HandleFunc("/ready", func(w http.ResponseWriter, r *http.Request) {
+			checkCtx, checkCancel := context.WithTimeout(r.Context(), 5*time.Second)
+			defer checkCancel()
+			if err := srv.ReadinessCheck(checkCtx); err != nil {
+				logger.Warn("readiness check failed", "error", err)
+				w.WriteHeader(http.StatusServiceUnavailable)
+				_, _ = w.Write([]byte("not ready: " + err.Error()))
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte("ready"))
+		})
 		metricsLimiter := newSimpleRateLimiter(10, 20) // 10 req/s, burst of 20
 		metricsServer := &http.Server{
 			Addr:              metricsAddr,
@@ -396,7 +409,7 @@ func runServer(cmd *cobra.Command, args []string) error {
 			<-ctx.Done()
 			shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer shutdownCancel()
-			metricsServer.Shutdown(shutdownCtx)
+			_ = metricsServer.Shutdown(shutdownCtx)
 		}()
 	}
 
@@ -452,7 +465,7 @@ func runServer(cmd *cobra.Command, args []string) error {
 				logger.Info("shutting down HTTPS server")
 				shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
 				defer shutdownCancel()
-				httpServer.Shutdown(shutdownCtx)
+				_ = httpServer.Shutdown(shutdownCtx)
 			}()
 			logger.Info("TLS enabled", "cert", cfg.Server.TLSCert, "key", cfg.Server.TLSKey)
 			if err := httpServer.ListenAndServeTLS(cfg.Server.TLSCert, cfg.Server.TLSKey); err != nil && err != http.ErrServerClosed {
@@ -464,7 +477,7 @@ func runServer(cmd *cobra.Command, args []string) error {
 				logger.Info("shutting down HTTP server")
 				shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
 				defer shutdownCancel()
-				httpServer.Shutdown(shutdownCtx)
+				_ = httpServer.Shutdown(shutdownCtx)
 			}()
 			if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 				return fmt.Errorf("HTTP server error: %w", err)
@@ -525,6 +538,7 @@ func newSimpleRateLimiter(ratePerSec, burst float64) *simpleRateLimiter {
 	}
 }
 
+// Allow is auto-documented.
 func (rl *simpleRateLimiter) Allow() bool {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()

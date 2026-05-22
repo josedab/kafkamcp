@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"sync"
 	"time"
@@ -142,6 +143,30 @@ func (s *Server) HealthCheck(ctx context.Context) error {
 	return s.kafkaManager.Ping(ctx)
 }
 
+// ReadinessCheck reports whether the server is ready to accept traffic.
+// Readiness is stricter than HealthCheck: it requires (a) a successful Kafka
+// metadata fetch on every configured cluster, (b) the persistence backend to
+// respond to a round-trip if one is configured, and (c) the identity provider
+// to be initialized. Returns nil when ready, or a wrapped error describing
+// every subsystem that is still warming up. A failed readiness check returns
+// HTTP 503 so Kubernetes / load balancers will withhold traffic.
+func (s *Server) ReadinessCheck(ctx context.Context) error {
+	var errs []error
+
+	if err := s.kafkaManager.Ping(ctx); err != nil {
+		errs = append(errs, fmt.Errorf("kafka: %w", err))
+	}
+
+	if s.engineBackend != nil {
+		if _, err := s.engineBackend.Get(ctx, "_ready", "_probe"); err != nil &&
+			!errors.Is(err, enginebackend.ErrNotFound) {
+			errs = append(errs, fmt.Errorf("persistence: %w", err))
+		}
+	}
+
+	return errors.Join(errs...)
+}
+
 // SetOTelProvider sets the OpenTelemetry provider for trace instrumentation.
 func (s *Server) SetOTelProvider(p *telemetry.Provider) {
 	s.otelProvider = p
@@ -175,6 +200,13 @@ func (s *Server) Close() error {
 	}
 	if err := s.auditLogger.Close(); err != nil {
 		errs = append(errs, fmt.Errorf("audit logger: %w", err))
+	}
+	if s.identityProvider != nil {
+		if closer, ok := s.identityProvider.(io.Closer); ok {
+			if err := closer.Close(); err != nil {
+				errs = append(errs, fmt.Errorf("identity provider %s: %w", s.identityProvider.Name(), err))
+			}
+		}
 	}
 	if s.engineBackend != nil {
 		if err := s.engineBackend.Close(); err != nil {
@@ -246,7 +278,7 @@ func matchTopicFilter(pattern, name string) bool {
 }
 
 // acquireExpensiveOp blocks until a slot is available for an expensive operation,
-// or returns an error if the context is cancelled while waiting.
+// or returns an error if the context is canceled while waiting.
 func (s *Server) acquireExpensiveOp(ctx context.Context) error {
 	select {
 	case s.expensiveOps <- struct{}{}:
