@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/kafkamcp/kafkamcp/internal/codec/avro"
+	"github.com/kafkamcp/kafkamcp/internal/codec/protobuf"
 	"github.com/kafkamcp/kafkamcp/internal/codec/wire"
 )
 
@@ -85,6 +86,9 @@ type codecEntry struct {
 //
 // Pass a non-nil [avro.Codec] (via [NewEngineWithAvro] or [WithAvroCodec]) to
 // enable real Avro encoding/decoding via github.com/hamba/avro/v2.
+// Pass a non-nil [protobuf.Codec] (via [NewEngineWithProtobuf] or
+// [SetProtobufCodec]) to enable real Protobuf encoding/decoding via
+// github.com/bufbuild/protocompile + google.golang.org/protobuf.
 type Engine struct {
 	mu                sync.RWMutex
 	provider          SchemaProvider
@@ -92,6 +96,7 @@ type Engine struct {
 	maxCache          int
 	allowJSONFallback bool
 	avroCodec         *avro.Codec
+	protobufCodec     *protobuf.Codec
 }
 
 // NewEngine creates a new codec engine with strict semantics: Avro/Protobuf
@@ -123,6 +128,34 @@ func NewEngineWithAvro(provider SchemaProvider, avroCodec *avro.Codec) *Engine {
 	e := NewEngine(provider)
 	e.avroCodec = avroCodec
 	return e
+}
+
+// NewEngineWithProtobuf creates a codec engine that performs real
+// Protobuf encoding/decoding via the supplied [protobuf.Codec]. JSON
+// fallback is disabled by default. Pass a nil protobufCodec to fall
+// back to [NewEngine] semantics (Protobuf operations return
+// [ErrNoProtobufCodec]).
+func NewEngineWithProtobuf(provider SchemaProvider, pb *protobuf.Codec) *Engine {
+	e := NewEngine(provider)
+	e.protobufCodec = pb
+	return e
+}
+
+// SetProtobufCodec swaps the engine's Protobuf codec at runtime.
+// Primarily for tests and for the platform initializer that needs to
+// register the codec after engine construction.
+func (e *Engine) SetProtobufCodec(pb *protobuf.Codec) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.protobufCodec = pb
+}
+
+// ProtobufCodec returns the engine's registered Protobuf codec (may
+// be nil).
+func (e *Engine) ProtobufCodec() *protobuf.Codec {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+	return e.protobufCodec
 }
 
 // SetAllowJSONFallback toggles the JSON-in-wire-format fallback at runtime.
@@ -331,15 +364,33 @@ func (e *Engine) decodeAvro(data []byte, schemaID int) (any, error) {
 	return result, nil
 }
 
-// encodeProtobuf serializes a value as Protobuf binary.
+// encodeProtobuf serializes a value as Confluent-wire Protobuf binary.
 //
-// See encodeAvro for the JSON-fallback caveat.
+// Prefers the registered [protobuf.Codec] when one is set (real
+// Protobuf binary output that's interoperable with
+// kafka-protobuf-serializer consumers). Falls back to
+// JSON-in-wire-format when AllowJSONFallback is set, or returns
+// ErrNoProtobufCodec when neither is available.
 func (e *Engine) encodeProtobuf(value any, schemaID int) ([]byte, error) {
+	schemaStr, err := e.getSchema(schemaID)
+	if err != nil {
+		return nil, fmt.Errorf("codec: protobuf encode: %w", err)
+	}
+
+	codec := e.ProtobufCodec()
+	if codec != nil && schemaStr != "" && schemaStr != "{}" {
+		// Default to the top-level message (index 0); deployments that
+		// need multi-message schemas can call protobuf.Codec.Encode
+		// directly with an explicit index.
+		out, err := codec.Encode(schemaStr, nil, value)
+		if err != nil {
+			return nil, fmt.Errorf("codec: protobuf encode: %w", err)
+		}
+		return out, nil
+	}
+
 	if !e.allowJSONFallback {
 		return nil, ErrNoProtobufCodec
-	}
-	if _, err := e.getSchema(schemaID); err != nil {
-		return nil, fmt.Errorf("codec: protobuf encode: %w", err)
 	}
 	jsonBytes, err := json.Marshal(value)
 	if err != nil {
@@ -349,15 +400,28 @@ func (e *Engine) encodeProtobuf(value any, schemaID int) ([]byte, error) {
 	return append(prefix, jsonBytes...), nil
 }
 
-// decodeProtobuf deserializes Protobuf binary data.
+// decodeProtobuf deserializes Confluent-wire Protobuf data.
 //
-// See decodeAvro for the JSON-fallback caveat.
+// Prefers the registered [protobuf.Codec] when one is set. Falls back
+// to JSON-in-wire-format when AllowJSONFallback is set, or returns
+// ErrNoProtobufCodec when neither is available.
 func (e *Engine) decodeProtobuf(data []byte, schemaID int) (any, error) {
+	schemaStr, err := e.getSchema(schemaID)
+	if err != nil {
+		return nil, fmt.Errorf("codec: protobuf decode: %w", err)
+	}
+
+	codec := e.ProtobufCodec()
+	if codec != nil && schemaStr != "" && schemaStr != "{}" {
+		_, val, err := codec.Decode(schemaStr, data)
+		if err != nil {
+			return nil, fmt.Errorf("codec: protobuf decode: %w", err)
+		}
+		return val, nil
+	}
+
 	if !e.allowJSONFallback {
 		return nil, ErrNoProtobufCodec
-	}
-	if _, err := e.getSchema(schemaID); err != nil {
-		return nil, fmt.Errorf("codec: protobuf decode: %w", err)
 	}
 
 	payload := data

@@ -17,6 +17,7 @@ import (
 	"github.com/kafkamcp/kafkamcp/internal/clouddeploy"
 	"github.com/kafkamcp/kafkamcp/internal/codec"
 	codecavro "github.com/kafkamcp/kafkamcp/internal/codec/avro"
+	codecprotobuf "github.com/kafkamcp/kafkamcp/internal/codec/protobuf"
 	"github.com/kafkamcp/kafkamcp/internal/collaboration"
 	"github.com/kafkamcp/kafkamcp/internal/configvcs"
 	"github.com/kafkamcp/kafkamcp/internal/controlplane"
@@ -175,6 +176,11 @@ func newPlatform(logger *slog.Logger, be enginebackend.Backend) Platform {
 		logger.Error("agentmemory: failed to restore from persistence, continuing with empty state", "error", err)
 		agentMemoryEngine = agentmemory.NewEngine(logger)
 	}
+	// codec engine with first-class Avro AND Protobuf codecs so all
+	// codec_* tools produce / consume Confluent-Schema-Registry-
+	// interoperable wire bytes by default.
+	codecEng := codec.NewEngineWithAvro(nil, codecavro.New())
+	codecEng.SetProtobufCodec(codecprotobuf.New())
 	p := Platform{
 		pluginRegistry:       plugin.NewRegistry(logger),
 		agentRegistry:        kafka.NewAgentRegistry(),
@@ -215,7 +221,7 @@ func newPlatform(logger *slog.Logger, be enginebackend.Backend) Platform {
 		cloudDeployGenerator: clouddeploy.NewGenerator(logger),
 		vectorSyncEngine:     vectorsync.NewEngine(logger),
 		finOpsDashboard:      finops.NewDashboard(logger),
-		codecEngine:          codec.NewEngineWithAvro(nil, codecavro.New()),
+		codecEngine:          codecEng,
 		eventSourcingEngine:  eventsourcing.NewEngine(logger),
 		topicPortalEngine:    topicportal.NewEngine(topicportal.DefaultApprovalChainConfig(), logger),
 		gitopsReconciler:     gitops.NewReconciler(gitops.DefaultReconcilerConfig(), gitops.NewManager(logger), logger),

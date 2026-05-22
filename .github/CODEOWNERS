@@ -50,6 +50,7 @@
 /internal/codec/ @kafkamcp/kafka
 /internal/codec/wire/ @kafkamcp/kafka
 /internal/codec/avro/ @kafkamcp/kafka
+/internal/codec/protobuf/ @kafkamcp/kafka
 
 # Feature tier — Schema & data quality
 /internal/evolution/ @kafkamcp/kafka
