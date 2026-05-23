@@ -247,7 +247,7 @@ func TestTraceHop_OmitEmpty(t *testing.T) {
 	hop := TraceHop{Topic: "t", Partition: 0, Offset: 0, Timestamp: "now"}
 	data, _ := json.Marshal(hop)
 	var raw map[string]json.RawMessage
-	json.Unmarshal(data, &raw)
+	_ = json.Unmarshal(data, &raw)
 	if _, ok := raw["key"]; ok {
 		t.Error("key should be omitted when nil")
 	}
@@ -261,7 +261,7 @@ func TestFlowEdge_JSON(t *testing.T) {
 	edge := FlowEdge{FromTopic: "a", ToTopic: "b", LatencyMs: 500}
 	data, _ := json.Marshal(edge)
 	var out FlowEdge
-	json.Unmarshal(data, &out)
+	_ = json.Unmarshal(data, &out)
 	if out != edge {
 		t.Errorf("round-trip mismatch: got %+v, want %+v", out, edge)
 	}
@@ -297,7 +297,7 @@ func TestConfigDiff_OnlyIn(t *testing.T) {
 	diff := ConfigDiff{Topic: "orphan", OnlyIn: "target"}
 	data, _ := json.Marshal(diff)
 	var out ConfigDiff
-	json.Unmarshal(data, &out)
+	_ = json.Unmarshal(data, &out)
 	if out.OnlyIn != "target" {
 		t.Errorf("expected OnlyIn=target, got %s", out.OnlyIn)
 	}
@@ -308,7 +308,7 @@ func TestConfigValueDiff_JSON(t *testing.T) {
 	d := ConfigValueDiff{Key: "retention.ms", SourceValue: "100", TargetValue: "200"}
 	data, _ := json.Marshal(d)
 	var out ConfigValueDiff
-	json.Unmarshal(data, &out)
+	_ = json.Unmarshal(data, &out)
 	if out != d {
 		t.Errorf("round-trip mismatch: got %+v, want %+v", out, d)
 	}

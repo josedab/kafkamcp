@@ -97,7 +97,7 @@ func TestPollStream_CallRecording(t *testing.T) {
 		},
 	}
 
-	mock.PollStream("stream-123", 3000)
+	_, _ = mock.PollStream("stream-123", 3000)
 	if mock.CallCount("PollStream") != 1 {
 		t.Error("expected PollStream called once")
 	}

@@ -31,10 +31,10 @@ func sanitizeAgentID(agentID string) string {
 
 // PlaygroundTopicResult is the result of creating a playground topic.
 type PlaygroundTopicResult struct {
-	TopicName  string `json:"topic_name"`
-	Partitions int32  `json:"partitions"`
-	Status     string `json:"status"`
-	RetentionMs int64 `json:"retention_ms"`
+	TopicName   string `json:"topic_name"`
+	Partitions  int32  `json:"partitions"`
+	Status      string `json:"status"`
+	RetentionMs int64  `json:"retention_ms"`
 }
 
 // PlaygroundCreate creates a temporary playground topic.
@@ -50,7 +50,7 @@ func (m *Manager) PlaygroundCreate(ctx context.Context, cluster, agentID, name s
 		Partitions:        partitions,
 		ReplicationFactor: 1,
 		Configs: map[string]string{
-			"retention.ms": retentionMs,
+			"retention.ms":   retentionMs,
 			"cleanup.policy": "delete",
 		},
 	})
@@ -144,19 +144,19 @@ func generateSampleData(pattern string, count int) []ProduceMessage {
 
 func generateEcommerceMessage(idx int) ProduceMessage {
 	products := []string{"laptop", "phone", "headphones", "keyboard", "monitor", "tablet", "camera"}
-	statuses := []string{"created", "paid", "shipped", "delivered", "cancelled"}
+	statuses := []string{"created", "paid", "shipped", "delivered", "canceled"}
 	product := products[rand.IntN(len(products))]
 	status := statuses[rand.IntN(len(statuses))]
 	orderID := fmt.Sprintf("ORD-%06d", idx+1)
 
 	value := map[string]any{
-		"order_id":   orderID,
-		"product":    product,
-		"quantity":   rand.IntN(5) + 1,
-		"price":      float64(rand.IntN(100000)) / 100.0,
-		"status":     status,
+		"order_id":    orderID,
+		"product":     product,
+		"quantity":    rand.IntN(5) + 1,
+		"price":       float64(rand.IntN(100000)) / 100.0,
+		"status":      status,
 		"customer_id": fmt.Sprintf("CUST-%04d", rand.IntN(1000)),
-		"timestamp":  time.Now().UTC().Format(time.RFC3339),
+		"timestamp":   time.Now().UTC().Format(time.RFC3339),
 	}
 
 	valueBytes, _ := json.Marshal(value) //nolint:errcheck // marshaling simple map literals cannot fail
@@ -188,13 +188,13 @@ func generateUserActivityMessage(idx int) ProduceMessage {
 	action := actions[rand.IntN(len(actions))]
 
 	value := map[string]any{
-		"user_id":    userID,
-		"action":     action,
-		"page":       pages[rand.IntN(len(pages))],
-		"session_id": fmt.Sprintf("sess-%08d", rand.IntN(100000)),
+		"user_id":     userID,
+		"action":      action,
+		"page":        pages[rand.IntN(len(pages))],
+		"session_id":  fmt.Sprintf("sess-%08d", rand.IntN(100000)),
 		"duration_ms": rand.IntN(30000),
-		"timestamp":  time.Now().UTC().Format(time.RFC3339),
-		"user_agent": "Mozilla/5.0 (Sample Data)",
+		"timestamp":   time.Now().UTC().Format(time.RFC3339),
+		"user_agent":  "Mozilla/5.0 (Sample Data)",
 	}
 	valueBytes, _ := json.Marshal(value) //nolint:errcheck // marshaling simple map literals cannot fail
 	return ProduceMessage{Key: userID, Value: json.RawMessage(valueBytes)}

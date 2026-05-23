@@ -400,7 +400,7 @@ func TestStats_ThreadSafety(t *testing.T) {
 			defer wg.Done()
 			apiKey := int16(idx % 4) // Produce, Fetch, ListOffsets, Metadata
 			hdr := &RequestHeader{APIKey: apiKey, ClientID: "client"}
-			tr.Translate(hdr, nil)
+			_, _ = tr.Translate(hdr, nil)
 		}(i)
 	}
 
@@ -426,11 +426,11 @@ func TestStats_ByAPIKeyAndClient(t *testing.T) {
 	tr := newTestTranslator()
 
 	hdr := &RequestHeader{APIKey: APIKeyProduce, ClientID: "client-A"}
-	tr.Translate(hdr, nil)
-	tr.Translate(hdr, nil)
+	_, _ = tr.Translate(hdr, nil)
+	_, _ = tr.Translate(hdr, nil)
 
 	hdr2 := &RequestHeader{APIKey: APIKeyFetch, ClientID: "client-B"}
-	tr.Translate(hdr2, nil)
+	_, _ = tr.Translate(hdr2, nil)
 
 	stats := tr.Stats()
 	if stats.ByAPIKey[APIKeyProduce] != 2 {

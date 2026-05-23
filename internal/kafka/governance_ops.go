@@ -120,7 +120,7 @@ type ACLEntry struct {
 type ACLResult struct {
 	ACLs             []ACLEntry        `json:"acls"`
 	TotalACLs        int               `json:"total_acls"`
-	SecurityAnalysis *SecurityAnalysis  `json:"security_analysis,omitempty"`
+	SecurityAnalysis *SecurityAnalysis `json:"security_analysis,omitempty"`
 }
 
 // SecurityAnalysis provides security insights about ACLs.

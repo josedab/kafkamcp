@@ -8,9 +8,10 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/kafkamcp/kafkamcp/internal/config"
 	"github.com/twmb/franz-go/pkg/kadm"
 	"github.com/twmb/franz-go/pkg/kgo"
+
+	"github.com/kafkamcp/kafkamcp/internal/config"
 )
 
 // --- Session capacity limits ---
@@ -239,11 +240,11 @@ func TestControlStream_ResumeWithCleanup(t *testing.T) {
 func TestControlStream_StopWithCleanup(t *testing.T) {
 	t.Parallel()
 	m := testManager()
-	cancelled := false
+	canceled := false
 	session := &StreamSession{
 		ID:     "test-session",
 		Status: "running",
-		cancel: func() { cancelled = true },
+		cancel: func() { canceled = true },
 	}
 	m.streamMgr.sessions["test-session"] = session
 
@@ -254,7 +255,7 @@ func TestControlStream_StopWithCleanup(t *testing.T) {
 	if result.Status != "stopped" {
 		t.Errorf("expected stopped, got %s", result.Status)
 	}
-	if !cancelled {
+	if !canceled {
 		t.Error("expected cancel to be called")
 	}
 	// Session should be removed

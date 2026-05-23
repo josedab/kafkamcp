@@ -81,7 +81,7 @@ func TestMaskValueNoRules(t *testing.T) {
 func TestMaskValueWithMapValue(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(config.MaskingConfig{Enabled: true}, slog.Default())
-	e.AddRule("email-mask", "email", "email", "", "***", nil)
+	_ = e.AddRule("email-mask", "email", "email", "", "***", nil)
 
 	input := map[string]any{
 		"email": "user@example.com",
@@ -100,7 +100,7 @@ func TestMaskValueWithMapValue(t *testing.T) {
 func TestMaskValueWithNonMapNonString(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(config.MaskingConfig{Enabled: true}, slog.Default())
-	e.AddRule("email-mask", "email", "", "", "***", nil)
+	_ = e.AddRule("email-mask", "email", "", "", "***", nil)
 
 	// A struct value that can be JSON marshaled
 	type testStruct struct {

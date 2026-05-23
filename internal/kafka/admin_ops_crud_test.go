@@ -478,9 +478,9 @@ func TestResetOffsets_MultiplePartitions(t *testing.T) {
 func TestValidateTopicConfigs_MixedSafeAndDangerous(t *testing.T) {
 	t.Parallel()
 	configs := map[string]string{
-		"retention.ms":                   "86400000",
-		"cleanup.policy":                 "compact",
-		"message.downconversion.enable":  "true",
+		"retention.ms":                  "86400000",
+		"cleanup.policy":                "compact",
+		"message.downconversion.enable": "true",
 	}
 	err := validateTopicConfigs(configs)
 	if err == nil {

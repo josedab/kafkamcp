@@ -161,7 +161,7 @@ func TestNewConnectClient(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if c == nil {
-		t.Error("expected non-nil client")
+		t.Fatal("expected non-nil client")
 	}
 	if c.baseURL != "http://localhost:8083" {
 		t.Errorf("unexpected baseURL: %s", c.baseURL)

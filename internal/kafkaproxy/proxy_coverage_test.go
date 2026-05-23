@@ -44,7 +44,7 @@ func TestProxy_StartStop(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Dial: %v", err)
 	}
-	conn.Close()
+	_ = conn.Close()
 
 	if err := p.Stop(); err != nil {
 		t.Fatalf("Stop: %v", err)
@@ -76,7 +76,7 @@ func TestProxy_Stats_AfterConnections(t *testing.T) {
 	if err := p.Start(context.Background()); err != nil {
 		t.Fatalf("Start: %v", err)
 	}
-	defer p.Stop()
+	defer func() { _ = p.Stop() }()
 
 	addr := p.ListenAddr()
 
@@ -86,7 +86,7 @@ func TestProxy_Stats_AfterConnections(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Dial %d: %v", i, err)
 		}
-		conn.Close()
+		_ = conn.Close()
 	}
 
 	// Wait a bit for connections to be handled
@@ -126,11 +126,11 @@ func buildKafkaRequest(apiKey int16, apiVersion int16, correlationID int32, clie
 	var buf bytes.Buffer
 	headerSize := 2 + 2 + 4 + 2 + len(clientID)
 	totalSize := headerSize + len(body)
-	binary.Write(&buf, binary.BigEndian, int32(totalSize))
-	binary.Write(&buf, binary.BigEndian, apiKey)
-	binary.Write(&buf, binary.BigEndian, apiVersion)
-	binary.Write(&buf, binary.BigEndian, correlationID)
-	binary.Write(&buf, binary.BigEndian, int16(len(clientID)))
+	_ = binary.Write(&buf, binary.BigEndian, int32(totalSize))
+	_ = binary.Write(&buf, binary.BigEndian, apiKey)
+	_ = binary.Write(&buf, binary.BigEndian, apiVersion)
+	_ = binary.Write(&buf, binary.BigEndian, correlationID)
+	_ = binary.Write(&buf, binary.BigEndian, int16(len(clientID)))
 	buf.WriteString(clientID)
 	buf.Write(body)
 	return buf.Bytes()
@@ -146,23 +146,23 @@ func TestProxy_HandleConnection_APIVersions(t *testing.T) {
 	if err := p.Start(context.Background()); err != nil {
 		t.Fatalf("Start: %v", err)
 	}
-	defer p.Stop()
+	defer func() { _ = p.Stop() }()
 
 	conn, err := net.DialTimeout("tcp", p.ListenAddr(), 2*time.Second)
 	if err != nil {
 		t.Fatalf("Dial: %v", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	// Send APIVersions request
 	req := buildKafkaRequest(APIKeyAPIVersions, 0, 42, "test-client", nil)
-	conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
+	_ = conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
 	if _, err := conn.Write(req); err != nil {
 		t.Fatalf("Write: %v", err)
 	}
 
 	// Read response
-	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+	_ = conn.SetReadDeadline(time.Now().Add(2 * time.Second))
 	var respSize int32
 	if err := binary.Read(conn, binary.BigEndian, &respSize); err != nil {
 		t.Fatalf("Read response size: %v", err)
@@ -199,24 +199,24 @@ func TestProxy_HandleConnection_Produce(t *testing.T) {
 	if err := p.Start(context.Background()); err != nil {
 		t.Fatalf("Start: %v", err)
 	}
-	defer p.Stop()
+	defer func() { _ = p.Stop() }()
 
 	conn, err := net.DialTimeout("tcp", p.ListenAddr(), 2*time.Second)
 	if err != nil {
 		t.Fatalf("Dial: %v", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	// Send Produce request with a topic name
 	topicData := append([]byte{0, 5}, []byte("hello")...)
 	req := buildKafkaRequest(APIKeyProduce, 0, 100, "producer-1", topicData)
-	conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
+	_ = conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
 	if _, err := conn.Write(req); err != nil {
 		t.Fatalf("Write: %v", err)
 	}
 
 	// Read response
-	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+	_ = conn.SetReadDeadline(time.Now().Add(2 * time.Second))
 	var respSize int32
 	if err := binary.Read(conn, binary.BigEndian, &respSize); err != nil {
 		t.Fatalf("Read response size: %v", err)
@@ -243,7 +243,7 @@ func TestProxy_HandleConnection_MalformedData(t *testing.T) {
 	if err := p.Start(context.Background()); err != nil {
 		t.Fatalf("Start: %v", err)
 	}
-	defer p.Stop()
+	defer func() { _ = p.Stop() }()
 
 	conn, err := net.DialTimeout("tcp", p.ListenAddr(), 2*time.Second)
 	if err != nil {
@@ -251,9 +251,9 @@ func TestProxy_HandleConnection_MalformedData(t *testing.T) {
 	}
 
 	// Send garbage data
-	conn.Write([]byte{0xFF, 0xFF, 0xFF, 0xFF})
+	_, _ = conn.Write([]byte{0xFF, 0xFF, 0xFF, 0xFF})
 	time.Sleep(200 * time.Millisecond)
-	conn.Close()
+	_ = conn.Close()
 }
 
 func TestProxy_HandleConnection_ConnectionReset(t *testing.T) {
@@ -266,14 +266,14 @@ func TestProxy_HandleConnection_ConnectionReset(t *testing.T) {
 	if err := p.Start(context.Background()); err != nil {
 		t.Fatalf("Start: %v", err)
 	}
-	defer p.Stop()
+	defer func() { _ = p.Stop() }()
 
 	conn, err := net.DialTimeout("tcp", p.ListenAddr(), 2*time.Second)
 	if err != nil {
 		t.Fatalf("Dial: %v", err)
 	}
 	// Immediately close without sending data
-	conn.Close()
+	_ = conn.Close()
 	time.Sleep(200 * time.Millisecond)
 }
 
@@ -305,7 +305,7 @@ func TestProxy_ConcurrentConnections(t *testing.T) {
 	if err := p.Start(context.Background()); err != nil {
 		t.Fatalf("Start: %v", err)
 	}
-	defer p.Stop()
+	defer func() { _ = p.Stop() }()
 
 	addr := p.ListenAddr()
 	var wg sync.WaitGroup
@@ -317,15 +317,15 @@ func TestProxy_ConcurrentConnections(t *testing.T) {
 			if err != nil {
 				return
 			}
-			defer conn.Close()
+			defer func() { _ = conn.Close() }()
 
 			req := buildKafkaRequest(APIKeyAPIVersions, 0, int32(idx), "client", nil)
-			conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
-			conn.Write(req)
+			_ = conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
+			_, _ = conn.Write(req)
 
-			conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+			_ = conn.SetReadDeadline(time.Now().Add(2 * time.Second))
 			resp := make([]byte, 256)
-			conn.Read(resp)
+			_, _ = conn.Read(resp)
 		}(i)
 	}
 	wg.Wait()
@@ -370,7 +370,7 @@ func TestProxy_Start_InvalidAddr(t *testing.T) {
 
 	err := p.Start(context.Background())
 	if err == nil {
-		p.Stop()
+		_ = p.Stop()
 		t.Fatal("expected error for invalid listen address")
 	}
 }
@@ -387,7 +387,7 @@ func TestProxy_Stop_AfterStart(t *testing.T) {
 		if err := p.Start(context.Background()); err != nil {
 			return
 		}
-		p.Stop()
+		_ = p.Stop()
 	}()
 	select {
 	case <-done:

@@ -138,7 +138,7 @@ func TestConnectClientListConnectorsExpanded(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/connectors" {
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]any{
+			_ = json.NewEncoder(w).Encode(map[string]any{
 				"my-connector": map[string]any{
 					"status": map[string]any{
 						"name": "my-connector",
@@ -174,7 +174,7 @@ func TestConnectClientListConnectorsSimple(t *testing.T) {
 	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode([]string{"connector-a", "connector-b"})
+		_ = json.NewEncoder(w).Encode([]string{"connector-a", "connector-b"})
 	}))
 	defer server.Close()
 
@@ -211,13 +211,13 @@ func TestConnectClientDescribeConnector(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		switch {
 		case r.URL.Path == "/connectors/test-conn/config":
-			json.NewEncoder(w).Encode(map[string]string{
+			_ = json.NewEncoder(w).Encode(map[string]string{
 				"connector.class": "FileStreamSource",
 				"topic":           "test",
 				"db.password":     "secret",
 			})
 		case r.URL.Path == "/connectors/test-conn/status":
-			json.NewEncoder(w).Encode(map[string]any{
+			_ = json.NewEncoder(w).Encode(map[string]any{
 				"name": "test-conn",
 				"type": "source",
 				"connector": map[string]any{
@@ -262,7 +262,7 @@ func TestConnectClientCreateConnector(t *testing.T) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]any{
+		_ = json.NewEncoder(w).Encode(map[string]any{
 			"name":   "new-conn",
 			"config": map[string]string{"connector.class": "FileSink"},
 		})
@@ -292,7 +292,7 @@ func TestConnectClientUpdateConnector(t *testing.T) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{
+		_ = json.NewEncoder(w).Encode(map[string]string{
 			"connector.class": "FileSink",
 			"topic":           "updated-topic",
 		})
@@ -333,7 +333,7 @@ func TestConnectClientDeleteConnectorError(t *testing.T) {
 	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(`{"error_code":404,"message":"Connector not found"}`))
+		_, _ = w.Write([]byte(`{"error_code":404,"message":"Connector not found"}`))
 	}))
 	defer server.Close()
 
@@ -387,9 +387,9 @@ func TestConnectorHealthAllRunning(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		switch {
 		case r.URL.Path == "/connectors/test/config":
-			json.NewEncoder(w).Encode(map[string]string{"connector.class": "Test"})
+			_ = json.NewEncoder(w).Encode(map[string]string{"connector.class": "Test"})
 		case r.URL.Path == "/connectors/test/status":
-			json.NewEncoder(w).Encode(map[string]any{
+			_ = json.NewEncoder(w).Encode(map[string]any{
 				"name": "test",
 				"type": "source",
 				"connector": map[string]any{
@@ -427,9 +427,9 @@ func TestConnectorHealthWithFailedTasks(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		switch {
 		case r.URL.Path == "/connectors/test/config":
-			json.NewEncoder(w).Encode(map[string]string{"connector.class": "Test"})
+			_ = json.NewEncoder(w).Encode(map[string]string{"connector.class": "Test"})
 		case r.URL.Path == "/connectors/test/status":
-			json.NewEncoder(w).Encode(map[string]any{
+			_ = json.NewEncoder(w).Encode(map[string]any{
 				"name": "test",
 				"type": "source",
 				"connector": map[string]any{
@@ -467,9 +467,9 @@ func TestConnectorHealthPaused(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		switch {
 		case r.URL.Path == "/connectors/test/config":
-			json.NewEncoder(w).Encode(map[string]string{"connector.class": "Test"})
+			_ = json.NewEncoder(w).Encode(map[string]string{"connector.class": "Test"})
 		case r.URL.Path == "/connectors/test/status":
-			json.NewEncoder(w).Encode(map[string]any{
+			_ = json.NewEncoder(w).Encode(map[string]any{
 				"name": "test",
 				"type": "source",
 				"connector": map[string]any{
@@ -509,9 +509,9 @@ func TestConnectorHealthNoTasks(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		switch {
 		case r.URL.Path == "/connectors/test/config":
-			json.NewEncoder(w).Encode(map[string]string{"connector.class": "Test"})
+			_ = json.NewEncoder(w).Encode(map[string]string{"connector.class": "Test"})
 		case r.URL.Path == "/connectors/test/status":
-			json.NewEncoder(w).Encode(map[string]any{
+			_ = json.NewEncoder(w).Encode(map[string]any{
 				"name": "test",
 				"type": "source",
 				"connector": map[string]any{

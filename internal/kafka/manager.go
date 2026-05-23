@@ -4,17 +4,20 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
 	"strings"
 	"sync"
+	"time"
 
-	"github.com/kafkamcp/kafkamcp/internal/config"
 	"github.com/twmb/franz-go/pkg/kadm"
 	"github.com/twmb/franz-go/pkg/kgo"
 	"github.com/twmb/franz-go/pkg/sasl/plain"
 	"github.com/twmb/franz-go/pkg/sasl/scram"
+
+	"github.com/kafkamcp/kafkamcp/internal/config"
 )
 
 // Manager manages Kafka client connections for multiple clusters.
@@ -28,7 +31,17 @@ type Manager struct {
 	streamMgr *streamSessionManager
 }
 
-// NewManager creates a new Kafka Manager from the provided config.
+// connect-retry knobs: kept package-private so tests can override.
+var (
+	connectInitialBackoff = 1 * time.Second
+	connectMaxBackoff     = 10 * time.Second
+	connectMaxAttempts    = 6
+)
+
+// NewManager creates a new Kafka Manager from the provided config. Each
+// cluster is connected with exponential backoff so the server tolerates a
+// few seconds of broker unavailability at startup (e.g. when running in
+// docker-compose alongside Kafka).
 func NewManager(cfg *config.Config, logger *slog.Logger) (*Manager, error) {
 	m := &Manager{
 		clients: make(map[string]*kgo.Client),
@@ -44,17 +57,84 @@ func NewManager(cfg *config.Config, logger *slog.Logger) (*Manager, error) {
 			m.defClust = cl.Name
 		}
 
-		client, err := m.createClient(cl)
+		client, admin, err := m.connectWithBackoff(cl)
 		if err != nil {
 			m.Close()
 			return nil, fmt.Errorf("creating client for cluster %q: %w", cl.Name, err)
 		}
 		m.clients[cl.Name] = client
-		m.admins[cl.Name] = kadm.NewClient(client)
+		m.admins[cl.Name] = admin
 		logger.Info("connected to kafka cluster", "cluster", cl.Name, "broker_count", len(strings.Split(cl.BootstrapServers, ",")))
 	}
 
 	return m, nil
+}
+
+// connectWithBackoff creates a Kafka client and verifies the broker is
+// reachable. It retries with exponential backoff up to connectMaxAttempts
+// times to absorb broker-startup delays in containerised environments.
+func (m *Manager) connectWithBackoff(cl *config.ClusterConfig) (*kgo.Client, *kadm.Client, error) {
+	var lastErr error
+	backoff := connectInitialBackoff
+	for attempt := 1; attempt <= connectMaxAttempts; attempt++ {
+		client, err := m.createClient(cl)
+		if err != nil {
+			// Permanent config errors (bad SASL mech, invalid TLS, …) don't
+			// get better with retries.
+			return nil, nil, err
+		}
+		admin := kadm.NewClient(client)
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		_, err = admin.Metadata(ctx)
+		cancel()
+		if err == nil {
+			return client, admin, nil
+		}
+
+		client.Close()
+		lastErr = err
+		if !isTransientConnectError(err) || attempt == connectMaxAttempts {
+			break
+		}
+		m.logger.Warn("kafka connect attempt failed; will retry",
+			"cluster", cl.Name,
+			"attempt", attempt,
+			"max_attempts", connectMaxAttempts,
+			"backoff", backoff.String(),
+			"error", err)
+		time.Sleep(backoff)
+		backoff *= 2
+		if backoff > connectMaxBackoff {
+			backoff = connectMaxBackoff
+		}
+	}
+	if lastErr == nil {
+		lastErr = errors.New("unknown connect error")
+	}
+	return nil, nil, lastErr
+}
+
+// isTransientConnectError reports whether the error from initial metadata
+// fetch is the kind of "broker not up yet" failure that we want to retry.
+func isTransientConnectError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	for _, needle := range []string{
+		"connection refused",
+		"no such host",
+		"i/o timeout",
+		"context deadline exceeded",
+		"dial tcp",
+		"broker not available",
+	} {
+		if strings.Contains(msg, needle) {
+			return true
+		}
+	}
+	return false
 }
 
 // clientOpts returns common kgo options (SASL, TLS) for a cluster config.
@@ -87,11 +167,18 @@ func (m *Manager) clientOpts(cl *config.ClusterConfig) ([]kgo.Opt, error) {
 	}
 
 	// SASL
-	switch strings.ToUpper(cl.SASLMechanism) {
-	case "PLAIN":
-		if !strings.Contains(strings.ToUpper(cl.SecurityProtocol), "SSL") {
-			return nil, fmt.Errorf("SASL PLAIN requires TLS (security_protocol must be SSL or SASL_SSL) for cluster %q — refusing to send credentials in plaintext", cl.Name)
+	saslMech := strings.ToUpper(cl.SASLMechanism)
+	requiresSSL := saslMech == "PLAIN" || saslMech == "SCRAM-SHA-256" || saslMech == "SCRAM-SHA-512"
+	if requiresSSL && !strings.Contains(strings.ToUpper(cl.SecurityProtocol), "SSL") {
+		if os.Getenv("KAFKAMCP_ALLOW_INSECURE") != "true" {
+			return nil, fmt.Errorf("SASL %s requires TLS (security_protocol must include SSL) for cluster %q — refusing to send credentials over plaintext; set KAFKAMCP_ALLOW_INSECURE=true to override for development only", saslMech, cl.Name)
 		}
+		m.logger.Warn("KAFKAMCP_ALLOW_INSECURE override: sending SASL credentials over plaintext — DO NOT USE IN PRODUCTION",
+			"cluster", cl.Name, "mechanism", saslMech)
+	}
+
+	switch saslMech {
+	case "PLAIN":
 		opts = append(opts, kgo.SASL(plain.Auth{User: cl.SASLUsername, Pass: cl.SASLPassword}.AsMechanism()))
 	case "SCRAM-SHA-256":
 		opts = append(opts, kgo.SASL(scram.Auth{User: cl.SASLUsername, Pass: cl.SASLPassword}.AsSha256Mechanism()))
@@ -210,5 +297,3 @@ func (m *Manager) Ping(ctx context.Context) error {
 	}
 	return nil
 }
-
-

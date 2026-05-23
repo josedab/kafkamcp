@@ -298,7 +298,7 @@ func TestGetRecommendations_CallRecording(t *testing.T) {
 		},
 	}
 
-	mock.GetRecommendations(context.Background(), "prod", "my-topic")
+	_, _ = mock.GetRecommendations(context.Background(), "prod", "my-topic")
 	if mock.CallCount("GetRecommendations") != 1 {
 		t.Error("expected GetRecommendations to be called once")
 	}

@@ -34,23 +34,23 @@ func DefaultProxyConfig() ProxyConfig {
 
 // ConnectionInfo tracks a single proxy connection.
 type ConnectionInfo struct {
-	ID        string    `json:"id"`
-	ClientID  string    `json:"client_id"`
-	RemoteAddr string   `json:"remote_addr"`
+	ID          string    `json:"id"`
+	ClientID    string    `json:"client_id"`
+	RemoteAddr  string    `json:"remote_addr"`
 	ConnectedAt time.Time `json:"connected_at"`
-	Requests  int64     `json:"requests"`
-	BytesIn   int64     `json:"bytes_in"`
-	BytesOut  int64     `json:"bytes_out"`
+	Requests    int64     `json:"requests"`
+	BytesIn     int64     `json:"bytes_in"`
+	BytesOut    int64     `json:"bytes_out"`
 }
 
 // ProxyStats tracks aggregate proxy metrics.
 type ProxyStats struct {
-	ActiveConnections int64              `json:"active_connections"`
-	TotalConnections  int64              `json:"total_connections"`
-	TotalRequests     int64              `json:"total_requests"`
-	TotalErrors       int64              `json:"total_errors"`
-	Translation       TranslationStats   `json:"translation"`
-	Uptime            string             `json:"uptime"`
+	ActiveConnections int64            `json:"active_connections"`
+	TotalConnections  int64            `json:"total_connections"`
+	TotalRequests     int64            `json:"total_requests"`
+	TotalErrors       int64            `json:"total_errors"`
+	Translation       TranslationStats `json:"translation"`
+	Uptime            string           `json:"uptime"`
 }
 
 // Proxy is a transparent TCP proxy that intercepts Kafka protocol traffic.
@@ -169,7 +169,7 @@ func (p *Proxy) acceptLoop(ctx context.Context) {
 
 		if p.connCount.Load() >= int64(p.config.MaxConnections) {
 			p.logger.Warn("max connections reached, rejecting", "remote", conn.RemoteAddr())
-			conn.Close()
+			_ = conn.Close()
 			continue
 		}
 
@@ -181,7 +181,7 @@ func (p *Proxy) acceptLoop(ctx context.Context) {
 
 func (p *Proxy) handleConnection(ctx context.Context, conn net.Conn) {
 	defer func() {
-		conn.Close()
+		_ = conn.Close()
 		p.connCount.Add(-1)
 	}()
 
@@ -212,7 +212,7 @@ func (p *Proxy) handleConnection(ctx context.Context, conn net.Conn) {
 		}
 
 		if p.config.ReadTimeout > 0 {
-			conn.SetReadDeadline(time.Now().Add(p.config.ReadTimeout))
+			_ = conn.SetReadDeadline(time.Now().Add(p.config.ReadTimeout))
 		}
 
 		hdr, body, err := ReadRequestHeader(conn)
@@ -266,7 +266,7 @@ func (p *Proxy) handleConnection(ctx context.Context, conn net.Conn) {
 		info.BytesOut += int64(len(responsePayload) + 8)
 
 		if p.config.WriteTimeout > 0 {
-			conn.SetWriteDeadline(time.Now().Add(p.config.WriteTimeout))
+			_ = conn.SetWriteDeadline(time.Now().Add(p.config.WriteTimeout))
 		}
 
 		if err := WriteResponse(conn, hdr.CorrelationID, responsePayload); err != nil {

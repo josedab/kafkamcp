@@ -59,7 +59,7 @@ func TestExecutePlanAlreadyCompleted(t *testing.T) {
 		[]TopicInfo{{Name: "t1", Partitions: 3, ReplicationFactor: 1}},
 		[]TopicInfo{},
 	)
-	p.ExecutePlan(plan.ID, false)
+	_, _ = p.ExecutePlan(plan.ID, false)
 
 	_, err := p.ExecutePlan(plan.ID, false)
 	if err == nil {
@@ -121,7 +121,7 @@ func TestRollbackCompleted(t *testing.T) {
 		[]TopicInfo{{Name: "t1", Partitions: 3, ReplicationFactor: 1}},
 		[]TopicInfo{},
 	)
-	p.ExecutePlan(plan.ID, false)
+	_, _ = p.ExecutePlan(plan.ID, false)
 
 	record, err := p.Rollback(plan.ID)
 	if err != nil {
@@ -144,7 +144,7 @@ func TestRollbackPendingError(t *testing.T) {
 		[]TopicInfo{},
 	)
 	// Execute dry-run only, plan stays pending
-	p.ExecutePlan(plan.ID, true)
+	_, _ = p.ExecutePlan(plan.ID, true)
 
 	_, err := p.Rollback(plan.ID)
 	if err == nil {
@@ -159,8 +159,8 @@ func TestRollbackAlreadyRolledBack(t *testing.T) {
 		[]TopicInfo{{Name: "t1", Partitions: 3, ReplicationFactor: 1}},
 		[]TopicInfo{},
 	)
-	p.ExecutePlan(plan.ID, false)
-	p.Rollback(plan.ID)
+	_, _ = p.ExecutePlan(plan.ID, false)
+	_, _ = p.Rollback(plan.ID)
 
 	_, err := p.Rollback(plan.ID)
 	if err == nil {
@@ -269,7 +269,7 @@ func TestGetProgressValid(t *testing.T) {
 		[]TopicInfo{{Name: "t1", Partitions: 3, ReplicationFactor: 1}},
 		[]TopicInfo{},
 	)
-	p.ExecutePlan(plan.ID, false)
+	_, _ = p.ExecutePlan(plan.ID, false)
 
 	progress, err := p.GetProgress(plan.ID)
 	if err != nil {
@@ -298,7 +298,7 @@ func TestGetReportValid(t *testing.T) {
 		[]TopicInfo{{Name: "t1", Partitions: 3, ReplicationFactor: 1}},
 		[]TopicInfo{},
 	)
-	p.ExecutePlan(plan.ID, false)
+	_, _ = p.ExecutePlan(plan.ID, false)
 
 	report, err := p.GetReport(plan.ID)
 	if err != nil {

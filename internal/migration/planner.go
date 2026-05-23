@@ -3,12 +3,10 @@ package migration
 import (
 	"fmt"
 	"sync"
-	"sync/atomic"
 	"time"
+
 	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
-
-var planCounter atomic.Uint64
 
 // TopicInfo describes a topic in a Kafka cluster.
 type TopicInfo struct {
@@ -93,44 +91,44 @@ type MigrationProgress struct {
 
 // OffsetMapping maps source offsets to target offsets for consumer group migration.
 type OffsetMapping struct {
-	Topic          string            `json:"topic"`
-	PartitionMap   map[int32]int64   `json:"partition_map"`
-	Strategy       string            `json:"strategy"`
-	MappedAt       string            `json:"mapped_at"`
+	Topic        string          `json:"topic"`
+	PartitionMap map[int32]int64 `json:"partition_map"`
+	Strategy     string          `json:"strategy"`
+	MappedAt     string          `json:"mapped_at"`
 }
 
 // RollbackRecord stores information needed to rollback a migration.
 type RollbackRecord struct {
-	PlanID          string              `json:"plan_id"`
-	TopicsCreated   []string            `json:"topics_created"`
-	TopicsModified  []TopicMigration    `json:"topics_modified"`
-	GroupsRecreated []string            `json:"groups_recreated"`
-	SchemasMigrated []string            `json:"schemas_migrated"`
-	CreatedAt       string              `json:"created_at"`
+	PlanID          string           `json:"plan_id"`
+	TopicsCreated   []string         `json:"topics_created"`
+	TopicsModified  []TopicMigration `json:"topics_modified"`
+	GroupsRecreated []string         `json:"groups_recreated"`
+	SchemasMigrated []string         `json:"schemas_migrated"`
+	CreatedAt       string           `json:"created_at"`
 }
 
 // MigrationReport summarizes a completed migration.
 type MigrationReport struct {
-	PlanID          string                `json:"plan_id"`
-	SourceCluster   string                `json:"source_cluster"`
-	TargetCluster   string                `json:"target_cluster"`
-	Status          string                `json:"status"`
-	TopicsMigrated  int                   `json:"topics_migrated"`
-	GroupsMigrated  int                   `json:"groups_migrated"`
-	SchemasMigrated int                   `json:"schemas_migrated"`
-	DurationMs      int64                 `json:"duration_ms"`
-	Warnings        []string              `json:"warnings"`
-	ValidationResult *ValidationResult    `json:"validation_result,omitempty"`
-	GeneratedAt     string                `json:"generated_at"`
+	PlanID           string            `json:"plan_id"`
+	SourceCluster    string            `json:"source_cluster"`
+	TargetCluster    string            `json:"target_cluster"`
+	Status           string            `json:"status"`
+	TopicsMigrated   int               `json:"topics_migrated"`
+	GroupsMigrated   int               `json:"groups_migrated"`
+	SchemasMigrated  int               `json:"schemas_migrated"`
+	DurationMs       int64             `json:"duration_ms"`
+	Warnings         []string          `json:"warnings"`
+	ValidationResult *ValidationResult `json:"validation_result,omitempty"`
+	GeneratedAt      string            `json:"generated_at"`
 }
 
 // ValidationResult captures pre/post migration validation.
 type ValidationResult struct {
-	TopicsValid     bool     `json:"topics_valid"`
-	SchemasValid    bool     `json:"schemas_valid"`
-	GroupsValid     bool     `json:"groups_valid"`
-	Errors          []string `json:"errors,omitempty"`
-	Warnings        []string `json:"warnings,omitempty"`
+	TopicsValid  bool     `json:"topics_valid"`
+	SchemasValid bool     `json:"schemas_valid"`
+	GroupsValid  bool     `json:"groups_valid"`
+	Errors       []string `json:"errors,omitempty"`
+	Warnings     []string `json:"warnings,omitempty"`
 }
 
 // Planner creates and manages migration plans.

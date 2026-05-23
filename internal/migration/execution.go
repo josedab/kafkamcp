@@ -159,7 +159,7 @@ func (p *Planner) ExecutePlan(planID string, dryRun bool) (*MigrationResult, err
 		PlanID:          planID,
 		SourceCluster:   plan.SourceCluster,
 		TargetCluster:   plan.TargetCluster,
-		Status:          string(plan.Status),
+		Status:          plan.Status,
 		TopicsMigrated:  countNonSkipped(plan.Topics),
 		GroupsMigrated:  countNonSkippedGroups(plan.ConsumerGroups),
 		SchemasMigrated: countNonSkippedSchemas(plan.SchemaSubjects),

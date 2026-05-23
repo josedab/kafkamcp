@@ -14,46 +14,77 @@ import (
 
 // StreamConfig defines parameters for a streaming consumer session.
 type StreamConfig struct {
-	Topic           string `json:"topic"`
-	GroupID         string `json:"group_id"`
-	BatchSize       int    `json:"batch_size"`
-	MaxMsgPerSec    int    `json:"max_msg_per_sec"`
-	MaxMessages     int    `json:"max_messages"`
-	TimeoutMs       int    `json:"timeout_ms"`
-	Deserializer    string `json:"deserializer"`
-	AutoCommit      bool   `json:"auto_commit"`
-	AgentID         string `json:"agent_id,omitempty"`
+	Topic        string `json:"topic"`
+	GroupID      string `json:"group_id"`
+	BatchSize    int    `json:"batch_size"`
+	MaxMsgPerSec int    `json:"max_msg_per_sec"`
+	MaxMessages  int    `json:"max_messages"`
+	TimeoutMs    int    `json:"timeout_ms"`
+	Deserializer string `json:"deserializer"`
+	AutoCommit   bool   `json:"auto_commit"`
+	AgentID      string `json:"agent_id,omitempty"`
 }
 
 // StreamSession represents an active streaming consumer session.
+//
+// StreamSession contains a sync.Mutex and must always be passed by pointer.
+// Use StreamSessionSnapshot when returning session state to callers.
 type StreamSession struct {
-	ID          string        `json:"id"`
-	Topic       string        `json:"topic"`
-	GroupID     string        `json:"group_id"`
-	AgentID     string        `json:"agent_id,omitempty"`
-	Status      string        `json:"status"` // running, paused, stopped
-	StartedAt   string        `json:"started_at"`
-	MsgCount    int64         `json:"messages_delivered"`
-	BatchSize   int           `json:"batch_size"`
+	ID        string `json:"id"`
+	Topic     string `json:"topic"`
+	GroupID   string `json:"group_id"`
+	AgentID   string `json:"agent_id,omitempty"`
+	Status    string `json:"status"` // running, paused, stopped
+	StartedAt string `json:"started_at"`
+	MsgCount  int64  `json:"messages_delivered"`
+	BatchSize int    `json:"batch_size"`
 
-	mu         sync.Mutex
-	cancel     context.CancelFunc
-	paused     atomic.Bool
-	stopped    atomic.Bool
-	messages   []Message
-	msgChan    chan []Message
-	errChan    chan error
+	mu      sync.Mutex
+	cancel  context.CancelFunc
+	paused  atomic.Bool
+	stopped atomic.Bool
+	msgChan chan []Message
+	errChan chan error
+}
+
+// StreamSessionSnapshot is a value-safe, mutex-free view of StreamSession for
+// returning session state to callers without aliasing the session lock.
+type StreamSessionSnapshot struct {
+	ID        string `json:"id"`
+	Topic     string `json:"topic"`
+	GroupID   string `json:"group_id"`
+	AgentID   string `json:"agent_id,omitempty"`
+	Status    string `json:"status"`
+	StartedAt string `json:"started_at"`
+	MsgCount  int64  `json:"messages_delivered"`
+	BatchSize int    `json:"batch_size"`
+}
+
+// snapshot returns a value-safe view of the session for external consumers.
+// Callers must NOT rely on s being externally locked; only atomic fields are
+// read here.
+func (s *StreamSession) snapshot() StreamSessionSnapshot {
+	return StreamSessionSnapshot{
+		ID:        s.ID,
+		Topic:     s.Topic,
+		GroupID:   s.GroupID,
+		AgentID:   s.AgentID,
+		Status:    s.Status,
+		StartedAt: s.StartedAt,
+		MsgCount:  atomic.LoadInt64(&s.MsgCount),
+		BatchSize: s.BatchSize,
+	}
 }
 
 // StreamResult contains the result of a stream poll or control operation.
 type StreamResult struct {
-	SessionID  string    `json:"session_id"`
-	Messages   []Message `json:"messages,omitempty"`
-	Count      int       `json:"count"`
-	Status     string    `json:"status"`
-	Topic      string    `json:"topic"`
-	GroupID    string    `json:"group_id"`
-	TotalSent  int64     `json:"total_delivered"`
+	SessionID string    `json:"session_id"`
+	Messages  []Message `json:"messages,omitempty"`
+	Count     int       `json:"count"`
+	Status    string    `json:"status"`
+	Topic     string    `json:"topic"`
+	GroupID   string    `json:"group_id"`
+	TotalSent int64     `json:"total_delivered"`
 }
 
 // streamSessionManager manages active streaming sessions.
@@ -430,8 +461,8 @@ func (m *Manager) ControlStream(sessionID, action string) (*StreamResult, error)
 	}, nil
 }
 
-// ListStreams returns all active stream sessions.
-func (m *Manager) ListStreams() []StreamSession {
+// ListStreams returns a snapshot of all active stream sessions.
+func (m *Manager) ListStreams() []StreamSessionSnapshot {
 	if m.streamMgr == nil {
 		return nil
 	}
@@ -439,26 +470,20 @@ func (m *Manager) ListStreams() []StreamSession {
 	m.streamMgr.mu.RLock()
 	defer m.streamMgr.mu.RUnlock()
 
-	var sessions []StreamSession
+	if len(m.streamMgr.sessions) == 0 {
+		return nil
+	}
+	sessions := make([]StreamSessionSnapshot, 0, len(m.streamMgr.sessions))
 	for _, s := range m.streamMgr.sessions {
-		sessions = append(sessions, StreamSession{
-			ID:        s.ID,
-			Topic:     s.Topic,
-			GroupID:   s.GroupID,
-			AgentID:   s.AgentID,
-			Status:    s.Status,
-			StartedAt: s.StartedAt,
-			MsgCount:  atomic.LoadInt64(&s.MsgCount),
-			BatchSize: s.BatchSize,
-		})
+		sessions = append(sessions, s.snapshot())
 	}
 	return sessions
 }
 
-// GetStreamSession returns the agent ID for a given stream session.
-func (m *Manager) GetStreamSession(sessionID string) (*StreamSession, bool) {
+// GetStreamSession returns a value-safe snapshot of the named stream session.
+func (m *Manager) GetStreamSession(sessionID string) (StreamSessionSnapshot, bool) {
 	if m.streamMgr == nil {
-		return nil, false
+		return StreamSessionSnapshot{}, false
 	}
 
 	m.streamMgr.mu.RLock()
@@ -466,13 +491,7 @@ func (m *Manager) GetStreamSession(sessionID string) (*StreamSession, bool) {
 
 	s, ok := m.streamMgr.sessions[sessionID]
 	if !ok {
-		return nil, false
+		return StreamSessionSnapshot{}, false
 	}
-	return &StreamSession{
-		ID:      s.ID,
-		AgentID: s.AgentID,
-		Topic:   s.Topic,
-		GroupID:  s.GroupID,
-		Status:  s.Status,
-	}, true
+	return s.snapshot(), true
 }

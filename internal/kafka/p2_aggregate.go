@@ -11,22 +11,22 @@ import (
 
 // AggregateRequest defines parameters for windowed aggregation.
 type AggregateRequest struct {
-	Topic      string `json:"topic"`
-	Field      string `json:"field"`
-	WindowMs   int64  `json:"window_ms"`
-	Function   string `json:"function"` // count, sum, avg, min, max
+	Topic    string `json:"topic"`
+	Field    string `json:"field"`
+	WindowMs int64  `json:"window_ms"`
+	Function string `json:"function"` // count, sum, avg, min, max
 }
 
 // AggregateResult is the result of a windowed aggregation.
 type AggregateResult struct {
-	Topic         string  `json:"topic"`
-	Field         string  `json:"field"`
-	Function      string  `json:"function"`
-	WindowMs      int64   `json:"window_ms"`
-	Value         float64 `json:"value"`
-	MessageCount  int     `json:"message_count"`
-	WindowStart   string  `json:"window_start"`
-	WindowEnd     string  `json:"window_end"`
+	Topic        string  `json:"topic"`
+	Field        string  `json:"field"`
+	Function     string  `json:"function"`
+	WindowMs     int64   `json:"window_ms"`
+	Value        float64 `json:"value"`
+	MessageCount int     `json:"message_count"`
+	WindowStart  string  `json:"window_start"`
+	WindowEnd    string  `json:"window_end"`
 }
 
 // Aggregate computes count, sum, avg, min, or max over a time window on a numeric field.

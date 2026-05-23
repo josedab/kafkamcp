@@ -212,7 +212,7 @@ func TestApproveRunbookValidation(t *testing.T) {
 	}
 
 	runbook, _ := c.GenerateRunbook(incident.ID)
-	c.ApproveRunbook(runbook.ID, "admin")
+	_, _ = c.ApproveRunbook(runbook.ID, "admin")
 
 	// Double approve should fail
 	if _, err := c.ApproveRunbook(runbook.ID, "admin"); err == nil {

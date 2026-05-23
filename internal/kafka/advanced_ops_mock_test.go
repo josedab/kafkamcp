@@ -257,7 +257,7 @@ func TestTraceMessage_CustomHeaderName(t *testing.T) {
 			return &TraceResult{CorrelationID: correlationID}, nil
 		},
 	}
-	mock.TraceMessage(context.Background(), "default", "c-1", "x-custom-trace-id",
+	_, _ = mock.TraceMessage(context.Background(), "default", "c-1", "x-custom-trace-id",
 		[]string{"topic1"}, 1000)
 	if capturedHeaderName != "x-custom-trace-id" {
 		t.Errorf("expected custom header name, got %q", capturedHeaderName)

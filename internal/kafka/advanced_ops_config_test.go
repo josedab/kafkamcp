@@ -188,7 +188,7 @@ func TestCompareConfigs_CallRecording(t *testing.T) {
 		},
 	}
 
-	mock.CompareConfigs(context.Background(), "prod", "staging", "orders")
+	_, _ = mock.CompareConfigs(context.Background(), "prod", "staging", "orders")
 	if mock.CallCount("CompareConfigs") != 1 {
 		t.Error("expected CompareConfigs to be called once")
 	}
@@ -217,7 +217,7 @@ func TestAuditConfigs_AllCompliant(t *testing.T) {
 	}
 
 	result, err := mock.AuditConfigs(context.Background(), "prod", "", map[string]string{
-		"retention.ms":    "604800000",
+		"retention.ms":     "604800000",
 		"compression.type": "lz4",
 	})
 	if err != nil {
@@ -263,7 +263,7 @@ func TestAuditConfigs_TopicsDeviating(t *testing.T) {
 	}
 
 	result, err := mock.AuditConfigs(context.Background(), "prod", "", map[string]string{
-		"retention.ms":    "604800000",
+		"retention.ms":     "604800000",
 		"compression.type": "lz4",
 	})
 	if err != nil {
@@ -366,7 +366,7 @@ func TestAuditConfigs_CallRecording(t *testing.T) {
 	}
 
 	tmpl := map[string]string{"retention.ms": "604800000"}
-	mock.AuditConfigs(context.Background(), "prod", "orders", tmpl)
+	_, _ = mock.AuditConfigs(context.Background(), "prod", "orders", tmpl)
 	if mock.CallCount("AuditConfigs") != 1 {
 		t.Error("expected AuditConfigs to be called once")
 	}

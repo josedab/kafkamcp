@@ -9,23 +9,23 @@ import (
 
 // MessageSample represents a sampled message for profiling.
 type MessageSample struct {
-	KeySize    int    `json:"key_size"`
-	ValueSize  int    `json:"value_size"`
-	HasKey     bool   `json:"has_key"`
-	KeyHash    string `json:"key_hash,omitempty"`
-	HeaderCount int   `json:"header_count"`
+	KeySize     int    `json:"key_size"`
+	ValueSize   int    `json:"value_size"`
+	HasKey      bool   `json:"has_key"`
+	KeyHash     string `json:"key_hash,omitempty"`
+	HeaderCount int    `json:"header_count"`
 	SchemaType  string `json:"schema_type,omitempty"` // json, avro, protobuf, string, binary
 }
 
 // ProfileResult contains the statistical profile of sampled messages.
 type ProfileResult struct {
-	Topic           string                  `json:"topic"`
-	SampleCount     int                     `json:"sample_count"`
-	SizeStats       SizeStatistics          `json:"size_statistics"`
-	KeyAnalysis     KeyAnalysis             `json:"key_analysis"`
-	SchemaDistribution map[string]int       `json:"schema_distribution"`
-	SizeHistogram   []HistogramBucket       `json:"size_histogram"`
-	Recommendations []string               `json:"recommendations,omitempty"`
+	Topic              string            `json:"topic"`
+	SampleCount        int               `json:"sample_count"`
+	SizeStats          SizeStatistics    `json:"size_statistics"`
+	KeyAnalysis        KeyAnalysis       `json:"key_analysis"`
+	SchemaDistribution map[string]int    `json:"schema_distribution"`
+	SizeHistogram      []HistogramBucket `json:"size_histogram"`
+	Recommendations    []string          `json:"recommendations,omitempty"`
 }
 
 // SizeStatistics provides message size metrics.
@@ -33,7 +33,7 @@ type SizeStatistics struct {
 	MinBytes    int     `json:"min_bytes"`
 	MaxBytes    int     `json:"max_bytes"`
 	AvgBytes    float64 `json:"avg_bytes"`
-	MedianBytes int    `json:"median_bytes"`
+	MedianBytes int     `json:"median_bytes"`
 	P95Bytes    int     `json:"p95_bytes"`
 	P99Bytes    int     `json:"p99_bytes"`
 	TotalBytes  int64   `json:"total_bytes"`
@@ -41,9 +41,9 @@ type SizeStatistics struct {
 
 // KeyAnalysis provides key distribution metrics.
 type KeyAnalysis struct {
-	UniqueKeys     int     `json:"unique_keys"`
-	NullKeyPercent float64 `json:"null_key_percent"`
-	Cardinality    string  `json:"cardinality"` // low, medium, high, very_high
+	UniqueKeys     int        `json:"unique_keys"`
+	NullKeyPercent float64    `json:"null_key_percent"`
+	Cardinality    string     `json:"cardinality"` // low, medium, high, very_high
 	TopKeys        []KeyCount `json:"top_keys,omitempty"`
 }
 
@@ -55,10 +55,10 @@ type KeyCount struct {
 
 // HistogramBucket represents a bucket in a size histogram.
 type HistogramBucket struct {
-	RangeLabel string `json:"range"`
-	MinBytes   int    `json:"min_bytes"`
-	MaxBytes   int    `json:"max_bytes"`
-	Count      int    `json:"count"`
+	RangeLabel string  `json:"range"`
+	MinBytes   int     `json:"min_bytes"`
+	MaxBytes   int     `json:"max_bytes"`
+	Count      int     `json:"count"`
 	Percent    float64 `json:"percent"`
 }
 

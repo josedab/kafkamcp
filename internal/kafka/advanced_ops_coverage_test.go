@@ -220,4 +220,3 @@ func TestAnalyzeACLSecurity_OverPermissioned(t *testing.T) {
 		t.Errorf("expected 1 over-permissioned finding, got %d", len(analysis.OverPermissioned))
 	}
 }
-

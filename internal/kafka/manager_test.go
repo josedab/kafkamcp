@@ -7,9 +7,10 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/kafkamcp/kafkamcp/internal/config"
-	"github.com/twmb/franz-go/pkg/kgo"
 	"github.com/twmb/franz-go/pkg/kadm"
+	"github.com/twmb/franz-go/pkg/kgo"
+
+	"github.com/kafkamcp/kafkamcp/internal/config"
 )
 
 // testManager builds a Manager with two clusters and no real broker connections.
@@ -496,9 +497,9 @@ func TestMockKafkaManager_CustomFunctions(t *testing.T) {
 func TestMockKafkaManager_CallRecording(t *testing.T) {
 	t.Parallel()
 	mock := &MockKafkaManager{}
-	mock.ListTopics(t.Context(), "prod", true)
-	mock.ListTopics(t.Context(), "staging", false)
-	mock.Consume(t.Context(), "prod", "test", 0, "latest", 10, 5000, "auto")
+	_, _ = mock.ListTopics(t.Context(), "prod", true)
+	_, _ = mock.ListTopics(t.Context(), "staging", false)
+	_, _ = mock.Consume(t.Context(), "prod", "test", 0, "latest", 10, 5000, "auto")
 
 	if mock.CallCount("ListTopics") != 2 {
 		t.Errorf("expected 2 ListTopics calls, got %d", mock.CallCount("ListTopics"))
@@ -515,8 +516,8 @@ func TestMockKafkaManager_ConcurrentSafety(t *testing.T) {
 	done := make(chan bool, 10)
 	for i := 0; i < 10; i++ {
 		go func() {
-			mock.ListTopics(t.Context(), "prod", false)
-			mock.Consume(t.Context(), "prod", "test", 0, "latest", 10, 5000, "auto")
+			_, _ = mock.ListTopics(t.Context(), "prod", false)
+			_, _ = mock.Consume(t.Context(), "prod", "test", 0, "latest", 10, 5000, "auto")
 			done <- true
 		}()
 	}

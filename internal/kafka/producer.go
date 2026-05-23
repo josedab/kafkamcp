@@ -1,13 +1,14 @@
 package kafka
 
 import (
-"context"
-"fmt"
-"sync"
-"sync/atomic"
+	"context"
+	"fmt"
+	"sync"
+	"sync/atomic"
 
-"github.com/twmb/franz-go/pkg/kgo"
+	"github.com/twmb/franz-go/pkg/kgo"
 )
+
 // ProduceOptions configures acknowledgement semantics and serialization for
 // producing messages to Kafka.
 type ProduceOptions struct {

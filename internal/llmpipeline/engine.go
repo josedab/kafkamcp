@@ -4,8 +4,8 @@
 package llmpipeline
 
 import (
-	"crypto/sha256"
 	crypto_rand "crypto/rand"
+	"crypto/sha256"
 	"encoding/binary"
 	"encoding/csv"
 	"encoding/hex"
@@ -16,22 +16,25 @@ import (
 	"strings"
 	"sync"
 	"time"
+
 	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
 // SamplingStrategy defines how messages are sampled from topics.
 type SamplingStrategy string
 
+// SamplingRandom and related values define constants for this package.
 const (
-	SamplingRandom   SamplingStrategy = "random"
-	SamplingTimeBased SamplingStrategy = "time_based"
-	SamplingKeyBased SamplingStrategy = "key_based"
+	SamplingRandom     SamplingStrategy = "random"
+	SamplingTimeBased  SamplingStrategy = "time_based"
+	SamplingKeyBased   SamplingStrategy = "key_based"
 	SamplingStratified SamplingStrategy = "stratified"
 )
 
 // ExportFormat defines the output format.
 type ExportFormat string
 
+// FormatJSONL and related values define constants for this package.
 const (
 	FormatJSONL   ExportFormat = "jsonl"
 	FormatCSV     ExportFormat = "csv"
@@ -41,6 +44,7 @@ const (
 // ExportDestination defines where to write output.
 type ExportDestination string
 
+// DestinationLocal and related values define constants for this package.
 const (
 	DestinationLocal ExportDestination = "local"
 	DestinationS3    ExportDestination = "s3"
@@ -64,30 +68,30 @@ type PipelineConfig struct {
 
 // SamplingConfig configures the sampling strategy.
 type SamplingConfig struct {
-	Strategy     SamplingStrategy `json:"strategy"`
-	Rate         float64          `json:"rate"` // 0.0-1.0 for random sampling
-	TimeWindowMs int64            `json:"time_window_ms,omitempty"`
-	KeyPattern   string           `json:"key_pattern,omitempty"`
-	StratifyField string          `json:"stratify_field,omitempty"`
-	MaxPerStratum int             `json:"max_per_stratum,omitempty"`
+	Strategy      SamplingStrategy `json:"strategy"`
+	Rate          float64          `json:"rate"` // 0.0-1.0 for random sampling
+	TimeWindowMs  int64            `json:"time_window_ms,omitempty"`
+	KeyPattern    string           `json:"key_pattern,omitempty"`
+	StratifyField string           `json:"stratify_field,omitempty"`
+	MaxPerStratum int              `json:"max_per_stratum,omitempty"`
 }
 
 // ExportResult is the outcome of a pipeline run.
 type ExportResult struct {
-	PipelineID      string         `json:"pipeline_id"`
-	Status          string         `json:"status"` // running, completed, failed
-	MessagesRead    int64          `json:"messages_read"`
-	MessagesExported int64         `json:"messages_exported"`
-	MessagesDeduplicated int64     `json:"messages_deduplicated"`
-	PIIFieldsRedacted int64       `json:"pii_fields_redacted"`
-	OutputSizeBytes int64          `json:"output_size_bytes"`
-	OutputPath      string         `json:"output_path"`
-	Format          ExportFormat   `json:"format"`
-	Duration        time.Duration  `json:"duration"`
-	StartedAt       time.Time      `json:"started_at"`
-	CompletedAt     time.Time      `json:"completed_at,omitempty"`
-	Error           string         `json:"error,omitempty"`
-	Distribution    map[string]int `json:"distribution,omitempty"`
+	PipelineID           string         `json:"pipeline_id"`
+	Status               string         `json:"status"` // running, completed, failed
+	MessagesRead         int64          `json:"messages_read"`
+	MessagesExported     int64          `json:"messages_exported"`
+	MessagesDeduplicated int64          `json:"messages_deduplicated"`
+	PIIFieldsRedacted    int64          `json:"pii_fields_redacted"`
+	OutputSizeBytes      int64          `json:"output_size_bytes"`
+	OutputPath           string         `json:"output_path"`
+	Format               ExportFormat   `json:"format"`
+	Duration             time.Duration  `json:"duration"`
+	StartedAt            time.Time      `json:"started_at"`
+	CompletedAt          time.Time      `json:"completed_at,omitempty"`
+	Error                string         `json:"error,omitempty"`
+	Distribution         map[string]int `json:"distribution,omitempty"`
 }
 
 // PIIField defines a PII field pattern for redaction.

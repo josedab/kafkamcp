@@ -22,6 +22,7 @@ type TranslationResult struct {
 // PolicyAction defines what happens to a translated request.
 type PolicyAction string
 
+// PolicyAllow and related values define constants for this package.
 const (
 	PolicyAllow PolicyAction = "allow"
 	PolicyDeny  PolicyAction = "deny"
@@ -39,25 +40,25 @@ type Policy struct {
 
 // TranslatorConfig configures the translation layer.
 type TranslatorConfig struct {
-	EnableAudit  bool     `json:"enable_audit" yaml:"enable_audit"`
-	EnableMasking bool    `json:"enable_masking" yaml:"enable_masking"`
-	Policies     []Policy `json:"policies,omitempty" yaml:"policies,omitempty"`
+	EnableAudit   bool     `json:"enable_audit" yaml:"enable_audit"`
+	EnableMasking bool     `json:"enable_masking" yaml:"enable_masking"`
+	Policies      []Policy `json:"policies,omitempty" yaml:"policies,omitempty"`
 }
 
 // DefaultTranslatorConfig returns sensible defaults.
 func DefaultTranslatorConfig() TranslatorConfig {
 	return TranslatorConfig{
-		EnableAudit:  true,
+		EnableAudit:   true,
 		EnableMasking: false,
 	}
 }
 
 // Translator maps Kafka API requests to MCP tool invocations.
 type Translator struct {
-	config  TranslatorConfig
-	stats   TranslationStats
-	mu      sync.RWMutex
-	logger  *slog.Logger
+	config TranslatorConfig
+	stats  TranslationStats
+	mu     sync.RWMutex
+	logger *slog.Logger
 }
 
 // TranslationStats tracks translation metrics.

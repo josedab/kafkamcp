@@ -145,8 +145,8 @@ func TestFilterFields(t *testing.T) {
 func TestListPipelines(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(nil)
-	e.CreatePipeline(PipelineConfig{Topics: []string{"a"}})
-	e.CreatePipeline(PipelineConfig{Topics: []string{"b"}})
+	_, _ = e.CreatePipeline(PipelineConfig{Topics: []string{"a"}})
+	_, _ = e.CreatePipeline(PipelineConfig{Topics: []string{"b"}})
 
 	pipelines := e.ListPipelines()
 	if len(pipelines) != 2 {

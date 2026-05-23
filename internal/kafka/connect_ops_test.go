@@ -47,9 +47,9 @@ func TestRestartConnector_FailedOnly(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		switch {
 		case r.URL.Path == "/connectors/my-conn/config":
-			json.NewEncoder(w).Encode(map[string]string{"connector.class": "Test"})
+			_ = json.NewEncoder(w).Encode(map[string]string{"connector.class": "Test"})
 		case r.URL.Path == "/connectors/my-conn/status":
-			json.NewEncoder(w).Encode(map[string]any{
+			_ = json.NewEncoder(w).Encode(map[string]any{
 				"name": "my-conn",
 				"type": "source",
 				"connector": map[string]any{
@@ -89,9 +89,9 @@ func TestRestartConnector_NoFailedTasks(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		switch {
 		case r.URL.Path == "/connectors/my-conn/config":
-			json.NewEncoder(w).Encode(map[string]string{"connector.class": "Test"})
+			_ = json.NewEncoder(w).Encode(map[string]string{"connector.class": "Test"})
 		case r.URL.Path == "/connectors/my-conn/status":
-			json.NewEncoder(w).Encode(map[string]any{
+			_ = json.NewEncoder(w).Encode(map[string]any{
 				"name": "my-conn",
 				"type": "source",
 				"connector": map[string]any{
@@ -148,7 +148,7 @@ func TestHTTPPostRaw_HTTP400Error(t *testing.T) {
 	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"error":"invalid request"}`))
+		_, _ = w.Write([]byte(`{"error":"invalid request"}`))
 	}))
 	defer server.Close()
 
@@ -166,7 +166,7 @@ func TestHTTPPostRaw_HTTP500Error(t *testing.T) {
 	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("internal error"))
+		_, _ = w.Write([]byte("internal error"))
 	}))
 	defer server.Close()
 
@@ -209,7 +209,7 @@ func TestHTTPPostRaw_Success(t *testing.T) {
 			t.Error("expected Content-Type application/json")
 		}
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"ok":true}`))
+		_, _ = w.Write([]byte(`{"ok":true}`))
 	}))
 	defer server.Close()
 
@@ -249,7 +249,7 @@ func TestHTTPPut_Success(t *testing.T) {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"updated":true}`))
+		_, _ = w.Write([]byte(`{"updated":true}`))
 	}))
 	defer server.Close()
 
@@ -267,7 +267,7 @@ func TestHTTPPut_Non2xx(t *testing.T) {
 	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusConflict)
-		w.Write([]byte("conflict"))
+		_, _ = w.Write([]byte("conflict"))
 	}))
 	defer server.Close()
 
@@ -290,7 +290,7 @@ func TestHTTPPost_Success(t *testing.T) {
 			t.Errorf("expected POST, got %s", r.Method)
 		}
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"created":true}`))
+		_, _ = w.Write([]byte(`{"created":true}`))
 	}))
 	defer server.Close()
 

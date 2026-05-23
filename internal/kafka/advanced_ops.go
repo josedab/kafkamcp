@@ -9,11 +9,11 @@ import (
 
 // TimeTravelSnapshot represents a point-in-time state of a compacted topic.
 type TimeTravelSnapshot struct {
-	Topic      string            `json:"topic"`
-	Timestamp  string            `json:"timestamp"`
-	KeyCount   int               `json:"key_count"`
-	State      map[string]any    `json:"state"` // key -> last value before timestamp
-	ScanInfo   TimeTravelScanInfo `json:"scan_info"`
+	Topic     string             `json:"topic"`
+	Timestamp string             `json:"timestamp"`
+	KeyCount  int                `json:"key_count"`
+	State     map[string]any     `json:"state"` // key -> last value before timestamp
+	ScanInfo  TimeTravelScanInfo `json:"scan_info"`
 }
 
 // TimeTravelScanInfo provides metadata about the scan operation.
@@ -24,13 +24,13 @@ type TimeTravelScanInfo struct {
 
 // TimeTravelDiffResult represents changes between two timestamps.
 type TimeTravelDiffResult struct {
-	Topic        string              `json:"topic"`
-	From         string              `json:"timestamp_from"`
-	To           string              `json:"timestamp_to"`
-	TotalChanges int                 `json:"total_changes"`
-	Added        map[string]any      `json:"added"`   // keys that appeared
+	Topic        string               `json:"topic"`
+	From         string               `json:"timestamp_from"`
+	To           string               `json:"timestamp_to"`
+	TotalChanges int                  `json:"total_changes"`
+	Added        map[string]any       `json:"added"`    // keys that appeared
 	Modified     []TimeTravelModified `json:"modified"` // keys that changed value
-	Deleted      []string            `json:"deleted"`  // keys that disappeared
+	Deleted      []string             `json:"deleted"`  // keys that disappeared
 }
 
 // TimeTravelModified represents a modified key between two snapshots.
@@ -138,8 +138,8 @@ func (m *Manager) TimeTravelDiff(ctx context.Context, cluster, topic, tsFrom, ts
 
 // Recommendation represents an actionable insight about a topic or cluster.
 type Recommendation struct {
-	Type       string  `json:"type"`       // partition_hotspot, idle_topic, under_replicated, lag_trend, retention, compression
-	Severity   string  `json:"severity"`   // critical, warning, info
+	Type       string  `json:"type"`     // partition_hotspot, idle_topic, under_replicated, lag_trend, retention, compression
+	Severity   string  `json:"severity"` // critical, warning, info
 	Topic      string  `json:"topic,omitempty"`
 	Message    string  `json:"message"`
 	Suggestion string  `json:"suggestion"`

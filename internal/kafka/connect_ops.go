@@ -175,7 +175,7 @@ func (c *ConnectClient) ConnectorHealth(ctx context.Context, name string) (*Conn
 	}
 	if result.TotalTasks > 0 {
 		taskHealth := float64(result.RunningTasks) / float64(result.TotalTasks)
-		score = score * taskHealth
+		score *= taskHealth
 	}
 	result.HealthScore = score
 
@@ -254,7 +254,7 @@ func (c *ConnectClient) httpPostRaw(ctx context.Context, reqURL string, data []b
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	respBody, err := io.ReadAll(io.LimitReader(resp.Body, 10<<20))
 	if err != nil {
 		return nil, err
@@ -288,7 +288,7 @@ func (c *ConnectClient) httpPut(ctx context.Context, reqURL string, payload any)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 10<<20))
 	if err != nil {
 		return nil, err
@@ -316,7 +316,7 @@ func (c *ConnectClient) httpDelete(ctx context.Context, reqURL string) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode >= 400 {
 		body, readErr := io.ReadAll(io.LimitReader(resp.Body, 10<<20))
 		if readErr != nil {

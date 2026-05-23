@@ -85,7 +85,7 @@ func TestPlaygroundCreate_CallArgs(t *testing.T) {
 		},
 	}
 
-	mock.PlaygroundCreate(context.Background(), "prod", "my-agent", "my-topic", 6)
+	_, _ = mock.PlaygroundCreate(context.Background(), "prod", "my-agent", "my-topic", 6)
 	if mock.CallCount("PlaygroundCreate") != 1 {
 		t.Error("expected PlaygroundCreate called once")
 	}

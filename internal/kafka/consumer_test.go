@@ -33,10 +33,10 @@ func TestConsume_MockManager_OffsetPositioning(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name       string
-		offset     string
-		partition  int32
-		wantCount  int
+		name      string
+		offset    string
+		partition int32
+		wantCount int
 	}{
 		{"earliest offset all partitions", "earliest", -1, 3},
 		{"latest offset all partitions", "latest", -1, 1},
@@ -289,7 +289,7 @@ func TestSubscribe_MockManager_MaxMessagesClamping(t *testing.T) {
 		},
 	}
 
-	mock.Subscribe(context.Background(), "default", SubscribeRequest{
+	_, _ = mock.Subscribe(context.Background(), "default", SubscribeRequest{
 		Topic:       "test",
 		MaxMessages: 5000,
 	})
@@ -357,7 +357,7 @@ func TestConsume_MockManager_TimestampOffset(t *testing.T) {
 		},
 	}
 
-	mock.Consume(context.Background(), "default", "test", -1, "2024-01-01T00:00:00Z", 10, 5000, "auto")
+	_, _ = mock.Consume(context.Background(), "default", "test", -1, "2024-01-01T00:00:00Z", 10, 5000, "auto")
 	if capturedOffset != "2024-01-01T00:00:00Z" {
 		t.Errorf("expected timestamp offset to be passed, got %q", capturedOffset)
 	}
@@ -373,7 +373,7 @@ func TestConsume_MockManager_LimitEnforcement(t *testing.T) {
 		},
 	}
 
-	mock.Consume(context.Background(), "default", "test", -1, "earliest", 500, 5000, "auto")
+	_, _ = mock.Consume(context.Background(), "default", "test", -1, "earliest", 500, 5000, "auto")
 	if capturedLimit != 500 {
 		t.Errorf("expected limit 500, got %d", capturedLimit)
 	}

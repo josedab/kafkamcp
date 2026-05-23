@@ -7,6 +7,7 @@ import (
 	"sort"
 	"sync"
 	"time"
+
 	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
@@ -72,10 +73,10 @@ type FlowEdge struct {
 
 // MessageTracer provides distributed tracing for Kafka messages.
 type MessageTracer struct {
-	mu       sync.RWMutex
-	traces   map[string]*MessageTrace
-	spans    map[string][]TraceSpan // traceID -> spans
-	traceOrder []string             // insertion order for FIFO eviction
+	mu         sync.RWMutex
+	traces     map[string]*MessageTrace
+	spans      map[string][]TraceSpan // traceID -> spans
+	traceOrder []string               // insertion order for FIFO eviction
 }
 
 // NewMessageTracer creates a new message tracer.

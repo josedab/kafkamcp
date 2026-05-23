@@ -99,7 +99,7 @@ func TestClaimPartitionConflict(t *testing.T) {
 	reg.RegisterAgent("a1", "Agent 1")
 	reg.RegisterAgent("a2", "Agent 2")
 
-	reg.ClaimPartition("a1", "orders", 0)
+	_ = reg.ClaimPartition("a1", "orders", 0)
 	err := reg.ClaimPartition("a2", "orders", 0)
 	if err == nil {
 		t.Error("expected error for conflicting claim")
@@ -111,7 +111,7 @@ func TestClaimPartitionSameAgent(t *testing.T) {
 	reg := NewAgentRegistry()
 	reg.RegisterAgent("a1", "Agent 1")
 
-	reg.ClaimPartition("a1", "orders", 0)
+	_ = reg.ClaimPartition("a1", "orders", 0)
 	err := reg.ClaimPartition("a1", "orders", 0)
 	if err != nil {
 		t.Fatalf("expected no error for same agent re-claim, got: %v", err)
@@ -122,7 +122,7 @@ func TestReleasePartition(t *testing.T) {
 	t.Parallel()
 	reg := NewAgentRegistry()
 	reg.RegisterAgent("a1", "Agent 1")
-	reg.ClaimPartition("a1", "orders", 0)
+	_ = reg.ClaimPartition("a1", "orders", 0)
 
 	err := reg.ReleasePartition("a1", "orders", 0)
 	if err != nil {
@@ -135,7 +135,7 @@ func TestReleasePartitionWrongOwner(t *testing.T) {
 	reg := NewAgentRegistry()
 	reg.RegisterAgent("a1", "Agent 1")
 	reg.RegisterAgent("a2", "Agent 2")
-	reg.ClaimPartition("a1", "orders", 0)
+	_ = reg.ClaimPartition("a1", "orders", 0)
 
 	err := reg.ReleasePartition("a2", "orders", 0)
 	if err == nil {
@@ -211,8 +211,8 @@ func TestPendingHandoffs(t *testing.T) {
 	reg.RegisterAgent("a1", "Agent 1")
 	reg.RegisterAgent("a2", "Agent 2")
 
-	reg.QueueHandoff("a1", "a2", "data1")
-	reg.QueueHandoff("a1", "a2", "data2")
+	_, _ = reg.QueueHandoff("a1", "a2", "data1")
+	_, _ = reg.QueueHandoff("a1", "a2", "data2")
 
 	pending := reg.PendingHandoffs("a2")
 	if len(pending) != 2 {
@@ -240,10 +240,10 @@ func TestPendingHandoffsNoMessages(t *testing.T) {
 func TestAppendUnique(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		name     string
-		slice    []int32
-		val      int32
-		wantLen  int
+		name    string
+		slice   []int32
+		val     int32
+		wantLen int
 	}{
 		{"empty slice", nil, 1, 1},
 		{"add new", []int32{1, 2}, 3, 3},

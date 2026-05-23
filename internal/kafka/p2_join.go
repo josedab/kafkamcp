@@ -18,12 +18,12 @@ type JoinRequest struct {
 
 // JoinedMessage represents a joined message from two topics.
 type JoinedMessage struct {
-	Key       any    `json:"key"`
-	Left      any    `json:"left_value"`
-	Right     any    `json:"right_value"`
-	LeftTopic string `json:"left_topic"`
+	Key        any    `json:"key"`
+	Left       any    `json:"left_value"`
+	Right      any    `json:"right_value"`
+	LeftTopic  string `json:"left_topic"`
 	RightTopic string `json:"right_topic"`
-	Timestamp string `json:"timestamp"`
+	Timestamp  string `json:"timestamp"`
 }
 
 // JoinResult is the result of a cross-topic join.

@@ -85,7 +85,7 @@ func TestConfirmationDeny(t *testing.T) {
 	v := NewVerifier(DefaultVerifierConfig(), slog.Default())
 
 	req := v.RequestConfirmation("agent-1", "kafka_delete_topic", "clean up")
-	v.ResolveConfirmation(req.ID, "admin", false)
+	_ = v.ResolveConfirmation(req.ID, "admin", false)
 
 	req2, _ := v.GetConfirmation(req.ID)
 	if req2.Status != "denied" {

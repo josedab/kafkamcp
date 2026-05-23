@@ -151,12 +151,12 @@ func TestPollStream_DefaultTimeout(t *testing.T) {
 	t.Parallel()
 	m := testManager()
 	session := &StreamSession{
-		ID:      "poll-test",
-		Topic:   "t",
-		Status:  "running",
+		ID:        "poll-test",
+		Topic:     "t",
+		Status:    "running",
 		BatchSize: 10,
-		msgChan: make(chan []Message, 10),
-		cancel:  func() {},
+		msgChan:   make(chan []Message, 10),
+		cancel:    func() {},
 	}
 	m.streamMgr.mu.Lock()
 	m.streamMgr.sessions["poll-test"] = session

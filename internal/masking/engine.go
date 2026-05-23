@@ -87,7 +87,7 @@ func NewEngine(cfg config.MaskingConfig, logger *slog.Logger) *Engine {
 					logger.Warn("masking regex pattern too long, skipping rule", "rule", r.Name, "length", len(r.Pattern), "max", maxRegexPatternLength)
 					continue
 				}
-				if strings.Contains(r.Pattern, "(?") && (strings.Contains(r.Pattern, "(?i)") == false) {
+				if strings.Contains(r.Pattern, "(?") && !strings.Contains(r.Pattern, "(?i)") {
 					logger.Warn("masking regex contains potentially dangerous constructs, skipping rule", "rule", r.Name)
 					continue
 				}

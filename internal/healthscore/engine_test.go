@@ -9,9 +9,9 @@ func TestEvaluate_HealthyCluster(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
 	report := e.Evaluate("test-cluster", ClusterMetricsInput{
-		TotalBrokers:  3,
-		OnlineBrokers: 3,
-		TotalPartitions: 100,
+		TotalBrokers:          3,
+		OnlineBrokers:         3,
+		TotalPartitions:       100,
 		ActiveControllerCount: 1,
 	})
 

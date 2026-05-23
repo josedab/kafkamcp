@@ -9,12 +9,14 @@ import (
 	"sort"
 	"sync"
 	"time"
+
 	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
 // Severity represents incident severity.
 type Severity string
 
+// SeverityInfo and related values define constants for this package.
 const (
 	SeverityInfo     Severity = "info"
 	SeverityWarning  Severity = "warning"
@@ -37,18 +39,18 @@ type AnomalyEvent struct {
 
 // IncidentCluster groups correlated anomaly events.
 type IncidentCluster struct {
-	ID           string         `json:"id"`
-	Events       []AnomalyEvent `json:"events"`
-	Severity     Severity       `json:"severity"`
-	Clusters     []string       `json:"affected_clusters"`
-	Topics       []string       `json:"affected_topics"`
-	Groups       []string       `json:"affected_groups"`
-	RootCause    *RootCause     `json:"root_cause,omitempty"`
-	BlastRadius  int            `json:"blast_radius"`
-	StartTime    time.Time      `json:"start_time"`
-	EndTime      time.Time      `json:"end_time"`
-	Duration     time.Duration  `json:"duration"`
-	Status       string         `json:"status"` // active, resolved, investigating
+	ID          string         `json:"id"`
+	Events      []AnomalyEvent `json:"events"`
+	Severity    Severity       `json:"severity"`
+	Clusters    []string       `json:"affected_clusters"`
+	Topics      []string       `json:"affected_topics"`
+	Groups      []string       `json:"affected_groups"`
+	RootCause   *RootCause     `json:"root_cause,omitempty"`
+	BlastRadius int            `json:"blast_radius"`
+	StartTime   time.Time      `json:"start_time"`
+	EndTime     time.Time      `json:"end_time"`
+	Duration    time.Duration  `json:"duration"`
+	Status      string         `json:"status"` // active, resolved, investigating
 }
 
 // RootCause is the identified probable root cause.
@@ -61,19 +63,19 @@ type RootCause struct {
 
 // IncidentReport is a structured report of an incident.
 type IncidentReport struct {
-	Incident        IncidentCluster `json:"incident"`
-	Timeline        []TimelineEntry `json:"timeline"`
-	BlastRadius     BlastRadius     `json:"blast_radius"`
-	Remediation     []string        `json:"remediation_steps"`
-	GeneratedAt     time.Time       `json:"generated_at"`
+	Incident    IncidentCluster `json:"incident"`
+	Timeline    []TimelineEntry `json:"timeline"`
+	BlastRadius BlastRadius     `json:"blast_radius"`
+	Remediation []string        `json:"remediation_steps"`
+	GeneratedAt time.Time       `json:"generated_at"`
 }
 
 // TimelineEntry is a point on the incident timeline.
 type TimelineEntry struct {
-	Timestamp   time.Time `json:"timestamp"`
-	Event       string    `json:"event"`
-	Cluster     string    `json:"cluster"`
-	Component   string    `json:"component"`
+	Timestamp time.Time `json:"timestamp"`
+	Event     string    `json:"event"`
+	Cluster   string    `json:"cluster"`
+	Component string    `json:"component"`
 }
 
 // BlastRadius quantifies the impact of an incident.
@@ -237,10 +239,10 @@ func (c *Correlator) Stats() map[string]any {
 		}
 	}
 	return map[string]any{
-		"total_events":       len(c.events),
-		"total_incidents":    len(c.incidents),
-		"active_incidents":   active,
-		"dependencies":       len(c.dependencies),
+		"total_events":     len(c.events),
+		"total_incidents":  len(c.incidents),
+		"active_incidents": active,
+		"dependencies":     len(c.dependencies),
 	}
 }
 
@@ -418,7 +420,7 @@ func (c *Correlator) calculateBlastRadius(incident *IncidentCluster) BlastRadius
 	return BlastRadius{
 		ClustersAffected: len(incident.Clusters),
 		TopicsAffected:   len(incident.Topics),
-		GroupsAffected:    len(incident.Groups),
+		GroupsAffected:   len(incident.Groups),
 		EstimatedImpact:  impact,
 		DownstreamTopics: downstream,
 	}

@@ -30,11 +30,11 @@ func TestReadRequestHeader(t *testing.T) {
 	var buf bytes.Buffer
 	clientID := "test-client"
 	bodySize := 2 + 2 + 4 + 2 + len(clientID)
-	binary.Write(&buf, binary.BigEndian, int32(bodySize))
-	binary.Write(&buf, binary.BigEndian, int16(APIKeyMetadata)) // api_key
-	binary.Write(&buf, binary.BigEndian, int16(9))              // api_version
-	binary.Write(&buf, binary.BigEndian, int32(42))             // correlation_id
-	binary.Write(&buf, binary.BigEndian, int16(len(clientID)))  // client_id length
+	_ = binary.Write(&buf, binary.BigEndian, int32(bodySize))
+	_ = binary.Write(&buf, binary.BigEndian, APIKeyMetadata)       // api_key
+	_ = binary.Write(&buf, binary.BigEndian, int16(9))             // api_version
+	_ = binary.Write(&buf, binary.BigEndian, int32(42))            // correlation_id
+	_ = binary.Write(&buf, binary.BigEndian, int16(len(clientID))) // client_id length
 	buf.WriteString(clientID)
 
 	hdr, _, err := ReadRequestHeader(&buf)

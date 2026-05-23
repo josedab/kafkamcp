@@ -25,7 +25,7 @@ func TestRestartConnector_HTTPError(t *testing.T) {
 	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(`{"error_code":404,"message":"Connector not found"}`))
+		_, _ = w.Write([]byte(`{"error_code":404,"message":"Connector not found"}`))
 	}))
 	defer server.Close()
 
@@ -43,7 +43,7 @@ func TestRestartConnector_TaskHTTPError(t *testing.T) {
 	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte(`{"error":"unauthorized"}`))
+		_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
 	}))
 	defer server.Close()
 
@@ -65,7 +65,7 @@ func TestGetConnectorConfig_Success(t *testing.T) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{
+		_ = json.NewEncoder(w).Encode(map[string]string{
 			"connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
 			"connection.url":  "jdbc:postgresql://localhost/mydb",
 			"topic.prefix":    "db.",
@@ -96,9 +96,9 @@ func TestUpdateConnectorConfig_Roundtrip(t *testing.T) {
 	var receivedConfig map[string]string
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPut {
-			json.NewDecoder(r.Body).Decode(&receivedConfig)
+			_ = json.NewDecoder(r.Body).Decode(&receivedConfig)
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(receivedConfig)
+			_ = json.NewEncoder(w).Encode(receivedConfig)
 			return
 		}
 		w.WriteHeader(http.StatusNotFound)
@@ -140,7 +140,7 @@ func TestCreateConnector_Success(t *testing.T) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]any{
+		_ = json.NewEncoder(w).Encode(map[string]any{
 			"name":   "new-conn",
 			"config": map[string]string{"connector.class": "FileSource", "topic": "test"},
 		})
@@ -194,7 +194,7 @@ func TestDeleteConnector_NotFound(t *testing.T) {
 	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(`{"error_code":404,"message":"Connector not found"}`))
+		_, _ = w.Write([]byte(`{"error_code":404,"message":"Connector not found"}`))
 	}))
 	defer server.Close()
 
@@ -230,7 +230,7 @@ func TestHTTPDelete_AuthFailure(t *testing.T) {
 	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte(`{"error":"unauthorized"}`))
+		_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
 	}))
 	defer server.Close()
 

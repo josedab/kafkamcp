@@ -121,7 +121,7 @@ func TestMaskPartial(t *testing.T) {
 	}{
 		{"4111111111111111", 4, "************1111"},
 		{"hello", 2, "***lo"},
-		{"ab", 4, "**"},    // shorter than visible chars
+		{"ab", 4, "**"}, // shorter than visible chars
 		{"", 4, ""},
 		{"secret", 0, "******"},
 	}
@@ -246,7 +246,7 @@ func TestPolicyManager_Apply(t *testing.T) {
 func TestPolicyManager_GetAgentPolicy(t *testing.T) {
 	t.Parallel()
 	pm := NewPolicyManager()
-	pm.Apply(&MaskingPolicy{
+	_ = pm.Apply(&MaskingPolicy{
 		AgentPolicies: []AgentPolicy{
 			{AgentID: "agent-1", MinSensitivity: SensitivityHigh},
 		},
@@ -265,7 +265,7 @@ func TestPolicyManager_GetAgentPolicy(t *testing.T) {
 func TestPolicyManager_ShouldMaskForAgent_UnknownAgent(t *testing.T) {
 	t.Parallel()
 	pm := NewPolicyManager()
-	pm.Apply(&MaskingPolicy{})
+	_ = pm.Apply(&MaskingPolicy{})
 
 	// Unknown agent → always mask
 	if !pm.ShouldMaskForAgent("unknown", "any.field", SensitivityLow) {
@@ -276,7 +276,7 @@ func TestPolicyManager_ShouldMaskForAgent_UnknownAgent(t *testing.T) {
 func TestPolicyManager_ShouldMaskForAgent_DeniedField(t *testing.T) {
 	t.Parallel()
 	pm := NewPolicyManager()
-	pm.Apply(&MaskingPolicy{
+	_ = pm.Apply(&MaskingPolicy{
 		AgentPolicies: []AgentPolicy{
 			{AgentID: "a1", MinSensitivity: SensitivityLow, DeniedFields: []string{"user.ssn"}},
 		},
@@ -290,7 +290,7 @@ func TestPolicyManager_ShouldMaskForAgent_DeniedField(t *testing.T) {
 func TestPolicyManager_ShouldMaskForAgent_AllowedField(t *testing.T) {
 	t.Parallel()
 	pm := NewPolicyManager()
-	pm.Apply(&MaskingPolicy{
+	_ = pm.Apply(&MaskingPolicy{
 		AgentPolicies: []AgentPolicy{
 			{AgentID: "a1", MinSensitivity: SensitivityCritical, AllowedFields: []string{"user.name"}},
 		},
@@ -304,7 +304,7 @@ func TestPolicyManager_ShouldMaskForAgent_AllowedField(t *testing.T) {
 func TestPolicyManager_ShouldMaskForAgent_SensitivityThreshold(t *testing.T) {
 	t.Parallel()
 	pm := NewPolicyManager()
-	pm.Apply(&MaskingPolicy{
+	_ = pm.Apply(&MaskingPolicy{
 		AgentPolicies: []AgentPolicy{
 			{AgentID: "a1", MinSensitivity: SensitivityHigh},
 		},

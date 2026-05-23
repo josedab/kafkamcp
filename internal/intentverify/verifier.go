@@ -11,6 +11,7 @@ import (
 // RiskLevel classifies tool risk.
 type RiskLevel string
 
+// RiskRead and related values define constants for this package.
 const (
 	RiskRead        RiskLevel = "read"
 	RiskWrite       RiskLevel = "write"
@@ -18,7 +19,7 @@ const (
 	RiskAdmin       RiskLevel = "admin"
 )
 
-// RiskWeight returns a numeric weight for a risk level.
+// Weight returns a numeric weight for a risk level.
 func (r RiskLevel) Weight() int {
 	switch r {
 	case RiskRead:
@@ -44,13 +45,13 @@ type ToolRiskClassification struct {
 
 // IntentMatch represents a comparison between stated intent and requested operation.
 type IntentMatch struct {
-	Tool           string    `json:"tool"`
-	StatedIntent   string    `json:"stated_intent"`
-	Risk           RiskLevel `json:"risk"`
-	MatchScore     float64   `json:"match_score"` // 0.0 to 1.0
-	Aligned        bool      `json:"aligned"`
-	Explanation    string    `json:"explanation"`
-	RequiresConfirm bool    `json:"requires_confirmation"`
+	Tool            string    `json:"tool"`
+	StatedIntent    string    `json:"stated_intent"`
+	Risk            RiskLevel `json:"risk"`
+	MatchScore      float64   `json:"match_score"` // 0.0 to 1.0
+	Aligned         bool      `json:"aligned"`
+	Explanation     string    `json:"explanation"`
+	RequiresConfirm bool      `json:"requires_confirmation"`
 }
 
 // ConfirmationRequest represents a pending confirmation for a risky operation.
@@ -78,10 +79,10 @@ type AgentRiskConfig struct {
 
 // VerifierConfig configures the intent verifier.
 type VerifierConfig struct {
-	DefaultMaxRisk     RiskLevel         `json:"default_max_risk" yaml:"default_max_risk"`
-	DefaultConfirmAt   RiskLevel         `json:"default_confirm_at" yaml:"default_confirm_at"`
-	ConfirmTimeout     string            `json:"confirm_timeout" yaml:"confirm_timeout"`
-	AgentConfigs       []AgentRiskConfig `json:"agent_configs,omitempty" yaml:"agent_configs,omitempty"`
+	DefaultMaxRisk   RiskLevel         `json:"default_max_risk" yaml:"default_max_risk"`
+	DefaultConfirmAt RiskLevel         `json:"default_confirm_at" yaml:"default_confirm_at"`
+	ConfirmTimeout   string            `json:"confirm_timeout" yaml:"confirm_timeout"`
+	AgentConfigs     []AgentRiskConfig `json:"agent_configs,omitempty" yaml:"agent_configs,omitempty"`
 }
 
 // DefaultVerifierConfig returns sensible defaults.
@@ -352,11 +353,11 @@ func (v *Verifier) computeIntentScore(tool, intent string, classification ToolRi
 
 	// Keyword matching for common intent patterns
 	intentKeywords := map[string][]string{
-		"read":       {"read", "list", "view", "check", "get", "describe", "query", "search", "find", "show", "monitor"},
-		"write":      {"write", "produce", "send", "publish", "create", "add", "insert"},
-		"delete":     {"delete", "remove", "purge", "drop", "clean", "wipe", "destroy"},
-		"admin":      {"configure", "manage", "alter", "modify", "reassign", "migrate", "admin"},
-		"reset":      {"reset", "clear", "restart", "rebalance"},
+		"read":   {"read", "list", "view", "check", "get", "describe", "query", "search", "find", "show", "monitor"},
+		"write":  {"write", "produce", "send", "publish", "create", "add", "insert"},
+		"delete": {"delete", "remove", "purge", "drop", "clean", "wipe", "destroy"},
+		"admin":  {"configure", "manage", "alter", "modify", "reassign", "migrate", "admin"},
+		"reset":  {"reset", "clear", "restart", "rebalance"},
 	}
 
 	score := 0.0

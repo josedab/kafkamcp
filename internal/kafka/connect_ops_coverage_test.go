@@ -21,7 +21,7 @@ func TestPauseConnector_Success(t *testing.T) {
 			t.Errorf("expected /pause path, got %s", r.URL.Path)
 		}
 		w.WriteHeader(http.StatusAccepted)
-		w.Write([]byte("null"))
+		_, _ = w.Write([]byte("null"))
 	}))
 	defer server.Close()
 
@@ -36,7 +36,7 @@ func TestPauseConnector_NotFound(t *testing.T) {
 	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(`{"error_code":404,"message":"Connector not found"}`))
+		_, _ = w.Write([]byte(`{"error_code":404,"message":"Connector not found"}`))
 	}))
 	defer server.Close()
 
@@ -80,7 +80,7 @@ func TestResumeConnector_Success(t *testing.T) {
 			t.Errorf("expected /resume path, got %s", r.URL.Path)
 		}
 		w.WriteHeader(http.StatusAccepted)
-		w.Write([]byte("null"))
+		_, _ = w.Write([]byte("null"))
 	}))
 	defer server.Close()
 
@@ -95,7 +95,7 @@ func TestResumeConnector_NotFound(t *testing.T) {
 	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(`{"error_code":404,"message":"Connector not found"}`))
+		_, _ = w.Write([]byte(`{"error_code":404,"message":"Connector not found"}`))
 	}))
 	defer server.Close()
 
@@ -123,9 +123,9 @@ func TestDescribeConnector_MixedTaskStates(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		switch {
 		case strings.HasSuffix(r.URL.Path, "/config"):
-			json.NewEncoder(w).Encode(map[string]string{"connector.class": "TestConn"})
+			_ = json.NewEncoder(w).Encode(map[string]string{"connector.class": "TestConn"})
 		case strings.HasSuffix(r.URL.Path, "/status"):
-			json.NewEncoder(w).Encode(map[string]any{
+			_ = json.NewEncoder(w).Encode(map[string]any{
 				"name": "mixed-conn",
 				"type": "source",
 				"connector": map[string]any{
@@ -166,9 +166,9 @@ func TestDescribeConnector_RebalancingState(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		switch {
 		case strings.HasSuffix(r.URL.Path, "/config"):
-			json.NewEncoder(w).Encode(map[string]string{"connector.class": "TestConn"})
+			_ = json.NewEncoder(w).Encode(map[string]string{"connector.class": "TestConn"})
 		case strings.HasSuffix(r.URL.Path, "/status"):
-			json.NewEncoder(w).Encode(map[string]any{
+			_ = json.NewEncoder(w).Encode(map[string]any{
 				"name": "rebal-conn",
 				"type": "sink",
 				"connector": map[string]any{
@@ -219,7 +219,7 @@ func TestRestartConnectorTask_InvalidTaskID_ServerError(t *testing.T) {
 	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(`{"error_code":404,"message":"Task not found"}`))
+		_, _ = w.Write([]byte(`{"error_code":404,"message":"Task not found"}`))
 	}))
 	defer server.Close()
 
@@ -234,7 +234,7 @@ func TestRestartConnector_409Conflict(t *testing.T) {
 	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusConflict)
-		w.Write([]byte(`{"error_code":409,"message":"Rebalance in progress"}`))
+		_, _ = w.Write([]byte(`{"error_code":409,"message":"Rebalance in progress"}`))
 	}))
 	defer server.Close()
 
@@ -256,11 +256,11 @@ func TestConnectorHealth_AllHealthy(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		switch {
 		case strings.HasSuffix(r.URL.Path, "/config"):
-			json.NewEncoder(w).Encode(map[string]string{"connector.class": "TestConn"})
+			_ = json.NewEncoder(w).Encode(map[string]string{"connector.class": "TestConn"})
 		case strings.HasSuffix(r.URL.Path, "/status"):
-			json.NewEncoder(w).Encode(map[string]any{
-				"name": "healthy-conn",
-				"type": "source",
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"name":      "healthy-conn",
+				"type":      "source",
 				"connector": map[string]any{"state": "RUNNING", "worker_id": "w1:8083"},
 				"tasks": []map[string]any{
 					{"id": 0, "state": "RUNNING", "worker_id": "w1:8083"},

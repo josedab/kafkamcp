@@ -40,9 +40,9 @@ func TestTopicMatchScore_NoMatch(t *testing.T) {
 func TestNLQ_LimitExtraction(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		query    string
-		wantMin  int
-		wantMax  int
+		query   string
+		wantMin int
+		wantMax int
 	}{
 		{"show last 5 messages from orders", 5, 5},
 		{"show recent 20 events", 20, 20},

@@ -19,34 +19,34 @@ type ComponentScore struct {
 
 // HealthReport is the unified health report for a cluster.
 type HealthReport struct {
-	Cluster           string           `json:"cluster"`
-	OverallScore      float64          `json:"overall_score"`
-	Status            string           `json:"status"`
-	Components        []ComponentScore `json:"components"`
-	Recommendations   []string         `json:"recommendations,omitempty"`
-	EvaluatedAt       time.Time        `json:"evaluated_at"`
-	TrendDirection    string           `json:"trend_direction,omitempty"`
-	PreviousScore     float64          `json:"previous_score,omitempty"`
+	Cluster         string           `json:"cluster"`
+	OverallScore    float64          `json:"overall_score"`
+	Status          string           `json:"status"`
+	Components      []ComponentScore `json:"components"`
+	Recommendations []string         `json:"recommendations,omitempty"`
+	EvaluatedAt     time.Time        `json:"evaluated_at"`
+	TrendDirection  string           `json:"trend_direction,omitempty"`
+	PreviousScore   float64          `json:"previous_score,omitempty"`
 }
 
 // ClusterMetricsInput provides the raw metrics to compute health.
 type ClusterMetricsInput struct {
-	TotalBrokers            int     `json:"total_brokers"`
-	OnlineBrokers           int     `json:"online_brokers"`
-	UnderReplicatedPartitions int   `json:"under_replicated_partitions"`
-	TotalPartitions         int     `json:"total_partitions"`
-	ISRShrinkRate           float64 `json:"isr_shrink_rate"`
-	TotalConsumerLag        int64   `json:"total_consumer_lag"`
-	MaxConsumerLag          int64   `json:"max_consumer_lag"`
-	ActiveControllerCount   int     `json:"active_controller_count"`
-	OfflinePartitions       int     `json:"offline_partitions"`
+	TotalBrokers              int     `json:"total_brokers"`
+	OnlineBrokers             int     `json:"online_brokers"`
+	UnderReplicatedPartitions int     `json:"under_replicated_partitions"`
+	TotalPartitions           int     `json:"total_partitions"`
+	ISRShrinkRate             float64 `json:"isr_shrink_rate"`
+	TotalConsumerLag          int64   `json:"total_consumer_lag"`
+	MaxConsumerLag            int64   `json:"max_consumer_lag"`
+	ActiveControllerCount     int     `json:"active_controller_count"`
+	OfflinePartitions         int     `json:"offline_partitions"`
 }
 
 // Engine computes and tracks cluster health scores.
 type Engine struct {
-	mu       sync.RWMutex
-	history  map[string][]HealthReport
-	logger   *slog.Logger
+	mu      sync.RWMutex
+	history map[string][]HealthReport
+	logger  *slog.Logger
 }
 
 // NewEngine creates a new health score engine.

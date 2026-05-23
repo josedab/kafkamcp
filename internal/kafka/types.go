@@ -2,23 +2,23 @@ package kafka
 
 // TopicSummary contains summarized information about a Kafka topic.
 type TopicSummary struct {
-	Name             string `json:"name"`
-	Partitions       int    `json:"partitions"`
-	ReplicationFactor int   `json:"replication_factor"`
-	RetentionMs      int64  `json:"retention_ms,omitempty"`
-	IsInternal       bool   `json:"is_internal"`
-	MessageCount     int64  `json:"message_count_estimate"`
-	SchemaSubject    string `json:"schema_subject,omitempty"`
+	Name              string `json:"name"`
+	Partitions        int    `json:"partitions"`
+	ReplicationFactor int    `json:"replication_factor"`
+	RetentionMs       int64  `json:"retention_ms,omitempty"`
+	IsInternal        bool   `json:"is_internal"`
+	MessageCount      int64  `json:"message_count_estimate"`
+	SchemaSubject     string `json:"schema_subject,omitempty"`
 }
 
 // TopicDetail contains full topic metadata.
 type TopicDetail struct {
-	Name             string            `json:"name"`
-	Partitions       []PartitionDetail `json:"partitions"`
-	ReplicationFactor int              `json:"replication_factor"`
-	Configs          map[string]string `json:"configs"`
-	IsInternal       bool              `json:"is_internal"`
-	MessageCount     int64             `json:"message_count_estimate"`
+	Name              string            `json:"name"`
+	Partitions        []PartitionDetail `json:"partitions"`
+	ReplicationFactor int               `json:"replication_factor"`
+	Configs           map[string]string `json:"configs"`
+	IsInternal        bool              `json:"is_internal"`
+	MessageCount      int64             `json:"message_count_estimate"`
 }
 
 // PartitionDetail describes a single topic partition.
@@ -33,11 +33,11 @@ type PartitionDetail struct {
 
 // ConsumerGroupSummary is a summary of a consumer group.
 type ConsumerGroupSummary struct {
-	GroupID       string `json:"group_id"`
-	State         string `json:"state"`
-	MemberCount   int    `json:"member_count"`
-	Protocol      string `json:"protocol"`
-	TotalLag      int64  `json:"total_lag"`
+	GroupID     string `json:"group_id"`
+	State       string `json:"state"`
+	MemberCount int    `json:"member_count"`
+	Protocol    string `json:"protocol"`
+	TotalLag    int64  `json:"total_lag"`
 }
 
 // ConsumerGroupDetail is full consumer group metadata.
@@ -96,12 +96,12 @@ type ClusterMetadata struct {
 
 // Message represents a consumed Kafka message.
 type Message struct {
-	Partition    int32             `json:"partition"`
-	Offset       int64             `json:"offset"`
-	Timestamp    string            `json:"timestamp"`
-	Key          any               `json:"key"`
-	Value        any               `json:"value"`
-	Headers      map[string]string `json:"headers,omitempty"`
+	Partition int32             `json:"partition"`
+	Offset    int64             `json:"offset"`
+	Timestamp string            `json:"timestamp"`
+	Key       any               `json:"key"`
+	Value     any               `json:"value"`
+	Headers   map[string]string `json:"headers,omitempty"`
 }
 
 // DeliveryResult is the result of producing a message.

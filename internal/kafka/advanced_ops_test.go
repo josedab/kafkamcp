@@ -75,10 +75,10 @@ func TestPlaygroundPrefix(t *testing.T) {
 func TestAnalyzeACLSecurity(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		name             string
-		acls             []ACLEntry
-		wantWildcards    int
-		wantOverPerm     int
+		name              string
+		acls              []ACLEntry
+		wantWildcards     int
+		wantOverPerm      int
 		wantTotalFindings int
 	}{
 		{
@@ -92,7 +92,7 @@ func TestAnalyzeACLSecurity(t *testing.T) {
 			acls: []ACLEntry{
 				{Principal: "User:admin", ResourceName: "*", ResourceType: "Topic", Operation: "All"},
 			},
-			wantWildcards:    1,
+			wantWildcards:     1,
 			wantTotalFindings: 1,
 		},
 		{
@@ -104,7 +104,7 @@ func TestAnalyzeACLSecurity(t *testing.T) {
 				}
 				return acls
 			}(),
-			wantOverPerm:     1,
+			wantOverPerm:      1,
 			wantTotalFindings: 1,
 		},
 		{
@@ -113,8 +113,8 @@ func TestAnalyzeACLSecurity(t *testing.T) {
 				{Principal: "User:app1", ResourceName: "orders", ResourceType: "Topic", Operation: "Read"},
 				{Principal: "User:app2", ResourceName: "payments", ResourceType: "Topic", Operation: "Write"},
 			},
-			wantWildcards:    0,
-			wantOverPerm:     0,
+			wantWildcards:     0,
+			wantOverPerm:      0,
 			wantTotalFindings: 0,
 		},
 	}

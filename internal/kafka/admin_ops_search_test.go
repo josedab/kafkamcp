@@ -487,7 +487,7 @@ func TestAnalyzeDLQ_CallRecording(t *testing.T) {
 		},
 	}
 
-	mock.AnalyzeDLQ(context.Background(), "prod", "my-dlq", 50)
+	_, _ = mock.AnalyzeDLQ(context.Background(), "prod", "my-dlq", 50)
 	if mock.CallCount("AnalyzeDLQ") != 1 {
 		t.Error("expected AnalyzeDLQ to be called once")
 	}

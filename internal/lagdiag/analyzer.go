@@ -111,10 +111,6 @@ func diagnoseLagTrend(snapshots []LagSnapshot) DiagFactor {
 	}
 
 	// Aggregate lag per snapshot timestamp to detect trend.
-	type tsLag struct {
-		ts  string
-		lag int64
-	}
 	seen := make(map[string]int64)
 	var order []string
 	for _, s := range snapshots {

@@ -25,8 +25,8 @@ type LineageNode struct {
 // LineageEdge represents a directed edge in the lineage graph.
 type LineageEdge struct {
 	Source  string `json:"source"`
-	Target string `json:"target"`
-	Type   string `json:"type"` // produces, consumes, transforms
+	Target  string `json:"target"`
+	Type    string `json:"type"` // produces, consumes, transforms
 	Latency string `json:"latency,omitempty"`
 }
 

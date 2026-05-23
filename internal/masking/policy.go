@@ -13,6 +13,7 @@ import (
 // SensitivityLevel defines the sensitivity classification of data.
 type SensitivityLevel string
 
+// SensitivityLow and related values define constants for this package.
 const (
 	SensitivityLow      SensitivityLevel = "low"
 	SensitivityMedium   SensitivityLevel = "medium"
@@ -34,26 +35,26 @@ type PolicyRule struct {
 
 // AgentPolicy defines per-agent masking configuration.
 type AgentPolicy struct {
-	AgentID          string           `yaml:"agent_id" json:"agent_id"`
-	MinSensitivity   SensitivityLevel `yaml:"min_sensitivity" json:"min_sensitivity"`
-	AllowedFields    []string         `yaml:"allowed_fields,omitempty" json:"allowed_fields,omitempty"`
-	DeniedFields     []string         `yaml:"denied_fields,omitempty" json:"denied_fields,omitempty"`
-	OverrideAction   string           `yaml:"override_action,omitempty" json:"override_action,omitempty"`
+	AgentID        string           `yaml:"agent_id" json:"agent_id"`
+	MinSensitivity SensitivityLevel `yaml:"min_sensitivity" json:"min_sensitivity"`
+	AllowedFields  []string         `yaml:"allowed_fields,omitempty" json:"allowed_fields,omitempty"`
+	DeniedFields   []string         `yaml:"denied_fields,omitempty" json:"denied_fields,omitempty"`
+	OverrideAction string           `yaml:"override_action,omitempty" json:"override_action,omitempty"`
 }
 
 // MaskingPolicy is a complete masking policy loaded from YAML.
 type MaskingPolicy struct {
-	Version      string        `yaml:"version" json:"version"`
-	Rules        []PolicyRule  `yaml:"rules" json:"rules"`
+	Version       string        `yaml:"version" json:"version"`
+	Rules         []PolicyRule  `yaml:"rules" json:"rules"`
 	AgentPolicies []AgentPolicy `yaml:"agent_policies,omitempty" json:"agent_policies,omitempty"`
 }
 
 // PolicyManager manages masking policies with hot-reloading support.
 type PolicyManager struct {
-	mu             sync.RWMutex
-	policy         *MaskingPolicy
-	compiledRules  []compiledPolicyRule
-	agentPolicies  map[string]*AgentPolicy
+	mu            sync.RWMutex
+	policy        *MaskingPolicy
+	compiledRules []compiledPolicyRule
+	agentPolicies map[string]*AgentPolicy
 }
 
 type compiledPolicyRule struct {

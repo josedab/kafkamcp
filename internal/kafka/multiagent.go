@@ -8,11 +8,11 @@ import (
 
 // AgentInfo represents a registered agent in the multi-agent system.
 type AgentInfo struct {
-	ID            string            `json:"id"`
-	Name          string            `json:"name"`
-	Status        string            `json:"status"` // active, inactive
-	RegisteredAt  string            `json:"registered_at"`
-	LastHeartbeat string            `json:"last_heartbeat"`
+	ID            string             `json:"id"`
+	Name          string             `json:"name"`
+	Status        string             `json:"status"` // active, inactive
+	RegisteredAt  string             `json:"registered_at"`
+	LastHeartbeat string             `json:"last_heartbeat"`
 	Partitions    map[string][]int32 `json:"claimed_partitions"` // topic -> partitions
 }
 
@@ -27,23 +27,23 @@ type SharedCursor struct {
 
 // HandoffMessage represents a message queued for handoff between agents.
 type HandoffMessage struct {
-	ID          string `json:"id"`
-	FromAgent   string `json:"from_agent"`
-	ToAgent     string `json:"to_agent"`
-	Data        string `json:"data"`
-	CreatedAt   string `json:"created_at"`
-	Status      string `json:"status"` // pending, delivered
+	ID        string `json:"id"`
+	FromAgent string `json:"from_agent"`
+	ToAgent   string `json:"to_agent"`
+	Data      string `json:"data"`
+	CreatedAt string `json:"created_at"`
+	Status    string `json:"status"` // pending, delivered
 }
 
 // AgentRegistry manages multi-agent collaboration primitives.
 type AgentRegistry struct {
-	mu        sync.RWMutex
-	agents    map[string]*AgentInfo
-	cursors   map[string]*SharedCursor // key: "topic:partition"
-	handoffs  []HandoffMessage
-	leases    map[string]string // key: "topic:partition" -> agentID
-	leaseTTL  time.Duration
-	leaseExp  map[string]time.Time // key: "topic:partition" -> expiry
+	mu       sync.RWMutex
+	agents   map[string]*AgentInfo
+	cursors  map[string]*SharedCursor // key: "topic:partition"
+	handoffs []HandoffMessage
+	leases   map[string]string // key: "topic:partition" -> agentID
+	leaseTTL time.Duration
+	leaseExp map[string]time.Time // key: "topic:partition" -> expiry
 }
 
 // NewAgentRegistry creates a new agent registry.

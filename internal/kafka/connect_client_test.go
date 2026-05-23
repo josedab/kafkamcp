@@ -116,7 +116,7 @@ func TestListConnectors_ExpandedFormat(t *testing.T) {
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(expanded)
+		_ = json.NewEncoder(w).Encode(expanded)
 	}))
 	defer srv.Close()
 
@@ -145,7 +145,7 @@ func TestListConnectors_SimpleFormat(t *testing.T) {
 	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode([]string{"connector-a", "connector-b"})
+		_ = json.NewEncoder(w).Encode([]string{"connector-a", "connector-b"})
 	}))
 	defer srv.Close()
 
@@ -187,7 +187,7 @@ func TestListConnectors_HTTPError(t *testing.T) {
 func TestListConnectors_InvalidJSON(t *testing.T) {
 	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("not json"))
+		_, _ = w.Write([]byte("not json"))
 	}))
 	defer srv.Close()
 
@@ -219,13 +219,13 @@ func TestDescribeConnector_Success(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		switch {
 		case r.URL.Path == "/connectors/my-connector/config":
-			json.NewEncoder(w).Encode(map[string]string{
-				"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+			_ = json.NewEncoder(w).Encode(map[string]string{
+				"connector.class":   "io.debezium.connector.postgresql.PostgresConnector",
 				"database.password": "secret",
 				"database.hostname": "db.example.com",
 			})
 		case r.URL.Path == "/connectors/my-connector/status":
-			json.NewEncoder(w).Encode(map[string]any{
+			_ = json.NewEncoder(w).Encode(map[string]any{
 				"name": "my-connector",
 				"type": "source",
 				"connector": map[string]any{
@@ -311,6 +311,6 @@ func TestHttpGet_ContextCancelled(t *testing.T) {
 
 	_, err := client.httpGet(ctx, srv.URL+"/test")
 	if err == nil {
-		t.Error("expected error for cancelled context")
+		t.Error("expected error for canceled context")
 	}
 }

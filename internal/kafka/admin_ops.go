@@ -146,17 +146,17 @@ func (m *Manager) DeleteTopic(ctx context.Context, cluster, topicName string) er
 
 // ResetOffsetsRequest defines parameters for resetting consumer group offsets.
 type ResetOffsetsRequest struct {
-	GroupID   string `json:"group_id"`
-	Topic     string `json:"topic"`
-	Strategy  string `json:"strategy"` // earliest, latest, timestamp, offset
-	Value     string `json:"value,omitempty"`
-	DryRun    bool   `json:"dry_run"`
+	GroupID  string `json:"group_id"`
+	Topic    string `json:"topic"`
+	Strategy string `json:"strategy"` // earliest, latest, timestamp, offset
+	Value    string `json:"value,omitempty"`
+	DryRun   bool   `json:"dry_run"`
 }
 
 // ResetOffsetsResult is the result of an offset reset.
 type ResetOffsetsResult struct {
 	Offsets []GroupOffsetDetail `json:"offsets"`
-	DryRun  bool               `json:"dry_run"`
+	DryRun  bool                `json:"dry_run"`
 }
 
 // ResetOffsets resets consumer group offsets.
@@ -221,15 +221,15 @@ type SearchMessage = Message
 
 // SearchRequest defines parameters for searching messages.
 type SearchRequest struct {
-	Topic          string `json:"topic"`
-	KeyFilter      string `json:"key_filter,omitempty"`
-	HeaderKey      string `json:"header_key,omitempty"`
-	HeaderValue    string `json:"header_value,omitempty"`
-	ValueContains  string `json:"value_contains,omitempty"`
-	StartTime      string `json:"start_time,omitempty"`
-	EndTime        string `json:"end_time,omitempty"`
-	MaxScan        int    `json:"max_scan"`
-	Limit          int    `json:"limit"`
+	Topic         string `json:"topic"`
+	KeyFilter     string `json:"key_filter,omitempty"`
+	HeaderKey     string `json:"header_key,omitempty"`
+	HeaderValue   string `json:"header_value,omitempty"`
+	ValueContains string `json:"value_contains,omitempty"`
+	StartTime     string `json:"start_time,omitempty"`
+	EndTime       string `json:"end_time,omitempty"`
+	MaxScan       int    `json:"max_scan"`
+	Limit         int    `json:"limit"`
 }
 
 // SearchMessages searches for messages matching the given criteria.
@@ -322,11 +322,11 @@ func (m *Manager) SearchMessages(ctx context.Context, cluster string, req Search
 
 // AnalyzeDLQResult is the result of DLQ analysis.
 type AnalyzeDLQResult struct {
-	Topic         string              `json:"topic"`
-	TotalMessages int                 `json:"total_messages"`
-	ErrorTypes    map[string]int      `json:"error_types"`
-	Samples       []Message           `json:"samples"`
-	TimeRange     DLQTimeRange        `json:"time_range"`
+	Topic         string         `json:"topic"`
+	TotalMessages int            `json:"total_messages"`
+	ErrorTypes    map[string]int `json:"error_types"`
+	Samples       []Message      `json:"samples"`
+	TimeRange     DLQTimeRange   `json:"time_range"`
 }
 
 // DLQTimeRange describes the time range of DLQ messages.

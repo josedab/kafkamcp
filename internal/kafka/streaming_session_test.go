@@ -9,24 +9,18 @@ import (
 func TestGetStreamSession_NilStreamMgr(t *testing.T) {
 	t.Parallel()
 	m := &Manager{}
-	sess, ok := m.GetStreamSession("some-id")
+	_, ok := m.GetStreamSession("some-id")
 	if ok {
 		t.Error("expected false for nil streamMgr")
-	}
-	if sess != nil {
-		t.Error("expected nil session for nil streamMgr")
 	}
 }
 
 func TestGetStreamSession_UnknownID(t *testing.T) {
 	t.Parallel()
 	m := &Manager{streamMgr: newStreamSessionManager()}
-	sess, ok := m.GetStreamSession("nonexistent")
+	_, ok := m.GetStreamSession("nonexistent")
 	if ok {
 		t.Error("expected false for unknown session ID")
-	}
-	if sess != nil {
-		t.Error("expected nil session for unknown ID")
 	}
 }
 
@@ -132,8 +126,8 @@ func TestConcurrentGetStreamSession(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			sess, ok := m.GetStreamSession("s1")
-			if !ok || sess == nil {
+			_, ok := m.GetStreamSession("s1")
+			if !ok {
 				t.Error("expected session to be found")
 			}
 		}()

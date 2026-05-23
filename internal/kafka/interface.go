@@ -1,7 +1,5 @@
 package kafka
 
-//go:generate go run github.com/matryer/moq@latest -out mock_manager_gen.go -pkg kafka . KafkaManager
-
 import (
 	"context"
 
@@ -38,8 +36,8 @@ type StreamManager interface {
 	StartStream(ctx context.Context, cluster string, cfg StreamConfig) (*StreamResult, error)
 	PollStream(sessionID string, timeoutMs int) (*StreamResult, error)
 	ControlStream(sessionID, action string) (*StreamResult, error)
-	ListStreams() []StreamSession
-	GetStreamSession(sessionID string) (*StreamSession, bool)
+	ListStreams() []StreamSessionSnapshot
+	GetStreamSession(sessionID string) (StreamSessionSnapshot, bool)
 }
 
 // KafkaManager defines the interface for Kafka operations used by server handlers.

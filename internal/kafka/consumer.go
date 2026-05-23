@@ -1,15 +1,16 @@
 package kafka
 
 import (
-"context"
-"crypto/rand"
-"encoding/hex"
-"fmt"
-"strconv"
-"time"
+	"context"
+	"crypto/rand"
+	"encoding/hex"
+	"fmt"
+	"strconv"
+	"time"
 
-"github.com/twmb/franz-go/pkg/kgo"
+	"github.com/twmb/franz-go/pkg/kgo"
 )
+
 // Consume reads messages from a topic using direct partition fetch.
 func (m *Manager) Consume(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]Message, error) {
 	clCfg, err := m.GetClusterConfig(cluster)
@@ -150,25 +151,26 @@ func (m *Manager) Consume(ctx context.Context, cluster, topic string, partition 
 
 	return messages, nil
 }
+
 // SubscribeRequest defines parameters for a consumer-group-based subscription
 // including topic, group ID, timeout, and deserialization settings.
 type SubscribeRequest struct {
-	Topic          string `json:"topic"`
-	GroupID        string `json:"group_id"`
-	AutoCommit     bool   `json:"auto_commit"`
-	MaxMessages    int    `json:"max_messages"`
-	TimeoutMs      int    `json:"timeout_ms"`
-	Deserializer   string `json:"deserializer"`
+	Topic        string `json:"topic"`
+	GroupID      string `json:"group_id"`
+	AutoCommit   bool   `json:"auto_commit"`
+	MaxMessages  int    `json:"max_messages"`
+	TimeoutMs    int    `json:"timeout_ms"`
+	Deserializer string `json:"deserializer"`
 }
 
 // SubscribeResult contains the messages consumed during a subscription poll
 // along with metadata such as the consumer group ID and commit status.
 type SubscribeResult struct {
-	Messages    []Message `json:"messages"`
-	Count       int       `json:"count"`
-	Topic       string    `json:"topic"`
-	GroupID     string    `json:"group_id"`
-	AutoCommit  bool      `json:"auto_committed"`
+	Messages   []Message `json:"messages"`
+	Count      int       `json:"count"`
+	Topic      string    `json:"topic"`
+	GroupID    string    `json:"group_id"`
+	AutoCommit bool      `json:"auto_committed"`
 }
 
 // Subscribe consumes from a topic using consumer group semantics.

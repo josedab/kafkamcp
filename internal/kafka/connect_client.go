@@ -26,18 +26,18 @@ type ConnectorSummary struct {
 
 // ConnectorDetail provides full details for a Kafka Connect connector.
 type ConnectorDetail struct {
-	Name    string            `json:"name"`
-	Type    string            `json:"type"`
-	State   string            `json:"state"`
-	Worker  string            `json:"worker"`
-	Config  map[string]string `json:"config"`
-	Tasks   []ConnectorTask   `json:"tasks"`
+	Name   string            `json:"name"`
+	Type   string            `json:"type"`
+	State  string            `json:"state"`
+	Worker string            `json:"worker"`
+	Config map[string]string `json:"config"`
+	Tasks  []ConnectorTask   `json:"tasks"`
 }
 
 // ConnectorTask describes a connector task.
 type ConnectorTask struct {
-	ID    int    `json:"id"`
-	State string `json:"state"`
+	ID     int    `json:"id"`
+	State  string `json:"state"`
 	Worker string `json:"worker"`
 	Trace  string `json:"trace,omitempty"`
 }
@@ -261,7 +261,7 @@ func (c *ConnectClient) httpGet(ctx context.Context, reqURL string) ([]byte, err
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 10<<20))
 	if err != nil {
 		return nil, err

@@ -380,8 +380,8 @@ func TestNaturalLanguageQuery_LimitEnforcement(t *testing.T) {
 func TestMockCallRecording(t *testing.T) {
 	t.Parallel()
 	mock := &MockKafkaManager{}
-	mock.Aggregate(context.Background(), "c1", AggregateRequest{Topic: "t1"})
-	mock.Aggregate(context.Background(), "c2", AggregateRequest{Topic: "t2"})
+	_, _ = mock.Aggregate(context.Background(), "c1", AggregateRequest{Topic: "t1"})
+	_, _ = mock.Aggregate(context.Background(), "c2", AggregateRequest{Topic: "t2"})
 
 	if mock.CallCount("Aggregate") != 2 {
 		t.Errorf("expected 2 Aggregate calls, got %d", mock.CallCount("Aggregate"))

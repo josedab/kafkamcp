@@ -22,9 +22,9 @@ func (m *Manager) ListConsumerGroups(ctx context.Context, cluster string) ([]Con
 	var result []ConsumerGroupSummary
 	for _, g := range groups.Sorted() {
 		result = append(result, ConsumerGroupSummary{
-			GroupID:     g.Group,
-			State:       g.State,
-			Protocol:    g.ProtocolType,
+			GroupID:  g.Group,
+			State:    g.State,
+			Protocol: g.ProtocolType,
 		})
 	}
 
@@ -89,7 +89,7 @@ func (m *Manager) DescribeConsumerGroup(ctx context.Context, cluster, groupID st
 		ProtocolType: dg.ProtocolType,
 		Protocol:     dg.Protocol,
 		Coordinator: BrokerInfo{
-			ID: int32(dg.Coordinator.NodeID),
+			ID: dg.Coordinator.NodeID,
 		},
 	}
 

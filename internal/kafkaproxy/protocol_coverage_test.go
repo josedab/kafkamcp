@@ -13,11 +13,11 @@ func TestReadRequestHeader_ValidRequest(t *testing.T) {
 	var buf bytes.Buffer
 	clientID := "my-producer"
 	bodySize := 2 + 2 + 4 + 2 + len(clientID) + 3 // header + 3 extra body bytes
-	binary.Write(&buf, binary.BigEndian, int32(bodySize))
-	binary.Write(&buf, binary.BigEndian, int16(APIKeyProduce))
-	binary.Write(&buf, binary.BigEndian, int16(8))
-	binary.Write(&buf, binary.BigEndian, int32(99))
-	binary.Write(&buf, binary.BigEndian, int16(len(clientID)))
+	_ = binary.Write(&buf, binary.BigEndian, int32(bodySize))
+	_ = binary.Write(&buf, binary.BigEndian, APIKeyProduce)
+	_ = binary.Write(&buf, binary.BigEndian, int16(8))
+	_ = binary.Write(&buf, binary.BigEndian, int32(99))
+	_ = binary.Write(&buf, binary.BigEndian, int16(len(clientID)))
 	buf.WriteString(clientID)
 	buf.Write([]byte{1, 2, 3}) // extra body
 
@@ -54,7 +54,7 @@ func TestReadRequestHeader_TruncatedSize(t *testing.T) {
 func TestReadRequestHeader_InvalidMessageSize_TooSmall(t *testing.T) {
 	t.Parallel()
 	var buf bytes.Buffer
-	binary.Write(&buf, binary.BigEndian, int32(4)) // less than 8 min
+	_ = binary.Write(&buf, binary.BigEndian, int32(4)) // less than 8 min
 	buf.Write(make([]byte, 4))
 	_, _, err := ReadRequestHeader(&buf)
 	if err == nil {
@@ -65,7 +65,7 @@ func TestReadRequestHeader_InvalidMessageSize_TooSmall(t *testing.T) {
 func TestReadRequestHeader_InvalidMessageSize_TooLarge(t *testing.T) {
 	t.Parallel()
 	var buf bytes.Buffer
-	binary.Write(&buf, binary.BigEndian, int32(200*1024*1024)) // > 100MB
+	_ = binary.Write(&buf, binary.BigEndian, int32(200*1024*1024)) // > 100MB
 	_, _, err := ReadRequestHeader(&buf)
 	if err == nil {
 		t.Fatal("expected error for size > 100MB")
@@ -76,10 +76,10 @@ func TestReadRequestHeader_ZeroLengthBody(t *testing.T) {
 	t.Parallel()
 	var buf bytes.Buffer
 	// Size = 8 (minimum), just the header fields
-	binary.Write(&buf, binary.BigEndian, int32(8))
-	binary.Write(&buf, binary.BigEndian, int16(APIKeyFetch))
-	binary.Write(&buf, binary.BigEndian, int16(0))
-	binary.Write(&buf, binary.BigEndian, int32(1))
+	_ = binary.Write(&buf, binary.BigEndian, int32(8))
+	_ = binary.Write(&buf, binary.BigEndian, APIKeyFetch)
+	_ = binary.Write(&buf, binary.BigEndian, int16(0))
+	_ = binary.Write(&buf, binary.BigEndian, int32(1))
 
 	hdr, body, err := ReadRequestHeader(&buf)
 	if err != nil {
@@ -101,7 +101,7 @@ func TestReadRequestHeader_MaxSizeBoundary(t *testing.T) {
 	// 100MB exactly should be valid
 	var buf bytes.Buffer
 	maxSize := int32(100 * 1024 * 1024)
-	binary.Write(&buf, binary.BigEndian, maxSize)
+	_ = binary.Write(&buf, binary.BigEndian, maxSize)
 	// We won't actually write 100MB of data; the read will fail on io.ReadFull
 	_, _, err := ReadRequestHeader(&buf)
 	if err == nil {
@@ -114,11 +114,11 @@ func TestReadRequestHeader_NullClientID(t *testing.T) {
 	t.Parallel()
 	var buf bytes.Buffer
 	bodySize := 2 + 2 + 4 + 2 // header + null client (-1)
-	binary.Write(&buf, binary.BigEndian, int32(bodySize))
-	binary.Write(&buf, binary.BigEndian, int16(APIKeyMetadata))
-	binary.Write(&buf, binary.BigEndian, int16(9))
-	binary.Write(&buf, binary.BigEndian, int32(42))
-	binary.Write(&buf, binary.BigEndian, int16(-1)) // null client ID
+	_ = binary.Write(&buf, binary.BigEndian, int32(bodySize))
+	_ = binary.Write(&buf, binary.BigEndian, APIKeyMetadata)
+	_ = binary.Write(&buf, binary.BigEndian, int16(9))
+	_ = binary.Write(&buf, binary.BigEndian, int32(42))
+	_ = binary.Write(&buf, binary.BigEndian, int16(-1)) // null client ID
 
 	hdr, _, err := ReadRequestHeader(&buf)
 	if err != nil {
@@ -320,10 +320,10 @@ func TestReadRequestHeader_BodyOnlyHeaderBytes(t *testing.T) {
 	t.Parallel()
 	var buf bytes.Buffer
 	// Exactly 8 bytes: minimal header
-	binary.Write(&buf, binary.BigEndian, int32(8))
-	binary.Write(&buf, binary.BigEndian, int16(APIKeyAPIVersions))
-	binary.Write(&buf, binary.BigEndian, int16(3))
-	binary.Write(&buf, binary.BigEndian, int32(55))
+	_ = binary.Write(&buf, binary.BigEndian, int32(8))
+	_ = binary.Write(&buf, binary.BigEndian, APIKeyAPIVersions)
+	_ = binary.Write(&buf, binary.BigEndian, int16(3))
+	_ = binary.Write(&buf, binary.BigEndian, int32(55))
 
 	hdr, body, err := ReadRequestHeader(&buf)
 	if err != nil {
@@ -350,8 +350,8 @@ func TestReadRequestHeader_NilBody(t *testing.T) {
 func TestReadRequestHeader_TruncatedBody(t *testing.T) {
 	t.Parallel()
 	var buf bytes.Buffer
-	binary.Write(&buf, binary.BigEndian, int32(100)) // claims 100 bytes
-	buf.Write(make([]byte, 10))                       // but only 10 available
+	_ = binary.Write(&buf, binary.BigEndian, int32(100)) // claims 100 bytes
+	buf.Write(make([]byte, 10))                          // but only 10 available
 	_, _, err := ReadRequestHeader(&buf)
 	if err == nil {
 		t.Fatal("expected error for truncated body")
