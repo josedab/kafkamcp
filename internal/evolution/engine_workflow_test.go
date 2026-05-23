@@ -204,7 +204,7 @@ func TestWorkflowEngineApply(t *testing.T) {
 	t.Run("mark approved proposal as applied", func(t *testing.T) {
 		w := NewWorkflowEngine()
 		p, _ := w.Propose("test-value", `{}`, "AVRO", "alice", nil, 0, nil, nil)
-		w.Review(p.ID, "bob", "approve", "")
+		_, _ = w.Review(p.ID, "bob", "approve", "")
 
 		err := w.MarkApplied(p.ID)
 		if err != nil {
@@ -251,8 +251,8 @@ func TestWorkflowEngineRollback(t *testing.T) {
 	t.Run("roll back applied proposal", func(t *testing.T) {
 		w := NewWorkflowEngine()
 		p, _ := w.Propose("test-value", `{}`, "AVRO", "alice", nil, 0, nil, nil)
-		w.Review(p.ID, "bob", "approve", "")
-		w.MarkApplied(p.ID)
+		_, _ = w.Review(p.ID, "bob", "approve", "")
+		_ = w.MarkApplied(p.ID)
 
 		err := w.MarkRolledBack(p.ID)
 		if err != nil {
@@ -280,7 +280,7 @@ func TestWorkflowEngineRollback(t *testing.T) {
 	t.Run("wrong state - approved but not applied", func(t *testing.T) {
 		w := NewWorkflowEngine()
 		p, _ := w.Propose("test-value", `{}`, "AVRO", "alice", nil, 0, nil, nil)
-		w.Review(p.ID, "bob", "approve", "")
+		_, _ = w.Review(p.ID, "bob", "approve", "")
 
 		err := w.MarkRolledBack(p.ID)
 		if err == nil {
@@ -303,8 +303,8 @@ func TestWorkflowEngineListProposals(t *testing.T) {
 	t.Parallel()
 	t.Run("list all proposals", func(t *testing.T) {
 		w := NewWorkflowEngine()
-		w.Propose("a-value", `{}`, "AVRO", "alice", nil, 0, nil, nil)
-		w.Propose("b-value", `{}`, "AVRO", "bob", nil, 0, nil, nil)
+		_, _ = w.Propose("a-value", `{}`, "AVRO", "alice", nil, 0, nil, nil)
+		_, _ = w.Propose("b-value", `{}`, "AVRO", "bob", nil, 0, nil, nil)
 
 		all := w.ListProposals("")
 		if len(all) != 2 {
@@ -315,8 +315,8 @@ func TestWorkflowEngineListProposals(t *testing.T) {
 	t.Run("filter by status", func(t *testing.T) {
 		w := NewWorkflowEngine()
 		p1, _ := w.Propose("a-value", `{}`, "AVRO", "alice", nil, 0, nil, nil)
-		w.Propose("b-value", `{}`, "AVRO", "bob", nil, 0, nil, nil)
-		w.Review(p1.ID, "carol", "approve", "")
+		_, _ = w.Propose("b-value", `{}`, "AVRO", "bob", nil, 0, nil, nil)
+		_, _ = w.Review(p1.ID, "carol", "approve", "")
 
 		pending := w.ListProposals("pending")
 		if len(pending) != 1 {
@@ -339,7 +339,7 @@ func TestWorkflowEngineListProposals(t *testing.T) {
 
 	t.Run("filter returns empty when no match", func(t *testing.T) {
 		w := NewWorkflowEngine()
-		w.Propose("a-value", `{}`, "AVRO", "alice", nil, 0, nil, nil)
+		_, _ = w.Propose("a-value", `{}`, "AVRO", "alice", nil, 0, nil, nil)
 
 		result := w.ListProposals("approved")
 		if len(result) != 0 {
@@ -395,8 +395,8 @@ func TestWorkflowEngineReview_RejectAfterApply(t *testing.T) {
 	t.Parallel()
 	w := NewWorkflowEngine()
 	p, _ := w.Propose("test-value", `{}`, "AVRO", "alice", nil, 0, nil, nil)
-	w.Review(p.ID, "bob", "approve", "")
-	w.MarkApplied(p.ID)
+	_, _ = w.Review(p.ID, "bob", "approve", "")
+	_ = w.MarkApplied(p.ID)
 
 	_, err := w.Review(p.ID, "carol", "reject", "too late")
 	if err == nil {
@@ -457,8 +457,8 @@ func TestWorkflowEngineApply_AlreadyApplied(t *testing.T) {
 	t.Parallel()
 	w := NewWorkflowEngine()
 	p, _ := w.Propose("test-value", `{}`, "AVRO", "alice", nil, 0, nil, nil)
-	w.Review(p.ID, "bob", "approve", "")
-	w.MarkApplied(p.ID)
+	_, _ = w.Review(p.ID, "bob", "approve", "")
+	_ = w.MarkApplied(p.ID)
 
 	err := w.MarkApplied(p.ID)
 	if err == nil {
@@ -473,9 +473,9 @@ func TestWorkflowEngineRollback_AlreadyRolledBack(t *testing.T) {
 	t.Parallel()
 	w := NewWorkflowEngine()
 	p, _ := w.Propose("test-value", `{}`, "AVRO", "alice", nil, 0, nil, nil)
-	w.Review(p.ID, "bob", "approve", "")
-	w.MarkApplied(p.ID)
-	w.MarkRolledBack(p.ID)
+	_, _ = w.Review(p.ID, "bob", "approve", "")
+	_ = w.MarkApplied(p.ID)
+	_ = w.MarkRolledBack(p.ID)
 
 	err := w.MarkRolledBack(p.ID)
 	if err == nil {
@@ -489,9 +489,9 @@ func TestWorkflowEngineRollback_AlreadyRolledBack(t *testing.T) {
 func TestWorkflowEngineListProposals_SortedByTime(t *testing.T) {
 	t.Parallel()
 	w := NewWorkflowEngine()
-	w.Propose("a-value", `{}`, "AVRO", "alice", nil, 0, nil, nil)
-	w.Propose("b-value", `{}`, "AVRO", "bob", nil, 0, nil, nil)
-	w.Propose("c-value", `{}`, "AVRO", "carol", nil, 0, nil, nil)
+	_, _ = w.Propose("a-value", `{}`, "AVRO", "alice", nil, 0, nil, nil)
+	_, _ = w.Propose("b-value", `{}`, "AVRO", "bob", nil, 0, nil, nil)
+	_, _ = w.Propose("c-value", `{}`, "AVRO", "carol", nil, 0, nil, nil)
 
 	all := w.ListProposals("")
 	if len(all) != 3 {

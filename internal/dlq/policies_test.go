@@ -24,7 +24,7 @@ func TestPolicyManager_AddPolicy_Defaults(t *testing.T) {
 	t.Parallel()
 	pm := NewPolicyManager(testDLQLogger())
 
-	pm.AddPolicy(RemediationPolicy{TopicPattern: "dlq.*"})
+	_ = pm.AddPolicy(RemediationPolicy{TopicPattern: "dlq.*"})
 
 	policies := pm.ListPolicies()
 	if len(policies) != 1 {
@@ -45,8 +45,8 @@ func TestPolicyManager_AddPolicy_ReplaceExisting(t *testing.T) {
 	t.Parallel()
 	pm := NewPolicyManager(testDLQLogger())
 
-	pm.AddPolicy(RemediationPolicy{TopicPattern: "dlq.*", Action: "retry"})
-	pm.AddPolicy(RemediationPolicy{TopicPattern: "dlq.*", Action: "skip"})
+	_ = pm.AddPolicy(RemediationPolicy{TopicPattern: "dlq.*", Action: "retry"})
+	_ = pm.AddPolicy(RemediationPolicy{TopicPattern: "dlq.*", Action: "skip"})
 
 	policies := pm.ListPolicies()
 	if len(policies) != 1 {
@@ -60,7 +60,7 @@ func TestPolicyManager_AddPolicy_ReplaceExisting(t *testing.T) {
 func TestPolicyManager_RemovePolicy(t *testing.T) {
 	t.Parallel()
 	pm := NewPolicyManager(testDLQLogger())
-	pm.AddPolicy(RemediationPolicy{TopicPattern: "dlq.*"})
+	_ = pm.AddPolicy(RemediationPolicy{TopicPattern: "dlq.*"})
 
 	if !pm.RemovePolicy("dlq.*") {
 		t.Error("expected successful removal")
@@ -76,8 +76,8 @@ func TestPolicyManager_RemovePolicy(t *testing.T) {
 func TestPolicyManager_FindPolicy(t *testing.T) {
 	t.Parallel()
 	pm := NewPolicyManager(testDLQLogger())
-	pm.AddPolicy(RemediationPolicy{TopicPattern: "dlq.*", Action: "retry", Priority: 1})
-	pm.AddPolicy(RemediationPolicy{TopicPattern: "dlq.orders*", Action: "route", Priority: 10})
+	_ = pm.AddPolicy(RemediationPolicy{TopicPattern: "dlq.*", Action: "retry", Priority: 1})
+	_ = pm.AddPolicy(RemediationPolicy{TopicPattern: "dlq.orders*", Action: "route", Priority: 10})
 
 	// Exact match with higher priority
 	p := pm.FindPolicy("dlq.orders.topic")
@@ -101,7 +101,7 @@ func TestPolicyManager_FindPolicy(t *testing.T) {
 func TestPolicyManager_FindPolicy_WildcardAll(t *testing.T) {
 	t.Parallel()
 	pm := NewPolicyManager(testDLQLogger())
-	pm.AddPolicy(RemediationPolicy{TopicPattern: "*", Action: "retry"})
+	_ = pm.AddPolicy(RemediationPolicy{TopicPattern: "*", Action: "retry"})
 
 	p := pm.FindPolicy("anything")
 	if p == nil || p.Action != "retry" {
@@ -145,11 +145,11 @@ func TestCalculateBackoff(t *testing.T) {
 		maxMs   int64
 		wantMs  int64
 	}{
-		{0, 1000, 30000, 1000},    // 1000 * 2^0 = 1000
-		{1, 1000, 30000, 2000},    // 1000 * 2^1 = 2000
-		{2, 1000, 30000, 4000},    // 1000 * 2^2 = 4000
-		{5, 1000, 30000, 30000},   // 1000 * 2^5 = 32000 → capped at 30000
-		{10, 1000, 30000, 30000},  // capped
+		{0, 1000, 30000, 1000},   // 1000 * 2^0 = 1000
+		{1, 1000, 30000, 2000},   // 1000 * 2^1 = 2000
+		{2, 1000, 30000, 4000},   // 1000 * 2^2 = 4000
+		{5, 1000, 30000, 30000},  // 1000 * 2^5 = 32000 → capped at 30000
+		{10, 1000, 30000, 30000}, // capped
 	}
 
 	for _, tt := range tests {
@@ -174,11 +174,11 @@ func TestDryRun_ClassifiesErrors(t *testing.T) {
 			return &kafka.AnalyzeDLQResult{
 				TotalMessages: 100,
 				ErrorTypes: map[string]int{
-					"timeout error":        30,
-					"schema mismatch":      20,
-					"auth denied":          10,
-					"validation failed":    15,
-					"unknown":              25,
+					"timeout error":     30,
+					"schema mismatch":   20,
+					"auth denied":       10,
+					"validation failed": 15,
+					"unknown":           25,
 				},
 			}, nil
 		},
@@ -218,7 +218,7 @@ func TestDryRun_DefaultLimit(t *testing.T) {
 		},
 	}
 
-	r.DryRun(context.Background(), mock, "", "topic", 0)
+	_, _ = r.DryRun(context.Background(), mock, "", "topic", 0)
 }
 
 func TestDryRun_EstimatedSuccess(t *testing.T) {
@@ -362,7 +362,7 @@ func TestSuggestSchemaFixes_DefaultLimit(t *testing.T) {
 		},
 	}
 
-	r.SuggestSchemaFixes(context.Background(), mock, "", "dlq.topic", 0)
+	_, _ = r.SuggestSchemaFixes(context.Background(), mock, "", "dlq.topic", 0)
 	if capturedLimit != 20 {
 		t.Errorf("expected default limit 20, got %d", capturedLimit)
 	}
@@ -530,7 +530,7 @@ func TestSuggestSchemaFixes_CustomLimit(t *testing.T) {
 		},
 	}
 
-	r.SuggestSchemaFixes(context.Background(), mock, "", "dlq.topic", 50)
+	_, _ = r.SuggestSchemaFixes(context.Background(), mock, "", "dlq.topic", 50)
 	if capturedLimit != 50 {
 		t.Errorf("expected custom limit 50, got %d", capturedLimit)
 	}

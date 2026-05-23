@@ -10,10 +10,10 @@ import (
 
 // DesiredState represents declarative configuration for Kafka resources.
 type DesiredState struct {
-	Version  string             `json:"version" yaml:"version"`
-	Topics   []TopicSpec        `json:"topics" yaml:"topics"`
-	Schemas  []SchemaSpec       `json:"schemas,omitempty" yaml:"schemas,omitempty"`
-	ACLs     []ACLSpec          `json:"acls,omitempty" yaml:"acls,omitempty"`
+	Version string       `json:"version" yaml:"version"`
+	Topics  []TopicSpec  `json:"topics" yaml:"topics"`
+	Schemas []SchemaSpec `json:"schemas,omitempty" yaml:"schemas,omitempty"`
+	ACLs    []ACLSpec    `json:"acls,omitempty" yaml:"acls,omitempty"`
 }
 
 // TopicSpec is a declarative topic definition.
@@ -44,22 +44,22 @@ type ACLSpec struct {
 
 // DiffResult contains the differences between desired and live state.
 type DiffResult struct {
-	TopicsToCreate  []TopicSpec       `json:"topics_to_create"`
-	TopicsToUpdate  []TopicDiff       `json:"topics_to_update"`
-	TopicsToDelete  []string          `json:"topics_to_delete,omitempty"`
-	SchemasToCreate []SchemaSpec      `json:"schemas_to_create,omitempty"`
-	SchemasToUpdate []SchemaSpec      `json:"schemas_to_update,omitempty"`
-	ACLsToCreate    []ACLSpec         `json:"acls_to_create,omitempty"`
-	ACLsToDelete    []ACLSpec         `json:"acls_to_delete,omitempty"`
-	TotalChanges    int               `json:"total_changes"`
-	Summary         string            `json:"summary"`
+	TopicsToCreate  []TopicSpec  `json:"topics_to_create"`
+	TopicsToUpdate  []TopicDiff  `json:"topics_to_update"`
+	TopicsToDelete  []string     `json:"topics_to_delete,omitempty"`
+	SchemasToCreate []SchemaSpec `json:"schemas_to_create,omitempty"`
+	SchemasToUpdate []SchemaSpec `json:"schemas_to_update,omitempty"`
+	ACLsToCreate    []ACLSpec    `json:"acls_to_create,omitempty"`
+	ACLsToDelete    []ACLSpec    `json:"acls_to_delete,omitempty"`
+	TotalChanges    int          `json:"total_changes"`
+	Summary         string       `json:"summary"`
 }
 
 // TopicDiff shows differences for a single topic.
 type TopicDiff struct {
-	Name           string            `json:"name"`
-	ConfigChanges  map[string]Change `json:"config_changes,omitempty"`
-	PartitionChange *Change          `json:"partition_change,omitempty"`
+	Name            string            `json:"name"`
+	ConfigChanges   map[string]Change `json:"config_changes,omitempty"`
+	PartitionChange *Change           `json:"partition_change,omitempty"`
 }
 
 // Change represents a single config change.
@@ -77,12 +77,12 @@ type MigrationPlan struct {
 
 // MigrationStep is a single migration operation.
 type MigrationStep struct {
-	Order       int               `json:"order"`
-	Action      string            `json:"action"` // create_topic, update_topic, delete_topic, register_schema, create_acl
-	Resource    string            `json:"resource"`
-	Description string            `json:"description"`
-	Params      map[string]any    `json:"params"`
-	Reversible  bool              `json:"reversible"`
+	Order       int            `json:"order"`
+	Action      string         `json:"action"` // create_topic, update_topic, delete_topic, register_schema, create_acl
+	Resource    string         `json:"resource"`
+	Description string         `json:"description"`
+	Params      map[string]any `json:"params"`
+	Reversible  bool           `json:"reversible"`
 }
 
 // LiveState represents the current state from a Kafka cluster.

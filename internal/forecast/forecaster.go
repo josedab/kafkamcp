@@ -308,12 +308,12 @@ func (f *Forecaster) GetMetricHistory(topic, metricName string) []Metric {
 
 // CapacityPlan represents a comprehensive capacity plan with actionable recommendations.
 type CapacityPlan struct {
-	Cluster         string          `json:"cluster"`
-	Topics          []TopicCapacity `json:"topics"`
-	ClusterCapacity ClusterCapacity `json:"cluster_capacity"`
+	Cluster         string           `json:"cluster"`
+	Topics          []TopicCapacity  `json:"topics"`
+	ClusterCapacity ClusterCapacity  `json:"cluster_capacity"`
 	Recommendations []Recommendation `json:"recommendations"`
-	CostEstimate    *CostEstimate   `json:"cost_estimate,omitempty"`
-	Timestamp       string          `json:"timestamp"`
+	CostEstimate    *CostEstimate    `json:"cost_estimate,omitempty"`
+	Timestamp       string           `json:"timestamp"`
 }
 
 // ClusterCapacity describes aggregate cluster-level capacity metrics.

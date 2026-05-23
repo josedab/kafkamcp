@@ -8,14 +8,14 @@ import (
 
 // CypherQuery represents a parsed Cypher-style graph query.
 type CypherQuery struct {
-	Type       string   `json:"type"` // match, path, shortestPath, allPaths
-	StartNode  string   `json:"start_node,omitempty"`
-	EndNode    string   `json:"end_node,omitempty"`
-	NodeType   NodeType `json:"node_type,omitempty"`
-	EdgeType   EdgeType `json:"edge_type,omitempty"`
-	MaxDepth   int      `json:"max_depth,omitempty"`
-	Filters    map[string]string `json:"filters,omitempty"`
-	ReturnFields []string `json:"return_fields,omitempty"`
+	Type         string            `json:"type"` // match, path, shortestPath, allPaths
+	StartNode    string            `json:"start_node,omitempty"`
+	EndNode      string            `json:"end_node,omitempty"`
+	NodeType     NodeType          `json:"node_type,omitempty"`
+	EdgeType     EdgeType          `json:"edge_type,omitempty"`
+	MaxDepth     int               `json:"max_depth,omitempty"`
+	Filters      map[string]string `json:"filters,omitempty"`
+	ReturnFields []string          `json:"return_fields,omitempty"`
 }
 
 // ExecuteCypher parses and executes a Cypher-style query string.
@@ -275,7 +275,7 @@ func (kg *KnowledgeGraph) resolveNodeID(nameOrID string) string {
 	// Try to find by name
 	nameLower := strings.ToLower(nameOrID)
 	for id, n := range kg.nodes {
-		if strings.ToLower(n.Name) == nameLower {
+		if strings.EqualFold(n.Name, nameLower) {
 			return id
 		}
 	}

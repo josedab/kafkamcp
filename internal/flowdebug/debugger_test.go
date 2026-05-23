@@ -245,10 +245,10 @@ func TestSetBottleneckConfig_NegativeValues(t *testing.T) {
 	t.Parallel()
 	d := NewDebugger(nil)
 	cfg := BottleneckConfig{
-		LagWarning:        -100,
-		ErrorRateWarning:  -0.5,
-		LatencyWarningMs:  -1000,
-		ThroughputMinMsg:  -10,
+		LagWarning:       -100,
+		ErrorRateWarning: -0.5,
+		LatencyWarningMs: -1000,
+		ThroughputMinMsg: -10,
 	}
 	d.SetBottleneckConfig(cfg)
 

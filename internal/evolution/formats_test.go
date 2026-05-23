@@ -222,10 +222,7 @@ func TestExtractFieldsWithFormat_Unknown(t *testing.T) {
 		"fields": map[string]any{"x": "int"},
 	}
 	fields := d.ExtractFieldsWithFormat(schema, FormatUnknown)
-	if len(fields) == 0 {
-		// Unknown format uses generic extraction fallback
-		// May or may not produce fields depending on extractFields implementation
-	}
+	_ = fields
 }
 
 // --- ComputeFormatAwareDiff tests ---

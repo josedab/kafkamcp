@@ -104,7 +104,7 @@ func TestPlayground_ResetTwin(t *testing.T) {
 	twin, _ := e.CreatePlayground("test", map[string]int{"events": 3}, 3)
 
 	// Modify the twin
-	e.SimulateOp(twin.ID, SimulationOp{
+	_, _ = e.SimulateOp(twin.ID, SimulationOp{
 		Type: "create_topic", Params: map[string]any{"name": "new-topic", "partitions": 6},
 	})
 	if len(e.twins[twin.ID].Topics) != 2 {

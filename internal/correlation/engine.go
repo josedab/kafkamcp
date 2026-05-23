@@ -9,12 +9,14 @@ import (
 	"sort"
 	"sync"
 	"time"
+
 	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
 // SignalSource identifies the origin of an external signal.
 type SignalSource string
 
+// SourcePrometheus and related values define constants for this package.
 const (
 	SourcePrometheus SignalSource = "prometheus"
 	SourceDatadog    SignalSource = "datadog"
@@ -27,23 +29,23 @@ const (
 type Signal struct {
 	ID        string            `json:"id"`
 	Source    SignalSource      `json:"source"`
-	Metric   string            `json:"metric"`
-	Value    float64           `json:"value"`
-	Labels   map[string]string `json:"labels,omitempty"`
-	Timestamp time.Time        `json:"timestamp"`
-	Severity string            `json:"severity,omitempty"`
-	Message  string            `json:"message,omitempty"`
+	Metric    string            `json:"metric"`
+	Value     float64           `json:"value"`
+	Labels    map[string]string `json:"labels,omitempty"`
+	Timestamp time.Time         `json:"timestamp"`
+	Severity  string            `json:"severity,omitempty"`
+	Message   string            `json:"message,omitempty"`
 }
 
 // CorrelationResult describes correlations found between signals.
 type CorrelationResult struct {
-	ID              string          `json:"id"`
-	TimeWindow      string          `json:"time_window"`
-	SignalCount     int             `json:"signal_count"`
-	Correlations    []Correlation   `json:"correlations"`
-	RootCauses      []RootCause     `json:"root_causes"`
-	Timeline        []TimelineEvent `json:"timeline"`
-	GeneratedAt     time.Time       `json:"generated_at"`
+	ID           string          `json:"id"`
+	TimeWindow   string          `json:"time_window"`
+	SignalCount  int             `json:"signal_count"`
+	Correlations []Correlation   `json:"correlations"`
+	RootCauses   []RootCause     `json:"root_causes"`
+	Timeline     []TimelineEvent `json:"timeline"`
+	GeneratedAt  time.Time       `json:"generated_at"`
 }
 
 // Correlation links two signals with a strength score.
@@ -58,38 +60,38 @@ type Correlation struct {
 
 // RootCause is a ranked potential root cause.
 type RootCause struct {
-	Rank        int     `json:"rank"`
-	Source      string  `json:"source"`
-	Metric      string  `json:"metric"`
-	Score       float64 `json:"score"`
-	Evidence    string  `json:"evidence"`
-	Confidence  string  `json:"confidence"`
+	Rank       int     `json:"rank"`
+	Source     string  `json:"source"`
+	Metric     string  `json:"metric"`
+	Score      float64 `json:"score"`
+	Evidence   string  `json:"evidence"`
+	Confidence string  `json:"confidence"`
 }
 
 // TimelineEvent represents a signal on a unified timeline.
 type TimelineEvent struct {
 	Timestamp time.Time    `json:"timestamp"`
 	Source    SignalSource `json:"source"`
-	Metric   string       `json:"metric"`
-	Value    float64      `json:"value"`
-	Severity string       `json:"severity,omitempty"`
+	Metric    string       `json:"metric"`
+	Value     float64      `json:"value"`
+	Severity  string       `json:"severity,omitempty"`
 }
 
 // ExternalEndpoint configures an external data source.
 type ExternalEndpoint struct {
-	Source  SignalSource `json:"source"`
-	URL     string       `json:"url"`
-	APIKey  string       `json:"api_key,omitempty"`
-	Active  bool         `json:"active"`
+	Source SignalSource `json:"source"`
+	URL    string       `json:"url"`
+	APIKey string       `json:"api_key,omitempty"`
+	Active bool         `json:"active"`
 }
 
 // Engine manages the observability correlation engine.
 type Engine struct {
-	mu        sync.RWMutex
-	signals   []Signal
-	endpoints map[string]ExternalEndpoint
+	mu         sync.RWMutex
+	signals    []Signal
+	endpoints  map[string]ExternalEndpoint
 	maxSignals int
-	logger    *slog.Logger
+	logger     *slog.Logger
 }
 
 // NewEngine creates a new correlation engine.
@@ -174,9 +176,9 @@ func (e *Engine) Correlate(windowDuration time.Duration, metricFilter string) *C
 		result.Timeline = append(result.Timeline, TimelineEvent{
 			Timestamp: s.Timestamp,
 			Source:    s.Source,
-			Metric:   s.Metric,
-			Value:    s.Value,
-			Severity: s.Severity,
+			Metric:    s.Metric,
+			Value:     s.Value,
+			Severity:  s.Severity,
 		})
 	}
 

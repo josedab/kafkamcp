@@ -113,8 +113,8 @@ func TestListRoutingRulesAfterAdding(t *testing.T) {
 	t.Parallel()
 	c := NewCoordinator("local-1", testLogger())
 
-	c.AddRoutingRule(RoutingRule{ID: "r1", ToolMatch: "list_topics"})
-	c.AddRoutingRule(RoutingRule{ID: "r2", Cluster: "staging"})
+	_, _ = c.AddRoutingRule(RoutingRule{ID: "r1", ToolMatch: "list_topics"})
+	_, _ = c.AddRoutingRule(RoutingRule{ID: "r2", Cluster: "staging"})
 
 	rules := c.ListRoutingRules()
 	if len(rules) != 2 {
@@ -138,9 +138,9 @@ func TestResolveRouteWithMatchingRule(t *testing.T) {
 	t.Parallel()
 	c := NewCoordinator("local-1", testLogger())
 
-	c.Join(Instance{ID: "inst-1", Name: "n1", Endpoint: "http://a:8080", Clusters: []string{"prod"}})
-	c.Join(Instance{ID: "inst-2", Name: "n2", Endpoint: "http://b:8080", Clusters: []string{"staging"}})
-	c.AddRoutingRule(RoutingRule{ToolMatch: "list_topics", Targets: []string{"inst-1"}})
+	_, _ = c.Join(Instance{ID: "inst-1", Name: "n1", Endpoint: "http://a:8080", Clusters: []string{"prod"}})
+	_, _ = c.Join(Instance{ID: "inst-2", Name: "n2", Endpoint: "http://b:8080", Clusters: []string{"staging"}})
+	_, _ = c.AddRoutingRule(RoutingRule{ToolMatch: "list_topics", Targets: []string{"inst-1"}})
 
 	result := c.ResolveRoute("list_topics", "")
 	if len(result) != 1 {
@@ -155,9 +155,9 @@ func TestResolveRouteWildcardTool(t *testing.T) {
 	t.Parallel()
 	c := NewCoordinator("local-1", testLogger())
 
-	c.Join(Instance{ID: "inst-1", Name: "n1", Endpoint: "http://a:8080", Clusters: []string{"prod"}})
-	c.Join(Instance{ID: "inst-2", Name: "n2", Endpoint: "http://b:8080", Clusters: []string{"staging"}})
-	c.AddRoutingRule(RoutingRule{ToolMatch: "*", Targets: []string{"inst-2"}})
+	_, _ = c.Join(Instance{ID: "inst-1", Name: "n1", Endpoint: "http://a:8080", Clusters: []string{"prod"}})
+	_, _ = c.Join(Instance{ID: "inst-2", Name: "n2", Endpoint: "http://b:8080", Clusters: []string{"staging"}})
+	_, _ = c.AddRoutingRule(RoutingRule{ToolMatch: "*", Targets: []string{"inst-2"}})
 
 	result := c.ResolveRoute("any_tool", "")
 	if len(result) != 1 {
@@ -172,8 +172,8 @@ func TestResolveRouteNoRuleClusterMatch(t *testing.T) {
 	t.Parallel()
 	c := NewCoordinator("local-1", testLogger())
 
-	c.Join(Instance{ID: "inst-1", Name: "n1", Endpoint: "http://a:8080", Clusters: []string{"prod"}})
-	c.Join(Instance{ID: "inst-2", Name: "n2", Endpoint: "http://b:8080", Clusters: []string{"staging"}})
+	_, _ = c.Join(Instance{ID: "inst-1", Name: "n1", Endpoint: "http://a:8080", Clusters: []string{"prod"}})
+	_, _ = c.Join(Instance{ID: "inst-2", Name: "n2", Endpoint: "http://b:8080", Clusters: []string{"staging"}})
 
 	result := c.ResolveRoute("list_topics", "prod")
 	if len(result) != 1 {
@@ -188,8 +188,8 @@ func TestResolveRouteNoRuleNoClusterReturnsAll(t *testing.T) {
 	t.Parallel()
 	c := NewCoordinator("local-1", testLogger())
 
-	c.Join(Instance{ID: "inst-1", Name: "n1", Endpoint: "http://a:8080", Clusters: []string{"prod"}})
-	c.Join(Instance{ID: "inst-2", Name: "n2", Endpoint: "http://b:8080", Clusters: []string{"staging"}})
+	_, _ = c.Join(Instance{ID: "inst-1", Name: "n1", Endpoint: "http://a:8080", Clusters: []string{"prod"}})
+	_, _ = c.Join(Instance{ID: "inst-2", Name: "n2", Endpoint: "http://b:8080", Clusters: []string{"staging"}})
 
 	result := c.ResolveRoute("list_topics", "")
 	if len(result) != 2 {
@@ -201,12 +201,12 @@ func TestResolveRouteInactiveTargetFallsThrough(t *testing.T) {
 	t.Parallel()
 	c := NewCoordinator("local-1", testLogger())
 
-	c.Join(Instance{ID: "inst-1", Name: "n1", Endpoint: "http://a:8080", Clusters: []string{"prod"}})
-	c.Join(Instance{ID: "inst-2", Name: "n2", Endpoint: "http://b:8080", Clusters: []string{"prod"}})
+	_, _ = c.Join(Instance{ID: "inst-1", Name: "n1", Endpoint: "http://a:8080", Clusters: []string{"prod"}})
+	_, _ = c.Join(Instance{ID: "inst-2", Name: "n2", Endpoint: "http://b:8080", Clusters: []string{"prod"}})
 	// Deregister inst-1 so the rule's target is inactive
-	c.Leave("inst-1")
+	_ = c.Leave("inst-1")
 
-	c.AddRoutingRule(RoutingRule{ToolMatch: "list_topics", Targets: []string{"inst-1"}})
+	_, _ = c.AddRoutingRule(RoutingRule{ToolMatch: "list_topics", Targets: []string{"inst-1"}})
 
 	// Should fall through to cluster routing since inst-1 is inactive
 	result := c.ResolveRoute("list_topics", "prod")
@@ -246,8 +246,8 @@ func TestDiscoverServicesMultipleInstances(t *testing.T) {
 	t.Parallel()
 	c := NewCoordinator("local-1", testLogger())
 
-	c.Join(Instance{ID: "inst-1", Name: "n1", Endpoint: "http://a:8080", Clusters: []string{"prod"}})
-	c.Join(Instance{ID: "inst-2", Name: "n2", Endpoint: "http://b:8080", Clusters: []string{"staging"}})
+	_, _ = c.Join(Instance{ID: "inst-1", Name: "n1", Endpoint: "http://a:8080", Clusters: []string{"prod"}})
+	_, _ = c.Join(Instance{ID: "inst-2", Name: "n2", Endpoint: "http://b:8080", Clusters: []string{"staging"}})
 
 	services := c.DiscoverServices()
 	if len(services) != 2 {
@@ -272,7 +272,7 @@ func TestDiscoverServicesWithCapabilities(t *testing.T) {
 	t.Parallel()
 	c := NewCoordinator("local-1", testLogger())
 
-	c.Join(Instance{
+	_, _ = c.Join(Instance{
 		ID: "inst-1", Name: "n1", Endpoint: "http://a:8080",
 		Clusters:     []string{"prod"},
 		Capabilities: []string{"list_topics", "describe_topic"},
@@ -314,8 +314,8 @@ func TestGetTopologySingleCluster(t *testing.T) {
 	t.Parallel()
 	c := NewCoordinator("local-1", testLogger())
 
-	c.Join(Instance{ID: "inst-1", Name: "n1", Endpoint: "http://a:8080", Clusters: []string{"prod"}})
-	c.Join(Instance{ID: "inst-2", Name: "n2", Endpoint: "http://b:8080", Clusters: []string{"prod"}})
+	_, _ = c.Join(Instance{ID: "inst-1", Name: "n1", Endpoint: "http://a:8080", Clusters: []string{"prod"}})
+	_, _ = c.Join(Instance{ID: "inst-2", Name: "n2", Endpoint: "http://b:8080", Clusters: []string{"prod"}})
 
 	topo := c.GetTopology()
 	if len(topo.ClusterMap) != 1 {
@@ -331,9 +331,9 @@ func TestGetTopologyMultiCluster(t *testing.T) {
 	t.Parallel()
 	c := NewCoordinator("local-1", testLogger())
 
-	c.Join(Instance{ID: "inst-1", Name: "n1", Endpoint: "http://a:8080", Clusters: []string{"prod"}})
-	c.Join(Instance{ID: "inst-2", Name: "n2", Endpoint: "http://b:8080", Clusters: []string{"staging"}})
-	c.Join(Instance{ID: "inst-3", Name: "n3", Endpoint: "http://c:8080", Clusters: []string{"prod", "staging"}})
+	_, _ = c.Join(Instance{ID: "inst-1", Name: "n1", Endpoint: "http://a:8080", Clusters: []string{"prod"}})
+	_, _ = c.Join(Instance{ID: "inst-2", Name: "n2", Endpoint: "http://b:8080", Clusters: []string{"staging"}})
+	_, _ = c.Join(Instance{ID: "inst-3", Name: "n3", Endpoint: "http://c:8080", Clusters: []string{"prod", "staging"}})
 
 	topo := c.GetTopology()
 	if len(topo.ClusterMap) != 2 {
@@ -351,12 +351,12 @@ func TestGetTopologyTotalToolsUnique(t *testing.T) {
 	t.Parallel()
 	c := NewCoordinator("local-1", testLogger())
 
-	c.Join(Instance{
+	_, _ = c.Join(Instance{
 		ID: "inst-1", Name: "n1", Endpoint: "http://a:8080",
 		Clusters:     []string{"prod"},
 		Capabilities: []string{"list_topics", "describe_topic"},
 	})
-	c.Join(Instance{
+	_, _ = c.Join(Instance{
 		ID: "inst-2", Name: "n2", Endpoint: "http://b:8080",
 		Clusters:     []string{"staging"},
 		Capabilities: []string{"list_topics", "produce_message"},
@@ -373,8 +373,8 @@ func TestGetTopologyIncludesRoutingRules(t *testing.T) {
 	t.Parallel()
 	c := NewCoordinator("local-1", testLogger())
 
-	c.Join(Instance{ID: "inst-1", Name: "n1", Endpoint: "http://a:8080", Clusters: []string{"prod"}})
-	c.AddRoutingRule(RoutingRule{ID: "r1", ToolMatch: "list_topics", Targets: []string{"inst-1"}})
+	_, _ = c.Join(Instance{ID: "inst-1", Name: "n1", Endpoint: "http://a:8080", Clusters: []string{"prod"}})
+	_, _ = c.AddRoutingRule(RoutingRule{ID: "r1", ToolMatch: "list_topics", Targets: []string{"inst-1"}})
 
 	topo := c.GetTopology()
 	if len(topo.Routes) != 1 {

@@ -36,9 +36,9 @@ func TestListWorkflowsLatestVersion(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
 	steps := []DAGStep{{ID: "s1", Name: "S1", Tool: "t1"}}
-	e.CreateWorkflow("wf-a", "", "agent", nil, steps, nil)
-	e.CreateWorkflow("wf-a", "", "agent", nil, steps, nil)
-	e.CreateWorkflow("wf-b", "", "agent", nil, steps, nil)
+	_, _ = e.CreateWorkflow("wf-a", "", "agent", nil, steps, nil)
+	_, _ = e.CreateWorkflow("wf-a", "", "agent", nil, steps, nil)
+	_, _ = e.CreateWorkflow("wf-b", "", "agent", nil, steps, nil)
 
 	list := e.ListWorkflows()
 	if len(list) != 2 {
@@ -66,9 +66,9 @@ func TestGetVersions(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
 	steps := []DAGStep{{ID: "s1", Name: "S1", Tool: "t1"}}
-	e.CreateWorkflow("wf", "", "agent", nil, steps, nil)
-	e.CreateWorkflow("wf", "", "agent", nil, steps, nil)
-	e.CreateWorkflow("wf", "", "agent", nil, steps, nil)
+	_, _ = e.CreateWorkflow("wf", "", "agent", nil, steps, nil)
+	_, _ = e.CreateWorkflow("wf", "", "agent", nil, steps, nil)
+	_, _ = e.CreateWorkflow("wf", "", "agent", nil, steps, nil)
 
 	versions, err := e.GetVersions("wf")
 	if err != nil {
@@ -187,8 +187,8 @@ func TestListRunsFilterByTemplate(t *testing.T) {
 	steps := []DAGStep{{ID: "s1", Name: "S1", Tool: "t1"}}
 	wf1, _ := e.CreateWorkflow("wf1", "", "agent", nil, steps, nil)
 	wf2, _ := e.CreateWorkflow("wf2", "", "agent", nil, steps, nil)
-	e.StartRun(wf1.ID, "agent", nil)
-	e.StartRun(wf2.ID, "agent", nil)
+	_, _ = e.StartRun(wf1.ID, "agent", nil)
+	_, _ = e.StartRun(wf2.ID, "agent", nil)
 
 	runs := e.ListRuns(wf1.ID, 50)
 	if len(runs) != 1 {
@@ -201,8 +201,8 @@ func TestListRunsAll(t *testing.T) {
 	e := NewEngine(testLogger())
 	steps := []DAGStep{{ID: "s1", Name: "S1", Tool: "t1"}}
 	wf, _ := e.CreateWorkflow("wf", "", "agent", nil, steps, nil)
-	e.StartRun(wf.ID, "agent", nil)
-	e.StartRun(wf.ID, "agent", nil)
+	_, _ = e.StartRun(wf.ID, "agent", nil)
+	_, _ = e.StartRun(wf.ID, "agent", nil)
 
 	runs := e.ListRuns("", 50)
 	if len(runs) != 2 {
@@ -216,7 +216,7 @@ func TestListRunsLimit(t *testing.T) {
 	steps := []DAGStep{{ID: "s1", Name: "S1", Tool: "t1"}}
 	wf, _ := e.CreateWorkflow("wf", "", "agent", nil, steps, nil)
 	for i := 0; i < 5; i++ {
-		e.StartRun(wf.ID, "agent", nil)
+		_, _ = e.StartRun(wf.ID, "agent", nil)
 	}
 
 	runs := e.ListRuns("", 2)
@@ -243,7 +243,7 @@ func TestCompleteStepTriggersWorkflowCompletion(t *testing.T) {
 	wf, _ := e.CreateWorkflow("wf", "", "agent", nil, steps, nil)
 	run, _ := e.StartRun(wf.ID, "agent", nil)
 
-	e.CompleteStep(run.ID, "s1", "completed", "output", "")
+	_ = e.CompleteStep(run.ID, "s1", "completed", "output", "")
 
 	got, _ := e.GetRun(run.ID)
 	if got.Status != "completed" {
@@ -261,7 +261,7 @@ func TestCompleteStepFailed(t *testing.T) {
 	wf, _ := e.CreateWorkflow("wf", "", "agent", nil, steps, nil)
 	run, _ := e.StartRun(wf.ID, "agent", nil)
 
-	e.CompleteStep(run.ID, "s1", "failed", nil, "error occurred")
+	_ = e.CompleteStep(run.ID, "s1", "failed", nil, "error occurred")
 
 	got, _ := e.GetRun(run.ID)
 	if got.Status != "failed" {
@@ -303,7 +303,7 @@ func TestGetReadyStepsAllDepsComplete(t *testing.T) {
 	wf, _ := e.CreateWorkflow("wf", "", "agent", nil, steps, nil)
 	run, _ := e.StartRun(wf.ID, "agent", nil)
 
-	e.CompleteStep(run.ID, "s1", "completed", nil, "")
+	_ = e.CompleteStep(run.ID, "s1", "completed", nil, "")
 
 	ready, _ := e.GetReadySteps(run.ID)
 	if len(ready) != 1 || ready[0].ID != "s2" {
@@ -322,7 +322,7 @@ func TestGetReadyStepsPartialDeps(t *testing.T) {
 	wf, _ := e.CreateWorkflow("wf", "", "agent", nil, steps, nil)
 	run, _ := e.StartRun(wf.ID, "agent", nil)
 
-	e.CompleteStep(run.ID, "s1", "completed", nil, "")
+	_ = e.CompleteStep(run.ID, "s1", "completed", nil, "")
 
 	ready, _ := e.GetReadySteps(run.ID)
 	for _, s := range ready {
@@ -342,7 +342,7 @@ func TestGetReadyStepsSkippedDepsCount(t *testing.T) {
 	wf, _ := e.CreateWorkflow("wf", "", "agent", nil, steps, nil)
 	run, _ := e.StartRun(wf.ID, "agent", nil)
 
-	e.CompleteStep(run.ID, "s1", "skipped", nil, "")
+	_ = e.CompleteStep(run.ID, "s1", "skipped", nil, "")
 
 	ready, _ := e.GetReadySteps(run.ID)
 	if len(ready) != 1 || ready[0].ID != "s2" {
@@ -441,10 +441,10 @@ func TestCancelAlreadyCancelled(t *testing.T) {
 	steps := []DAGStep{{ID: "s1", Name: "S1", Tool: "t1"}}
 	wf, _ := e.CreateWorkflow("wf", "", "agent", nil, steps, nil)
 	run, _ := e.StartRun(wf.ID, "agent", nil)
-	e.CancelRun(run.ID)
+	_ = e.CancelRun(run.ID)
 
 	err := e.CancelRun(run.ID)
 	if err == nil {
-		t.Error("expected error for already cancelled run")
+		t.Error("expected error for already canceled run")
 	}
 }

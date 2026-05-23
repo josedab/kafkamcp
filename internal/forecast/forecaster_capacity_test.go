@@ -99,7 +99,7 @@ func TestGenerateCapacityPlan(t *testing.T) {
 		})
 		f.RecordMetric(Metric{
 			Topic: "orders", MetricName: "storage",
-			Value: float64(d+1) * 1024 * 1024 * 100, // growing storage
+			Value:     float64(d+1) * 1024 * 1024 * 100, // growing storage
 			Timestamp: base.AddDate(0, 0, d),
 		})
 	}
@@ -208,10 +208,10 @@ func TestSplitMetricKey(t *testing.T) {
 		{"orders:throughput", [2]string{"orders", "throughput"}},
 		{"my-topic:storage", [2]string{"my-topic", "storage"}},
 		{"a:b:c", [2]string{"a:b", "c"}},         // splits on last colon
-		{"nocolon", [2]string{"nocolon", ""}},     // no colon
-		{":leading", [2]string{"", "leading"}},    // leading colon
-		{"trailing:", [2]string{"trailing", ""}},   // trailing colon
-		{"", [2]string{"", ""}},                    // empty string
+		{"nocolon", [2]string{"nocolon", ""}},    // no colon
+		{":leading", [2]string{"", "leading"}},   // leading colon
+		{"trailing:", [2]string{"trailing", ""}}, // trailing colon
+		{"", [2]string{"", ""}},                  // empty string
 	}
 
 	for _, tc := range tests {

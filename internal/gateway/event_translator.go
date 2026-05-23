@@ -10,16 +10,16 @@ import (
 
 // TranslationRule defines how events are translated between platforms.
 type TranslationRule struct {
-	ID             string            `json:"id"`
-	Name           string            `json:"name"`
-	Description    string            `json:"description,omitempty"`
-	SourceBackend  string            `json:"source_backend"`
-	SourceTopic    string            `json:"source_topic"`
-	TargetBackend  string            `json:"target_backend"`
-	TargetTopic    string            `json:"target_topic"`
-	Transform      TransformConfig   `json:"transform,omitempty"`
-	Status         string            `json:"status"` // active, paused, error
-	CreatedAt      time.Time         `json:"created_at"`
+	ID            string          `json:"id"`
+	Name          string          `json:"name"`
+	Description   string          `json:"description,omitempty"`
+	SourceBackend string          `json:"source_backend"`
+	SourceTopic   string          `json:"source_topic"`
+	TargetBackend string          `json:"target_backend"`
+	TargetTopic   string          `json:"target_topic"`
+	Transform     TransformConfig `json:"transform,omitempty"`
+	Status        string          `json:"status"` // active, paused, error
+	CreatedAt     time.Time       `json:"created_at"`
 }
 
 // TransformConfig defines message transformation rules.
@@ -47,12 +47,12 @@ type TranslationResult struct {
 
 // TranslationStats tracks aggregate translation statistics.
 type TranslationStats struct {
-	TotalRules      int                      `json:"total_rules"`
-	ActiveRules     int                      `json:"active_rules"`
-	TotalTranslated int64                    `json:"total_translated"`
-	TotalErrors     int64                    `json:"total_errors"`
-	RuleStats       map[string]RuleStats     `json:"rule_stats"`
-	BackendPairs    []BackendPairStats       `json:"backend_pairs"`
+	TotalRules      int                  `json:"total_rules"`
+	ActiveRules     int                  `json:"active_rules"`
+	TotalTranslated int64                `json:"total_translated"`
+	TotalErrors     int64                `json:"total_errors"`
+	RuleStats       map[string]RuleStats `json:"rule_stats"`
+	BackendPairs    []BackendPairStats   `json:"backend_pairs"`
 }
 
 // RuleStats tracks per-rule statistics.

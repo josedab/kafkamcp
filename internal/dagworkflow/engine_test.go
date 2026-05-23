@@ -83,7 +83,7 @@ func TestRunAndReadySteps(t *testing.T) {
 	}
 
 	// Complete s1
-	e.CompleteStep(run.ID, "s1", "completed", nil, "")
+	_ = e.CompleteStep(run.ID, "s1", "completed", nil, "")
 	ready, _ = e.GetReadySteps(run.ID)
 	// s2 should now be ready, s3 still pending
 	readyIDs := make(map[string]bool)
@@ -108,7 +108,7 @@ func TestCancelRun(t *testing.T) {
 	}
 
 	r, _ := e.GetRun(run.ID)
-	if r.Status != "cancelled" {
-		t.Errorf("expected cancelled, got %s", r.Status)
+	if r.Status != "canceled" {
+		t.Errorf("expected canceled, got %s", r.Status)
 	}
 }

@@ -126,7 +126,7 @@ func AnalyzeConsumerImpact(diff *SchemaDiff, consumerGroups []string, topicsByGr
 
 		impact := ConsumerImpact{
 			GroupID: groupID,
-			Topics: []string{subjectTopic},
+			Topics:  []string{subjectTopic},
 		}
 
 		for _, f := range diff.Fields {

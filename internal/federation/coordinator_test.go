@@ -69,7 +69,7 @@ func TestJoinEmptyEndpoint(t *testing.T) {
 func TestJoinDuplicate(t *testing.T) {
 	t.Parallel()
 	c := NewCoordinator("local-1", testLogger())
-	c.Join(Instance{ID: "inst-1", Name: "n1", Endpoint: "http://a:8080"})
+	_, _ = c.Join(Instance{ID: "inst-1", Name: "n1", Endpoint: "http://a:8080"})
 	// Joining with same ID overwrites (no error per implementation)
 	inst, err := c.Join(Instance{ID: "inst-1", Name: "n2", Endpoint: "http://b:8080"})
 	if err != nil {
@@ -83,7 +83,7 @@ func TestJoinDuplicate(t *testing.T) {
 func TestLeaveSuccess(t *testing.T) {
 	t.Parallel()
 	c := NewCoordinator("local-1", testLogger())
-	c.Join(Instance{ID: "inst-1", Endpoint: "http://a:8080"})
+	_, _ = c.Join(Instance{ID: "inst-1", Endpoint: "http://a:8080"})
 
 	err := c.Leave("inst-1")
 	if err != nil {
@@ -108,7 +108,7 @@ func TestLeaveNotFound(t *testing.T) {
 func TestHeartbeatSuccess(t *testing.T) {
 	t.Parallel()
 	c := NewCoordinator("local-1", testLogger())
-	c.Join(Instance{ID: "inst-1", Endpoint: "http://a:8080"})
+	_, _ = c.Join(Instance{ID: "inst-1", Endpoint: "http://a:8080"})
 
 	err := c.Heartbeat("inst-1")
 	if err != nil {
@@ -128,8 +128,8 @@ func TestHeartbeatNotFound(t *testing.T) {
 func TestHeartbeatAfterLeave(t *testing.T) {
 	t.Parallel()
 	c := NewCoordinator("local-1", testLogger())
-	c.Join(Instance{ID: "inst-1", Endpoint: "http://a:8080"})
-	c.Leave("inst-1")
+	_, _ = c.Join(Instance{ID: "inst-1", Endpoint: "http://a:8080"})
+	_ = c.Leave("inst-1")
 
 	err := c.Heartbeat("inst-1")
 	if err == nil {
@@ -140,8 +140,8 @@ func TestHeartbeatAfterLeave(t *testing.T) {
 func TestQueryAllActive(t *testing.T) {
 	t.Parallel()
 	c := NewCoordinator("local-1", testLogger())
-	c.Join(Instance{ID: "inst-1", Name: "n1", Endpoint: "http://a:8080"})
-	c.Join(Instance{ID: "inst-2", Name: "n2", Endpoint: "http://b:8080"})
+	_, _ = c.Join(Instance{ID: "inst-1", Name: "n1", Endpoint: "http://a:8080"})
+	_, _ = c.Join(Instance{ID: "inst-2", Name: "n2", Endpoint: "http://b:8080"})
 
 	q := c.Query("list_topics", map[string]any{"cluster": "default"}, nil)
 	if q.Status != "completed" {
@@ -158,8 +158,8 @@ func TestQueryAllActive(t *testing.T) {
 func TestQueryTargeted(t *testing.T) {
 	t.Parallel()
 	c := NewCoordinator("local-1", testLogger())
-	c.Join(Instance{ID: "inst-1", Name: "n1", Endpoint: "http://a:8080"})
-	c.Join(Instance{ID: "inst-2", Name: "n2", Endpoint: "http://b:8080"})
+	_, _ = c.Join(Instance{ID: "inst-1", Name: "n1", Endpoint: "http://a:8080"})
+	_, _ = c.Join(Instance{ID: "inst-2", Name: "n2", Endpoint: "http://b:8080"})
 
 	q := c.Query("list_topics", nil, []string{"inst-1"})
 	if len(q.Results) != 1 {
@@ -182,8 +182,8 @@ func TestQueryNoInstances(t *testing.T) {
 func TestQuerySkipsInactive(t *testing.T) {
 	t.Parallel()
 	c := NewCoordinator("local-1", testLogger())
-	c.Join(Instance{ID: "inst-1", Endpoint: "http://a:8080"})
-	c.Join(Instance{ID: "inst-2", Endpoint: "http://b:8080"})
+	_, _ = c.Join(Instance{ID: "inst-1", Endpoint: "http://a:8080"})
+	_, _ = c.Join(Instance{ID: "inst-2", Endpoint: "http://b:8080"})
 
 	// Manually set one to degraded
 	c.mu.Lock()
@@ -199,8 +199,8 @@ func TestQuerySkipsInactive(t *testing.T) {
 func TestGetStatus(t *testing.T) {
 	t.Parallel()
 	c := NewCoordinator("local-1", testLogger())
-	c.Join(Instance{ID: "inst-1", Endpoint: "http://a:8080"})
-	c.Join(Instance{ID: "inst-2", Endpoint: "http://b:8080"})
+	_, _ = c.Join(Instance{ID: "inst-1", Endpoint: "http://a:8080"})
+	_, _ = c.Join(Instance{ID: "inst-2", Endpoint: "http://b:8080"})
 
 	status := c.GetStatus()
 	if status["local_id"] != "local-1" {
@@ -226,7 +226,7 @@ func TestGetStatusEmpty(t *testing.T) {
 func TestListInstances(t *testing.T) {
 	t.Parallel()
 	c := NewCoordinator("local-1", testLogger())
-	c.Join(Instance{ID: "inst-1", Endpoint: "http://a:8080"})
+	_, _ = c.Join(Instance{ID: "inst-1", Endpoint: "http://a:8080"})
 
 	instances := c.ListInstances()
 	if len(instances) != 1 {
@@ -241,7 +241,7 @@ func TestListInstancesEmpty(t *testing.T) {
 	t.Parallel()
 	c := NewCoordinator("local-1", testLogger())
 	instances := c.ListInstances()
-	if instances != nil && len(instances) != 0 {
+	if len(instances) != 0 {
 		t.Errorf("expected nil or empty, got %d", len(instances))
 	}
 }
@@ -288,7 +288,7 @@ func TestListPoliciesEmpty(t *testing.T) {
 	t.Parallel()
 	c := NewCoordinator("local-1", testLogger())
 	policies := c.ListPolicies()
-	if policies != nil && len(policies) != 0 {
+	if len(policies) != 0 {
 		t.Errorf("expected nil or empty, got %d", len(policies))
 	}
 }
@@ -296,8 +296,8 @@ func TestListPoliciesEmpty(t *testing.T) {
 func TestGetAuditLog(t *testing.T) {
 	t.Parallel()
 	c := NewCoordinator("local-1", testLogger())
-	c.Join(Instance{ID: "inst-1", Endpoint: "http://a:8080"})
-	c.Leave("inst-1")
+	_, _ = c.Join(Instance{ID: "inst-1", Endpoint: "http://a:8080"})
+	_ = c.Leave("inst-1")
 
 	log := c.GetAuditLog(10)
 	if len(log) != 2 {
@@ -315,7 +315,7 @@ func TestGetAuditLogLimit(t *testing.T) {
 	t.Parallel()
 	c := NewCoordinator("local-1", testLogger())
 	for i := 0; i < 5; i++ {
-		c.Join(Instance{ID: "inst", Endpoint: "http://a:8080"})
+		_, _ = c.Join(Instance{ID: "inst", Endpoint: "http://a:8080"})
 	}
 
 	log := c.GetAuditLog(2)
@@ -327,7 +327,7 @@ func TestGetAuditLogLimit(t *testing.T) {
 func TestGetAuditLogZeroLimit(t *testing.T) {
 	t.Parallel()
 	c := NewCoordinator("local-1", testLogger())
-	c.Join(Instance{ID: "inst-1", Endpoint: "http://a:8080"})
+	_, _ = c.Join(Instance{ID: "inst-1", Endpoint: "http://a:8080"})
 
 	log := c.GetAuditLog(0)
 	if len(log) != 1 {
@@ -338,7 +338,7 @@ func TestGetAuditLogZeroLimit(t *testing.T) {
 func TestGetAuditLogNegativeLimit(t *testing.T) {
 	t.Parallel()
 	c := NewCoordinator("local-1", testLogger())
-	c.Join(Instance{ID: "inst-1", Endpoint: "http://a:8080"})
+	_, _ = c.Join(Instance{ID: "inst-1", Endpoint: "http://a:8080"})
 
 	log := c.GetAuditLog(-1)
 	if len(log) != 1 {
@@ -370,9 +370,9 @@ func TestConcurrentJoinLeave(t *testing.T) {
 		go func(id int) {
 			defer wg.Done()
 			instID := "inst-" + string(rune('A'+id%26))
-			c.Join(Instance{ID: instID, Endpoint: "http://a:8080"})
-			c.Heartbeat(instID)
-			c.Leave(instID)
+			_, _ = c.Join(Instance{ID: instID, Endpoint: "http://a:8080"})
+			_ = c.Heartbeat(instID)
+			_ = c.Leave(instID)
 		}(i)
 	}
 	wg.Wait()
@@ -387,8 +387,8 @@ func TestConcurrentJoinLeave(t *testing.T) {
 func TestConcurrentQuery(t *testing.T) {
 	t.Parallel()
 	c := NewCoordinator("local-1", testLogger())
-	c.Join(Instance{ID: "inst-1", Name: "n1", Endpoint: "http://a:8080"})
-	c.Join(Instance{ID: "inst-2", Name: "n2", Endpoint: "http://b:8080"})
+	_, _ = c.Join(Instance{ID: "inst-1", Name: "n1", Endpoint: "http://a:8080"})
+	_, _ = c.Join(Instance{ID: "inst-2", Name: "n2", Endpoint: "http://b:8080"})
 
 	var wg sync.WaitGroup
 	for i := 0; i < 20; i++ {

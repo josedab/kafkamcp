@@ -47,10 +47,10 @@ func TestAgentPolicy(t *testing.T) {
 	e := NewEngine(slog.Default())
 
 	key, _ := e.CreateKey("policy-key", ProviderLocal, "")
-	e.ConfigureFieldEncryption("sensitive", key.ID, []string{"ssn"})
+	_, _ = e.ConfigureFieldEncryption("sensitive", key.ID, []string{"ssn"})
 
 	// Agent without decrypt permission
-	e.SetAgentPolicy("agent-1", []string{key.ID}, []string{"sensitive"}, true, false)
+	_, _ = e.SetAgentPolicy("agent-1", []string{key.ID}, []string{"sensitive"}, true, false)
 
 	_, err := e.DecryptMessage("agent-1", "sensitive", `{"ssn":"ENC:fake"}`)
 	if err == nil {
@@ -58,7 +58,7 @@ func TestAgentPolicy(t *testing.T) {
 	}
 
 	// Agent without topic access
-	e.SetAgentPolicy("agent-2", nil, []string{"other-topic"}, true, true)
+	_, _ = e.SetAgentPolicy("agent-2", nil, []string{"other-topic"}, true, true)
 	_, err = e.EncryptMessage("agent-2", "sensitive", `{"ssn":"123-45-6789"}`)
 	if err == nil {
 		t.Error("expected error for agent without topic access")
@@ -80,7 +80,7 @@ func TestKeyRotation(t *testing.T) {
 	}
 
 	// Verify key still works
-	e.ConfigureFieldEncryption("test-topic", key.ID, []string{"data"})
+	_, _ = e.ConfigureFieldEncryption("test-topic", key.ID, []string{"data"})
 	msg := `{"data":"secret"}`
 	enc, err := e.EncryptMessage("", "test-topic", msg)
 	if err != nil {
@@ -100,7 +100,7 @@ func TestKeyRevoke(t *testing.T) {
 	e := NewEngine(slog.Default())
 
 	key, _ := e.CreateKey("revoke-me", ProviderLocal, "")
-	e.ConfigureFieldEncryption("topic", key.ID, []string{"x"})
+	_, _ = e.ConfigureFieldEncryption("topic", key.ID, []string{"x"})
 
 	if err := e.RevokeKey(key.ID); err != nil {
 		t.Fatalf("RevokeKey: %v", err)
@@ -116,8 +116,12 @@ func TestListKeys(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
 
-	e.CreateKey("k1", ProviderLocal, "")
-	e.CreateKey("k2", ProviderVault, "")
+	if _, err := e.CreateKey("k1", ProviderLocal, ""); err != nil {
+		t.Fatalf("CreateKey k1: %v", err)
+	}
+	if _, err := e.CreateKey("k2", ProviderLocal, ""); err != nil {
+		t.Fatalf("CreateKey k2: %v", err)
+	}
 
 	keys := e.ListKeys()
 	if len(keys) != 2 {
@@ -130,7 +134,7 @@ func TestEncryptionConcurrent(t *testing.T) {
 	e := NewEngine(slog.Default())
 
 	key, _ := e.CreateKey("concurrent-key", ProviderLocal, "AES-256-GCM")
-	e.ConfigureFieldEncryption("concurrent-topic", key.ID, []string{"data"})
+	_, _ = e.ConfigureFieldEncryption("concurrent-topic", key.ID, []string{"data"})
 
 	done := make(chan bool, 10)
 	for i := 0; i < 10; i++ {
@@ -161,7 +165,7 @@ func TestEncryptNonJSONMessage(t *testing.T) {
 	e := NewEngine(slog.Default())
 
 	key, _ := e.CreateKey("plain-key", ProviderLocal, "AES-256-GCM")
-	e.ConfigureFieldEncryption("plain-topic", key.ID, []string{"data"})
+	_, _ = e.ConfigureFieldEncryption("plain-topic", key.ID, []string{"data"})
 
 	result, err := e.EncryptMessage("", "plain-topic", "plain text not JSON")
 	if err != nil {
@@ -200,7 +204,7 @@ func TestRevokeKeyPreventsEncryption(t *testing.T) {
 	e := NewEngine(slog.Default())
 
 	key, _ := e.CreateKey("revoke-test", ProviderLocal, "")
-	e.ConfigureFieldEncryption("secure-topic", key.ID, []string{"ssn"})
+	_, _ = e.ConfigureFieldEncryption("secure-topic", key.ID, []string{"ssn"})
 
 	// Works before revoke
 	_, err := e.EncryptMessage("", "secure-topic", `{"ssn":"123-45-6789"}`)
@@ -208,7 +212,7 @@ func TestRevokeKeyPreventsEncryption(t *testing.T) {
 		t.Fatalf("EncryptMessage before revoke: %v", err)
 	}
 
-	e.RevokeKey(key.ID)
+	_ = e.RevokeKey(key.ID)
 
 	// Fails after revoke
 	_, err = e.EncryptMessage("", "secure-topic", `{"ssn":"123-45-6789"}`)

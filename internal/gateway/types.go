@@ -8,6 +8,7 @@ import (
 // Protocol identifies a streaming protocol backend.
 type Protocol string
 
+// ProtocolKafka and related values define constants for this package.
 const (
 	ProtocolKafka     Protocol = "kafka"
 	ProtocolPulsar    Protocol = "pulsar"
@@ -66,15 +67,15 @@ type TopicInfo struct {
 
 // BackendConfig holds connection details for a streaming backend.
 type BackendConfig struct {
-	Protocol         Protocol          `json:"protocol" yaml:"protocol"`
-	Name             string            `json:"name" yaml:"name"`
-	Endpoints        []string          `json:"endpoints" yaml:"endpoints"`
-	TLS              bool              `json:"tls,omitempty" yaml:"tls,omitempty"`
-	AuthType         string            `json:"auth_type,omitempty" yaml:"auth_type,omitempty"`
-	Username         string            `json:"username,omitempty" yaml:"username,omitempty"`
-	Password         string            `json:"-" yaml:"password,omitempty"`
-	Token            string            `json:"-" yaml:"token,omitempty"`
-	Properties       map[string]string `json:"properties,omitempty" yaml:"properties,omitempty"`
+	Protocol   Protocol          `json:"protocol" yaml:"protocol"`
+	Name       string            `json:"name" yaml:"name"`
+	Endpoints  []string          `json:"endpoints" yaml:"endpoints"`
+	TLS        bool              `json:"tls,omitempty" yaml:"tls,omitempty"`
+	AuthType   string            `json:"auth_type,omitempty" yaml:"auth_type,omitempty"`
+	Username   string            `json:"username,omitempty" yaml:"username,omitempty"`
+	Password   string            `json:"-" yaml:"password,omitempty"`
+	Token      string            `json:"-" yaml:"token,omitempty"`
+	Properties map[string]string `json:"properties,omitempty" yaml:"properties,omitempty"`
 }
 
 // StreamBackend is the interface that each protocol adapter must implement.

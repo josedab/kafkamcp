@@ -10,20 +10,20 @@ import (
 
 // SchemaProposal represents a proposed schema change awaiting approval.
 type SchemaProposal struct {
-	ID           string          `json:"id"`
-	Subject      string          `json:"subject"`
-	Schema       string          `json:"schema"`
-	SchemaType   string          `json:"schema_type"`
-	Diff         *SchemaDiff     `json:"diff,omitempty"`
-	Impact       *ImpactAnalysis `json:"impact,omitempty"`
-	RolloutPlan  *RolloutPlan    `json:"rollout_plan,omitempty"`
-	Status       string          `json:"status"`
-	ProposedBy   string          `json:"proposed_by"`
-	ReviewedBy   string          `json:"reviewed_by,omitempty"`
-	ReviewNote   string          `json:"review_note,omitempty"`
-	ProposedAt   string          `json:"proposed_at"`
-	ReviewedAt   string          `json:"reviewed_at,omitempty"`
-	AppliedAt    string          `json:"applied_at,omitempty"`
+	ID          string          `json:"id"`
+	Subject     string          `json:"subject"`
+	Schema      string          `json:"schema"`
+	SchemaType  string          `json:"schema_type"`
+	Diff        *SchemaDiff     `json:"diff,omitempty"`
+	Impact      *ImpactAnalysis `json:"impact,omitempty"`
+	RolloutPlan *RolloutPlan    `json:"rollout_plan,omitempty"`
+	Status      string          `json:"status"`
+	ProposedBy  string          `json:"proposed_by"`
+	ReviewedBy  string          `json:"reviewed_by,omitempty"`
+	ReviewNote  string          `json:"review_note,omitempty"`
+	ProposedAt  string          `json:"proposed_at"`
+	ReviewedAt  string          `json:"reviewed_at,omitempty"`
+	AppliedAt   string          `json:"applied_at,omitempty"`
 }
 
 // VersionTimeline represents the versioning history for a schema subject.

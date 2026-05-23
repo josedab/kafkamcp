@@ -13,6 +13,7 @@ import (
 // FieldType represents a GraphQL field type.
 type FieldType string
 
+// TypeString and related values define constants for this package.
 const (
 	TypeString  FieldType = "String"
 	TypeInt     FieldType = "Int"
@@ -25,10 +26,10 @@ const (
 
 // SchemaField describes a field in the GraphQL schema.
 type SchemaField struct {
-	Name        string      `json:"name"`
-	Type        FieldType   `json:"type"`
-	Required    bool        `json:"required"`
-	Description string      `json:"description,omitempty"`
+	Name        string        `json:"name"`
+	Type        FieldType     `json:"type"`
+	Required    bool          `json:"required"`
+	Description string        `json:"description,omitempty"`
 	SubFields   []SchemaField `json:"sub_fields,omitempty"`
 }
 
@@ -69,24 +70,24 @@ type Schema struct {
 
 // Subscriber represents an active subscription connection.
 type Subscriber struct {
-	ID             string `json:"id"`
+	ID               string `json:"id"`
 	SubscriptionName string `json:"subscription_name"`
-	Topic          string `json:"topic,omitempty"`
-	CreatedAt      string `json:"created_at"`
-	MessageCount   int64  `json:"message_count"`
-	Active         bool   `json:"active"`
+	Topic            string `json:"topic,omitempty"`
+	CreatedAt        string `json:"created_at"`
+	MessageCount     int64  `json:"message_count"`
+	Active           bool   `json:"active"`
 }
 
 // QueryResult represents the result of a GraphQL query execution.
 type QueryResult struct {
-	Data   any      `json:"data,omitempty"`
+	Data   any        `json:"data,omitempty"`
 	Errors []GQLError `json:"errors,omitempty"`
 }
 
 // GQLError represents a GraphQL error.
 type GQLError struct {
-	Message   string   `json:"message"`
-	Path      []string `json:"path,omitempty"`
+	Message   string     `json:"message"`
+	Path      []string   `json:"path,omitempty"`
 	Locations []Location `json:"locations,omitempty"`
 }
 
@@ -98,11 +99,11 @@ type Location struct {
 
 // Engine manages the GraphQL schema, resolvers, and subscriptions.
 type Engine struct {
-	mu            sync.RWMutex
-	schema        *Schema
-	subscribers   map[string]*Subscriber
-	toolResolver  func(toolName string, args map[string]any) (any, error)
-	logger        *slog.Logger
+	mu           sync.RWMutex
+	schema       *Schema
+	subscribers  map[string]*Subscriber
+	toolResolver func(toolName string, args map[string]any) (any, error)
+	logger       *slog.Logger
 }
 
 // NewEngine creates a new GraphQL API engine.

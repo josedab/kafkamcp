@@ -117,7 +117,7 @@ func TestBusReplay(t *testing.T) {
 
 func TestBusStats(t *testing.T) {
 	bus := NewBus(DefaultBusConfig(), slog.Default())
-	bus.Subscribe(SubscriptionFilter{})
+	_, _ = bus.Subscribe(SubscriptionFilter{})
 	bus.Publish(Event{Type: EventToolInvocation, Source: "test"})
 
 	stats := bus.Stats()
@@ -134,8 +134,8 @@ func TestBusMaxSubscribers(t *testing.T) {
 	cfg.MaxSubscribers = 2
 	bus := NewBus(cfg, slog.Default())
 
-	bus.Subscribe(SubscriptionFilter{})
-	bus.Subscribe(SubscriptionFilter{})
+	_, _ = bus.Subscribe(SubscriptionFilter{})
+	_, _ = bus.Subscribe(SubscriptionFilter{})
 	_, err := bus.Subscribe(SubscriptionFilter{})
 	if err == nil {
 		t.Error("expected error when exceeding max subscribers")

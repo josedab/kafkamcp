@@ -17,46 +17,46 @@ import (
 
 // RemediationPolicy defines configurable per-DLQ-topic remediation policies.
 type RemediationPolicy struct {
-	TopicPattern    string          `json:"topic_pattern" yaml:"topic_pattern"`
-	Action          string          `json:"action" yaml:"action"`                     // retry, route, skip, escalate
-	MaxRetries      int             `json:"max_retries" yaml:"max_retries"`
-	BackoffBaseMs   int64           `json:"backoff_base_ms" yaml:"backoff_base_ms"`
-	BackoffMaxMs    int64           `json:"backoff_max_ms" yaml:"backoff_max_ms"`
-	TargetTopic     string          `json:"target_topic,omitempty" yaml:"target_topic,omitempty"`
-	EscalateAfter   int             `json:"escalate_after" yaml:"escalate_after"`
-	EscalationWebhook string        `json:"escalation_webhook,omitempty" yaml:"escalation_webhook,omitempty"`
-	ErrorPatterns   []ErrorPattern  `json:"error_patterns,omitempty" yaml:"error_patterns,omitempty"`
-	Priority        int             `json:"priority" yaml:"priority"`
+	TopicPattern      string         `json:"topic_pattern" yaml:"topic_pattern"`
+	Action            string         `json:"action" yaml:"action"` // retry, route, skip, escalate
+	MaxRetries        int            `json:"max_retries" yaml:"max_retries"`
+	BackoffBaseMs     int64          `json:"backoff_base_ms" yaml:"backoff_base_ms"`
+	BackoffMaxMs      int64          `json:"backoff_max_ms" yaml:"backoff_max_ms"`
+	TargetTopic       string         `json:"target_topic,omitempty" yaml:"target_topic,omitempty"`
+	EscalateAfter     int            `json:"escalate_after" yaml:"escalate_after"`
+	EscalationWebhook string         `json:"escalation_webhook,omitempty" yaml:"escalation_webhook,omitempty"`
+	ErrorPatterns     []ErrorPattern `json:"error_patterns,omitempty" yaml:"error_patterns,omitempty"`
+	Priority          int            `json:"priority" yaml:"priority"`
 }
 
 // ErrorPattern maps an error pattern to a specific remediation action.
 type ErrorPattern struct {
 	Pattern    string `json:"pattern" yaml:"pattern"`
-	Action     string `json:"action" yaml:"action"`       // retry, route, skip, escalate
+	Action     string `json:"action" yaml:"action"` // retry, route, skip, escalate
 	MaxRetries int    `json:"max_retries,omitempty" yaml:"max_retries,omitempty"`
 }
 
 // EscalationEvent represents an escalation triggered by threshold breach.
 type EscalationEvent struct {
-	Topic         string    `json:"topic"`
-	ErrorType     string    `json:"error_type"`
-	FailureCount  int       `json:"failure_count"`
-	Threshold     int       `json:"threshold"`
-	Timestamp     time.Time `json:"timestamp"`
-	Acknowledged  bool      `json:"acknowledged"`
+	Topic        string    `json:"topic"`
+	ErrorType    string    `json:"error_type"`
+	FailureCount int       `json:"failure_count"`
+	Threshold    int       `json:"threshold"`
+	Timestamp    time.Time `json:"timestamp"`
+	Acknowledged bool      `json:"acknowledged"`
 }
 
 // DryRunResult shows what would happen without actually remediating.
 type DryRunResult struct {
-	Topic           string            `json:"topic"`
-	TotalMessages   int               `json:"total_messages"`
-	WouldRetry      int               `json:"would_retry"`
-	WouldRoute      int               `json:"would_route"`
-	WouldSkip       int               `json:"would_skip"`
-	WouldEscalate   int               `json:"would_escalate"`
-	MatchedPolicies []string          `json:"matched_policies"`
-	ErrorBreakdown  map[string]int    `json:"error_breakdown"`
-	EstimatedSuccess float64          `json:"estimated_success_rate"`
+	Topic            string         `json:"topic"`
+	TotalMessages    int            `json:"total_messages"`
+	WouldRetry       int            `json:"would_retry"`
+	WouldRoute       int            `json:"would_route"`
+	WouldSkip        int            `json:"would_skip"`
+	WouldEscalate    int            `json:"would_escalate"`
+	MatchedPolicies  []string       `json:"matched_policies"`
+	ErrorBreakdown   map[string]int `json:"error_breakdown"`
+	EstimatedSuccess float64        `json:"estimated_success_rate"`
 }
 
 // SchemaFixSuggestion provides schema-aware fix suggestions.
@@ -342,7 +342,7 @@ func (r *Remediator) Escalate(ctx context.Context, topic, errorType string, fail
 	if err != nil {
 		return fmt.Errorf("sending escalation webhook: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= 300 {
 		return fmt.Errorf("escalation webhook returned status %d", resp.StatusCode)

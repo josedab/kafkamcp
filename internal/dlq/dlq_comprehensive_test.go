@@ -535,7 +535,7 @@ func TestRemediateWithCancelledContext(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	// Unknown action still returns error regardless of cancelled context
+	// Unknown action still returns error regardless of canceled context
 	_, err := r.Remediate(ctx, nil, "", "topic-dlq", "invalid", "", 10)
 	if err == nil {
 		t.Error("expected error for invalid action")

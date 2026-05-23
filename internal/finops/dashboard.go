@@ -11,77 +11,77 @@ import (
 
 // CostSnapshot captures cost data at a point in time.
 type CostSnapshot struct {
-	Timestamp       time.Time       `json:"timestamp"`
-	Provider        string          `json:"provider"`
-	TotalMonthly    float64         `json:"total_monthly"`
-	BrokerCost      float64         `json:"broker_cost"`
-	StorageCost     float64         `json:"storage_cost"`
-	NetworkCost     float64         `json:"network_cost"`
-	TopicBreakdown  []TopicCost     `json:"topic_breakdown,omitempty"`
-	TrendDirection  string          `json:"trend_direction"` // up, down, stable
-	ChangePercent   float64         `json:"change_percent"`
+	Timestamp      time.Time   `json:"timestamp"`
+	Provider       string      `json:"provider"`
+	TotalMonthly   float64     `json:"total_monthly"`
+	BrokerCost     float64     `json:"broker_cost"`
+	StorageCost    float64     `json:"storage_cost"`
+	NetworkCost    float64     `json:"network_cost"`
+	TopicBreakdown []TopicCost `json:"topic_breakdown,omitempty"`
+	TrendDirection string      `json:"trend_direction"` // up, down, stable
+	ChangePercent  float64     `json:"change_percent"`
 }
 
 // TopicCost is the cost of a single topic.
 type TopicCost struct {
-	Name            string  `json:"name"`
-	MonthlyCost     float64 `json:"monthly_cost"`
-	StorageGB       float64 `json:"storage_gb"`
-	Partitions      int     `json:"partitions"`
-	MsgsPerSec      float64 `json:"msgs_per_sec"`
-	CostPerMessage  float64 `json:"cost_per_message"`
-	Utilization     float64 `json:"utilization"` // 0-100%
+	Name           string  `json:"name"`
+	MonthlyCost    float64 `json:"monthly_cost"`
+	StorageGB      float64 `json:"storage_gb"`
+	Partitions     int     `json:"partitions"`
+	MsgsPerSec     float64 `json:"msgs_per_sec"`
+	CostPerMessage float64 `json:"cost_per_message"`
+	Utilization    float64 `json:"utilization"` // 0-100%
 }
 
 // RightsizeRecommendation suggests optimization changes.
 type RightsizeRecommendation struct {
-	Type            string  `json:"type"` // reduce_partitions, reduce_replication, compress, archive, delete
-	Topic           string  `json:"topic"`
-	Description     string  `json:"description"`
-	CurrentCost     float64 `json:"current_cost_month"`
-	ProjectedCost   float64 `json:"projected_cost_month"`
-	Savings         float64 `json:"savings_month"`
-	SavingsPercent  float64 `json:"savings_percent"`
-	Impact          string  `json:"impact"` // low, medium, high
-	Effort          string  `json:"effort"` // low, medium, high
-	Priority        int     `json:"priority"` // 1=highest
+	Type           string  `json:"type"` // reduce_partitions, reduce_replication, compress, archive, delete
+	Topic          string  `json:"topic"`
+	Description    string  `json:"description"`
+	CurrentCost    float64 `json:"current_cost_month"`
+	ProjectedCost  float64 `json:"projected_cost_month"`
+	Savings        float64 `json:"savings_month"`
+	SavingsPercent float64 `json:"savings_percent"`
+	Impact         string  `json:"impact"`   // low, medium, high
+	Effort         string  `json:"effort"`   // low, medium, high
+	Priority       int     `json:"priority"` // 1=highest
 }
 
 // SpendForecast projects future spending.
 type SpendForecast struct {
-	CurrentMonthly  float64          `json:"current_monthly"`
-	Projections     []ForecastPoint  `json:"projections"`
-	GrowthRate      float64          `json:"growth_rate_percent"`
-	Confidence      float64          `json:"confidence"` // 0-1
-	Assumptions     []string         `json:"assumptions"`
+	CurrentMonthly float64         `json:"current_monthly"`
+	Projections    []ForecastPoint `json:"projections"`
+	GrowthRate     float64         `json:"growth_rate_percent"`
+	Confidence     float64         `json:"confidence"` // 0-1
+	Assumptions    []string        `json:"assumptions"`
 }
 
 // ForecastPoint is a projected cost at a future date.
 type ForecastPoint struct {
-	Month     string  `json:"month"`
-	Projected float64 `json:"projected_cost"`
+	Month      string  `json:"month"`
+	Projected  float64 `json:"projected_cost"`
 	LowerBound float64 `json:"lower_bound"`
 	UpperBound float64 `json:"upper_bound"`
 }
 
 // BudgetAlert defines a spending alert.
 type BudgetAlert struct {
-	ID          string  `json:"id"`
-	Name        string  `json:"name"`
-	Threshold   float64 `json:"threshold"`
-	Current     float64 `json:"current"`
-	Percentage  float64 `json:"percentage"`
-	Status      string  `json:"status"` // ok, warning, exceeded
+	ID         string  `json:"id"`
+	Name       string  `json:"name"`
+	Threshold  float64 `json:"threshold"`
+	Current    float64 `json:"current"`
+	Percentage float64 `json:"percentage"`
+	Status     string  `json:"status"` // ok, warning, exceeded
 }
 
 // Dashboard manages cost intelligence and FinOps.
 type Dashboard struct {
-	mu          sync.RWMutex
-	snapshots   []CostSnapshot
-	budgets     map[string]*BudgetAlert
-	topicCosts  map[string]*TopicCost
-	logger      *slog.Logger
-	nextID      int64
+	mu         sync.RWMutex
+	snapshots  []CostSnapshot
+	budgets    map[string]*BudgetAlert
+	topicCosts map[string]*TopicCost
+	logger     *slog.Logger
+	nextID     int64
 }
 
 // NewDashboard creates a new FinOps dashboard.
@@ -383,15 +383,15 @@ func (d *Dashboard) GetSummary() map[string]any {
 	}
 
 	return map[string]any{
-		"total_monthly_cost":   math.Round(total*100) / 100,
-		"total_annual_cost":    math.Round(total*12*100) / 100,
-		"topic_count":          topicCount,
-		"total_storage_gb":     math.Round(totalStorage*100) / 100,
-		"optimization_count":   len(recs),
-		"potential_savings":    math.Round(totalSavings*100) / 100,
-		"savings_percent":     safePercent(totalSavings, total),
-		"budget_alerts":       len(d.budgets),
-		"snapshot_count":      len(d.snapshots),
+		"total_monthly_cost": math.Round(total*100) / 100,
+		"total_annual_cost":  math.Round(total*12*100) / 100,
+		"topic_count":        topicCount,
+		"total_storage_gb":   math.Round(totalStorage*100) / 100,
+		"optimization_count": len(recs),
+		"potential_savings":  math.Round(totalSavings*100) / 100,
+		"savings_percent":    safePercent(totalSavings, total),
+		"budget_alerts":      len(d.budgets),
+		"snapshot_count":     len(d.snapshots),
 	}
 }
 

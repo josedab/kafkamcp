@@ -6,33 +6,35 @@ import (
 	"log/slog"
 	"sync"
 	"time"
+
 	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
 // ReconcileStatus represents the state of a reconciliation run.
 type ReconcileStatus string
 
+// ReconcileStatusPending and related values define constants for this package.
 const (
-	ReconcileStatusPending   ReconcileStatus = "pending"
-	ReconcileStatusRunning   ReconcileStatus = "running"
-	ReconcileStatusSuccess   ReconcileStatus = "success"
-	ReconcileStatusFailed    ReconcileStatus = "failed"
-	ReconcileStatusDryRun    ReconcileStatus = "dry_run"
+	ReconcileStatusPending ReconcileStatus = "pending"
+	ReconcileStatusRunning ReconcileStatus = "running"
+	ReconcileStatusSuccess ReconcileStatus = "success"
+	ReconcileStatusFailed  ReconcileStatus = "failed"
+	ReconcileStatusDryRun  ReconcileStatus = "dry_run"
 )
 
 // ReconcileResult records the outcome of a reconciliation run.
 type ReconcileResult struct {
-	ID              string          `json:"id"`
-	Status          ReconcileStatus `json:"status"`
-	DryRun          bool            `json:"dry_run"`
-	Diff            *DiffResult     `json:"diff,omitempty"`
-	Plan            *MigrationPlan  `json:"plan,omitempty"`
-	StepsApplied    int             `json:"steps_applied"`
-	StepsFailed     int             `json:"steps_failed"`
-	Error           string          `json:"error,omitempty"`
-	StartedAt       time.Time       `json:"started_at"`
-	CompletedAt     time.Time       `json:"completed_at,omitempty"`
-	Duration        time.Duration   `json:"duration,omitempty"`
+	ID           string          `json:"id"`
+	Status       ReconcileStatus `json:"status"`
+	DryRun       bool            `json:"dry_run"`
+	Diff         *DiffResult     `json:"diff,omitempty"`
+	Plan         *MigrationPlan  `json:"plan,omitempty"`
+	StepsApplied int             `json:"steps_applied"`
+	StepsFailed  int             `json:"steps_failed"`
+	Error        string          `json:"error,omitempty"`
+	StartedAt    time.Time       `json:"started_at"`
+	CompletedAt  time.Time       `json:"completed_at,omitempty"`
+	Duration     time.Duration   `json:"duration,omitempty"`
 }
 
 // WebhookEvent represents a GitHub/GitLab webhook payload.
@@ -48,14 +50,14 @@ type WebhookEvent struct {
 
 // ReconcilerConfig configures the reconciliation controller.
 type ReconcilerConfig struct {
-	Interval        time.Duration `json:"interval" yaml:"interval"`
-	DryRunDefault   bool          `json:"dry_run_default" yaml:"dry_run_default"`
-	AutoApprove     bool          `json:"auto_approve" yaml:"auto_approve"`
-	MaxHistory      int           `json:"max_history" yaml:"max_history"`
-	WebhookSecret   string        `json:"-" yaml:"webhook_secret"`
-	GitRepo         string        `json:"git_repo" yaml:"git_repo"`
-	GitBranch       string        `json:"git_branch" yaml:"git_branch"`
-	StatePath       string        `json:"state_path" yaml:"state_path"`
+	Interval      time.Duration `json:"interval" yaml:"interval"`
+	DryRunDefault bool          `json:"dry_run_default" yaml:"dry_run_default"`
+	AutoApprove   bool          `json:"auto_approve" yaml:"auto_approve"`
+	MaxHistory    int           `json:"max_history" yaml:"max_history"`
+	WebhookSecret string        `json:"-" yaml:"webhook_secret"`
+	GitRepo       string        `json:"git_repo" yaml:"git_repo"`
+	GitBranch     string        `json:"git_branch" yaml:"git_branch"`
+	StatePath     string        `json:"state_path" yaml:"state_path"`
 }
 
 // DefaultReconcilerConfig returns sensible defaults.
@@ -71,14 +73,14 @@ func DefaultReconcilerConfig() ReconcilerConfig {
 
 // Reconciler continuously watches for drift and reconciles state.
 type Reconciler struct {
-	mu        sync.RWMutex
-	config    ReconcilerConfig
-	manager   *Manager
-	results   []ReconcileResult
-	desired   *DesiredState
-	running   bool
-	cancel    context.CancelFunc
-	logger    *slog.Logger
+	mu      sync.RWMutex
+	config  ReconcilerConfig
+	manager *Manager
+	results []ReconcileResult
+	desired *DesiredState
+	running bool
+	cancel  context.CancelFunc
+	logger  *slog.Logger
 }
 
 // NewReconciler creates a new reconciliation controller.
@@ -96,9 +98,9 @@ func NewReconciler(cfg ReconcilerConfig, mgr *Manager, logger *slog.Logger) *Rec
 
 // SetDesiredState updates the target state for reconciliation.
 func (r *Reconciler) SetDesiredState(state DesiredState) error {
-	errors := r.manager.ValidateDesiredState(state)
-	if len(errors) > 0 {
-		return fmt.Errorf("invalid desired state: %v", errors)
+	validationErrs := r.manager.ValidateDesiredState(state)
+	if len(validationErrs) > 0 {
+		return fmt.Errorf("invalid desired state: %v", validationErrs)
 	}
 	r.mu.Lock()
 	defer r.mu.Unlock()

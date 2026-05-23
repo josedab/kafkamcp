@@ -41,8 +41,8 @@ func TestEventTranslator_ListRules(t *testing.T) {
 	mgr := NewManager(slog.Default())
 	et := NewEventTranslator(mgr, slog.Default())
 
-	et.CreateRule("r1", "src", "t1", "tgt", "t2", TransformConfig{})
-	et.CreateRule("r2", "src", "t3", "tgt", "t4", TransformConfig{})
+	_, _ = et.CreateRule("r1", "src", "t1", "tgt", "t2", TransformConfig{})
+	_, _ = et.CreateRule("r2", "src", "t3", "tgt", "t4", TransformConfig{})
 
 	rules := et.ListRules("")
 	if len(rules) != 2 {
@@ -57,13 +57,13 @@ func TestEventTranslator_PauseResume(t *testing.T) {
 
 	rule, _ := et.CreateRule("r1", "src", "t1", "tgt", "t2", TransformConfig{})
 
-	et.PauseRule(rule.ID)
+	_ = et.PauseRule(rule.ID)
 	paused, _ := et.GetRule(rule.ID)
 	if paused.Status != "paused" {
 		t.Errorf("expected paused, got %s", paused.Status)
 	}
 
-	et.ResumeRule(rule.ID)
+	_ = et.ResumeRule(rule.ID)
 	resumed, _ := et.GetRule(rule.ID)
 	if resumed.Status != "active" {
 		t.Errorf("expected active, got %s", resumed.Status)
@@ -139,8 +139,8 @@ func TestEventTranslator_Stats(t *testing.T) {
 	mgr := NewManager(slog.Default())
 	et := NewEventTranslator(mgr, slog.Default())
 
-	et.CreateRule("r1", "src", "t1", "tgt", "t2", TransformConfig{})
-	et.CreateRule("r2", "src", "t3", "tgt", "t4", TransformConfig{})
+	_, _ = et.CreateRule("r1", "src", "t1", "tgt", "t2", TransformConfig{})
+	_, _ = et.CreateRule("r2", "src", "t3", "tgt", "t4", TransformConfig{})
 
 	stats := et.GetStats()
 	if stats.TotalRules != 2 {

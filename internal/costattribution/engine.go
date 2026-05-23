@@ -31,52 +31,52 @@ type LiveCost struct {
 
 // CostAllocation maps costs to teams, services, or projects.
 type CostAllocation struct {
-	ID              string           `json:"id"`
-	Name            string           `json:"name"`
-	Owner           string           `json:"owner"`
-	Resources       []string         `json:"resources"`
-	TotalCostMonth  float64          `json:"total_cost_per_month"`
-	ResourceCosts   []ResourceCost   `json:"resource_costs"`
-	Tags            map[string]string `json:"tags,omitempty"`
-	UpdatedAt       time.Time        `json:"updated_at"`
+	ID             string            `json:"id"`
+	Name           string            `json:"name"`
+	Owner          string            `json:"owner"`
+	Resources      []string          `json:"resources"`
+	TotalCostMonth float64           `json:"total_cost_per_month"`
+	ResourceCosts  []ResourceCost    `json:"resource_costs"`
+	Tags           map[string]string `json:"tags,omitempty"`
+	UpdatedAt      time.Time         `json:"updated_at"`
 }
 
 // ResourceCost is the cost for a single resource in an allocation.
 type ResourceCost struct {
-	ResourceName   string  `json:"resource_name"`
-	ResourceType   string  `json:"resource_type"`
-	MonthlyCost    float64 `json:"monthly_cost"`
-	PctOfTotal     float64 `json:"pct_of_total"`
+	ResourceName string  `json:"resource_name"`
+	ResourceType string  `json:"resource_type"`
+	MonthlyCost  float64 `json:"monthly_cost"`
+	PctOfTotal   float64 `json:"pct_of_total"`
 }
 
 // Budget defines a spending limit with alert thresholds.
 type Budget struct {
-	ID             string    `json:"id"`
-	Name           string    `json:"name"`
-	Owner          string    `json:"owner"`
-	MonthlyLimit   float64   `json:"monthly_limit"`
-	CurrentSpend   float64   `json:"current_spend"`
+	ID              string    `json:"id"`
+	Name            string    `json:"name"`
+	Owner           string    `json:"owner"`
+	MonthlyLimit    float64   `json:"monthly_limit"`
+	CurrentSpend    float64   `json:"current_spend"`
 	AlertThresholds []float64 `json:"alert_thresholds"` // e.g., [0.5, 0.8, 0.9, 1.0]
-	AlertsFired    []string   `json:"alerts_fired,omitempty"`
-	Resources      []string  `json:"resources,omitempty"`
-	Status         string    `json:"status"` // ok, warning, critical, exceeded
-	CreatedAt      time.Time `json:"created_at"`
-	UpdatedAt      time.Time `json:"updated_at"`
+	AlertsFired     []string  `json:"alerts_fired,omitempty"`
+	Resources       []string  `json:"resources,omitempty"`
+	Status          string    `json:"status"` // ok, warning, critical, exceeded
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
 }
 
 // PricingTier defines cloud provider pricing.
 type PricingTier struct {
-	Provider         string  `json:"provider"`
-	StoragePerGBHr   float64 `json:"storage_per_gb_hr"`
-	NetworkPerGBHr   float64 `json:"network_per_gb_hr"`
-	ComputePerCPUHr  float64 `json:"compute_per_cpu_hr"`
-	PartitionPerHr   float64 `json:"partition_per_hr"`
+	Provider        string  `json:"provider"`
+	StoragePerGBHr  float64 `json:"storage_per_gb_hr"`
+	NetworkPerGBHr  float64 `json:"network_per_gb_hr"`
+	ComputePerCPUHr float64 `json:"compute_per_cpu_hr"`
+	PartitionPerHr  float64 `json:"partition_per_hr"`
 }
 
 // Engine manages cost attribution and budget tracking.
 type Engine struct {
 	mu          sync.RWMutex
-	meters      map[string]*LiveCost      // resource key -> live cost
+	meters      map[string]*LiveCost // resource key -> live cost
 	allocations map[string]*CostAllocation
 	budgets     map[string]*Budget
 	pricing     PricingTier
@@ -92,7 +92,7 @@ func NewEngine(logger *slog.Logger) *Engine {
 		budgets:     make(map[string]*Budget),
 		pricing: PricingTier{
 			Provider:        "aws-msk",
-			StoragePerGBHr:  0.10 / 720,  // $0.10/GB/month
+			StoragePerGBHr:  0.10 / 720, // $0.10/GB/month
 			NetworkPerGBHr:  0.02 / 720,
 			ComputePerCPUHr: 0.21,
 			PartitionPerHr:  0.0015 / 720,

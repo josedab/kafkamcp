@@ -10,9 +10,9 @@ import (
 // CostModel defines pricing parameters for a cloud provider.
 type CostModel struct {
 	Provider          string  `json:"provider" yaml:"provider"`
-	StorageCostPerGB  float64 `json:"storage_cost_per_gb" yaml:"storage_cost_per_gb"`   // per month
+	StorageCostPerGB  float64 `json:"storage_cost_per_gb" yaml:"storage_cost_per_gb"` // per month
 	NetworkCostPerGB  float64 `json:"network_cost_per_gb" yaml:"network_cost_per_gb"`
-	PartitionCost     float64 `json:"partition_cost" yaml:"partition_cost"`              // per partition per month
+	PartitionCost     float64 `json:"partition_cost" yaml:"partition_cost"` // per partition per month
 	BrokerCostPerHour float64 `json:"broker_cost_per_hour" yaml:"broker_cost_per_hour"`
 }
 
@@ -56,66 +56,66 @@ type TopicCostInput struct {
 
 // TopicCostResult is the cost analysis for a single topic.
 type TopicCostResult struct {
-	Topic             string  `json:"topic"`
-	StorageGB         float64 `json:"storage_gb"`
-	StorageCostMonth  float64 `json:"storage_cost_month"`
-	NetworkCostMonth  float64 `json:"network_cost_month"`
-	PartitionCost     float64 `json:"partition_cost_month"`
-	TotalCostMonth    float64 `json:"total_cost_month"`
-	TotalCostYear     float64 `json:"total_cost_year"`
-	RetentionDays     float64 `json:"retention_days"`
-	DataRateGBPerDay  float64 `json:"data_rate_gb_per_day"`
+	Topic            string  `json:"topic"`
+	StorageGB        float64 `json:"storage_gb"`
+	StorageCostMonth float64 `json:"storage_cost_month"`
+	NetworkCostMonth float64 `json:"network_cost_month"`
+	PartitionCost    float64 `json:"partition_cost_month"`
+	TotalCostMonth   float64 `json:"total_cost_month"`
+	TotalCostYear    float64 `json:"total_cost_year"`
+	RetentionDays    float64 `json:"retention_days"`
+	DataRateGBPerDay float64 `json:"data_rate_gb_per_day"`
 }
 
 // WasteReport identifies cost optimization opportunities.
 type WasteReport struct {
-	TotalMonthlyWaste   float64         `json:"total_monthly_waste"`
-	IdleTopics          []IdleTopic     `json:"idle_topics"`
-	OverReplicated      []OverReplica   `json:"over_replicated"`
-	CompressionOpps     []CompressionOpp `json:"compression_opportunities"`
-	RetentionOpps       []RetentionOpp  `json:"retention_opportunities"`
-	Recommendations     []string        `json:"recommendations"`
+	TotalMonthlyWaste float64          `json:"total_monthly_waste"`
+	IdleTopics        []IdleTopic      `json:"idle_topics"`
+	OverReplicated    []OverReplica    `json:"over_replicated"`
+	CompressionOpps   []CompressionOpp `json:"compression_opportunities"`
+	RetentionOpps     []RetentionOpp   `json:"retention_opportunities"`
+	Recommendations   []string         `json:"recommendations"`
 }
 
 // IdleTopic is a topic with no active consumers.
 type IdleTopic struct {
-	Name           string  `json:"name"`
-	DaysIdle       int     `json:"days_idle"`
-	StorageGB      float64 `json:"storage_gb"`
-	MonthlyCost    float64 `json:"monthly_cost"`
+	Name        string  `json:"name"`
+	DaysIdle    int     `json:"days_idle"`
+	StorageGB   float64 `json:"storage_gb"`
+	MonthlyCost float64 `json:"monthly_cost"`
 }
 
 // OverReplica is a topic with more replicas than needed.
 type OverReplica struct {
-	Name              string  `json:"name"`
-	CurrentRF         int     `json:"current_rf"`
-	RecommendedRF     int     `json:"recommended_rf"`
-	SavingsMonth      float64 `json:"savings_month"`
+	Name          string  `json:"name"`
+	CurrentRF     int     `json:"current_rf"`
+	RecommendedRF int     `json:"recommended_rf"`
+	SavingsMonth  float64 `json:"savings_month"`
 }
 
 // CompressionOpp is a compression optimization opportunity.
 type CompressionOpp struct {
-	Name              string  `json:"name"`
-	CurrentCompression string `json:"current_compression"`
-	Recommended       string  `json:"recommended"`
-	EstimatedSavings  float64 `json:"estimated_savings_pct"`
+	Name               string  `json:"name"`
+	CurrentCompression string  `json:"current_compression"`
+	Recommended        string  `json:"recommended"`
+	EstimatedSavings   float64 `json:"estimated_savings_pct"`
 }
 
 // RetentionOpp is a retention reduction opportunity.
 type RetentionOpp struct {
-	Name              string  `json:"name"`
-	CurrentRetention  string  `json:"current_retention"`
-	RecommendedDays   int     `json:"recommended_days"`
-	SavingsMonth      float64 `json:"savings_month"`
+	Name             string  `json:"name"`
+	CurrentRetention string  `json:"current_retention"`
+	RecommendedDays  int     `json:"recommended_days"`
+	SavingsMonth     float64 `json:"savings_month"`
 }
 
 // WhatIfScenario defines a hypothetical configuration change.
 type WhatIfScenario struct {
-	Topic           string `json:"topic"`
-	NewRetentionMs  *int64 `json:"new_retention_ms,omitempty"`
-	NewCompression  string `json:"new_compression,omitempty"`
-	NewPartitions   *int   `json:"new_partitions,omitempty"`
-	NewReplication  *int   `json:"new_replication,omitempty"`
+	Topic          string `json:"topic"`
+	NewRetentionMs *int64 `json:"new_retention_ms,omitempty"`
+	NewCompression string `json:"new_compression,omitempty"`
+	NewPartitions  *int   `json:"new_partitions,omitempty"`
+	NewReplication *int   `json:"new_replication,omitempty"`
 }
 
 // WhatIfResult shows the cost impact of a scenario.

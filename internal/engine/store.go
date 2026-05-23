@@ -1,22 +1,24 @@
 // Package engine provides shared infrastructure for KafkaMCP "engines" —
-// long-lived in-process subsystems such as agent memory, materialised
+// long-lived in-process subsystems such as agent memory, materialized
 // views, audit logging, and rate limiting.
 //
 // Historically each engine kept its own ad-hoc map[string]T in memory.
 // This package introduces:
 //
 //   - A pluggable storage [backend.Backend] (in-memory or embedded SQLite).
+//
 //   - A typed [Store] helper that marshals/unmarshals JSON values for an
 //     engine namespace.
+//
 //   - Configuration plumbing (see [internal/config.PersistenceConfig]) so
 //     operators can opt into durable state via:
 //
-//	server:
-//	  persistence:
-//	    backend: sqlite
-//	    path: /var/lib/kafkamcp/state.db
+//     server:
+//     persistence:
+//     backend: sqlite
+//     path: /var/lib/kafkamcp/state.db
 //
-// The default is the in-memory backend, preserving the prior behaviour
+// The default is the in-memory backend, preserving the prior behavior
 // for existing deployments.
 package engine
 
@@ -30,7 +32,7 @@ import (
 )
 
 // Store is a typed wrapper around a [backend.Backend] for a single
-// namespace. Values are marshalled as JSON. It is safe for concurrent use
+// namespace. Values are marshaled as JSON. It is safe for concurrent use
 // by multiple goroutines.
 type Store[T any] struct {
 	be        backend.Backend

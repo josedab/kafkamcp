@@ -17,7 +17,7 @@ type sampleValue struct {
 func TestStore_RoundTrip(t *testing.T) {
 	ctx := context.Background()
 	be := backend.NewInMemory()
-	defer be.Close()
+	defer func() { _ = be.Close() }()
 
 	store := engine.NewStore[sampleValue](be, "sample")
 
@@ -68,7 +68,7 @@ func TestOpen_DefaultsToInMemory(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Open(default): %v", err)
 	}
-	defer be.Close()
+	defer func() { _ = be.Close() }()
 	if _, ok := be.(*backend.InMemory); !ok {
 		t.Fatalf("Open(default) returned %T, want *backend.InMemory", be)
 	}
@@ -80,7 +80,7 @@ func TestOpen_SQLite(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Open(sqlite): %v", err)
 	}
-	defer be.Close()
+	defer func() { _ = be.Close() }()
 	if _, ok := be.(*backend.SQLite); !ok {
 		t.Fatalf("Open(sqlite) returned %T, want *backend.SQLite", be)
 	}

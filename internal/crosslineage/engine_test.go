@@ -42,7 +42,7 @@ func TestGetGraph(t *testing.T) {
 	e := NewEngine(slog.Default())
 	e.RegisterNode("topic-a", NodeTopic, nil)
 	e.RegisterNode("topic-b", NodeTopic, nil)
-	e.AddEdge("topic:topic-a", "topic:topic-b", "", "produces", nil)
+	_, _ = e.AddEdge("topic:topic-a", "topic:topic-b", "", "produces", nil)
 
 	graph := e.GetGraph()
 	if graph.TotalNodes != 2 {
@@ -60,8 +60,8 @@ func TestTraceLineage(t *testing.T) {
 	e.RegisterNode("processor", NodeStream, nil)
 	e.RegisterNode("target", NodeTopic, nil)
 
-	e.AddEdge("topic:source", "stream_app:processor", "read", "consumes", nil)
-	e.AddEdge("stream_app:processor", "topic:target", "write", "produces", nil)
+	_, _ = e.AddEdge("topic:source", "stream_app:processor", "read", "consumes", nil)
+	_, _ = e.AddEdge("stream_app:processor", "topic:target", "write", "produces", nil)
 
 	lineage := e.TraceLineage("target", 5)
 	if len(lineage.Upstream) == 0 {
@@ -74,7 +74,7 @@ func TestRemoveNode(t *testing.T) {
 	e := NewEngine(slog.Default())
 	e.RegisterNode("to-remove", NodeTopic, nil)
 	e.RegisterNode("other", NodeTopic, nil)
-	e.AddEdge("topic:to-remove", "topic:other", "", "produces", nil)
+	_, _ = e.AddEdge("topic:to-remove", "topic:other", "", "produces", nil)
 
 	if err := e.RemoveNode("topic:to-remove"); err != nil {
 		t.Fatal(err)

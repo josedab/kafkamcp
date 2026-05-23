@@ -26,7 +26,7 @@ import (
 //	);
 //
 // All access goes through the standard `database/sql` connection pool,
-// which is set to a single connection to keep WAL writers serialised and
+// which is set to a single connection to keep WAL writers serialized and
 // to avoid `SQLITE_BUSY` under concurrent load.
 type SQLite struct {
 	db   *sql.DB
@@ -66,7 +66,7 @@ func OpenSQLite(opts SQLiteOptions) (*SQLite, error) {
 	}
 
 	// Pin the pool to a single connection. modernc.org/sqlite is safe
-	// for concurrent use, but WAL writers must still serialise; using
+	// for concurrent use, but WAL writers must still serialize; using
 	// one connection makes that explicit and avoids `SQLITE_BUSY`
 	// surprises under load.
 	db.SetMaxOpenConns(1)
@@ -166,7 +166,7 @@ func (b *SQLite) List(ctx context.Context, namespace, prefix string) ([]Entry, e
 	if err != nil {
 		return nil, fmt.Errorf("kafkamcp/engine/backend: list %s/%s: %w", namespace, prefix, err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var out []Entry
 	for rows.Next() {

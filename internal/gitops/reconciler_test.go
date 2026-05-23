@@ -350,7 +350,7 @@ func TestGetResults_LimitBehavior(t *testing.T) {
 	})
 
 	for i := 0; i < 5; i++ {
-		r.Reconcile(context.Background(), LiveState{Topics: make(map[string]TopicSpec)}, true)
+		_, _ = r.Reconcile(context.Background(), LiveState{Topics: make(map[string]TopicSpec)}, true)
 	}
 
 	all := r.GetResults(0)

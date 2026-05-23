@@ -11,8 +11,8 @@ func setupBasicGraph(e *Engine) {
 	e.RegisterNode("topic-a", NodeTopic, map[string]string{"cluster": "cluster-1"})
 	e.RegisterNode("topic-b", NodeTopic, map[string]string{"cluster": "cluster-2"})
 	e.RegisterNode("topic-c", NodeTopic, map[string]string{"cluster": "cluster-2"})
-	e.AddEdge("topic:topic-a", "topic:topic-b", "replicate", "replicates", nil)
-	e.AddEdge("topic:topic-b", "topic:topic-c", "transform", "transforms", nil)
+	_, _ = e.AddEdge("topic:topic-a", "topic:topic-b", "replicate", "replicates", nil)
+	_, _ = e.AddEdge("topic:topic-b", "topic:topic-c", "transform", "transforms", nil)
 }
 
 // --- AnalyzeImpact tests ---
@@ -67,7 +67,7 @@ func TestAnalyzeImpact_DeepChainTransitiveImpact(t *testing.T) {
 	for i := 0; i < len(names)-1; i++ {
 		src := "topic:" + names[i]
 		dst := "topic:" + names[i+1]
-		e.AddEdge(src, dst, "flow", "produces", nil)
+		_, _ = e.AddEdge(src, dst, "flow", "produces", nil)
 	}
 
 	analysis, err := e.AnalyzeImpact("topic:n-a")
@@ -120,7 +120,7 @@ func TestAnalyzeImpact_CriticalRisk(t *testing.T) {
 	for i := 0; i < 12; i++ {
 		name := "downstream-" + string(rune('a'+i))
 		e.RegisterNode(name, NodeTopic, nil)
-		e.AddEdge("topic:root", "topic:"+name, "flow", "produces", nil)
+		_, _ = e.AddEdge("topic:root", "topic:"+name, "flow", "produces", nil)
 	}
 
 	analysis, err := e.AnalyzeImpact("topic:root")
@@ -139,7 +139,7 @@ func TestAnalyzeImpact_HighRisk(t *testing.T) {
 	for i := 0; i < 6; i++ {
 		name := "d-" + string(rune('a'+i))
 		e.RegisterNode(name, NodeTopic, nil)
-		e.AddEdge("topic:root", "topic:"+name, "flow", "produces", nil)
+		_, _ = e.AddEdge("topic:root", "topic:"+name, "flow", "produces", nil)
 	}
 
 	analysis, err := e.AnalyzeImpact("topic:root")
@@ -158,7 +158,7 @@ func TestAnalyzeImpact_MediumRisk(t *testing.T) {
 	for i := 0; i < 3; i++ {
 		name := "d-" + string(rune('a'+i))
 		e.RegisterNode(name, NodeTopic, nil)
-		e.AddEdge("topic:root", "topic:"+name, "flow", "produces", nil)
+		_, _ = e.AddEdge("topic:root", "topic:"+name, "flow", "produces", nil)
 	}
 
 	analysis, err := e.AnalyzeImpact("topic:root")
@@ -197,7 +197,7 @@ func TestFindPaths_DirectPath(t *testing.T) {
 	e := NewEngine(slog.Default())
 	e.RegisterNode("a", NodeTopic, nil)
 	e.RegisterNode("b", NodeTopic, nil)
-	e.AddEdge("topic:a", "topic:b", "flow", "produces", nil)
+	_, _ = e.AddEdge("topic:a", "topic:b", "flow", "produces", nil)
 
 	result, err := e.FindPaths("topic:a", "topic:b", 10)
 	if err != nil {
@@ -221,10 +221,10 @@ func TestFindPaths_MultiplePaths(t *testing.T) {
 	e.RegisterNode("b", NodeTopic, nil)
 	e.RegisterNode("c", NodeTopic, nil)
 	e.RegisterNode("d", NodeTopic, nil)
-	e.AddEdge("topic:a", "topic:b", "flow", "produces", nil)
-	e.AddEdge("topic:a", "topic:c", "flow", "produces", nil)
-	e.AddEdge("topic:b", "topic:d", "flow", "produces", nil)
-	e.AddEdge("topic:c", "topic:d", "flow", "produces", nil)
+	_, _ = e.AddEdge("topic:a", "topic:b", "flow", "produces", nil)
+	_, _ = e.AddEdge("topic:a", "topic:c", "flow", "produces", nil)
+	_, _ = e.AddEdge("topic:b", "topic:d", "flow", "produces", nil)
+	_, _ = e.AddEdge("topic:c", "topic:d", "flow", "produces", nil)
 
 	result, err := e.FindPaths("topic:a", "topic:d", 10)
 	if err != nil {
@@ -258,9 +258,9 @@ func TestFindPaths_CycleHandling(t *testing.T) {
 	e.RegisterNode("c", NodeTopic, nil)
 	e.RegisterNode("d", NodeTopic, nil)
 	// Cycle: a -> b -> c -> a
-	e.AddEdge("topic:a", "topic:b", "flow", "produces", nil)
-	e.AddEdge("topic:b", "topic:c", "flow", "produces", nil)
-	e.AddEdge("topic:c", "topic:a", "flow", "produces", nil)
+	_, _ = e.AddEdge("topic:a", "topic:b", "flow", "produces", nil)
+	_, _ = e.AddEdge("topic:b", "topic:c", "flow", "produces", nil)
+	_, _ = e.AddEdge("topic:c", "topic:a", "flow", "produces", nil)
 
 	// Target d is unreachable; should not infinite loop
 	result, err := e.FindPaths("topic:a", "topic:d", 10)
@@ -277,7 +277,7 @@ func TestFindPaths_MaxDepthZeroDefaultsTo10(t *testing.T) {
 	e := NewEngine(slog.Default())
 	e.RegisterNode("a", NodeTopic, nil)
 	e.RegisterNode("b", NodeTopic, nil)
-	e.AddEdge("topic:a", "topic:b", "flow", "produces", nil)
+	_, _ = e.AddEdge("topic:a", "topic:b", "flow", "produces", nil)
 
 	result, err := e.FindPaths("topic:a", "topic:b", 0)
 	if err != nil {
@@ -312,9 +312,9 @@ func TestFindPaths_ShortestLength(t *testing.T) {
 	e.RegisterNode("b", NodeTopic, nil)
 	e.RegisterNode("c", NodeTopic, nil)
 	// Direct path a->c and indirect a->b->c
-	e.AddEdge("topic:a", "topic:c", "direct", "produces", nil)
-	e.AddEdge("topic:a", "topic:b", "flow", "produces", nil)
-	e.AddEdge("topic:b", "topic:c", "flow", "produces", nil)
+	_, _ = e.AddEdge("topic:a", "topic:c", "direct", "produces", nil)
+	_, _ = e.AddEdge("topic:a", "topic:b", "flow", "produces", nil)
+	_, _ = e.AddEdge("topic:b", "topic:c", "flow", "produces", nil)
 
 	result, err := e.FindPaths("topic:a", "topic:c", 10)
 	if err != nil {
@@ -332,7 +332,7 @@ func TestGetCrossClusterFlows_SameCluster(t *testing.T) {
 	e := NewEngine(slog.Default())
 	e.RegisterNode("x", NodeTopic, map[string]string{"cluster": "cluster-1"})
 	e.RegisterNode("y", NodeTopic, map[string]string{"cluster": "cluster-1"})
-	e.AddEdge("topic:x", "topic:y", "flow", "produces", nil)
+	_, _ = e.AddEdge("topic:x", "topic:y", "flow", "produces", nil)
 
 	flows := e.GetCrossClusterFlows()
 	if len(flows) != 0 {
@@ -345,7 +345,7 @@ func TestGetCrossClusterFlows_CrossCluster(t *testing.T) {
 	e := NewEngine(slog.Default())
 	e.RegisterNode("x", NodeTopic, map[string]string{"cluster": "cluster-a"})
 	e.RegisterNode("y", NodeTopic, map[string]string{"cluster": "cluster-b"})
-	e.AddEdge("topic:x", "topic:y", "replicate", "replicates", nil)
+	_, _ = e.AddEdge("topic:x", "topic:y", "replicate", "replicates", nil)
 
 	flows := e.GetCrossClusterFlows()
 	if len(flows) != 1 {
@@ -365,8 +365,8 @@ func TestGetCrossClusterFlows_MultipleEdgesGrouped(t *testing.T) {
 	e.RegisterNode("x1", NodeTopic, map[string]string{"cluster": "cluster-a"})
 	e.RegisterNode("x2", NodeTopic, map[string]string{"cluster": "cluster-a"})
 	e.RegisterNode("y1", NodeTopic, map[string]string{"cluster": "cluster-b"})
-	e.AddEdge("topic:x1", "topic:y1", "replicate", "replicates", nil)
-	e.AddEdge("topic:x2", "topic:y1", "replicate", "replicates", nil)
+	_, _ = e.AddEdge("topic:x1", "topic:y1", "replicate", "replicates", nil)
+	_, _ = e.AddEdge("topic:x2", "topic:y1", "replicate", "replicates", nil)
 
 	flows := e.GetCrossClusterFlows()
 	if len(flows) != 1 {
@@ -382,7 +382,7 @@ func TestGetCrossClusterFlows_NoClusterMetadata(t *testing.T) {
 	e := NewEngine(slog.Default())
 	e.RegisterNode("x", NodeTopic, nil)
 	e.RegisterNode("y", NodeTopic, nil)
-	e.AddEdge("topic:x", "topic:y", "flow", "produces", nil)
+	_, _ = e.AddEdge("topic:x", "topic:y", "flow", "produces", nil)
 
 	flows := e.GetCrossClusterFlows()
 	if len(flows) != 0 {
@@ -395,7 +395,7 @@ func TestGetCrossClusterFlows_EmptyCluster(t *testing.T) {
 	e := NewEngine(slog.Default())
 	e.RegisterNode("x", NodeTopic, map[string]string{"cluster": ""})
 	e.RegisterNode("y", NodeTopic, map[string]string{"cluster": ""})
-	e.AddEdge("topic:x", "topic:y", "flow", "produces", nil)
+	_, _ = e.AddEdge("topic:x", "topic:y", "flow", "produces", nil)
 
 	flows := e.GetCrossClusterFlows()
 	if len(flows) != 0 {

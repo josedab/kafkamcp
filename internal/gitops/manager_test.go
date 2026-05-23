@@ -46,8 +46,8 @@ func TestDiff(t *testing.T) {
 
 	live := LiveState{
 		Topics: map[string]TopicSpec{
-			"orders":      {Name: "orders", Partitions: 6, ReplicationFactor: 3, Configs: map[string]string{"retention.ms": "86400000"}},
-			"old-topic":   {Name: "old-topic", Partitions: 3, ReplicationFactor: 3},
+			"orders":    {Name: "orders", Partitions: 6, ReplicationFactor: 3, Configs: map[string]string{"retention.ms": "86400000"}},
+			"old-topic": {Name: "old-topic", Partitions: 3, ReplicationFactor: 3},
 		},
 	}
 

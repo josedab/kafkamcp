@@ -196,9 +196,9 @@ func TestMultipleSubscriptions(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
 
-	e.Subscribe("onMessage", "orders")
-	e.Subscribe("onMessage", "events")
-	e.Subscribe("onClusterHealth", "")
+	_, _ = e.Subscribe("onMessage", "orders")
+	_, _ = e.Subscribe("onMessage", "events")
+	_, _ = e.Subscribe("onClusterHealth", "")
 
 	subs := e.ListSubscribers()
 	if len(subs) != 3 {

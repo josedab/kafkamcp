@@ -5,12 +5,14 @@ import (
 	"log/slog"
 	"sync"
 	"time"
+
 	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
 // InstanceStatus represents the status of a federated instance.
 type InstanceStatus string
 
+// StatusActive and related values define constants for this package.
 const (
 	StatusActive       InstanceStatus = "active"
 	StatusDegraded     InstanceStatus = "degraded"
@@ -20,30 +22,30 @@ const (
 
 // Instance represents a federated KafkaMCP instance.
 type Instance struct {
-	ID             string         `json:"id"`
-	Name           string         `json:"name"`
-	Endpoint       string         `json:"endpoint"`
-	Status         InstanceStatus `json:"status"`
-	Capabilities   []string       `json:"capabilities"`
-	Clusters       []string       `json:"clusters"`
-	TopicCount     int            `json:"topic_count"`
-	Version        string         `json:"version"`
-	LastHeartbeat  string         `json:"last_heartbeat"`
-	JoinedAt       string         `json:"joined_at"`
-	Metadata       map[string]any `json:"metadata,omitempty"`
+	ID            string         `json:"id"`
+	Name          string         `json:"name"`
+	Endpoint      string         `json:"endpoint"`
+	Status        InstanceStatus `json:"status"`
+	Capabilities  []string       `json:"capabilities"`
+	Clusters      []string       `json:"clusters"`
+	TopicCount    int            `json:"topic_count"`
+	Version       string         `json:"version"`
+	LastHeartbeat string         `json:"last_heartbeat"`
+	JoinedAt      string         `json:"joined_at"`
+	Metadata      map[string]any `json:"metadata,omitempty"`
 }
 
 // FederatedQuery represents a query that spans multiple instances.
 type FederatedQuery struct {
-	ID        string            `json:"id"`
-	Query     string            `json:"query"`
-	Tool      string            `json:"tool"`
-	Args      map[string]any    `json:"args"`
-	Targets   []string          `json:"targets"` // instance IDs, empty = all
-	Status    string            `json:"status"`
-	Results   []InstanceResult  `json:"results"`
-	StartedAt string            `json:"started_at"`
-	Duration  string            `json:"duration,omitempty"`
+	ID        string           `json:"id"`
+	Query     string           `json:"query"`
+	Tool      string           `json:"tool"`
+	Args      map[string]any   `json:"args"`
+	Targets   []string         `json:"targets"` // instance IDs, empty = all
+	Status    string           `json:"status"`
+	Results   []InstanceResult `json:"results"`
+	StartedAt string           `json:"started_at"`
+	Duration  string           `json:"duration,omitempty"`
 }
 
 // InstanceResult captures the result from a single instance.
@@ -58,15 +60,15 @@ type InstanceResult struct {
 
 // Policy represents a federated policy rule.
 type Policy struct {
-	ID          string   `json:"id"`
-	Name        string   `json:"name"`
-	Type        string   `json:"type"` // access, rate_limit, data_masking
-	Scope       string   `json:"scope"` // global, cluster, topic
-	Rules       any      `json:"rules"`
-	Targets     []string `json:"targets"` // instance IDs
-	Version     int      `json:"version"`
-	CreatedAt   string   `json:"created_at"`
-	UpdatedAt   string   `json:"updated_at"`
+	ID        string   `json:"id"`
+	Name      string   `json:"name"`
+	Type      string   `json:"type"`  // access, rate_limit, data_masking
+	Scope     string   `json:"scope"` // global, cluster, topic
+	Rules     any      `json:"rules"`
+	Targets   []string `json:"targets"` // instance IDs
+	Version   int      `json:"version"`
+	CreatedAt string   `json:"created_at"`
+	UpdatedAt string   `json:"updated_at"`
 }
 
 // AuditEntry records a federated action for audit trail.
@@ -80,13 +82,13 @@ type AuditEntry struct {
 
 // Coordinator manages the federation mesh.
 type Coordinator struct {
-	localID    string
-	instances  map[string]*Instance
-	policies   map[string]*Policy
-	queries    map[string]*FederatedQuery
-	auditLog   []AuditEntry
-	logger     *slog.Logger
-	mu         sync.RWMutex
+	localID   string
+	instances map[string]*Instance
+	policies  map[string]*Policy
+	queries   map[string]*FederatedQuery
+	auditLog  []AuditEntry
+	logger    *slog.Logger
+	mu        sync.RWMutex
 }
 
 // NewCoordinator creates a new federation coordinator.
@@ -315,11 +317,11 @@ type ServiceDiscovery struct {
 
 // FederationTopology shows the complete federation topology.
 type FederationTopology struct {
-	LocalID    string             `json:"local_id"`
-	Instances  []Instance         `json:"instances"`
-	Routes     []RoutingRule      `json:"routing_rules"`
+	LocalID    string              `json:"local_id"`
+	Instances  []Instance          `json:"instances"`
+	Routes     []RoutingRule       `json:"routing_rules"`
 	ClusterMap map[string][]string `json:"cluster_to_instances"`
-	TotalTools int                `json:"total_tools"`
+	TotalTools int                 `json:"total_tools"`
 }
 
 // AddRoutingRule adds a routing rule for request forwarding.
@@ -337,9 +339,9 @@ func (c *Coordinator) AddRoutingRule(rule RoutingRule) (*RoutingRule, error) {
 
 	// Store in policies map with a route: prefix
 	c.policies["route:"+rule.ID] = &Policy{
-		ID:   rule.ID,
-		Name: rule.ToolMatch,
-		Type: "routing",
+		ID:    rule.ID,
+		Name:  rule.ToolMatch,
+		Type:  "routing",
 		Rules: rule,
 	}
 

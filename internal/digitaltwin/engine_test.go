@@ -111,9 +111,9 @@ func TestDiffAndMigration(t *testing.T) {
 	twin, _ := e.CreateTwin(snap.ID)
 
 	// Make changes
-	e.SimulateOp(twin.ID, SimulationOp{Type: "create_topic", Params: map[string]any{"name": "events", "partitions": 6}})
-	e.SimulateOp(twin.ID, SimulationOp{Type: "delete_topic", Params: map[string]any{"name": "payments"}})
-	e.SimulateOp(twin.ID, SimulationOp{Type: "alter_partitions", Params: map[string]any{"name": "orders", "partitions": 12}})
+	_, _ = e.SimulateOp(twin.ID, SimulationOp{Type: "create_topic", Params: map[string]any{"name": "events", "partitions": 6}})
+	_, _ = e.SimulateOp(twin.ID, SimulationOp{Type: "delete_topic", Params: map[string]any{"name": "payments"}})
+	_, _ = e.SimulateOp(twin.ID, SimulationOp{Type: "alter_partitions", Params: map[string]any{"name": "orders", "partitions": 12}})
 
 	diff, err := e.Diff(twin.ID)
 	if err != nil {

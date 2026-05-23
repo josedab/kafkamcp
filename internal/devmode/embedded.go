@@ -13,8 +13,9 @@ import (
 // BrokerType identifies the embedded broker implementation.
 type BrokerType string
 
+// BrokerKRaft and related values define constants for this package.
 const (
-	BrokerKRaft   BrokerType = "kraft"
+	BrokerKRaft    BrokerType = "kraft"
 	BrokerRedpanda BrokerType = "redpanda"
 )
 
@@ -42,15 +43,15 @@ func DefaultEmbeddedBrokerConfig() EmbeddedBrokerConfig {
 
 // EmbeddedBrokerStatus represents the broker state.
 type EmbeddedBrokerStatus struct {
-	Running    bool       `json:"running"`
-	Type       BrokerType `json:"type"`
-	Address    string     `json:"address,omitempty"`
-	Port       int        `json:"port,omitempty"`
-	PID        int        `json:"pid,omitempty"`
-	DataDir    string     `json:"data_dir"`
-	StartedAt  *time.Time `json:"started_at,omitempty"`
-	Uptime     string     `json:"uptime,omitempty"`
-	DiskUsage  string     `json:"disk_usage,omitempty"`
+	Running   bool       `json:"running"`
+	Type      BrokerType `json:"type"`
+	Address   string     `json:"address,omitempty"`
+	Port      int        `json:"port,omitempty"`
+	PID       int        `json:"pid,omitempty"`
+	DataDir   string     `json:"data_dir"`
+	StartedAt *time.Time `json:"started_at,omitempty"`
+	Uptime    string     `json:"uptime,omitempty"`
+	DiskUsage string     `json:"disk_usage,omitempty"`
 }
 
 // EmbeddedBroker manages a local Kafka broker subprocess.
@@ -97,7 +98,7 @@ func AllocatePort() (int, error) {
 		return 0, fmt.Errorf("failed to allocate port: %w", err)
 	}
 	port := ln.Addr().(*net.TCPAddr).Port
-	ln.Close()
+	_ = ln.Close()
 	return port, nil
 }
 
@@ -127,10 +128,10 @@ func DetectBrokerBinary() (BrokerType, string, error) {
 
 // IDEConfig holds auto-configuration for IDE integrations.
 type IDEConfig struct {
-	IDE         string            `json:"ide"`
-	ConfigPath  string            `json:"config_path"`
-	Settings    map[string]string `json:"settings"`
-	Instructions []string         `json:"instructions"`
+	IDE          string            `json:"ide"`
+	ConfigPath   string            `json:"config_path"`
+	Settings     map[string]string `json:"settings"`
+	Instructions []string          `json:"instructions"`
 }
 
 // GenerateIDEConfigs generates auto-configuration for supported IDEs.
@@ -193,13 +194,13 @@ func claudeConfigPath() string {
 
 // DevSession represents an active dev mode session.
 type DevSession struct {
-	ID          string            `json:"id"`
-	BrokerAddr  string            `json:"broker_addr"`
-	Status      string            `json:"status"` // starting, ready, stopped
-	Topics      []string          `json:"topics"`
-	IDEConfigs  []IDEConfig       `json:"ide_configs"`
-	StartedAt   time.Time         `json:"started_at"`
-	QuickStart  []string          `json:"quick_start"`
+	ID         string      `json:"id"`
+	BrokerAddr string      `json:"broker_addr"`
+	Status     string      `json:"status"` // starting, ready, stopped
+	Topics     []string    `json:"topics"`
+	IDEConfigs []IDEConfig `json:"ide_configs"`
+	StartedAt  time.Time   `json:"started_at"`
+	QuickStart []string    `json:"quick_start"`
 }
 
 // StartDevSession creates a new dev mode session configuration.
@@ -232,7 +233,7 @@ func (e *Engine) StartDevSession(brokerAddr string) *DevSession {
 
 func estimateDiskUsage(dir string) string {
 	var size int64
-	filepath.Walk(dir, func(_ string, info os.FileInfo, err error) error {
+	_ = filepath.Walk(dir, func(_ string, info os.FileInfo, err error) error {
 		if err != nil || info.IsDir() {
 			return nil
 		}

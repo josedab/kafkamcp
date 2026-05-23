@@ -12,17 +12,18 @@ import (
 // EventType categorizes bus events.
 type EventType string
 
+// EventToolInvocation and related values define constants for this package.
 const (
-	EventToolInvocation EventType = "tool_invocation"
-	EventToolResult     EventType = "tool_result"
-	EventAgentConnect   EventType = "agent_connect"
+	EventToolInvocation  EventType = "tool_invocation"
+	EventToolResult      EventType = "tool_result"
+	EventAgentConnect    EventType = "agent_connect"
 	EventAgentDisconnect EventType = "agent_disconnect"
-	EventKafkaProduce   EventType = "kafka_produce"
-	EventKafkaConsume   EventType = "kafka_consume"
-	EventKafkaAdmin     EventType = "kafka_admin"
+	EventKafkaProduce    EventType = "kafka_produce"
+	EventKafkaConsume    EventType = "kafka_consume"
+	EventKafkaAdmin      EventType = "kafka_admin"
 	EventPolicyViolation EventType = "policy_violation"
-	EventAnomaly        EventType = "anomaly"
-	EventCustom         EventType = "custom"
+	EventAnomaly         EventType = "anomaly"
+	EventCustom          EventType = "custom"
 )
 
 // Event is a structured event on the bus.
@@ -40,11 +41,11 @@ type Event struct {
 
 // SubscriptionFilter defines what events a subscriber wants.
 type SubscriptionFilter struct {
-	EventTypes []EventType `json:"event_types,omitempty"`
-	AgentIDs   []string    `json:"agent_ids,omitempty"`
-	Tools      []string    `json:"tools,omitempty"`
-	Clusters   []string    `json:"clusters,omitempty"`
-	SourcePattern string   `json:"source_pattern,omitempty"`
+	EventTypes    []EventType `json:"event_types,omitempty"`
+	AgentIDs      []string    `json:"agent_ids,omitempty"`
+	Tools         []string    `json:"tools,omitempty"`
+	Clusters      []string    `json:"clusters,omitempty"`
+	SourcePattern string      `json:"source_pattern,omitempty"`
 }
 
 // Subscription represents a subscriber to the event bus.
@@ -77,10 +78,10 @@ type SubscriptionStats struct {
 
 // BusConfig configures the event bus.
 type BusConfig struct {
-	RingBufferSize    int `json:"ring_buffer_size" yaml:"ring_buffer_size"`
-	SubscriberBuffer  int `json:"subscriber_buffer" yaml:"subscriber_buffer"`
-	MaxSubscribers    int `json:"max_subscribers" yaml:"max_subscribers"`
-	MaxReplayEvents   int `json:"max_replay_events" yaml:"max_replay_events"`
+	RingBufferSize   int `json:"ring_buffer_size" yaml:"ring_buffer_size"`
+	SubscriberBuffer int `json:"subscriber_buffer" yaml:"subscriber_buffer"`
+	MaxSubscribers   int `json:"max_subscribers" yaml:"max_subscribers"`
+	MaxReplayEvents  int `json:"max_replay_events" yaml:"max_replay_events"`
 }
 
 // DefaultBusConfig returns sensible defaults.
@@ -95,11 +96,11 @@ func DefaultBusConfig() BusConfig {
 
 // BusStats tracks aggregate bus metrics.
 type BusStats struct {
-	TotalPublished   uint64               `json:"total_published"`
-	TotalSubscribers int                  `json:"total_subscribers"`
-	BufferUsed       int                  `json:"buffer_used"`
-	BufferCapacity   int                  `json:"buffer_capacity"`
-	Subscriptions    []SubscriptionStats  `json:"subscriptions"`
+	TotalPublished   uint64              `json:"total_published"`
+	TotalSubscribers int                 `json:"total_subscribers"`
+	BufferUsed       int                 `json:"buffer_used"`
+	BufferCapacity   int                 `json:"buffer_capacity"`
+	Subscriptions    []SubscriptionStats `json:"subscriptions"`
 }
 
 // Bus is the internal event bus with ring buffer storage.

@@ -10,48 +10,48 @@ import (
 
 // FlowGraph represents the real-time message flow across topics.
 type FlowGraph struct {
-	Nodes      []FlowNode `json:"nodes"`
-	Edges      []FlowEdge `json:"edges"`
-	UpdatedAt  time.Time  `json:"updated_at"`
-	ClusterID  string     `json:"cluster_id"`
+	Nodes     []FlowNode `json:"nodes"`
+	Edges     []FlowEdge `json:"edges"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	ClusterID string     `json:"cluster_id"`
 }
 
 // FlowNode is a topic or consumer group in the flow graph.
 type FlowNode struct {
-	ID             string         `json:"id"`
-	Type           string         `json:"type"` // topic, consumer_group, producer
-	Name           string         `json:"name"`
-	Throughput     float64        `json:"throughput_msg_sec"`
-	ErrorRate      float64        `json:"error_rate"`
-	Partitions     int            `json:"partitions,omitempty"`
-	ConsumerLag    int64          `json:"consumer_lag,omitempty"`
-	HealthStatus   string         `json:"health_status"` // healthy, warning, critical
-	Latency        *LatencyStats  `json:"latency,omitempty"`
+	ID           string        `json:"id"`
+	Type         string        `json:"type"` // topic, consumer_group, producer
+	Name         string        `json:"name"`
+	Throughput   float64       `json:"throughput_msg_sec"`
+	ErrorRate    float64       `json:"error_rate"`
+	Partitions   int           `json:"partitions,omitempty"`
+	ConsumerLag  int64         `json:"consumer_lag,omitempty"`
+	HealthStatus string        `json:"health_status"` // healthy, warning, critical
+	Latency      *LatencyStats `json:"latency,omitempty"`
 }
 
 // FlowEdge represents message flow between nodes.
 type FlowEdge struct {
-	Source          string  `json:"source"`
-	Target          string  `json:"target"`
-	Throughput      float64 `json:"throughput_msg_sec"`
-	AvgLatencyMs    float64 `json:"avg_latency_ms"`
-	ErrorRate       float64 `json:"error_rate"`
-	Status          string  `json:"status"` // active, slow, error, idle
+	Source       string  `json:"source"`
+	Target       string  `json:"target"`
+	Throughput   float64 `json:"throughput_msg_sec"`
+	AvgLatencyMs float64 `json:"avg_latency_ms"`
+	ErrorRate    float64 `json:"error_rate"`
+	Status       string  `json:"status"` // active, slow, error, idle
 }
 
 // LatencyStats contains latency distribution info.
 type LatencyStats struct {
-	P50Ms  float64 `json:"p50_ms"`
-	P95Ms  float64 `json:"p95_ms"`
-	P99Ms  float64 `json:"p99_ms"`
-	MaxMs  float64 `json:"max_ms"`
+	P50Ms float64 `json:"p50_ms"`
+	P95Ms float64 `json:"p95_ms"`
+	P99Ms float64 `json:"p99_ms"`
+	MaxMs float64 `json:"max_ms"`
 }
 
 // Bottleneck identifies a detected bottleneck in the flow.
 type Bottleneck struct {
 	NodeID      string  `json:"node_id"`
 	NodeName    string  `json:"node_name"`
-	Type        string  `json:"type"` // high_lag, low_throughput, high_error_rate, high_latency
+	Type        string  `json:"type"`     // high_lag, low_throughput, high_error_rate, high_latency
 	Severity    string  `json:"severity"` // warning, critical
 	Description string  `json:"description"`
 	Value       float64 `json:"value"`
@@ -60,22 +60,22 @@ type Bottleneck struct {
 
 // FlowSnapshot is a point-in-time snapshot for time-range analysis.
 type FlowSnapshot struct {
-	Timestamp    time.Time     `json:"timestamp"`
-	Nodes        []FlowNode    `json:"nodes"`
-	Edges        []FlowEdge    `json:"edges"`
-	Bottlenecks  []Bottleneck  `json:"bottlenecks"`
+	Timestamp   time.Time    `json:"timestamp"`
+	Nodes       []FlowNode   `json:"nodes"`
+	Edges       []FlowEdge   `json:"edges"`
+	Bottlenecks []Bottleneck `json:"bottlenecks"`
 }
 
 // MessageDetail is a single message for drill-down.
 type MessageDetail struct {
-	Topic       string            `json:"topic"`
-	Partition   int32             `json:"partition"`
-	Offset      int64             `json:"offset"`
-	Timestamp   time.Time         `json:"timestamp"`
-	Key         string            `json:"key"`
-	ValueSize   int               `json:"value_size_bytes"`
-	Headers     map[string]string `json:"headers"`
-	Latency     float64           `json:"latency_ms,omitempty"`
+	Topic     string            `json:"topic"`
+	Partition int32             `json:"partition"`
+	Offset    int64             `json:"offset"`
+	Timestamp time.Time         `json:"timestamp"`
+	Key       string            `json:"key"`
+	ValueSize int               `json:"value_size_bytes"`
+	Headers   map[string]string `json:"headers"`
+	Latency   float64           `json:"latency_ms,omitempty"`
 }
 
 // WebSocketMessage is the format for push updates.
@@ -86,8 +86,8 @@ type WebSocketMessage struct {
 
 // BottleneckConfig defines configurable thresholds for bottleneck detection.
 type BottleneckConfig struct {
-	LagWarning       int64   `json:"lag_warning"`
-	LagCritical      int64   `json:"lag_critical"`
+	LagWarning        int64   `json:"lag_warning"`
+	LagCritical       int64   `json:"lag_critical"`
 	ErrorRateWarning  float64 `json:"error_rate_warning"`
 	ErrorRateCritical float64 `json:"error_rate_critical"`
 	LatencyWarningMs  float64 `json:"latency_warning_ms"`
@@ -110,13 +110,13 @@ func DefaultBottleneckConfig() BottleneckConfig {
 
 // Debugger manages the visual message flow debugging.
 type Debugger struct {
-	currentGraph    *FlowGraph
-	snapshots       []FlowSnapshot
-	subscribers     map[string]chan WebSocketMessage
-	mu              sync.RWMutex
-	logger          *slog.Logger
-	maxSnapshots    int
-	bottleneckCfg   BottleneckConfig
+	currentGraph  *FlowGraph
+	snapshots     []FlowSnapshot
+	subscribers   map[string]chan WebSocketMessage
+	mu            sync.RWMutex
+	logger        *slog.Logger
+	maxSnapshots  int
+	bottleneckCfg BottleneckConfig
 }
 
 // NewDebugger creates a new flow debugger.

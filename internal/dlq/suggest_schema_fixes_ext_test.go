@@ -35,7 +35,7 @@ func TestSuggestSchemaFixes_NestedObjectValue(t *testing.T) {
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
 			return []kafka.Message{
 				{Value: map[string]any{
-					"user": map[string]any{"name": "alice", "age": nil},
+					"user":     map[string]any{"name": "alice", "age": nil},
 					"metadata": nil,
 				}},
 			}, nil

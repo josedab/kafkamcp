@@ -12,7 +12,7 @@ import (
 func TestGetAgentPolicy_Existing(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
-	e.SetAgentPolicy("agent-1", []string{"key-1"}, []string{"orders"}, true, true)
+	_, _ = e.SetAgentPolicy("agent-1", []string{"key-1"}, []string{"orders"}, true, true)
 
 	policy, err := e.GetAgentPolicy("agent-1")
 	if err != nil {
@@ -40,8 +40,8 @@ func TestGetAgentPolicy_AfterUpdate(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
 
-	e.SetAgentPolicy("agent-1", []string{"key-1"}, []string{"orders"}, true, false)
-	e.SetAgentPolicy("agent-1", []string{"key-1", "key-2"}, []string{"orders", "payments"}, true, true)
+	_, _ = e.SetAgentPolicy("agent-1", []string{"key-1"}, []string{"orders"}, true, false)
+	_, _ = e.SetAgentPolicy("agent-1", []string{"key-1", "key-2"}, []string{"orders", "payments"}, true, true)
 
 	policy, err := e.GetAgentPolicy("agent-1")
 	if err != nil {
@@ -72,9 +72,11 @@ func TestGetKey_Existing(t *testing.T) {
 	if got.Status != "active" {
 		t.Errorf("expected active, got %s", got.Status)
 	}
-	// Should not expose key material
-	if got.keyMaterial != nil {
-		t.Error("GetKey should not expose key material")
+	// Should not expose key material via JSON serialization
+	for _, v := range got.Versions {
+		if v.material != nil {
+			t.Error("GetKey should not expose key material via Versions")
+		}
 	}
 }
 
@@ -92,7 +94,7 @@ func TestGetKey_Revoked(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
 	key, _ := e.CreateKey("revoke-test", ProviderLocal, "")
-	e.RevokeKey(key.ID)
+	_ = e.RevokeKey(key.ID)
 
 	got, err := e.GetKey(key.ID)
 	if err != nil {
@@ -105,29 +107,26 @@ func TestGetKey_Revoked(t *testing.T) {
 
 // --- DecryptMessage ---
 
-func TestDecryptMessage_NonJSONWithENCPrefix(t *testing.T) {
+func TestDecryptMessage_RoundTrip(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
 	key, _ := e.CreateKey("dec-key", ProviderLocal, "AES-256-GCM")
-	e.ConfigureFieldEncryption("topic", key.ID, []string{"data"})
+	_, _ = e.ConfigureFieldEncryption("topic", key.ID, []string{"data"})
 
-	// Encrypt a non-JSON message: returns base64 without ENC: prefix
-	encResult, err := e.EncryptMessage("", "topic", "plain text")
+	encResult, err := e.EncryptMessage("", "topic", `{"data":"plain text","keep":"ok"}`)
 	if err != nil {
 		t.Fatalf("encrypt: %v", err)
 	}
 
-	// DecryptMessage with "ENC:" prefix manually added
-	prefixed := "ENC:" + encResult.EncryptedMessage
-	decResult, err := e.DecryptMessage("", "topic", prefixed)
+	decResult, err := e.DecryptMessage("", "topic", encResult.EncryptedMessage)
 	if err != nil {
 		t.Fatalf("decrypt: %v", err)
 	}
 	if decResult.DecryptedFields != 1 {
 		t.Errorf("expected 1 decrypted field, got %d", decResult.DecryptedFields)
 	}
-	if decResult.DecryptedMessage != "plain text" {
-		t.Errorf("expected original text, got %q", decResult.DecryptedMessage)
+	if !strings.Contains(decResult.DecryptedMessage, "plain text") {
+		t.Errorf("expected decrypted message to contain original value, got %q", decResult.DecryptedMessage)
 	}
 }
 
@@ -135,7 +134,7 @@ func TestDecryptMessage_JSONMultipleEncryptedFields(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
 	key, _ := e.CreateKey("multi-key", ProviderLocal, "AES-256-GCM")
-	e.ConfigureFieldEncryption("multi-topic", key.ID, []string{"email", "ssn", "phone"})
+	_, _ = e.ConfigureFieldEncryption("multi-topic", key.ID, []string{"email", "ssn", "phone"})
 
 	msg := `{"email":"user@test.com","ssn":"123-45-6789","phone":"555-0100","name":"John"}`
 	encResult, err := e.EncryptMessage("", "multi-topic", msg)
@@ -156,7 +155,7 @@ func TestDecryptMessage_JSONMultipleEncryptedFields(t *testing.T) {
 
 	// Verify name was preserved
 	var data map[string]any
-	json.Unmarshal([]byte(decResult.DecryptedMessage), &data)
+	_ = json.Unmarshal([]byte(decResult.DecryptedMessage), &data)
 	if data["name"] != "John" {
 		t.Errorf("non-encrypted field 'name' was altered")
 	}
@@ -166,7 +165,7 @@ func TestDecryptMessage_FieldNotPrefixedWithENC(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
 	key, _ := e.CreateKey("pass-key", ProviderLocal, "AES-256-GCM")
-	e.ConfigureFieldEncryption("pass-topic", key.ID, []string{"data"})
+	_, _ = e.ConfigureFieldEncryption("pass-topic", key.ID, []string{"data"})
 
 	// Message with field configured but not ENC-prefixed
 	msg := `{"data":"plain value"}`
@@ -183,7 +182,7 @@ func TestDecryptMessage_NestedJSONField(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
 	key, _ := e.CreateKey("nested-key", ProviderLocal, "AES-256-GCM")
-	e.ConfigureFieldEncryption("nested-topic", key.ID, []string{"user.email"})
+	_, _ = e.ConfigureFieldEncryption("nested-topic", key.ID, []string{"user.email"})
 
 	msg := `{"user":{"email":"secret@test.com","name":"John"}}`
 	encResult, err := e.EncryptMessage("", "nested-topic", msg)
@@ -204,8 +203,8 @@ func TestDecryptMessage_AgentWithoutDecryptPermission(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
 	key, _ := e.CreateKey("policy-key", ProviderLocal, "")
-	e.ConfigureFieldEncryption("sec-topic", key.ID, []string{"data"})
-	e.SetAgentPolicy("agent-no-dec", nil, nil, true, false)
+	_, _ = e.ConfigureFieldEncryption("sec-topic", key.ID, []string{"data"})
+	_, _ = e.SetAgentPolicy("agent-no-dec", nil, nil, true, false)
 
 	_, err := e.DecryptMessage("agent-no-dec", "sec-topic", `{"data":"ENC:fake"}`)
 	if err == nil {
@@ -217,8 +216,8 @@ func TestDecryptMessage_WrongTopicAccess(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
 	key, _ := e.CreateKey("topic-key", ProviderLocal, "")
-	e.ConfigureFieldEncryption("allowed-topic", key.ID, []string{"data"})
-	e.SetAgentPolicy("agent-wrong", nil, []string{"other-topic"}, true, true)
+	_, _ = e.ConfigureFieldEncryption("allowed-topic", key.ID, []string{"data"})
+	_, _ = e.SetAgentPolicy("agent-wrong", nil, []string{"other-topic"}, true, true)
 
 	_, err := e.DecryptMessage("agent-wrong", "allowed-topic", `{"data":"ENC:fake"}`)
 	if err == nil {
@@ -233,7 +232,7 @@ func TestDecryptMessage_NoEncryptedFieldsPassthrough(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
 	key, _ := e.CreateKey("pt-key", ProviderLocal, "")
-	e.ConfigureFieldEncryption("pt-topic", key.ID, []string{"secret"})
+	_, _ = e.ConfigureFieldEncryption("pt-topic", key.ID, []string{"secret"})
 
 	msg := `{"name":"John","age":30}`
 	decResult, err := e.DecryptMessage("", "pt-topic", msg)
@@ -245,7 +244,7 @@ func TestDecryptMessage_NoEncryptedFieldsPassthrough(t *testing.T) {
 	}
 	// Message should pass through
 	var data map[string]any
-	json.Unmarshal([]byte(decResult.DecryptedMessage), &data)
+	_ = json.Unmarshal([]byte(decResult.DecryptedMessage), &data)
 	if data["name"] != "John" {
 		t.Error("passthrough message was altered")
 	}
@@ -255,7 +254,7 @@ func TestDecryptMessage_PartiallyEncryptedFields(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
 	key, _ := e.CreateKey("partial-key", ProviderLocal, "AES-256-GCM")
-	e.ConfigureFieldEncryption("partial-topic", key.ID, []string{"email", "name"})
+	_, _ = e.ConfigureFieldEncryption("partial-topic", key.ID, []string{"email", "name"})
 
 	// Encrypt only email, leave name as plain
 	encResult, err := e.EncryptMessage("", "partial-topic", `{"email":"secret@test.com","name":"John"}`)

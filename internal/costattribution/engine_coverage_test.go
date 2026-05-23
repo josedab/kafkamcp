@@ -60,8 +60,8 @@ func TestGetAllocationsEmpty(t *testing.T) {
 func TestGetAllocationsMultiple(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.CreateAllocation("team-a", "owner-a", nil, nil)
-	e.CreateAllocation("team-b", "owner-b", nil, nil)
+	_, _ = e.CreateAllocation("team-a", "owner-a", nil, nil)
+	_, _ = e.CreateAllocation("team-b", "owner-b", nil, nil)
 
 	allocs := e.GetAllocations()
 	if len(allocs) != 2 {
@@ -83,8 +83,8 @@ func TestGetBudgetsEmpty(t *testing.T) {
 func TestGetBudgetsActiveListed(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.CreateBudget("b1", "owner", 100, nil, nil)
-	e.CreateBudget("b2", "owner", 200, nil, nil)
+	_, _ = e.CreateBudget("b1", "owner", 100, nil, nil)
+	_, _ = e.CreateBudget("b2", "owner", 200, nil, nil)
 
 	budgets := e.GetBudgets()
 	if len(budgets) != 2 {

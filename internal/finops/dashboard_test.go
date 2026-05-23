@@ -10,8 +10,8 @@ func newTestDashboard() *Dashboard {
 	// Seed some topic costs
 	d.RecordTopicCost("orders", 50.0, 25.0, 12, 500)
 	d.RecordTopicCost("events", 30.0, 15.0, 6, 200)
-	d.RecordTopicCost("logs", 100.0, 200.0, 24, 5)  // underutilized, high storage
-	d.RecordTopicCost("clicks", 20.0, 5.0, 48, 3)     // over-partitioned
+	d.RecordTopicCost("logs", 100.0, 200.0, 24, 5) // underutilized, high storage
+	d.RecordTopicCost("clicks", 20.0, 5.0, 48, 3)  // over-partitioned
 	return d
 }
 

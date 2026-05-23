@@ -26,13 +26,13 @@ type Validation struct {
 
 // ScenarioResult is the outcome of running a scenario.
 type ScenarioResult struct {
-	ScenarioID    string             `json:"scenario_id"`
-	ScenarioName  string             `json:"scenario_name"`
-	TwinID        string             `json:"twin_id"`
-	Operations    []SimulationResult `json:"operations"`
-	Validations   []ValidationResult `json:"validations"`
-	AllPassed     bool               `json:"all_passed"`
-	ExecutedAt    time.Time          `json:"executed_at"`
+	ScenarioID   string             `json:"scenario_id"`
+	ScenarioName string             `json:"scenario_name"`
+	TwinID       string             `json:"twin_id"`
+	Operations   []SimulationResult `json:"operations"`
+	Validations  []ValidationResult `json:"validations"`
+	AllPassed    bool               `json:"all_passed"`
+	ExecutedAt   time.Time          `json:"executed_at"`
 }
 
 // ValidationResult is the result of checking one validation.
@@ -45,17 +45,17 @@ type ValidationResult struct {
 
 // ImpactAnalysis predicts the impact of operations on the cluster.
 type ImpactAnalysis struct {
-	TwinID              string           `json:"twin_id"`
-	Operations          []SimulationOp   `json:"operations"`
-	RiskLevel           string           `json:"risk_level"` // low, medium, high, critical
-	AffectedTopics      []string         `json:"affected_topics"`
-	AffectedGroups      []string         `json:"affected_groups"`
-	PartitionChanges    int              `json:"partition_changes"`
-	DataLossRisk        bool             `json:"data_loss_risk"`
-	DowntimeRisk        bool             `json:"downtime_risk"`
-	Warnings            []string         `json:"warnings"`
-	Recommendations     []string         `json:"recommendations"`
-	AnalyzedAt          time.Time        `json:"analyzed_at"`
+	TwinID           string         `json:"twin_id"`
+	Operations       []SimulationOp `json:"operations"`
+	RiskLevel        string         `json:"risk_level"` // low, medium, high, critical
+	AffectedTopics   []string       `json:"affected_topics"`
+	AffectedGroups   []string       `json:"affected_groups"`
+	PartitionChanges int            `json:"partition_changes"`
+	DataLossRisk     bool           `json:"data_loss_risk"`
+	DowntimeRisk     bool           `json:"downtime_risk"`
+	Warnings         []string       `json:"warnings"`
+	Recommendations  []string       `json:"recommendations"`
+	AnalyzedAt       time.Time      `json:"analyzed_at"`
 }
 
 // initScenarios creates built-in simulation scenarios.

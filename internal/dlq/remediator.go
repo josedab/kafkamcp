@@ -35,12 +35,12 @@ type RemediationItem struct {
 
 // Policy defines a remediation policy for a DLQ topic pattern.
 type Policy struct {
-	TopicPattern    string `json:"topic_pattern"`
-	Action          string `json:"action"`           // retry, route, skip
-	MaxRetries      int    `json:"max_retries"`
-	BackoffMs       int64  `json:"backoff_ms"`
-	TargetTopic     string `json:"target_topic"`
-	EscalateAfter   int    `json:"escalate_after"`   // number of failures before escalation
+	TopicPattern  string `json:"topic_pattern"`
+	Action        string `json:"action"` // retry, route, skip
+	MaxRetries    int    `json:"max_retries"`
+	BackoffMs     int64  `json:"backoff_ms"`
+	TargetTopic   string `json:"target_topic"`
+	EscalateAfter int    `json:"escalate_after"` // number of failures before escalation
 }
 
 // Remediator handles DLQ auto-remediation with configurable policies.

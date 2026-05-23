@@ -126,9 +126,9 @@ func TestAnalyzeConsumerImpact(t *testing.T) {
 func TestCreateRolloutPlan(t *testing.T) {
 	t.Parallel()
 	diff := &SchemaDiff{
-		Subject:     "orders-value",
-		Compatible:  false,
-		Summary:     DiffSummary{Modified: 1, Breaking: 1},
+		Subject:    "orders-value",
+		Compatible: false,
+		Summary:    DiffSummary{Modified: 1, Breaking: 1},
 	}
 	impact := &ImpactAnalysis{
 		RiskLevel:   "high",

@@ -70,7 +70,7 @@ func TestMultiAgent_GetAgentSteps(t *testing.T) {
 	}, nil)
 	run, _ := e.StartRun(tmpl.ID, "admin", nil)
 
-	e.AssignSteps(run.ID, []AgentAssignment{
+	_, _ = e.AssignSteps(run.ID, []AgentAssignment{
 		{StepID: "s1", AgentID: "agent-a"},
 		{StepID: "s2", AgentID: "agent-a"},
 		{StepID: "s3", AgentID: "agent-b"},
@@ -99,7 +99,7 @@ func TestMultiAgent_GetReadyAgentSteps(t *testing.T) {
 	}, nil)
 	run, _ := e.StartRun(tmpl.ID, "admin", nil)
 
-	e.AssignSteps(run.ID, []AgentAssignment{
+	_, _ = e.AssignSteps(run.ID, []AgentAssignment{
 		{StepID: "s1", AgentID: "agent-a"},
 		{StepID: "s2", AgentID: "agent-b"},
 	})
@@ -116,7 +116,7 @@ func TestMultiAgent_GetReadyAgentSteps(t *testing.T) {
 	}
 
 	// Complete s1, now s2 should be ready for agent-b
-	e.CompleteStep(run.ID, "s1", "completed", nil, "")
+	_ = e.CompleteStep(run.ID, "s1", "completed", nil, "")
 	readyB2, _ := e.GetReadyAgentSteps(run.ID, "agent-b")
 	if len(readyB2) != 1 {
 		t.Errorf("expected 1 ready step for agent-b after s1 completion, got %d", len(readyB2))
@@ -131,7 +131,7 @@ func TestMultiAgent_GetStatus(t *testing.T) {
 	}, nil)
 	run, _ := e.StartRun(tmpl.ID, "admin", nil)
 
-	e.AssignSteps(run.ID, []AgentAssignment{{StepID: "s1", AgentID: "agent-a"}})
+	_, _ = e.AssignSteps(run.ID, []AgentAssignment{{StepID: "s1", AgentID: "agent-a"}})
 
 	mar, err := e.GetMultiAgentStatus(run.ID)
 	if err != nil {

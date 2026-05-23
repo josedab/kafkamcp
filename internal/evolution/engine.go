@@ -2,12 +2,12 @@ package evolution
 
 // FieldDiff represents a change to a single schema field.
 type FieldDiff struct {
-	Field     string `json:"field"`
-	Action    string `json:"action"` // "added", "removed", "modified", "unchanged"
-	OldType   any    `json:"old_type,omitempty"`
-	NewType   any    `json:"new_type,omitempty"`
-	Breaking  bool   `json:"breaking"`
-	Details   string `json:"details,omitempty"`
+	Field    string `json:"field"`
+	Action   string `json:"action"` // "added", "removed", "modified", "unchanged"
+	OldType  any    `json:"old_type,omitempty"`
+	NewType  any    `json:"new_type,omitempty"`
+	Breaking bool   `json:"breaking"`
+	Details  string `json:"details,omitempty"`
 }
 
 // SchemaDiff is the full diff between two schema versions.

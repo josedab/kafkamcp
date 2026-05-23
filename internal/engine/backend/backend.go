@@ -1,12 +1,12 @@
 // Package backend defines the KV abstraction used by KafkaMCP engines that
-// need to persist state across server restarts (agent memory, materialised
+// need to persist state across server restarts (agent memory, materialized
 // views, rate-limit budgets, audit ring buffer, ...).
 //
 // The interface is deliberately narrow:
 //
 //   - A namespace partitions keys (e.g. "agentmemory", "viewstore").
 //   - Keys and values are opaque to the backend; the caller is responsible
-//     for marshalling (typically JSON via the generic [Store] helper in the
+//     for marshaling (typically JSON via the generic [Store] helper in the
 //     parent engine package).
 //
 // Two implementations ship with KafkaMCP:

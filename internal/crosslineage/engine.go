@@ -11,6 +11,7 @@ import (
 // NodeType represents the type of entity in the lineage graph.
 type NodeType string
 
+// NodeTopic and related values define constants for this package.
 const (
 	NodeTopic     NodeType = "topic"
 	NodeConnector NodeType = "connector"
@@ -40,10 +41,10 @@ type Edge struct {
 
 // LineageGraph is the complete lineage visualization.
 type LineageGraph struct {
-	Nodes       []Node   `json:"nodes"`
-	Edges       []Edge   `json:"edges"`
-	TotalNodes  int      `json:"total_nodes"`
-	TotalEdges  int      `json:"total_edges"`
+	Nodes       []Node    `json:"nodes"`
+	Edges       []Edge    `json:"edges"`
+	TotalNodes  int       `json:"total_nodes"`
+	TotalEdges  int       `json:"total_edges"`
 	GeneratedAt time.Time `json:"generated_at"`
 }
 
@@ -275,10 +276,10 @@ type ImpactAnalysis struct {
 
 // PathResult represents a path between two nodes.
 type PathResult struct {
-	Source    string     `json:"source"`
-	Target    string     `json:"target"`
-	Paths     [][]string `json:"paths"`
-	ShortestLength int  `json:"shortest_length"`
+	Source         string     `json:"source"`
+	Target         string     `json:"target"`
+	Paths          [][]string `json:"paths"`
+	ShortestLength int        `json:"shortest_length"`
 }
 
 // CrossClusterFlow represents data flow between clusters.

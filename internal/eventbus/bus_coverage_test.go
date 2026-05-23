@@ -21,9 +21,9 @@ func TestListSubscriptions_Multiple(t *testing.T) {
 	t.Parallel()
 	bus := NewBus(DefaultBusConfig(), slog.Default())
 
-	bus.Subscribe(SubscriptionFilter{EventTypes: []EventType{EventToolInvocation}})
-	bus.Subscribe(SubscriptionFilter{AgentIDs: []string{"agent-1"}})
-	bus.Subscribe(SubscriptionFilter{})
+	_, _ = bus.Subscribe(SubscriptionFilter{EventTypes: []EventType{EventToolInvocation}})
+	_, _ = bus.Subscribe(SubscriptionFilter{AgentIDs: []string{"agent-1"}})
+	_, _ = bus.Subscribe(SubscriptionFilter{})
 
 	subs := bus.ListSubscriptions()
 	if len(subs) != 3 {
@@ -69,7 +69,7 @@ func TestListSubscriptions_DroppedCounts(t *testing.T) {
 	cfg.SubscriberBuffer = 1
 	bus := NewBus(cfg, slog.Default())
 
-	bus.Subscribe(SubscriptionFilter{})
+	_, _ = bus.Subscribe(SubscriptionFilter{})
 
 	// Publish multiple without consuming
 	for i := 0; i < 5; i++ {

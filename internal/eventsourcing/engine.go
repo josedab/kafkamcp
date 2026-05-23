@@ -35,23 +35,23 @@ type ActionResult struct {
 
 // AgentContext provides additional context about the agent.
 type AgentContext struct {
-	AgentType  string            `json:"agent_type,omitempty"`
-	Cluster    string            `json:"cluster,omitempty"`
-	Topic      string            `json:"topic,omitempty"`
-	Metadata   map[string]string `json:"metadata,omitempty"`
+	AgentType string            `json:"agent_type,omitempty"`
+	Cluster   string            `json:"cluster,omitempty"`
+	Topic     string            `json:"topic,omitempty"`
+	Metadata  map[string]string `json:"metadata,omitempty"`
 }
 
 // SessionView is a materialized view of an agent session.
 type SessionView struct {
-	SessionID    string        `json:"session_id"`
-	AgentID      string        `json:"agent_id"`
-	Actions      []ActionEvent `json:"actions"`
+	SessionID    string         `json:"session_id"`
+	AgentID      string         `json:"agent_id"`
+	Actions      []ActionEvent  `json:"actions"`
 	ToolCounts   map[string]int `json:"tool_counts"`
-	TotalActions int           `json:"total_actions"`
-	ErrorCount   int           `json:"error_count"`
-	StartTime    time.Time     `json:"start_time"`
-	EndTime      time.Time     `json:"end_time"`
-	Duration     time.Duration `json:"duration"`
+	TotalActions int            `json:"total_actions"`
+	ErrorCount   int            `json:"error_count"`
+	StartTime    time.Time      `json:"start_time"`
+	EndTime      time.Time      `json:"end_time"`
+	Duration     time.Duration  `json:"duration"`
 }
 
 // ToolUsageView is an analytics view of tool usage.
@@ -76,9 +76,9 @@ type ExportFilter struct {
 
 // CompactionPolicy defines how old events are compacted.
 type CompactionPolicy struct {
-	MaxEvents      int           `json:"max_events" yaml:"max_events"`
-	MaxAge         time.Duration `json:"max_age" yaml:"max_age"`
-	SamplingRate   float64       `json:"sampling_rate" yaml:"sampling_rate"` // 0.0-1.0
+	MaxEvents    int           `json:"max_events" yaml:"max_events"`
+	MaxAge       time.Duration `json:"max_age" yaml:"max_age"`
+	SamplingRate float64       `json:"sampling_rate" yaml:"sampling_rate"` // 0.0-1.0
 }
 
 // DefaultCompactionPolicy returns sensible defaults.
@@ -92,22 +92,22 @@ func DefaultCompactionPolicy() CompactionPolicy {
 
 // Engine is the event sourcing engine for agent actions.
 type Engine struct {
-	mu         sync.RWMutex
-	events     []ActionEvent
-	sessions   map[string]*SessionView
-	toolUsage  map[string]*toolUsageAccum
-	sequence   int64
-	policy     CompactionPolicy
-	logger     *slog.Logger
-	topicName  string
+	mu        sync.RWMutex
+	events    []ActionEvent
+	sessions  map[string]*SessionView
+	toolUsage map[string]*toolUsageAccum
+	sequence  int64
+	policy    CompactionPolicy
+	logger    *slog.Logger
+	topicName string
 }
 
 type toolUsageAccum struct {
-	totalCalls  int64
-	errorCalls  int64
-	totalDurMs  int64
-	durations   []int64
-	agents      map[string]bool
+	totalCalls int64
+	errorCalls int64
+	totalDurMs int64
+	durations  []int64
+	agents     map[string]bool
 }
 
 // NewEngine creates a new event sourcing engine.
@@ -175,9 +175,9 @@ func (e *Engine) GetToolUsage() []ToolUsageView {
 	var result []ToolUsageView
 	for tool, accum := range e.toolUsage {
 		view := ToolUsageView{
-			Tool:          tool,
-			TotalCalls:    accum.totalCalls,
-			UniqueAgents:  len(accum.agents),
+			Tool:         tool,
+			TotalCalls:   accum.totalCalls,
+			UniqueAgents: len(accum.agents),
 		}
 		if accum.totalCalls > 0 {
 			view.ErrorRate = float64(accum.errorCalls) / float64(accum.totalCalls)

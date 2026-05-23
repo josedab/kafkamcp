@@ -18,7 +18,7 @@ func TestRemediateAnalyzeNilManager(t *testing.T) {
 				panicked = true
 			}
 		}()
-		r.Remediate(context.Background(), nil, "", "orders-dlq", "analyze", "", 10)
+		_, _ = r.Remediate(context.Background(), nil, "", "orders-dlq", "analyze", "", 10)
 	}()
 	if !panicked {
 		t.Error("expected panic when calling analyze with nil manager")
@@ -36,7 +36,7 @@ func TestRemediateRetryNilManager(t *testing.T) {
 				panicked = true
 			}
 		}()
-		r.Remediate(context.Background(), nil, "", "orders-dlq", "retry", "", 10)
+		_, _ = r.Remediate(context.Background(), nil, "", "orders-dlq", "retry", "", 10)
 	}()
 	if !panicked {
 		t.Error("expected panic when calling retry with nil manager")
@@ -54,7 +54,7 @@ func TestRemediateRouteNilManager(t *testing.T) {
 				panicked = true
 			}
 		}()
-		r.Remediate(context.Background(), nil, "", "orders-dlq", "route", "target-topic", 10)
+		_, _ = r.Remediate(context.Background(), nil, "", "orders-dlq", "route", "target-topic", 10)
 	}()
 	if !panicked {
 		t.Error("expected panic when calling route with nil manager")
@@ -72,7 +72,7 @@ func TestRemediateSuggestNilManager(t *testing.T) {
 				panicked = true
 			}
 		}()
-		r.Remediate(context.Background(), nil, "", "orders-dlq", "suggest", "", 10)
+		_, _ = r.Remediate(context.Background(), nil, "", "orders-dlq", "suggest", "", 10)
 	}()
 	if !panicked {
 		t.Error("expected panic when calling suggest with nil manager")
@@ -106,7 +106,7 @@ func TestRemediateValidActionsDispatch(t *testing.T) {
 						panicked = true
 					}
 				}()
-				r.Remediate(context.Background(), nil, "cluster", "topic-dlq", a.action, a.target, 5)
+				_, _ = r.Remediate(context.Background(), nil, "cluster", "topic-dlq", a.action, a.target, 5)
 			}()
 			if !panicked {
 				t.Errorf("expected panic for action %q with nil manager", a.action)

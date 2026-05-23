@@ -14,6 +14,7 @@ import (
 // Dimension represents a quality dimension.
 type Dimension string
 
+// DimensionFreshness and related values define constants for this package.
 const (
 	DimensionFreshness    Dimension = "freshness"
 	DimensionCompleteness Dimension = "completeness"
@@ -24,43 +25,43 @@ const (
 
 // DimensionScore represents the score for a single quality dimension.
 type DimensionScore struct {
-	Dimension Dimension `json:"dimension"`
-	Score     float64   `json:"score"`
-	Details   string    `json:"details,omitempty"`
-	SampleSize int     `json:"sample_size"`
+	Dimension  Dimension `json:"dimension"`
+	Score      float64   `json:"score"`
+	Details    string    `json:"details,omitempty"`
+	SampleSize int       `json:"sample_size"`
 }
 
 // QualityScore is the aggregate quality score for a topic.
 type QualityScore struct {
-	Topic          string           `json:"topic"`
-	OverallScore   float64          `json:"overall_score"`
-	Grade          string           `json:"grade"`
-	Dimensions     []DimensionScore `json:"dimensions"`
-	SampleSize     int              `json:"sample_size"`
-	EvaluatedAt    time.Time        `json:"evaluated_at"`
+	Topic        string           `json:"topic"`
+	OverallScore float64          `json:"overall_score"`
+	Grade        string           `json:"grade"`
+	Dimensions   []DimensionScore `json:"dimensions"`
+	SampleSize   int              `json:"sample_size"`
+	EvaluatedAt  time.Time        `json:"evaluated_at"`
 }
 
 // SLAConfig defines quality thresholds for a topic.
 type SLAConfig struct {
-	Topic               string        `json:"topic" yaml:"topic"`
-	MinFreshness        float64       `json:"min_freshness" yaml:"min_freshness"`
-	MinCompleteness     float64       `json:"min_completeness" yaml:"min_completeness"`
-	MinConformance      float64       `json:"min_conformance" yaml:"min_conformance"`
-	MaxAnomalyRate      float64       `json:"max_anomaly_rate" yaml:"max_anomaly_rate"`
-	MinVolumeConsistency float64      `json:"min_volume_consistency" yaml:"min_volume_consistency"`
-	MinOverallScore     float64       `json:"min_overall_score" yaml:"min_overall_score"`
-	MaxLatencyMs        int64         `json:"max_latency_ms" yaml:"max_latency_ms"`
-	CheckInterval       time.Duration `json:"check_interval" yaml:"check_interval"`
-	AlertWebhook        string        `json:"alert_webhook,omitempty" yaml:"alert_webhook,omitempty"`
+	Topic                string        `json:"topic" yaml:"topic"`
+	MinFreshness         float64       `json:"min_freshness" yaml:"min_freshness"`
+	MinCompleteness      float64       `json:"min_completeness" yaml:"min_completeness"`
+	MinConformance       float64       `json:"min_conformance" yaml:"min_conformance"`
+	MaxAnomalyRate       float64       `json:"max_anomaly_rate" yaml:"max_anomaly_rate"`
+	MinVolumeConsistency float64       `json:"min_volume_consistency" yaml:"min_volume_consistency"`
+	MinOverallScore      float64       `json:"min_overall_score" yaml:"min_overall_score"`
+	MaxLatencyMs         int64         `json:"max_latency_ms" yaml:"max_latency_ms"`
+	CheckInterval        time.Duration `json:"check_interval" yaml:"check_interval"`
+	AlertWebhook         string        `json:"alert_webhook,omitempty" yaml:"alert_webhook,omitempty"`
 }
 
 // SLAStatus represents the current SLA compliance status.
 type SLAStatus struct {
-	Topic        string     `json:"topic"`
-	Compliant    bool       `json:"compliant"`
-	Breaches     []SLABreach `json:"breaches,omitempty"`
-	LastChecked  time.Time  `json:"last_checked"`
-	Score        float64    `json:"score"`
+	Topic       string      `json:"topic"`
+	Compliant   bool        `json:"compliant"`
+	Breaches    []SLABreach `json:"breaches,omitempty"`
+	LastChecked time.Time   `json:"last_checked"`
+	Score       float64     `json:"score"`
 }
 
 // SLABreach records a specific SLA violation.
@@ -73,12 +74,12 @@ type SLABreach struct {
 
 // QualityReport is a detailed quality analysis of a topic.
 type QualityReport struct {
-	Topic           string                `json:"topic"`
-	Score           QualityScore          `json:"score"`
-	SLAStatus       *SLAStatus            `json:"sla_status,omitempty"`
+	Topic           string                  `json:"topic"`
+	Score           QualityScore            `json:"score"`
+	SLAStatus       *SLAStatus              `json:"sla_status,omitempty"`
 	Trends          map[Dimension][]float64 `json:"trends,omitempty"`
-	Recommendations []string              `json:"recommendations,omitempty"`
-	GeneratedAt     time.Time             `json:"generated_at"`
+	Recommendations []string                `json:"recommendations,omitempty"`
+	GeneratedAt     time.Time               `json:"generated_at"`
 }
 
 // TopicMetrics holds raw metrics used for quality scoring.

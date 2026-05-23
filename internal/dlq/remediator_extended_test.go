@@ -1,6 +1,7 @@
 package dlq
 
 import (
+	"context"
 	"log/slog"
 	"testing"
 )
@@ -184,7 +185,7 @@ func TestUpdateStatsAccumulates(t *testing.T) {
 func TestRemediateInvalidAction(t *testing.T) {
 	t.Parallel()
 	r := NewRemediator(slog.Default())
-	_, err := r.Remediate(nil, nil, "", "topic", "invalid_action", "", 10)
+	_, err := r.Remediate(context.TODO(), nil, "", "topic", "invalid_action", "", 10)
 	if err == nil {
 		t.Error("expected error for invalid action")
 	}
@@ -193,7 +194,7 @@ func TestRemediateInvalidAction(t *testing.T) {
 func TestRemediateRouteRequiresTarget(t *testing.T) {
 	t.Parallel()
 	r := NewRemediator(slog.Default())
-	_, err := r.Remediate(nil, nil, "", "topic", "route", "", 10)
+	_, err := r.Remediate(context.TODO(), nil, "", "topic", "route", "", 10)
 	if err == nil {
 		t.Error("expected error when target_topic is empty for route action")
 	}
@@ -203,7 +204,7 @@ func TestRemediateDefaultLimit(t *testing.T) {
 	t.Parallel()
 	r := NewRemediator(slog.Default())
 	// Calling with invalid action but checking limit defaults
-	_, err := r.Remediate(nil, nil, "", "topic", "unknown", "", 0)
+	_, err := r.Remediate(context.TODO(), nil, "", "topic", "unknown", "", 0)
 	if err == nil {
 		t.Error("expected error for unknown action")
 	}

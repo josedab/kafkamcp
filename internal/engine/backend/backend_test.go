@@ -43,7 +43,7 @@ func TestBackend_SetGetDelete(t *testing.T) {
 	for _, f := range backends(t) {
 		t.Run(f.name, func(t *testing.T) {
 			be := f.open(t)
-			defer be.Close()
+			defer func() { _ = be.Close() }()
 
 			if _, err := be.Get(ctx, "ns", "missing"); !errors.Is(err, backend.ErrNotFound) {
 				t.Fatalf("Get on missing key: want ErrNotFound, got %v", err)
@@ -87,7 +87,7 @@ func TestBackend_List(t *testing.T) {
 	for _, f := range backends(t) {
 		t.Run(f.name, func(t *testing.T) {
 			be := f.open(t)
-			defer be.Close()
+			defer func() { _ = be.Close() }()
 
 			seed := map[string]string{
 				"agent/alice/profile":   "a1",
@@ -186,7 +186,7 @@ func TestSQLite_PersistsAcrossOpen(t *testing.T) {
 	if err != nil {
 		t.Fatalf("open #2: %v", err)
 	}
-	defer be2.Close()
+	defer func() { _ = be2.Close() }()
 	got, err := be2.Get(ctx, "agentmemory", "alice/profile")
 	if err != nil {
 		t.Fatalf("Get after reopen: %v", err)

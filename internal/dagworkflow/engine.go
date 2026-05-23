@@ -14,16 +14,16 @@ import (
 
 // WorkflowTemplate defines a reusable, versioned workflow as a DAG of steps.
 type WorkflowTemplate struct {
-	ID          string            `json:"id"`
-	Name        string            `json:"name"`
-	Description string            `json:"description,omitempty"`
-	Version     int               `json:"version"`
-	Parameters  []Parameter       `json:"parameters,omitempty"`
-	Steps       []DAGStep         `json:"steps"`
-	CreatedBy   string            `json:"created_by"`
-	CreatedAt   time.Time         `json:"created_at"`
-	UpdatedAt   time.Time         `json:"updated_at"`
-	Tags        []string          `json:"tags,omitempty"`
+	ID          string      `json:"id"`
+	Name        string      `json:"name"`
+	Description string      `json:"description,omitempty"`
+	Version     int         `json:"version"`
+	Parameters  []Parameter `json:"parameters,omitempty"`
+	Steps       []DAGStep   `json:"steps"`
+	CreatedBy   string      `json:"created_by"`
+	CreatedAt   time.Time   `json:"created_at"`
+	UpdatedAt   time.Time   `json:"updated_at"`
+	Tags        []string    `json:"tags,omitempty"`
 }
 
 // Parameter defines an input parameter for a workflow template.
@@ -37,15 +37,15 @@ type Parameter struct {
 
 // DAGStep is a single node in the workflow DAG.
 type DAGStep struct {
-	ID           string            `json:"id"`
-	Name         string            `json:"name"`
-	Tool         string            `json:"tool"`
-	Args         map[string]string `json:"args,omitempty"`
-	DependsOn    []string          `json:"depends_on,omitempty"`
-	Condition    string            `json:"condition,omitempty"`
-	OnError      string            `json:"on_error,omitempty"` // stop, continue, retry
-	MaxRetries   int               `json:"max_retries,omitempty"`
-	TimeoutSec   int               `json:"timeout_sec,omitempty"`
+	ID         string            `json:"id"`
+	Name       string            `json:"name"`
+	Tool       string            `json:"tool"`
+	Args       map[string]string `json:"args,omitempty"`
+	DependsOn  []string          `json:"depends_on,omitempty"`
+	Condition  string            `json:"condition,omitempty"`
+	OnError    string            `json:"on_error,omitempty"` // stop, continue, retry
+	MaxRetries int               `json:"max_retries,omitempty"`
+	TimeoutSec int               `json:"timeout_sec,omitempty"`
 }
 
 // WorkflowRun tracks a running workflow execution.
@@ -54,7 +54,7 @@ type WorkflowRun struct {
 	TemplateID   string                `json:"template_id"`
 	TemplateName string                `json:"template_name"`
 	Version      int                   `json:"version"`
-	Status       string                `json:"status"` // pending, running, completed, failed, cancelled
+	Status       string                `json:"status"` // pending, running, completed, failed, canceled
 	Parameters   map[string]any        `json:"parameters"`
 	StepResults  map[string]StepResult `json:"step_results"`
 	StartedAt    time.Time             `json:"started_at"`
@@ -65,21 +65,21 @@ type WorkflowRun struct {
 
 // StepResult records the outcome of a single DAG step.
 type StepResult struct {
-	StepID     string    `json:"step_id"`
-	StepName   string    `json:"step_name"`
-	Tool       string    `json:"tool"`
-	Status     string    `json:"status"` // pending, running, completed, failed, skipped
-	Output     any       `json:"output,omitempty"`
-	Error      string    `json:"error,omitempty"`
-	Retries    int       `json:"retries"`
-	StartedAt  time.Time `json:"started_at,omitempty"`
-	Duration   string    `json:"duration,omitempty"`
+	StepID    string    `json:"step_id"`
+	StepName  string    `json:"step_name"`
+	Tool      string    `json:"tool"`
+	Status    string    `json:"status"` // pending, running, completed, failed, skipped
+	Output    any       `json:"output,omitempty"`
+	Error     string    `json:"error,omitempty"`
+	Retries   int       `json:"retries"`
+	StartedAt time.Time `json:"started_at,omitempty"`
+	Duration  string    `json:"duration,omitempty"`
 }
 
 // Engine manages DAG workflow templates and executions.
 type Engine struct {
 	mu             sync.RWMutex
-	templates      map[string]*WorkflowTemplate // key: template ID
+	templates      map[string]*WorkflowTemplate   // key: template ID
 	versions       map[string][]*WorkflowTemplate // key: name -> version history
 	runs           map[string]*WorkflowRun
 	multiAgentRuns map[string]*MultiAgentRun
@@ -412,7 +412,7 @@ func (e *Engine) CancelRun(runID string) error {
 	}
 
 	now := time.Now()
-	run.Status = "cancelled"
+	run.Status = "canceled"
 	run.CompletedAt = &now
 	return nil
 }

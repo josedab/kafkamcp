@@ -18,26 +18,26 @@ type PartitionRecommendation struct {
 
 // BrokerRecommendation recommends broker configuration.
 type BrokerRecommendation struct {
-	CurrentBrokers      int      `json:"current_brokers"`
-	RecommendedBrokers  int      `json:"recommended_brokers"`
-	RecommendedDiskGB   float64  `json:"recommended_disk_gb"`
-	Reason              string   `json:"reason"`
-	ScalingTrigger      string   `json:"scaling_trigger"` // storage, throughput, partitions
-	TimelineDays        int      `json:"timeline_days"`
+	CurrentBrokers     int     `json:"current_brokers"`
+	RecommendedBrokers int     `json:"recommended_brokers"`
+	RecommendedDiskGB  float64 `json:"recommended_disk_gb"`
+	Reason             string  `json:"reason"`
+	ScalingTrigger     string  `json:"scaling_trigger"` // storage, throughput, partitions
+	TimelineDays       int     `json:"timeline_days"`
 }
 
 // CapacityForecast is a comprehensive capacity forecast with recommendations.
 type CapacityForecast struct {
-	Cluster               string                    `json:"cluster"`
-	HorizonDays           int                       `json:"horizon_days"`
-	TopicForecasts        []TopicForecast           `json:"topic_forecasts"`
-	PartitionRecommends   []PartitionRecommendation `json:"partition_recommendations"`
-	BrokerRecommendation  *BrokerRecommendation     `json:"broker_recommendation,omitempty"`
-	StorageForecast       StorageForecast           `json:"storage_forecast"`
-	ThroughputForecast    ThroughputForecast        `json:"throughput_forecast"`
-	CostProjection        CostProjection            `json:"cost_projection"`
-	RiskAssessment        RiskAssessment            `json:"risk_assessment"`
-	GeneratedAt           string                    `json:"generated_at"`
+	Cluster              string                    `json:"cluster"`
+	HorizonDays          int                       `json:"horizon_days"`
+	TopicForecasts       []TopicForecast           `json:"topic_forecasts"`
+	PartitionRecommends  []PartitionRecommendation `json:"partition_recommendations"`
+	BrokerRecommendation *BrokerRecommendation     `json:"broker_recommendation,omitempty"`
+	StorageForecast      StorageForecast           `json:"storage_forecast"`
+	ThroughputForecast   ThroughputForecast        `json:"throughput_forecast"`
+	CostProjection       CostProjection            `json:"cost_projection"`
+	RiskAssessment       RiskAssessment            `json:"risk_assessment"`
+	GeneratedAt          string                    `json:"generated_at"`
 }
 
 // TopicForecast is a per-topic growth forecast.
@@ -75,8 +75,8 @@ type CostProjection struct {
 
 // RiskAssessment evaluates capacity-related risks.
 type RiskAssessment struct {
-	OverallRisk    string       `json:"overall_risk"` // low, medium, high, critical
-	RiskFactors    []RiskFactor `json:"risk_factors"`
+	OverallRisk string       `json:"overall_risk"` // low, medium, high, critical
+	RiskFactors []RiskFactor `json:"risk_factors"`
 }
 
 // RiskFactor is a single capacity risk.

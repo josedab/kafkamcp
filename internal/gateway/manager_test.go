@@ -125,23 +125,23 @@ func TestNATSAdapter(t *testing.T) {
 
 // mockBackend implements StreamBackend for testing.
 type mockBackend struct {
-	protocol    Protocol
-	connectErr  error
-	closeErr    error
-	produceRes  *ProduceResult
-	produceErr  error
-	consumeRes  []Message
-	consumeErr  error
-	topicList   []TopicInfo
-	topicErr    error
-	createErr   error
-	healthyErr  error
+	protocol   Protocol
+	connectErr error
+	closeErr   error
+	produceRes *ProduceResult
+	produceErr error
+	consumeRes []Message
+	consumeErr error
+	topicList  []TopicInfo
+	topicErr   error
+	createErr  error
+	healthyErr error
 }
 
-func (m *mockBackend) Protocol() Protocol                         { return m.protocol }
-func (m *mockBackend) Connect(ctx context.Context) error          { return m.connectErr }
-func (m *mockBackend) Close() error                               { return m.closeErr }
-func (m *mockBackend) Healthy(ctx context.Context) error          { return m.healthyErr }
+func (m *mockBackend) Protocol() Protocol                                 { return m.protocol }
+func (m *mockBackend) Connect(ctx context.Context) error                  { return m.connectErr }
+func (m *mockBackend) Close() error                                       { return m.closeErr }
+func (m *mockBackend) Healthy(ctx context.Context) error                  { return m.healthyErr }
 func (m *mockBackend) DeleteTopic(ctx context.Context, name string) error { return nil }
 func (m *mockBackend) Produce(ctx context.Context, req ProduceRequest) (*ProduceResult, error) {
 	return m.produceRes, m.produceErr

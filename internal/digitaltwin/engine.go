@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"sync"
 	"time"
+
 	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
@@ -22,30 +23,30 @@ type TopicState struct {
 
 // ConsumerGroupState represents a consumer group in the simulation.
 type ConsumerGroupState struct {
-	GroupID     string                 `json:"group_id"`
-	State      string                 `json:"state"`
-	Members    int                    `json:"members"`
-	Offsets    map[string]int64       `json:"offsets"`
-	TotalLag   int64                  `json:"total_lag"`
+	GroupID  string           `json:"group_id"`
+	State    string           `json:"state"`
+	Members  int              `json:"members"`
+	Offsets  map[string]int64 `json:"offsets"`
+	TotalLag int64            `json:"total_lag"`
 }
 
 // BrokerState represents a broker node.
 type BrokerState struct {
-	ID        int    `json:"id"`
-	Host      string `json:"host"`
-	Port      int    `json:"port"`
-	Rack      string `json:"rack,omitempty"`
-	Partitions int   `json:"partitions"`
+	ID         int    `json:"id"`
+	Host       string `json:"host"`
+	Port       int    `json:"port"`
+	Rack       string `json:"rack,omitempty"`
+	Partitions int    `json:"partitions"`
 }
 
 // ClusterSnapshot captures the full state of a cluster.
 type ClusterSnapshot struct {
-	ID             string               `json:"id"`
-	SourceCluster  string               `json:"source_cluster"`
-	Topics         map[string]TopicState `json:"topics"`
+	ID             string                        `json:"id"`
+	SourceCluster  string                        `json:"source_cluster"`
+	Topics         map[string]TopicState         `json:"topics"`
 	ConsumerGroups map[string]ConsumerGroupState `json:"consumer_groups"`
-	Brokers        []BrokerState        `json:"brokers"`
-	CapturedAt     time.Time            `json:"captured_at"`
+	Brokers        []BrokerState                 `json:"brokers"`
+	CapturedAt     time.Time                     `json:"captured_at"`
 }
 
 // SimulationOp represents an operation to simulate.
@@ -56,12 +57,12 @@ type SimulationOp struct {
 
 // SimulationResult is the outcome of simulating an operation.
 type SimulationResult struct {
-	Operation   SimulationOp    `json:"operation"`
-	Success     bool            `json:"success"`
-	Changes     []Change        `json:"changes,omitempty"`
-	Warnings    []string        `json:"warnings,omitempty"`
-	Error       string          `json:"error,omitempty"`
-	SimulatedAt time.Time       `json:"simulated_at"`
+	Operation   SimulationOp `json:"operation"`
+	Success     bool         `json:"success"`
+	Changes     []Change     `json:"changes,omitempty"`
+	Warnings    []string     `json:"warnings,omitempty"`
+	Error       string       `json:"error,omitempty"`
+	SimulatedAt time.Time    `json:"simulated_at"`
 }
 
 // Change describes a state modification from a simulated operation.
@@ -74,12 +75,12 @@ type Change struct {
 
 // DiffResult compares two cluster states.
 type DiffResult struct {
-	AddedTopics    []string `json:"added_topics,omitempty"`
-	RemovedTopics  []string `json:"removed_topics,omitempty"`
+	AddedTopics    []string    `json:"added_topics,omitempty"`
+	RemovedTopics  []string    `json:"removed_topics,omitempty"`
 	ModifiedTopics []TopicDiff `json:"modified_topics,omitempty"`
-	AddedGroups    []string `json:"added_groups,omitempty"`
-	RemovedGroups  []string `json:"removed_groups,omitempty"`
-	TotalChanges   int      `json:"total_changes"`
+	AddedGroups    []string    `json:"added_groups,omitempty"`
+	RemovedGroups  []string    `json:"removed_groups,omitempty"`
+	TotalChanges   int         `json:"total_changes"`
 }
 
 // TopicDiff describes changes to a topic between two states.
@@ -90,9 +91,9 @@ type TopicDiff struct {
 
 // MigrationPlan describes steps to apply twin changes to production.
 type MigrationPlan struct {
-	Steps    []MigrationStep `json:"steps"`
-	Warnings []string        `json:"warnings,omitempty"`
-	Reversible bool          `json:"reversible"`
+	Steps      []MigrationStep `json:"steps"`
+	Warnings   []string        `json:"warnings,omitempty"`
+	Reversible bool            `json:"reversible"`
 }
 
 // MigrationStep is a single step in a migration plan.
@@ -152,12 +153,12 @@ func (e *Engine) CreateTwin(snapshotID string) (*ClusterSnapshot, error) {
 	}
 
 	twin := &ClusterSnapshot{
-		ID:            randid.New("twin"),
-		SourceCluster: snap.SourceCluster,
-		Topics:        make(map[string]TopicState, len(snap.Topics)),
+		ID:             randid.New("twin"),
+		SourceCluster:  snap.SourceCluster,
+		Topics:         make(map[string]TopicState, len(snap.Topics)),
 		ConsumerGroups: make(map[string]ConsumerGroupState, len(snap.ConsumerGroups)),
-		Brokers:       make([]BrokerState, len(snap.Brokers)),
-		CapturedAt:    snap.CapturedAt,
+		Brokers:        make([]BrokerState, len(snap.Brokers)),
+		CapturedAt:     snap.CapturedAt,
 	}
 
 	for k, v := range snap.Topics {
@@ -459,8 +460,8 @@ func (e *Engine) simAlterPartitions(twin *ClusterSnapshot, params map[string]any
 	twin.Topics[name] = topic
 
 	return &SimulationResult{
-		Success: true,
-		Changes: []Change{{Resource: name, Field: "partitions", OldValue: fmt.Sprintf("%d", old), NewValue: fmt.Sprintf("%d", newCount)}},
+		Success:  true,
+		Changes:  []Change{{Resource: name, Field: "partitions", OldValue: fmt.Sprintf("%d", old), NewValue: fmt.Sprintf("%d", newCount)}},
 		Warnings: []string{"Partition increase may cause message reordering for existing keys"},
 	}
 }

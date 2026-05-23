@@ -11,6 +11,7 @@ import (
 // NodeType identifies the kind of entity in the knowledge graph.
 type NodeType string
 
+// NodeTopic and related values define constants for this package.
 const (
 	NodeTopic         NodeType = "topic"
 	NodeConsumerGroup NodeType = "consumer_group"
@@ -22,40 +23,41 @@ const (
 // EdgeType identifies the kind of relationship.
 type EdgeType string
 
+// EdgeProducesTo and related values define constants for this package.
 const (
-	EdgeProducesTo  EdgeType = "produces_to"
+	EdgeProducesTo   EdgeType = "produces_to"
 	EdgeConsumesFrom EdgeType = "consumes_from"
-	EdgeUsesSchema  EdgeType = "uses_schema"
-	EdgeConnectsTo  EdgeType = "connects_to"
-	EdgeDependsOn   EdgeType = "depends_on"
+	EdgeUsesSchema   EdgeType = "uses_schema"
+	EdgeConnectsTo   EdgeType = "connects_to"
+	EdgeDependsOn    EdgeType = "depends_on"
 )
 
 // Node is an entity in the knowledge graph.
 type Node struct {
-	ID         string            `json:"id"`
-	Type       NodeType          `json:"type"`
-	Name       string            `json:"name"`
-	Properties map[string]any    `json:"properties,omitempty"`
-	UpdatedAt  time.Time         `json:"updated_at"`
+	ID         string         `json:"id"`
+	Type       NodeType       `json:"type"`
+	Name       string         `json:"name"`
+	Properties map[string]any `json:"properties,omitempty"`
+	UpdatedAt  time.Time      `json:"updated_at"`
 }
 
 // Edge is a relationship between two nodes.
 type Edge struct {
-	From       string            `json:"from"`
-	To         string            `json:"to"`
-	Type       EdgeType          `json:"type"`
-	Properties map[string]any    `json:"properties,omitempty"`
-	UpdatedAt  time.Time         `json:"updated_at"`
+	From       string         `json:"from"`
+	To         string         `json:"to"`
+	Type       EdgeType       `json:"type"`
+	Properties map[string]any `json:"properties,omitempty"`
+	UpdatedAt  time.Time      `json:"updated_at"`
 }
 
 // QueryResult is the result of a graph query.
 type QueryResult struct {
-	Nodes      []Node         `json:"nodes"`
-	Edges      []Edge         `json:"edges"`
-	Paths      [][]string     `json:"paths,omitempty"`
-	TotalNodes int            `json:"total_nodes"`
-	TotalEdges int            `json:"total_edges"`
-	QueryTime  string         `json:"query_time"`
+	Nodes      []Node     `json:"nodes"`
+	Edges      []Edge     `json:"edges"`
+	Paths      [][]string `json:"paths,omitempty"`
+	TotalNodes int        `json:"total_nodes"`
+	TotalEdges int        `json:"total_edges"`
+	QueryTime  string     `json:"query_time"`
 }
 
 // KnowledgeGraph is the embedded knowledge graph engine.
@@ -151,9 +153,9 @@ type TopicInfo struct {
 // GroupInfo for graph discovery.
 type GroupInfo struct {
 	GroupID     string
-	State      string
+	State       string
 	MemberCount int
-	Topics     []string
+	Topics      []string
 }
 
 // SchemaLink for graph discovery.
@@ -184,7 +186,7 @@ func (kg *KnowledgeGraph) Query(queryStr string) (*QueryResult, error) {
 
 	case strings.HasPrefix(queryLower, "path "):
 		parts := strings.Fields(queryStr)
-		if len(parts) < 4 || strings.ToLower(parts[2]) != "to" {
+		if len(parts) < 4 || !strings.EqualFold(parts[2], "to") {
 			return nil, fmt.Errorf("path query format: PATH <from> TO <to>")
 		}
 		return kg.findPath(parts[1], parts[3], start)
@@ -401,11 +403,11 @@ func (kg *KnowledgeGraph) GetStats() map[string]any {
 	}
 
 	return map[string]any{
-		"total_nodes":      len(kg.nodes),
-		"total_edges":      len(kg.edges),
-		"node_types":       typeCounts,
-		"edge_types":       edgeTypeCounts,
-		"ttl":              kg.ttl.String(),
+		"total_nodes": len(kg.nodes),
+		"total_edges": len(kg.edges),
+		"node_types":  typeCounts,
+		"edge_types":  edgeTypeCounts,
+		"ttl":         kg.ttl.String(),
 	}
 }
 

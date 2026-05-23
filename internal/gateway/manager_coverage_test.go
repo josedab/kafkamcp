@@ -24,10 +24,10 @@ type mockBackendCov struct {
 	healthyErr error
 }
 
-func (m *mockBackendCov) Protocol() Protocol                         { return m.protocol }
-func (m *mockBackendCov) Connect(ctx context.Context) error          { return m.connectErr }
-func (m *mockBackendCov) Close() error                               { return m.closeErr }
-func (m *mockBackendCov) Healthy(ctx context.Context) error          { return m.healthyErr }
+func (m *mockBackendCov) Protocol() Protocol                                 { return m.protocol }
+func (m *mockBackendCov) Connect(ctx context.Context) error                  { return m.connectErr }
+func (m *mockBackendCov) Close() error                                       { return m.closeErr }
+func (m *mockBackendCov) Healthy(ctx context.Context) error                  { return m.healthyErr }
 func (m *mockBackendCov) DeleteTopic(ctx context.Context, name string) error { return nil }
 func (m *mockBackendCov) Produce(ctx context.Context, req ProduceRequest) (*ProduceResult, error) {
 	return m.produceRes, m.produceErr

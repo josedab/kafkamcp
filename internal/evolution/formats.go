@@ -9,6 +9,7 @@ import (
 // SchemaFormat identifies the serialization format.
 type SchemaFormat string
 
+// FormatAvro and related values define constants for this package.
 const (
 	FormatAvro     SchemaFormat = "avro"
 	FormatProtobuf SchemaFormat = "protobuf"
@@ -285,10 +286,10 @@ func ComputeFormatAwareDiff(subject string, versionFrom, versionTo int, schemaFr
 
 // CanaryValidation describes a canary validation step.
 type CanaryValidation struct {
-	CanaryTopic    string   `json:"canary_topic"`
-	TrafficPercent float64  `json:"traffic_percent"`
-	DurationMins   int      `json:"duration_mins"`
-	SuccessCriteria []string `json:"success_criteria"`
+	CanaryTopic      string   `json:"canary_topic"`
+	TrafficPercent   float64  `json:"traffic_percent"`
+	DurationMins     int      `json:"duration_mins"`
+	SuccessCriteria  []string `json:"success_criteria"`
 	RollbackTriggers []string `json:"rollback_triggers"`
 }
 
@@ -325,20 +326,20 @@ func CreateCanaryValidation(subject string, diff *SchemaDiff) *CanaryValidation 
 
 // DiffVisualization provides metadata for visual schema diff rendering.
 type DiffVisualization struct {
-	Subject     string           `json:"subject"`
-	Format      SchemaFormat     `json:"format"`
-	FieldDiffs  []VisualFieldDiff `json:"field_diffs"`
-	BreakingCount int            `json:"breaking_count"`
-	SafeCount    int             `json:"safe_count"`
-	CanAutoRoll  bool            `json:"can_auto_roll"`
+	Subject       string            `json:"subject"`
+	Format        SchemaFormat      `json:"format"`
+	FieldDiffs    []VisualFieldDiff `json:"field_diffs"`
+	BreakingCount int               `json:"breaking_count"`
+	SafeCount     int               `json:"safe_count"`
+	CanAutoRoll   bool              `json:"can_auto_roll"`
 }
 
 // VisualFieldDiff enriches field diffs with visualization metadata.
 type VisualFieldDiff struct {
 	FieldDiff
-	Color       string `json:"color"`       // "red", "green", "yellow", "gray"
-	Icon        string `json:"icon"`        // "➕", "➖", "✏️", "⚠️"
-	Severity    string `json:"severity"`    // "critical", "warning", "info", "safe"
+	Color    string `json:"color"`    // "red", "green", "yellow", "gray"
+	Icon     string `json:"icon"`     // "➕", "➖", "✏️", "⚠️"
+	Severity string `json:"severity"` // "critical", "warning", "info", "safe"
 }
 
 // CreateDiffVisualization generates visualization metadata for a schema diff.

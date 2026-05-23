@@ -27,13 +27,13 @@ type SampleMessage struct {
 
 // TutorialStep is one step in a guided walkthrough.
 type TutorialStep struct {
-	ID          string   `json:"id"`
-	Title       string   `json:"title"`
-	Description string   `json:"description"`
-	Tool        string   `json:"tool"`
+	ID          string         `json:"id"`
+	Title       string         `json:"title"`
+	Description string         `json:"description"`
+	Tool        string         `json:"tool"`
 	Args        map[string]any `json:"args,omitempty"`
-	Expected    string   `json:"expected"`
-	Tips        []string `json:"tips,omitempty"`
+	Expected    string         `json:"expected"`
+	Tips        []string       `json:"tips,omitempty"`
 }
 
 // Tutorial is a guided interactive walkthrough.
@@ -314,11 +314,11 @@ func generateClickstreamMessages(count int) []SampleMessage {
 			Topic: "click-stream",
 			Key:   fmt.Sprintf("session-%d", (i%50)+1),
 			Value: map[string]any{
-				"session_id": fmt.Sprintf("SESS-%d", (i%50)+1),
-				"user_id":    fmt.Sprintf("USR-%d", (i%100)+1),
-				"page":       pages[i%len(pages)],
-				"action":     actions[i%len(actions)],
-				"duration_ms": (i%3000) + 100,
+				"session_id":  fmt.Sprintf("SESS-%d", (i%50)+1),
+				"user_id":     fmt.Sprintf("USR-%d", (i%100)+1),
+				"page":        pages[i%len(pages)],
+				"action":      actions[i%len(actions)],
+				"duration_ms": (i % 3000) + 100,
 				"timestamp":   time.Now().Add(time.Duration(-i) * time.Millisecond * 500).Format(time.RFC3339),
 			},
 		}
