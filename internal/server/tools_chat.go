@@ -4,8 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/kafkamcp/kafkamcp/internal/auth"
 	"github.com/mark3labs/mcp-go/mcp"
+
+	"github.com/kafkamcp/kafkamcp/internal/auth"
 )
 
 func (s *Server) handleChatSession(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -180,7 +181,7 @@ func (s *Server) handleChatTemplate(ctx context.Context, request mcp.CallToolReq
 
 func mapIntentToTools(intentType string) []string {
 	toolMap := map[string][]string{
-		"lag_diagnosis":    {"kafka_consumer_groups", "kafka_lag_diagnosis", "kafka_selfheal_status"},
+		"lag_diagnosis":     {"kafka_consumer_groups", "kafka_lag_diagnosis", "kafka_selfheal_status"},
 		"anomaly_detection": {"kafka_anomaly_detect", "kafka_anomaly_status"},
 		"schema_inspection": {"kafka_list_schemas", "kafka_schema_versions", "kafka_schema_compatibility"},
 		"topic_inspection":  {"kafka_list_topics", "kafka_topic_describe", "kafka_topic_config"},

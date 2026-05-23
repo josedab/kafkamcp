@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/kafkamcp/kafkamcp/internal/agentprofile"
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
@@ -85,19 +84,4 @@ func (s *Server) handleThreatStats(ctx context.Context, request mcp.CallToolRequ
 	stats := s.threatDetector.Stats()
 	s.logAudit(ctx, agentID, "agent_threat_stats", args, "", "success", 1, nil, start)
 	return marshalResult(stats)
-}
-
-// recordThreatAccess is called by the audit logging system to feed the threat detector.
-func (s *Server) recordThreatAccess(agentID, tool, topic, action string, count int) {
-	if s.threatDetector == nil {
-		return
-	}
-	s.threatDetector.RecordAccess(agentprofile.AccessEvent{
-		AgentID:   agentID,
-		Tool:      tool,
-		Topic:     topic,
-		Action:    action,
-		Count:     count,
-		Timestamp: time.Now(),
-	})
 }

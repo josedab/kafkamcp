@@ -6,8 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kafkamcp/kafkamcp/internal/auth"
 	"github.com/mark3labs/mcp-go/mcp"
+
+	"github.com/kafkamcp/kafkamcp/internal/auth"
 )
 
 // ===================== KAFKA CONNECT MANAGEMENT HANDLERS =====================

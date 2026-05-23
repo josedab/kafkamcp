@@ -13,15 +13,16 @@ import (
 // ToolCategory groups tools for selective registration.
 type ToolCategory string
 
+// ToolCategoryCore and related values define constants for this package.
 const (
-	ToolCategoryCore         ToolCategory = "core"         // P0: list, describe, consume, produce
-	ToolCategoryAdvanced     ToolCategory = "advanced"     // P1-P3 tools
-	ToolCategoryGovernance   ToolCategory = "governance"   // Auth, audit, masking, compliance
-	ToolCategoryStreaming    ToolCategory = "streaming"    // Watch, DLQ, replication
-	ToolCategoryAnalytics    ToolCategory = "analytics"    // Anomaly detection, NL query, cost analysis
-	ToolCategoryPlatform     ToolCategory = "platform"     // Workflows, plugins, federation
+	ToolCategoryCore          ToolCategory = "core"          // P0: list, describe, consume, produce
+	ToolCategoryAdvanced      ToolCategory = "advanced"      // P1-P3 tools
+	ToolCategoryGovernance    ToolCategory = "governance"    // Auth, audit, masking, compliance
+	ToolCategoryStreaming     ToolCategory = "streaming"     // Watch, DLQ, replication
+	ToolCategoryAnalytics     ToolCategory = "analytics"     // Anomaly detection, NL query, cost analysis
+	ToolCategoryPlatform      ToolCategory = "platform"      // Workflows, plugins, federation
 	ToolCategoryObservability ToolCategory = "observability" // Telemetry, metrics, event bus
-	ToolCategoryAll          ToolCategory = "all"
+	ToolCategoryAll           ToolCategory = "all"
 )
 
 // EmbeddedConfig configures the embeddable KafkaMCP instance.

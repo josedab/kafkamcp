@@ -4,9 +4,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mark3labs/mcp-go/mcp"
+
 	"github.com/kafkamcp/kafkamcp/internal/kafka"
 	"github.com/kafkamcp/kafkamcp/internal/nlquery"
-	"github.com/mark3labs/mcp-go/mcp"
 )
 
 // ===================== computeSchemaDiff Tests =====================
@@ -257,9 +258,9 @@ func TestExtractStringMapArg(t *testing.T) {
 			name: "map[string]any values",
 			args: map[string]any{
 				"config": map[string]any{
-					"retention.ms":    "86400000",
-					"compression":     "snappy",
-					"numeric_as_any":  42,
+					"retention.ms":   "86400000",
+					"compression":    "snappy",
+					"numeric_as_any": 42,
 				},
 			},
 			key: "config",

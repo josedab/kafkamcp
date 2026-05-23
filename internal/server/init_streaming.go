@@ -15,7 +15,7 @@ import (
 type Streaming struct {
 	watchManager   *watch.Manager         // event-driven watch subscriptions
 	dlqRemediator  *dlq.Remediator        // DLQ auto-remediation
-	replicationMon *replication.Monitor    // cross-cluster replication monitoring
+	replicationMon *replication.Monitor   // cross-cluster replication monitoring
 	selfHealMon    *selfheal.Monitor      // self-healing consumer groups
 	lineageTracker *lineage.Tracker       // topic data lineage
 	messageTracer  *lineage.MessageTracer // distributed message tracing

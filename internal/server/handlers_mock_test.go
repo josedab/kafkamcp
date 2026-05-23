@@ -7,8 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kafkamcp/kafkamcp/internal/kafka"
 	"github.com/mark3labs/mcp-go/mcp"
+
+	"github.com/kafkamcp/kafkamcp/internal/kafka"
 )
 
 // newTestServerWithMock constructs a Server with a MockKafkaManager.
@@ -132,7 +133,7 @@ func TestHandleListTopics_ClusterResolution(t *testing.T) {
 	s := newTestServerWithMock(t, mock)
 	ctx := context.Background()
 
-	s.handleListTopics(ctx, makeToolRequest(map[string]any{"cluster": "staging"}))
+	_, _ = s.handleListTopics(ctx, makeToolRequest(map[string]any{"cluster": "staging"}))
 	if calledCluster != "staging" {
 		t.Errorf("expected cluster 'staging', got %q", calledCluster)
 	}

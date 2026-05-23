@@ -39,7 +39,7 @@ type Governance struct {
 
 // newGovernance initializes all governance subsystems. be is the
 // shared persistence backend; passing nil keeps audit + rate-limiting
-// state in-memory (legacy behaviour).
+// state in-memory (legacy behavior).
 func newGovernance(cfg *config.Config, logger *slog.Logger, be enginebackend.Backend) (Governance, error) {
 	policyEngine := auth.NewPolicyEngine(cfg.Policies)
 
@@ -114,7 +114,7 @@ func buildIdentityProvider(cfg *config.Config, logger *slog.Logger) (identity.Pr
 	switch prov.Name() {
 	case "none":
 		// Don't log anything; this is the default and matches historical
-		// behaviour.
+		// behavior.
 	default:
 		logger.Info("agent identity verification enabled", "provider", prov.Name())
 	}

@@ -17,7 +17,7 @@ import (
 // populated so audit consumers can distinguish a header-asserted
 // agent ID (legacy / dev) from one verified by OIDC, static-token, or
 // mTLS. ctx may be context.Background() — the identity fields then
-// remain empty, matching the pre-identity-verification behaviour.
+// remain empty, matching the pre-identity-verification behavior.
 func (s *Server) logAudit(ctx context.Context, agentID, tool string, params map[string]any, cluster, status string, count int, err error, start time.Time) {
 	latency := time.Since(start)
 	entry := audit.Entry{

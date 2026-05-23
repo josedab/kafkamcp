@@ -1,7 +1,6 @@
 package server
 
 import (
-	"github.com/kafkamcp/kafkamcp/internal/auth"
 	mcp "github.com/mark3labs/mcp-go/mcp"
 )
 
@@ -45,17 +44,4 @@ func (s *Server) registerAutopilotTools() {
 		mcp.WithDescription("Get the current status and details of an autopilot migration session, or list all sessions."),
 		mcp.WithString("session_id", mcp.Description("Autopilot session ID. If empty, lists all sessions.")),
 	), s.handleAutopilotStatus)
-}
-
-// toolAuthConfig for autopilot operations.
-var autopilotAuthRead = toolAuthConfig{
-	tool:         "kafka_autopilot",
-	resourceType: auth.ResourceCluster,
-	action:       auth.ActionRead,
-}
-
-var autopilotAuthWrite = toolAuthConfig{
-	tool:         "kafka_autopilot",
-	resourceType: auth.ResourceCluster,
-	action:       auth.ActionWrite,
 }

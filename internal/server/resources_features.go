@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/kafkamcp/kafkamcp/internal/auth"
 	"github.com/mark3labs/mcp-go/mcp"
+
+	"github.com/kafkamcp/kafkamcp/internal/auth"
 )
 
 // ===================== FEATURE RESOURCE HANDLERS =====================
@@ -168,10 +169,10 @@ func (s *Server) handleFlowGraphResource(ctx context.Context, request mcp.ReadRe
 	var nodes []map[string]any
 	for _, t := range topics {
 		nodes = append(nodes, map[string]any{
-			"id":           t.Name,
-			"type":         "topic",
-			"name":         t.Name,
-			"partitions":   t.Partitions,
+			"id":            t.Name,
+			"type":          "topic",
+			"name":          t.Name,
+			"partitions":    t.Partitions,
 			"message_count": t.MessageCount,
 		})
 	}

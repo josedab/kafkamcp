@@ -20,12 +20,12 @@ func TestLogAudit_EnrichesIdentityFromContext(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
-		name           string
-		ident          *identity.AgentIdentity
-		wantMethod     string
-		wantIssuer     string
-		wantSubject    string
-		wantAgentID    string
+		name        string
+		ident       *identity.AgentIdentity
+		wantMethod  string
+		wantIssuer  string
+		wantSubject string
+		wantAgentID string
 	}{
 		{
 			name:        "none provider — no identity attached",
@@ -102,7 +102,7 @@ func TestLogAudit_EnrichesIdentityFromContext(t *testing.T) {
 
 // TestLogAudit_BackwardCompatibleWithBackgroundContext verifies that
 // passing context.Background() (no identity attached) leaves the
-// identity fields empty, preserving the legacy behaviour for STDIO
+// identity fields empty, preserving the legacy behavior for STDIO
 // transport / `provider: none` deployments.
 func TestLogAudit_BackwardCompatibleWithBackgroundContext(t *testing.T) {
 	t.Parallel()

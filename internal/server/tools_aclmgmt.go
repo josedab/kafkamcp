@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/mark3labs/mcp-go/mcp"
+
 	"github.com/kafkamcp/kafkamcp/internal/aclmgmt"
 	"github.com/kafkamcp/kafkamcp/internal/auth"
-	"github.com/mark3labs/mcp-go/mcp"
 )
 
 func (s *Server) handleACLManage(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {

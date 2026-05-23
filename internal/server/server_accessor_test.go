@@ -81,7 +81,7 @@ func TestAcquireExpensiveOp_BlocksWhenFull(t *testing.T) {
 		}
 	}
 
-	// Next acquire should block and fail on cancelled context
+	// Next acquire should block and fail on canceled context
 	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
 	defer cancel()
 
@@ -109,7 +109,7 @@ func TestAcquireExpensiveOp_CancelledContext(t *testing.T) {
 
 	// Fill semaphore
 	for i := 0; i < 5; i++ {
-		s.acquireExpensiveOp(context.Background())
+		_ = s.acquireExpensiveOp(context.Background())
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -117,7 +117,7 @@ func TestAcquireExpensiveOp_CancelledContext(t *testing.T) {
 
 	err := s.acquireExpensiveOp(ctx)
 	if err == nil {
-		t.Error("expected error for cancelled context")
+		t.Error("expected error for canceled context")
 	}
 
 	// Clean up
@@ -132,13 +132,13 @@ func TestReleaseExpensiveOp_UnblocksWaiting(t *testing.T) {
 
 	// Fill semaphore
 	for i := 0; i < 5; i++ {
-		s.acquireExpensiveOp(context.Background())
+		_ = s.acquireExpensiveOp(context.Background())
 	}
 
 	// Start a goroutine that tries to acquire
 	acquired := make(chan struct{})
 	go func() {
-		s.acquireExpensiveOp(context.Background())
+		_ = s.acquireExpensiveOp(context.Background())
 		close(acquired)
 	}()
 

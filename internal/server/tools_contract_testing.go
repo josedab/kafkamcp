@@ -4,9 +4,10 @@ import (
 	"context"
 	"time"
 
+	"github.com/mark3labs/mcp-go/mcp"
+
 	"github.com/kafkamcp/kafkamcp/internal/auth"
 	"github.com/kafkamcp/kafkamcp/internal/contracts"
-	"github.com/mark3labs/mcp-go/mcp"
 )
 
 func (s *Server) handleContractTest(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {

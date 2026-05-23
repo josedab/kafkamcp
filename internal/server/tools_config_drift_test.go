@@ -91,7 +91,7 @@ func TestHandleConfigDrift_Compare_WithTopicFilter(t *testing.T) {
 		},
 	}
 	s := newTestServerWithMock(t, mock)
-	s.handleConfigDrift(context.Background(), makeToolRequest(map[string]any{
+	_, _ = s.handleConfigDrift(context.Background(), makeToolRequest(map[string]any{
 		"action":         "compare",
 		"source_cluster": "prod",
 		"target_cluster": "staging",

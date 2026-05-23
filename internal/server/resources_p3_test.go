@@ -5,8 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kafkamcp/kafkamcp/internal/kafka"
 	"github.com/mark3labs/mcp-go/mcp"
+
+	"github.com/kafkamcp/kafkamcp/internal/kafka"
 )
 
 // ===================== handlePluginRegistry =====================

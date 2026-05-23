@@ -6,9 +6,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mark3labs/mcp-go/mcp"
+
 	"github.com/kafkamcp/kafkamcp/internal/chaos"
 	"github.com/kafkamcp/kafkamcp/internal/kafka"
-	"github.com/mark3labs/mcp-go/mcp"
 )
 
 func TestMatchTopicFilter(t *testing.T) {

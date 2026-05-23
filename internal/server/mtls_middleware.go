@@ -60,7 +60,7 @@ func (s *Server) MTLSIdentityMiddleware(next http.Handler) http.Handler {
 
 // BuildMTLSTLSConfig produces a *tls.Config that requests-and-verifies
 // client certificates against the configured CA bundle. Returns
-// (nil, nil) when the active provider does not need mTLS, signalling
+// (nil, nil) when the active provider does not need mTLS, signaling
 // the caller to use its default *tls.Config.
 //
 // caBundlePath is consulted only when non-empty; otherwise the system

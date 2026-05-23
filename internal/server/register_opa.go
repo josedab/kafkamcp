@@ -4,8 +4,9 @@ import (
 	"context"
 	"time"
 
-	opaEngine "github.com/kafkamcp/kafkamcp/internal/opa"
 	"github.com/mark3labs/mcp-go/mcp"
+
+	opaEngine "github.com/kafkamcp/kafkamcp/internal/opa"
 )
 
 func (s *Server) registerOPATools() {

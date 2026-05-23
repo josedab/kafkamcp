@@ -4,10 +4,11 @@ import (
 	"context"
 	"time"
 
+	"github.com/mark3labs/mcp-go/mcp"
+
 	"github.com/kafkamcp/kafkamcp/internal/auth"
 	"github.com/kafkamcp/kafkamcp/internal/digitaltwin"
 	"github.com/kafkamcp/kafkamcp/internal/migration"
-	"github.com/mark3labs/mcp-go/mcp"
 )
 
 func (s *Server) handleAutopilotAssess(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -46,8 +47,8 @@ func (s *Server) handleAutopilotAssess(ctx context.Context, request mcp.CallTool
 
 		s.logAudit(ctx, agentID, "kafka_autopilot_assess", args, sourceCluster, "success", 1, nil, start)
 		return marshalResult(map[string]any{
-			"session":    session,
-			"message":    "Assessment complete. Use kafka_autopilot_plan with session_id to generate a migration plan.",
+			"session": session,
+			"message": "Assessment complete. Use kafka_autopilot_plan with session_id to generate a migration plan.",
 		})
 	})(ctx, request)
 }

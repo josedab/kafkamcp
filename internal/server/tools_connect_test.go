@@ -107,9 +107,9 @@ func TestValidateConnectorConfig_EmptyConfig(t *testing.T) {
 func TestValidateConnectorConfig_MultipleSensitiveKeys(t *testing.T) {
 	t.Parallel()
 	config := map[string]string{
-		"normal.key":       "visible",
+		"normal.key":        "visible",
 		"database.password": "secret1",
-		"api.key":          "secret2",
+		"api.key":           "secret2",
 	}
 	deny, redacted := validateConnectorConfig(config)
 	if deny != nil {

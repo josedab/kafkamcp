@@ -7,8 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kafkamcp/kafkamcp/internal/config"
 	"github.com/mark3labs/mcp-go/mcp"
+
+	"github.com/kafkamcp/kafkamcp/internal/auth"
+	"github.com/kafkamcp/kafkamcp/internal/schema"
 )
 
 // ===================== validateAgentID Tests =====================
@@ -176,7 +178,7 @@ func TestAcquireExpensiveOp_CancelledContext(t *testing.T) {
 
 	err := s.acquireExpensiveOp(ctx)
 	if err == nil {
-		t.Error("expected error for cancelled context")
+		t.Error("expected error for canceled context")
 	}
 }
 

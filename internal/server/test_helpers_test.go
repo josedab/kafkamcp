@@ -6,6 +6,8 @@ import (
 	"log/slog"
 	"testing"
 
+	"github.com/mark3labs/mcp-go/mcp"
+
 	"github.com/kafkamcp/kafkamcp/internal/anomaly"
 	"github.com/kafkamcp/kafkamcp/internal/audit"
 	"github.com/kafkamcp/kafkamcp/internal/auth"
@@ -31,7 +33,6 @@ import (
 	"github.com/kafkamcp/kafkamcp/internal/selfheal"
 	"github.com/kafkamcp/kafkamcp/internal/watch"
 	"github.com/kafkamcp/kafkamcp/internal/workflow"
-	"github.com/mark3labs/mcp-go/mcp"
 )
 
 func makeToolRequest(args map[string]any) mcp.CallToolRequest {
@@ -78,34 +79,34 @@ func newTestServer(t *testing.T, opts ...func(*config.Config)) *Server {
 	}
 
 	return &Server{
-		config:           cfg,
-		kafkaManager:     nil,
-		schemaClients:    make(map[string]*schema.Client),
-		connectClients:   make(map[string]*kafka.ConnectClient),
-		metrics:          metrics.New(),
-		logger:           logger,
-		expensiveOps:     make(chan struct{}, 5),
+		config:         cfg,
+		kafkaManager:   nil,
+		schemaClients:  make(map[string]*schema.Client),
+		connectClients: make(map[string]*kafka.ConnectClient),
+		metrics:        metrics.New(),
+		logger:         logger,
+		expensiveOps:   make(chan struct{}, 5),
 		Analytics: Analytics{
-			anomalyDetector:  anomaly.NewDetector(anomaly.DefaultConfig(), logger),
-			nlQueryEngine:    nlquery.NewEngine(logger),
-			costAnalyzer:     cost.NewAnalyzer(logger),
-			forecaster:       forecast.NewForecaster(30),
-			knowledgeGraph:   graph.NewKnowledgeGraph(logger),
-			lagAnalyzer:      lagdiag.NewAnalyzer(),
+			anomalyDetector: anomaly.NewDetector(anomaly.DefaultConfig(), logger),
+			nlQueryEngine:   nlquery.NewEngine(logger),
+			costAnalyzer:    cost.NewAnalyzer(logger),
+			forecaster:      forecast.NewForecaster(30),
+			knowledgeGraph:  graph.NewKnowledgeGraph(logger),
+			lagAnalyzer:     lagdiag.NewAnalyzer(),
 		},
 		Governance: Governance{
-			policyEngine:     auth.NewPolicyEngine(cfg.Policies),
-			auditLogger:      auditLogger,
-			rateLimiter:      rl,
-			maskingEngine:    masking.NewEngine(cfg.Masking, logger),
-			contractEngine:   contracts.NewEngine(),
-			personaEngine:    persona.NewEngine(),
+			policyEngine:   auth.NewPolicyEngine(cfg.Policies),
+			auditLogger:    auditLogger,
+			rateLimiter:    rl,
+			maskingEngine:  masking.NewEngine(cfg.Masking, logger),
+			contractEngine: contracts.NewEngine(),
+			personaEngine:  persona.NewEngine(),
 		},
 		Streaming: Streaming{
-			watchManager:     watch.NewManager(logger),
-			dlqRemediator:    dlq.NewRemediator(logger),
-			selfHealMon:      selfheal.NewMonitor(),
-			lineageTracker:   lineage.NewTracker(),
+			watchManager:   watch.NewManager(logger),
+			dlqRemediator:  dlq.NewRemediator(logger),
+			selfHealMon:    selfheal.NewMonitor(),
+			lineageTracker: lineage.NewTracker(),
 		},
 		Platform: Platform{
 			pluginRegistry:   plugin.NewRegistry(logger),

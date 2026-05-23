@@ -7,10 +7,11 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/mark3labs/mcp-go/mcp"
+
 	"github.com/kafkamcp/kafkamcp/internal/auth"
 	"github.com/kafkamcp/kafkamcp/internal/masking"
 	"github.com/kafkamcp/kafkamcp/internal/watch"
-	"github.com/mark3labs/mcp-go/mcp"
 )
 
 // ===================== P3 RESOURCE HANDLERS =====================
@@ -109,9 +110,9 @@ func (s *Server) handleWatchSubscriptionsResource(ctx context.Context, request m
 // computeSchemaDiff computes a field-by-field diff between two schema definitions.
 func computeSchemaDiff(schemaFrom, schemaTo any) map[string]any {
 	diff := map[string]any{
-		"added":    []string{},
-		"removed":  []string{},
-		"changed":  []map[string]any{},
+		"added":     []string{},
+		"removed":   []string{},
+		"changed":   []map[string]any{},
 		"unchanged": 0,
 	}
 

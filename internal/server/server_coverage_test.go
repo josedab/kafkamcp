@@ -536,7 +536,6 @@ func TestHandleDescribeConsumerGroup_DefaultDenyAnonymous(t *testing.T) {
 	assertIsError(t, result)
 }
 
-
 // ===================== handleDiagnoseLag additional tests =====================
 
 func TestHandleDiagnoseLag_DefaultDenyExtended(t *testing.T) {
@@ -802,5 +801,3 @@ func TestHandleCostAnalyze_DefaultDenyExtended(t *testing.T) {
 	}
 	assertIsError(t, result)
 }
-
-

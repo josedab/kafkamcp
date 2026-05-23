@@ -120,7 +120,7 @@ func TestHandleAutopilotPlan_ValidSession(t *testing.T) {
 	assessResult, _ := s.handleAutopilotAssess(context.Background(), assessReq)
 	text := resultText(t, assessResult)
 	var assessResp map[string]any
-	json.Unmarshal([]byte(text), &assessResp)
+	_ = json.Unmarshal([]byte(text), &assessResp)
 	sessionMap, _ := assessResp["session"].(map[string]any)
 	sessionID, _ := sessionMap["id"].(string)
 
@@ -232,7 +232,7 @@ func TestHandleAutopilotStatus_ListAllSessions(t *testing.T) {
 	assertNotError(t, result)
 	text := resultText(t, result)
 	var resp map[string]any
-	json.Unmarshal([]byte(text), &resp)
+	_ = json.Unmarshal([]byte(text), &resp)
 	if _, ok := resp["sessions"]; !ok {
 		t.Error("expected 'sessions' in response")
 	}
@@ -258,7 +258,7 @@ func TestHandleAutopilotStatus_SingleSession(t *testing.T) {
 	assessResult, _ := s.handleAutopilotAssess(context.Background(), assessReq)
 	text := resultText(t, assessResult)
 	var assessResp map[string]any
-	json.Unmarshal([]byte(text), &assessResp)
+	_ = json.Unmarshal([]byte(text), &assessResp)
 	sessionMap, _ := assessResp["session"].(map[string]any)
 	sessionID, _ := sessionMap["id"].(string)
 

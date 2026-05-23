@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/kafkamcp/kafkamcp/internal/kafka"
 	"github.com/mark3labs/mcp-go/mcp"
+
+	"github.com/kafkamcp/kafkamcp/internal/kafka"
 )
 
 // newTestServerWithMockForResource creates a Server with a MockKafkaManager for resource handler tests.

@@ -6,17 +6,18 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/mark3labs/mcp-go/mcp"
+
 	"github.com/kafkamcp/kafkamcp/internal/kafka"
 	"github.com/kafkamcp/kafkamcp/internal/nlquery"
-	"github.com/mark3labs/mcp-go/mcp"
 )
 
 func TestClampInt64(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		name       string
+		name        string
 		v, min, max int64
-		want       int64
+		want        int64
 	}{
 		{"within range", 50, 0, 100, 50},
 		{"below min", -10, 0, 100, 0},
@@ -197,10 +198,10 @@ func TestMatchTopicFilterAdditional(t *testing.T) {
 func TestExtractAgentIDVariants(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		name     string
+		name      string
 		headerKey string
 		headerVal string
-		want     string
+		want      string
 	}{
 		{"no header", "", "", "anonymous"},
 		{"standard header", "X-Agent-Id", "agent-1", "agent-1"},
@@ -224,10 +225,10 @@ func TestExtractAgentIDVariants(t *testing.T) {
 func TestExtractAgentIDFromResourceVariants(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		name     string
+		name      string
 		headerKey string
 		headerVal string
-		want     string
+		want      string
 	}{
 		{"no header", "", "", "anonymous"},
 		{"with header", "X-Agent-Id", "res-agent", "res-agent"},

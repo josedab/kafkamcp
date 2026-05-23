@@ -31,7 +31,7 @@ func (s *Server) addTool(tool mcp.Tool, handler server.ToolHandlerFunc) {
 		return
 	}
 	s.registeredTools[name] = tier
-	s.addTool(tool, handler)
+	s.mcpServer.AddTool(tool, handler)
 }
 
 // RegisteredToolCount returns the number of tools actually exposed to MCP

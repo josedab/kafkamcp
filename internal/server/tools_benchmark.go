@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/mark3labs/mcp-go/mcp"
+
 	"github.com/kafkamcp/kafkamcp/internal/auth"
 	"github.com/kafkamcp/kafkamcp/internal/benchmark"
 	"github.com/kafkamcp/kafkamcp/internal/kafka"
-	"github.com/mark3labs/mcp-go/mcp"
 )
 
 func (s *Server) handleBenchmark(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {

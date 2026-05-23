@@ -4,8 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/kafkamcp/kafkamcp/internal/eventsourcing"
 	"github.com/mark3labs/mcp-go/mcp"
+
+	"github.com/kafkamcp/kafkamcp/internal/eventsourcing"
 )
 
 func (s *Server) registerEventSourcingTools() {

@@ -39,7 +39,7 @@ func TestHandleAgentRegistry_Heartbeat_Success(t *testing.T) {
 	ctx := context.Background()
 
 	// Register first
-	s.handleAgentRegistry(ctx, makeToolRequest(map[string]any{
+	_, _ = s.handleAgentRegistry(ctx, makeToolRequest(map[string]any{
 		"action":     "register",
 		"agent_name": "agent-1",
 	}))
@@ -81,7 +81,7 @@ func TestHandleAgentRegistry_Claim_Success(t *testing.T) {
 	ctx := context.Background()
 
 	// Register first
-	s.handleAgentRegistry(ctx, makeToolRequest(map[string]any{
+	_, _ = s.handleAgentRegistry(ctx, makeToolRequest(map[string]any{
 		"action": "register",
 	}))
 
@@ -134,8 +134,8 @@ func TestHandleAgentRegistry_Release_Success(t *testing.T) {
 	s := newTestServerWithMock(t, mock)
 	ctx := context.Background()
 
-	s.handleAgentRegistry(ctx, makeToolRequest(map[string]any{"action": "register"}))
-	s.handleAgentRegistry(ctx, makeToolRequest(map[string]any{
+	_, _ = s.handleAgentRegistry(ctx, makeToolRequest(map[string]any{"action": "register"}))
+	_, _ = s.handleAgentRegistry(ctx, makeToolRequest(map[string]any{
 		"action": "claim", "topic": "orders", "partition": float64(0),
 	}))
 
@@ -176,7 +176,7 @@ func TestHandleAgentRegistry_ShareCursor_Success(t *testing.T) {
 	s := newTestServerWithMock(t, mock)
 	ctx := context.Background()
 
-	s.handleAgentRegistry(ctx, makeToolRequest(map[string]any{"action": "register"}))
+	_, _ = s.handleAgentRegistry(ctx, makeToolRequest(map[string]any{"action": "register"}))
 
 	result, err := s.handleAgentRegistry(ctx, makeToolRequest(map[string]any{
 		"action":    "share_cursor",
@@ -217,7 +217,7 @@ func TestHandleAgentRegistry_Handoff_Success(t *testing.T) {
 	s := newTestServerWithMock(t, mock)
 	ctx := context.Background()
 
-	s.handleAgentRegistry(ctx, makeToolRequest(map[string]any{"action": "register"}))
+	_, _ = s.handleAgentRegistry(ctx, makeToolRequest(map[string]any{"action": "register"}))
 	// Register the target agent too
 	s.agentRegistry.RegisterAgent("agent-beta", "beta")
 
@@ -261,7 +261,7 @@ func TestHandleAgentRegistry_ListAgents(t *testing.T) {
 	s := newTestServerWithMock(t, mock)
 	ctx := context.Background()
 
-	s.handleAgentRegistry(ctx, makeToolRequest(map[string]any{
+	_, _ = s.handleAgentRegistry(ctx, makeToolRequest(map[string]any{
 		"action": "register", "agent_name": "alpha",
 	}))
 

@@ -18,18 +18,18 @@ import (
 
 // Analytics groups AI-powered analysis and intelligence subsystems.
 type Analytics struct {
-	anomalyDetector    *anomaly.Detector         // AI-powered anomaly detection
-	nlQueryEngine      *nlquery.Engine            // natural language query engine
-	costAnalyzer       *cost.Analyzer             // Kafka cost analysis
-	forecaster         *forecast.Forecaster       // intelligent capacity forecasting
-	knowledgeGraph     *graph.KnowledgeGraph      // embedded knowledge graph
-	lagAnalyzer        *lagdiag.Analyzer          // consumer lag root cause analysis
-	schemaWorkflow     *evolution.WorkflowEngine  // schema evolution workflow engine
+	anomalyDetector    *anomaly.Detector           // AI-powered anomaly detection
+	nlQueryEngine      *nlquery.Engine             // natural language query engine
+	costAnalyzer       *cost.Analyzer              // Kafka cost analysis
+	forecaster         *forecast.Forecaster        // intelligent capacity forecasting
+	knowledgeGraph     *graph.KnowledgeGraph       // embedded knowledge graph
+	lagAnalyzer        *lagdiag.Analyzer           // consumer lag root cause analysis
+	schemaWorkflow     *evolution.WorkflowEngine   // schema evolution workflow engine
 	timeseriesAnalyzer *anomaly.TimeSeriesAnalyzer // time-series analytics
-	advisorEngine      *advisor.Engine            // intelligent topic advisor
-	dataQualityEngine  *dataquality.Engine        // data quality scoring & SLA
-	incidentCorrelator *incident.Correlator       // cross-cluster incident correlation
-	telemetryDataLake  *telemetry.DataLake        // agent interaction telemetry data lake
+	advisorEngine      *advisor.Engine             // intelligent topic advisor
+	dataQualityEngine  *dataquality.Engine         // data quality scoring & SLA
+	incidentCorrelator *incident.Correlator        // cross-cluster incident correlation
+	telemetryDataLake  *telemetry.DataLake         // agent interaction telemetry data lake
 }
 
 // newAnalytics initializes all analytics subsystems.

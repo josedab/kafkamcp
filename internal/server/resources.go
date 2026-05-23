@@ -6,9 +6,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mark3labs/mcp-go/mcp"
+
 	"github.com/kafkamcp/kafkamcp/internal/auth"
 	"github.com/kafkamcp/kafkamcp/internal/kafka"
-	"github.com/mark3labs/mcp-go/mcp"
 )
 
 // ===================== RESOURCE HANDLERS =====================
@@ -18,25 +19,25 @@ func (s *Server) handleClusterMetadata(ctx context.Context, request mcp.ReadReso
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
 	if err := s.validateResourceAgentID(agentID); err != nil {
-		s.logAudit(agentID, "resource:kafka://cluster/metadata", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://cluster/metadata", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if err := s.checkResourceRateLimit(agentID, "resource:kafka://cluster/metadata"); err != nil {
-		s.logAudit(agentID, "resource:kafka://cluster/metadata", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://cluster/metadata", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceCluster, "", auth.ActionRead) {
 		err := fmt.Errorf("unauthorized: insufficient permission for this operation")
-		s.logAudit(agentID, "resource:kafka://cluster/metadata", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://cluster/metadata", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	meta, err := s.kafkaManager.GetClusterMetadata(ctx, "")
 	if err != nil {
 		err = fmt.Errorf("getting cluster metadata: %w", err)
-		s.logAudit(agentID, "resource:kafka://cluster/metadata", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://cluster/metadata", nil, "", "error", 0, err, start)
 		return nil, err
 	}
-	s.logAudit(agentID, "resource:kafka://cluster/metadata", nil, "", "success", 0, nil, start)
+	s.logAudit(ctx, agentID, "resource:kafka://cluster/metadata", nil, "", "success", 0, nil, start)
 	return marshalResourceJSON("kafka://cluster/metadata", meta)
 }
 
@@ -45,16 +46,16 @@ func (s *Server) handleClusterList(ctx context.Context, request mcp.ReadResource
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
 	if err := s.validateResourceAgentID(agentID); err != nil {
-		s.logAudit(agentID, "resource:kafka://clusters", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://clusters", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if err := s.checkResourceRateLimit(agentID, "resource:kafka://clusters"); err != nil {
-		s.logAudit(agentID, "resource:kafka://clusters", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://clusters", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceCluster, "", auth.ActionRead) {
 		err := fmt.Errorf("unauthorized: insufficient permission for this operation")
-		s.logAudit(agentID, "resource:kafka://clusters", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://clusters", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	type clusterSummary struct {
@@ -70,7 +71,7 @@ func (s *Server) handleClusterList(ctx context.Context, request mcp.ReadResource
 			IsDefault:         cl.Default,
 		})
 	}
-	s.logAudit(agentID, "resource:kafka://clusters", nil, "", "success", len(clusters), nil, start)
+	s.logAudit(ctx, agentID, "resource:kafka://clusters", nil, "", "success", len(clusters), nil, start)
 	return marshalResourceJSON("kafka://clusters", map[string]any{"clusters": clusters, "total_count": len(clusters)})
 }
 
@@ -79,22 +80,22 @@ func (s *Server) handleTopicCatalog(ctx context.Context, request mcp.ReadResourc
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
 	if err := s.validateResourceAgentID(agentID); err != nil {
-		s.logAudit(agentID, "resource:kafka://topics", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://topics", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if err := s.checkResourceRateLimit(agentID, "resource:kafka://topics"); err != nil {
-		s.logAudit(agentID, "resource:kafka://topics", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://topics", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceTopic, "*", auth.ActionRead) {
 		err := fmt.Errorf("unauthorized: insufficient permission for this operation")
-		s.logAudit(agentID, "resource:kafka://topics", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://topics", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	topics, err := s.kafkaManager.ListTopics(ctx, "", false)
 	if err != nil {
 		err = fmt.Errorf("listing topics: %w", err)
-		s.logAudit(agentID, "resource:kafka://topics", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://topics", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	// Filter by policy
@@ -107,7 +108,7 @@ func (s *Server) handleTopicCatalog(ctx context.Context, request mcp.ReadResourc
 		}
 		topics = allowed
 	}
-	s.logAudit(agentID, "resource:kafka://topics", nil, "", "success", len(topics), nil, start)
+	s.logAudit(ctx, agentID, "resource:kafka://topics", nil, "", "success", len(topics), nil, start)
 	return marshalResourceJSON("kafka://topics", map[string]any{"topics": topics, "total_count": len(topics)})
 }
 
@@ -116,16 +117,16 @@ func (s *Server) handleSchemaCatalog(ctx context.Context, request mcp.ReadResour
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
 	if err := s.validateResourceAgentID(agentID); err != nil {
-		s.logAudit(agentID, "resource:kafka://schemas", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://schemas", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if err := s.checkResourceRateLimit(agentID, "resource:kafka://schemas"); err != nil {
-		s.logAudit(agentID, "resource:kafka://schemas", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://schemas", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceSchema, "", auth.ActionRead) {
 		err := fmt.Errorf("unauthorized: insufficient permission for this operation")
-		s.logAudit(agentID, "resource:kafka://schemas", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://schemas", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	sc := s.getSchemaClient("")
@@ -135,10 +136,10 @@ func (s *Server) handleSchemaCatalog(ctx context.Context, request mcp.ReadResour
 	subjects, err := sc.ListSubjectsDetailed(ctx)
 	if err != nil {
 		err = fmt.Errorf("listing schemas: %w", err)
-		s.logAudit(agentID, "resource:kafka://schemas", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://schemas", nil, "", "error", 0, err, start)
 		return nil, err
 	}
-	s.logAudit(agentID, "resource:kafka://schemas", nil, "", "success", len(subjects), nil, start)
+	s.logAudit(ctx, agentID, "resource:kafka://schemas", nil, "", "success", len(subjects), nil, start)
 	return marshalResourceJSON("kafka://schemas", map[string]any{"subjects": subjects, "total_count": len(subjects)})
 }
 
@@ -147,25 +148,25 @@ func (s *Server) handleGroupCatalog(ctx context.Context, request mcp.ReadResourc
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
 	if err := s.validateResourceAgentID(agentID); err != nil {
-		s.logAudit(agentID, "resource:kafka://groups", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://groups", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if err := s.checkResourceRateLimit(agentID, "resource:kafka://groups"); err != nil {
-		s.logAudit(agentID, "resource:kafka://groups", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://groups", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceConsumerGroup, "", auth.ActionDescribe) {
 		err := fmt.Errorf("unauthorized: insufficient permission for this operation")
-		s.logAudit(agentID, "resource:kafka://groups", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://groups", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	groups, err := s.kafkaManager.ListConsumerGroups(ctx, "")
 	if err != nil {
 		err = fmt.Errorf("listing consumer groups: %w", err)
-		s.logAudit(agentID, "resource:kafka://groups", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://groups", nil, "", "error", 0, err, start)
 		return nil, err
 	}
-	s.logAudit(agentID, "resource:kafka://groups", nil, "", "success", len(groups), nil, start)
+	s.logAudit(ctx, agentID, "resource:kafka://groups", nil, "", "success", len(groups), nil, start)
 	return marshalResourceJSON("kafka://groups", map[string]any{"groups": groups, "total_count": len(groups)})
 }
 
@@ -174,16 +175,16 @@ func (s *Server) handleAuditLogResource(ctx context.Context, request mcp.ReadRes
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
 	if err := s.validateResourceAgentID(agentID); err != nil {
-		s.logAudit(agentID, "resource:kafka://audit/log", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://audit/log", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if err := s.checkResourceRateLimit(agentID, "resource:kafka://audit/log"); err != nil {
-		s.logAudit(agentID, "resource:kafka://audit/log", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://audit/log", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceCluster, "", auth.ActionAdmin) {
 		err := fmt.Errorf("unauthorized: insufficient permission for this operation")
-		s.logAudit(agentID, "resource:kafka://audit/log", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://audit/log", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	entries := s.auditLogger.RecentEntries(1000)
@@ -195,25 +196,25 @@ func (s *Server) handleTopicGraphResource(ctx context.Context, request mcp.ReadR
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
 	if err := s.validateResourceAgentID(agentID); err != nil {
-		s.logAudit(agentID, "resource:kafka://topic_graph", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://topic_graph", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if err := s.checkResourceRateLimit(agentID, "resource:kafka://topic_graph"); err != nil {
-		s.logAudit(agentID, "resource:kafka://topic_graph", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://topic_graph", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceCluster, "", auth.ActionRead) {
 		err := fmt.Errorf("unauthorized: insufficient permission for this operation")
-		s.logAudit(agentID, "resource:kafka://topic_graph", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://topic_graph", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	graph, err := s.kafkaManager.GetTopicGraph(ctx, "")
 	if err != nil {
 		err = fmt.Errorf("building topic graph: %w", err)
-		s.logAudit(agentID, "resource:kafka://topic_graph", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://topic_graph", nil, "", "error", 0, err, start)
 		return nil, err
 	}
-	s.logAudit(agentID, "resource:kafka://topic_graph", nil, "", "success", len(graph.Nodes), nil, start)
+	s.logAudit(ctx, agentID, "resource:kafka://topic_graph", nil, "", "success", len(graph.Nodes), nil, start)
 	return marshalResourceJSON("kafka://topic_graph", graph)
 }
 
@@ -222,11 +223,11 @@ func (s *Server) handleTopicResource(ctx context.Context, request mcp.ReadResour
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
 	if err := s.validateResourceAgentID(agentID); err != nil {
-		s.logAudit(agentID, "resource:kafka://topics/{name}", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://topics/{name}", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if err := s.checkResourceRateLimit(agentID, "resource:kafka://topics/{name}"); err != nil {
-		s.logAudit(agentID, "resource:kafka://topics/{name}", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://topics/{name}", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	uri := request.Params.URI
@@ -239,16 +240,16 @@ func (s *Server) handleTopicResource(ctx context.Context, request mcp.ReadResour
 	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceTopic, name, auth.ActionRead) {
 		err := fmt.Errorf("unauthorized: insufficient permission for this operation")
-		s.logAudit(agentID, "resource:kafka://topics/"+name, nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://topics/"+name, nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	detail, err := s.kafkaManager.DescribeTopic(ctx, "", name)
 	if err != nil {
 		err = fmt.Errorf("describing topic: %w", err)
-		s.logAudit(agentID, "resource:kafka://topics/"+name, nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://topics/"+name, nil, "", "error", 0, err, start)
 		return nil, err
 	}
-	s.logAudit(agentID, "resource:kafka://topics/"+name, nil, "", "success", 0, nil, start)
+	s.logAudit(ctx, agentID, "resource:kafka://topics/"+name, nil, "", "success", 0, nil, start)
 	return marshalResourceJSON(uri, detail)
 }
 
@@ -257,11 +258,11 @@ func (s *Server) handleSchemaResource(ctx context.Context, request mcp.ReadResou
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
 	if err := s.validateResourceAgentID(agentID); err != nil {
-		s.logAudit(agentID, "resource:kafka://schemas/{subject}", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://schemas/{subject}", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if err := s.checkResourceRateLimit(agentID, "resource:kafka://schemas/{subject}"); err != nil {
-		s.logAudit(agentID, "resource:kafka://schemas/{subject}", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://schemas/{subject}", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	sc := s.getSchemaClient("")
@@ -278,16 +279,16 @@ func (s *Server) handleSchemaResource(ctx context.Context, request mcp.ReadResou
 	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceSchema, "", auth.ActionRead) {
 		err := fmt.Errorf("unauthorized: insufficient permission for this operation")
-		s.logAudit(agentID, "resource:kafka://schemas/"+subject, nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://schemas/"+subject, nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	info, err := sc.GetSchema(ctx, subject, "latest")
 	if err != nil {
 		err = fmt.Errorf("getting schema: %w", err)
-		s.logAudit(agentID, "resource:kafka://schemas/"+subject, nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://schemas/"+subject, nil, "", "error", 0, err, start)
 		return nil, err
 	}
-	s.logAudit(agentID, "resource:kafka://schemas/"+subject, nil, "", "success", 0, nil, start)
+	s.logAudit(ctx, agentID, "resource:kafka://schemas/"+subject, nil, "", "success", 0, nil, start)
 	return marshalResourceJSON(uri, info)
 }
 
@@ -296,11 +297,11 @@ func (s *Server) handleGroupResource(ctx context.Context, request mcp.ReadResour
 	start := time.Now()
 	agentID := extractAgentIDFromResource(request)
 	if err := s.validateResourceAgentID(agentID); err != nil {
-		s.logAudit(agentID, "resource:kafka://groups/{id}", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://groups/{id}", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	if err := s.checkResourceRateLimit(agentID, "resource:kafka://groups/{id}"); err != nil {
-		s.logAudit(agentID, "resource:kafka://groups/{id}", nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://groups/{id}", nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	uri := request.Params.URI
@@ -313,15 +314,15 @@ func (s *Server) handleGroupResource(ctx context.Context, request mcp.ReadResour
 	}
 	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceConsumerGroup, "", auth.ActionDescribe) {
 		err := fmt.Errorf("unauthorized: insufficient permission for this operation")
-		s.logAudit(agentID, "resource:kafka://groups/"+groupID, nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://groups/"+groupID, nil, "", "error", 0, err, start)
 		return nil, err
 	}
 	detail, err := s.kafkaManager.DescribeConsumerGroup(ctx, "", groupID)
 	if err != nil {
 		err = fmt.Errorf("describing group: %w", err)
-		s.logAudit(agentID, "resource:kafka://groups/"+groupID, nil, "", "error", 0, err, start)
+		s.logAudit(ctx, agentID, "resource:kafka://groups/"+groupID, nil, "", "error", 0, err, start)
 		return nil, err
 	}
-	s.logAudit(agentID, "resource:kafka://groups/"+groupID, nil, "", "success", 0, nil, start)
+	s.logAudit(ctx, agentID, "resource:kafka://groups/"+groupID, nil, "", "success", 0, nil, start)
 	return marshalResourceJSON(uri, detail)
 }

@@ -5,9 +5,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mark3labs/mcp-go/mcp"
+
 	"github.com/kafkamcp/kafkamcp/internal/auth"
 	"github.com/kafkamcp/kafkamcp/internal/capability"
-	"github.com/mark3labs/mcp-go/mcp"
 )
 
 func (s *Server) handleNegotiateCapabilities(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -81,8 +82,8 @@ func (s *Server) handleCapabilityProfile(ctx context.Context, request mcp.CallTo
 
 		s.logAudit(ctx, agentID, "kafka_capability_profile", args, "", "success", 0, nil, start)
 		return marshalResult(map[string]any{
-			"profile":      profile,
-			"tools_count":  len(profile.AllowedTools),
+			"profile":     profile,
+			"tools_count": len(profile.AllowedTools),
 		})
 	})(ctx, request)
 }
