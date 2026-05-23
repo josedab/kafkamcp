@@ -109,7 +109,7 @@ func TestPromoteDraft(t *testing.T) {
 	}
 
 	// Test it first
-	e.TestMessage(draft.ID, `{"order_id": "1", "amount": 10, "status": "ok"}`)
+	_, _ = e.TestMessage(draft.ID, `{"order_id": "1", "amount": 10, "status": "ok"}`)
 
 	// Now promote
 	promoted, err := e.PromoteDraft(draft.ID)
@@ -163,7 +163,7 @@ func TestUpdateDraft_IncrementsVersion(t *testing.T) {
 	e := NewEngine(slog.Default())
 	draft, _ := e.CreateDraft("test", SchemaAvro, testAvroSchema, "agent-1")
 
-	e.UpdateDraft(draft.ID, `{"type":"record","name":"V2","fields":[]}`)
+	_, _ = e.UpdateDraft(draft.ID, `{"type":"record","name":"V2","fields":[]}`)
 	updated, _ := e.UpdateDraft(draft.ID, `{"type":"record","name":"V3","fields":[]}`)
 	if updated.Version != 3 {
 		t.Errorf("expected version 3, got %d", updated.Version)
@@ -176,8 +176,8 @@ func TestUpdateDraft_BlocksPromotedDraft(t *testing.T) {
 	draft, _ := e.CreateDraft("test", SchemaAvro, testAvroSchema, "agent-1")
 
 	// Test and promote
-	e.TestMessage(draft.ID, `{"order_id": "1", "amount": 10, "status": "ok"}`)
-	e.PromoteDraft(draft.ID)
+	_, _ = e.TestMessage(draft.ID, `{"order_id": "1", "amount": 10, "status": "ok"}`)
+	_, _ = e.PromoteDraft(draft.ID)
 
 	_, err := e.UpdateDraft(draft.ID, testAvroSchemaV2)
 	if err == nil {
@@ -191,7 +191,7 @@ func TestUpdateDraft_ResetsStatus(t *testing.T) {
 	draft, _ := e.CreateDraft("test", SchemaAvro, testAvroSchema, "agent-1")
 
 	// Test it to change status to "testing"
-	e.TestMessage(draft.ID, `{"order_id": "1", "amount": 10, "status": "ok"}`)
+	_, _ = e.TestMessage(draft.ID, `{"order_id": "1", "amount": 10, "status": "ok"}`)
 
 	updated, _ := e.UpdateDraft(draft.ID, testAvroSchemaV2)
 	if updated.Status != StatusDraft {
@@ -234,11 +234,11 @@ func TestGetDraft_NotFound(t *testing.T) {
 func TestListDrafts_FilterByStatus(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
-	e.CreateDraft("s1", SchemaAvro, testAvroSchema, "agent-1")
+	_, _ = e.CreateDraft("s1", SchemaAvro, testAvroSchema, "agent-1")
 	d2, _ := e.CreateDraft("s2", SchemaAvro, testAvroSchema, "agent-1")
 
 	// Test d2 to change its status
-	e.TestMessage(d2.ID, `{"order_id": "1", "amount": 10, "status": "ok"}`)
+	_, _ = e.TestMessage(d2.ID, `{"order_id": "1", "amount": 10, "status": "ok"}`)
 
 	drafts := e.ListDrafts("draft")
 	for _, d := range drafts {
@@ -258,8 +258,8 @@ func TestListDrafts_FilterByStatus(t *testing.T) {
 func TestListDrafts_AllWhenEmpty(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
-	e.CreateDraft("s1", SchemaAvro, testAvroSchema, "agent-1")
-	e.CreateDraft("s2", SchemaAvro, testAvroSchema, "agent-1")
+	_, _ = e.CreateDraft("s1", SchemaAvro, testAvroSchema, "agent-1")
+	_, _ = e.CreateDraft("s2", SchemaAvro, testAvroSchema, "agent-1")
 
 	all := e.ListDrafts("")
 	if len(all) != 2 {

@@ -205,16 +205,16 @@ func (e *Engine) SemanticParse(query string, availableTopics []string) (*QueryPl
 
 func (e *Engine) detectIntent(query string) string {
 	intentKeywords := map[string][]string{
-		"count":       {"count", "how many", "total number", "number of"},
-		"average":     {"average", "avg", "mean"},
-		"sum":         {"sum", "total", "add up"},
-		"max":         {"maximum", "max", "highest", "largest", "biggest", "top"},
-		"min":         {"minimum", "min", "lowest", "smallest"},
-		"group_by":    {"group by", "breakdown", "split by", "per"},
-		"filter":      {"where", "filter", "with", "having"},
-		"trend":       {"trend", "over time", "timeline", "history"},
-		"compare":     {"compare", "versus", "vs", "difference between"},
-		"join":        {"join", "combine", "correlate", "across topics"},
+		"count":    {"count", "how many", "total number", "number of"},
+		"average":  {"average", "avg", "mean"},
+		"sum":      {"sum", "total", "add up"},
+		"max":      {"maximum", "max", "highest", "largest", "biggest", "top"},
+		"min":      {"minimum", "min", "lowest", "smallest"},
+		"group_by": {"group by", "breakdown", "split by", "per"},
+		"filter":   {"where", "filter", "with", "having"},
+		"trend":    {"trend", "over time", "timeline", "history"},
+		"compare":  {"compare", "versus", "vs", "difference between"},
+		"join":     {"join", "combine", "correlate", "across topics"},
 	}
 
 	for intent, keywords := range intentKeywords {
@@ -400,7 +400,7 @@ func (e *Engine) extractLimit(query string) int {
 	limitPattern := regexp.MustCompile(`(?:top|first|limit|last)\s+(\d+)`)
 	if m := limitPattern.FindStringSubmatch(query); m != nil {
 		n := 0
-		fmt.Sscanf(m[1], "%d", &n)
+		_, _ = fmt.Sscanf(m[1], "%d", &n)
 		if n > 0 && n <= 10000 {
 			return n
 		}
@@ -468,7 +468,7 @@ func fuzzyFieldMatch(query string, fields map[string]string) string {
 
 	// Case-insensitive match
 	for name := range fields {
-		if strings.ToLower(name) == queryLower {
+		if strings.EqualFold(name, queryLower) {
 			return name
 		}
 	}
@@ -486,7 +486,7 @@ func fuzzyFieldMatch(query string, fields map[string]string) string {
 
 func parseDuration(amount, unit string) time.Duration {
 	n := 1
-	fmt.Sscanf(amount, "%d", &n)
+	_, _ = fmt.Sscanf(amount, "%d", &n)
 
 	switch strings.ToLower(unit) {
 	case "minute":

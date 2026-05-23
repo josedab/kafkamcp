@@ -25,22 +25,22 @@ type Client struct {
 
 // Subject represents a schema subject in the Schema Registry.
 type Subject struct {
-	SubjectName       string `json:"subject_name"`
-	LatestVersion     int    `json:"latest_version"`
-	SchemaType        string `json:"schema_type"`
+	SubjectName        string `json:"subject_name"`
+	LatestVersion      int    `json:"latest_version"`
+	SchemaType         string `json:"schema_type"`
 	CompatibilityLevel string `json:"compatibility_level,omitempty"`
 }
 
 // SchemaInfo contains a full schema definition.
 type SchemaInfo struct {
-	Subject           string `json:"subject"`
-	Version           int    `json:"version"`
-	SchemaID          int    `json:"schema_id"`
-	SchemaType        string `json:"schema_type"`
+	Subject            string `json:"subject"`
+	Version            int    `json:"version"`
+	SchemaID           int    `json:"schema_id"`
+	SchemaType         string `json:"schema_type"`
 	CompatibilityLevel string `json:"compatibility_level,omitempty"`
-	Schema            any    `json:"schema"`
-	FieldSummary      string `json:"field_summary"`
-	References        []any  `json:"references"`
+	Schema             any    `json:"schema"`
+	FieldSummary       string `json:"field_summary"`
+	References         []any  `json:"references"`
 }
 
 // NewClient creates a new Schema Registry client.
@@ -77,7 +77,7 @@ func (c *Client) doRequest(ctx context.Context, method, path string) ([]byte, er
 	if err != nil {
 		return nil, fmt.Errorf("schema registry request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 10<<20))
 	if err != nil {
@@ -170,14 +170,14 @@ func (c *Client) GetSchema(ctx context.Context, subject, version string) (*Schem
 	compat := c.getCompatibility(ctx, subject)
 
 	info := &SchemaInfo{
-		Subject:           raw.Subject,
-		Version:           raw.Version,
-		SchemaID:          raw.ID,
-		SchemaType:        schemaType,
+		Subject:            raw.Subject,
+		Version:            raw.Version,
+		SchemaID:           raw.ID,
+		SchemaType:         schemaType,
 		CompatibilityLevel: compat,
-		Schema:            parsedSchema,
-		FieldSummary:      generateFieldSummary(parsedSchema, schemaType),
-		References:        raw.References,
+		Schema:             parsedSchema,
+		FieldSummary:       generateFieldSummary(parsedSchema, schemaType),
+		References:         raw.References,
 	}
 
 	// Cache the result
@@ -426,7 +426,7 @@ func (c *Client) CheckCompatibility(ctx context.Context, subject, version, schem
 	if err != nil {
 		return nil, fmt.Errorf("executing compatibility check: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 10<<20))
 	if err != nil {
@@ -478,7 +478,7 @@ func (c *Client) RegisterSchema(ctx context.Context, subject, schemaStr, schemaT
 	if err != nil {
 		return 0, fmt.Errorf("registering schema: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 10<<20))
 	if err != nil {

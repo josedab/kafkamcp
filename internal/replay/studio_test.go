@@ -17,7 +17,7 @@ func TestRecording(t *testing.T) {
 	err := e.AddRecordedMessage(rec.ID, RecordedMessage{
 		Partition: 0, Offset: 1, Key: "order-1",
 		Value: `{"id":"order-1","amount":99.99,"email":"user@test.com"}`,
-		Size: 50,
+		Size:  50,
 	})
 	if err != nil {
 		t.Fatalf("AddRecordedMessage: %v", err)
@@ -26,7 +26,7 @@ func TestRecording(t *testing.T) {
 	err = e.AddRecordedMessage(rec.ID, RecordedMessage{
 		Partition: 0, Offset: 2, Key: "order-2",
 		Value: `{"id":"order-2","amount":150.00}`,
-		Size: 30,
+		Size:  30,
 	})
 	if err != nil {
 		t.Fatalf("AddRecordedMessage: %v", err)
@@ -49,10 +49,10 @@ func TestReplaySession(t *testing.T) {
 	e := NewEngine(slog.Default())
 
 	rec := e.CreateRecording("test", "orders", "cluster", 100)
-	e.AddRecordedMessage(rec.ID, RecordedMessage{
+	_ = e.AddRecordedMessage(rec.ID, RecordedMessage{
 		Partition: 0, Offset: 1, Value: `{"id":"1","email":"test@test.com"}`, Size: 30,
 	})
-	e.StopRecording(rec.ID)
+	_, _ = e.StopRecording(rec.ID)
 
 	assertions := []Assertion{
 		{Name: "has-messages", Type: "message_count", Operator: "gt", Expected: "0"},
@@ -87,10 +87,10 @@ func TestRegressionSuite(t *testing.T) {
 	e := NewEngine(slog.Default())
 
 	rec := e.CreateRecording("regression-data", "events", "cluster", 100)
-	e.AddRecordedMessage(rec.ID, RecordedMessage{
+	_ = e.AddRecordedMessage(rec.ID, RecordedMessage{
 		Partition: 0, Offset: 1, Value: `{"type":"click","user":"123"}`, Size: 25,
 	})
-	e.StopRecording(rec.ID)
+	_, _ = e.StopRecording(rec.ID)
 
 	suite, err := e.CreateRegressionSuite("event-tests", "Basic event regression tests", rec.ID, []Assertion{
 		{Name: "count-check", Type: "message_count", Operator: "eq", Expected: "1"},
@@ -117,8 +117,8 @@ func TestTimeDilation(t *testing.T) {
 	e := NewEngine(slog.Default())
 
 	rec := e.CreateRecording("td-test", "topic", "cluster", 10)
-	e.AddRecordedMessage(rec.ID, RecordedMessage{Value: "test", Size: 4})
-	e.StopRecording(rec.ID)
+	_ = e.AddRecordedMessage(rec.ID, RecordedMessage{Value: "test", Size: 4})
+	_, _ = e.StopRecording(rec.ID)
 
 	// Fast replay (0.5x = 2x faster)
 	session, err := e.CreateReplaySession("fast-replay", rec.ID, 0.5, "", nil)
@@ -180,8 +180,8 @@ func TestRecordingMaxMessages(t *testing.T) {
 	e := NewEngine(slog.Default())
 
 	rec := e.CreateRecording("small", "topic", "cluster", 2)
-	e.AddRecordedMessage(rec.ID, RecordedMessage{Value: "msg1", Size: 4})
-	e.AddRecordedMessage(rec.ID, RecordedMessage{Value: "msg2", Size: 4})
+	_ = e.AddRecordedMessage(rec.ID, RecordedMessage{Value: "msg1", Size: 4})
+	_ = e.AddRecordedMessage(rec.ID, RecordedMessage{Value: "msg2", Size: 4})
 
 	// Third message should trigger auto-completion
 	err := e.AddRecordedMessage(rec.ID, RecordedMessage{Value: "msg3", Size: 4})

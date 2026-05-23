@@ -9,12 +9,14 @@ import (
 	"math"
 	"sync"
 	"time"
+
 	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
 // ComplianceFramework represents a regulatory framework.
 type ComplianceFramework string
 
+// ComplianceGDPR and related values define constants for this package.
 const (
 	ComplianceGDPR  ComplianceFramework = "GDPR"
 	ComplianceHIPAA ComplianceFramework = "HIPAA"
@@ -38,52 +40,52 @@ type RetentionPolicy struct {
 
 // UsageMetrics captures topic usage patterns for retention analysis.
 type UsageMetrics struct {
-	Topic            string    `json:"topic"`
-	ConsumerLag      int64     `json:"consumer_lag"`
-	ReadFrequencyHz  float64   `json:"read_frequency_hz"`
-	LastReadTime     time.Time `json:"last_read_time"`
-	StorageBytes     int64     `json:"storage_bytes"`
-	MessageCount     int64     `json:"message_count"`
-	ActiveConsumers  int       `json:"active_consumers"`
-	BytesPerDay      int64     `json:"bytes_per_day"`
+	Topic           string    `json:"topic"`
+	ConsumerLag     int64     `json:"consumer_lag"`
+	ReadFrequencyHz float64   `json:"read_frequency_hz"`
+	LastReadTime    time.Time `json:"last_read_time"`
+	StorageBytes    int64     `json:"storage_bytes"`
+	MessageCount    int64     `json:"message_count"`
+	ActiveConsumers int       `json:"active_consumers"`
+	BytesPerDay     int64     `json:"bytes_per_day"`
 }
 
 // RetentionRecommendation is a suggested retention change.
 type RetentionRecommendation struct {
-	Topic               string              `json:"topic"`
-	CurrentRetentionMs  int64               `json:"current_retention_ms"`
-	RecommendedMs       int64               `json:"recommended_retention_ms"`
-	Reason              string              `json:"reason"`
-	EstimatedSavingsPct float64             `json:"estimated_savings_pct"`
-	EstimatedSavingBytes int64              `json:"estimated_savings_bytes"`
-	Compliance          ComplianceFramework `json:"compliance"`
-	RiskLevel           string              `json:"risk_level"` // low, medium, high
-	RequiresApproval    bool                `json:"requires_approval"`
+	Topic                string              `json:"topic"`
+	CurrentRetentionMs   int64               `json:"current_retention_ms"`
+	RecommendedMs        int64               `json:"recommended_retention_ms"`
+	Reason               string              `json:"reason"`
+	EstimatedSavingsPct  float64             `json:"estimated_savings_pct"`
+	EstimatedSavingBytes int64               `json:"estimated_savings_bytes"`
+	Compliance           ComplianceFramework `json:"compliance"`
+	RiskLevel            string              `json:"risk_level"` // low, medium, high
+	RequiresApproval     bool                `json:"requires_approval"`
 }
 
 // RetentionChangeRequest represents a pending retention change.
 type RetentionChangeRequest struct {
-	ID               string    `json:"id"`
-	Topic            string    `json:"topic"`
-	CurrentMs        int64     `json:"current_retention_ms"`
-	TargetMs         int64     `json:"target_retention_ms"`
-	Reason           string    `json:"reason"`
-	Status           string    `json:"status"` // pending, approved, applied, rejected, rolled_back
-	RequestedAt      time.Time `json:"requested_at"`
-	ApprovedAt       time.Time `json:"approved_at,omitempty"`
-	AppliedAt        time.Time `json:"applied_at,omitempty"`
-	ApprovedBy       string    `json:"approved_by,omitempty"`
-	GraceEndsAt      time.Time `json:"grace_ends_at,omitempty"`
+	ID          string    `json:"id"`
+	Topic       string    `json:"topic"`
+	CurrentMs   int64     `json:"current_retention_ms"`
+	TargetMs    int64     `json:"target_retention_ms"`
+	Reason      string    `json:"reason"`
+	Status      string    `json:"status"` // pending, approved, applied, rejected, rolled_back
+	RequestedAt time.Time `json:"requested_at"`
+	ApprovedAt  time.Time `json:"approved_at,omitempty"`
+	AppliedAt   time.Time `json:"applied_at,omitempty"`
+	ApprovedBy  string    `json:"approved_by,omitempty"`
+	GraceEndsAt time.Time `json:"grace_ends_at,omitempty"`
 }
 
 // Engine manages intelligent retention policies.
 type Engine struct {
-	mu               sync.RWMutex
-	policies         map[string]*RetentionPolicy
-	recommendations  []RetentionRecommendation
-	changeRequests   map[string]*RetentionChangeRequest
-	complianceRules  map[ComplianceFramework]complianceRule
-	logger           *slog.Logger
+	mu              sync.RWMutex
+	policies        map[string]*RetentionPolicy
+	recommendations []RetentionRecommendation
+	changeRequests  map[string]*RetentionChangeRequest
+	complianceRules map[ComplianceFramework]complianceRule
+	logger          *slog.Logger
 }
 
 type complianceRule struct {
@@ -95,9 +97,9 @@ type complianceRule struct {
 // NewEngine creates a new retention policy engine.
 func NewEngine(logger *slog.Logger) *Engine {
 	e := &Engine{
-		policies:        make(map[string]*RetentionPolicy),
-		changeRequests:  make(map[string]*RetentionChangeRequest),
-		logger:          logger,
+		policies:       make(map[string]*RetentionPolicy),
+		changeRequests: make(map[string]*RetentionChangeRequest),
+		logger:         logger,
 	}
 	e.complianceRules = map[ComplianceFramework]complianceRule{
 		ComplianceGDPR: {

@@ -73,9 +73,9 @@ func TestListDashboards(t *testing.T) {
 	}
 
 	// Multiple dashboards
-	m.CreateDashboard("First", "grafana", "cluster", "", "admin")
+	_, _ = m.CreateDashboard("First", "grafana", "cluster", "", "admin")
 	time.Sleep(5 * time.Millisecond)
-	m.CreateDashboard("Second", "grafana", "topic", "t1", "admin")
+	_, _ = m.CreateDashboard("Second", "grafana", "topic", "t1", "admin")
 
 	dashboards = m.ListDashboards()
 	if len(dashboards) != 2 {

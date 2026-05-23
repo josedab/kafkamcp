@@ -11,17 +11,17 @@ import (
 
 // Runbook defines a multi-step operational procedure.
 type Runbook struct {
-	ID          string         `json:"id"`
-	Name        string         `json:"name"`
-	Description string         `json:"description,omitempty"`
-	Category    string         `json:"category,omitempty"`
-	Steps       []Step         `json:"steps"`
-	Params      []ParamDef     `json:"params,omitempty"`
-	Timeout     string         `json:"timeout,omitempty"`
-	Rollback    []Step         `json:"rollback,omitempty"`
-	CreatedBy   string         `json:"created_by"`
-	CreatedAt   time.Time      `json:"created_at"`
-	Enabled     bool           `json:"enabled"`
+	ID          string     `json:"id"`
+	Name        string     `json:"name"`
+	Description string     `json:"description,omitempty"`
+	Category    string     `json:"category,omitempty"`
+	Steps       []Step     `json:"steps"`
+	Params      []ParamDef `json:"params,omitempty"`
+	Timeout     string     `json:"timeout,omitempty"`
+	Rollback    []Step     `json:"rollback,omitempty"`
+	CreatedBy   string     `json:"created_by"`
+	CreatedAt   time.Time  `json:"created_at"`
+	Enabled     bool       `json:"enabled"`
 }
 
 // Step defines a single action in a runbook.
@@ -61,14 +61,14 @@ type Execution struct {
 
 // StepResult tracks a single step execution.
 type StepResult struct {
-	StepName   string    `json:"step_name"`
-	Tool       string    `json:"tool"`
-	Status     string    `json:"status"` // pending, running, completed, failed, skipped
-	Output     any       `json:"output,omitempty"`
-	Error      string    `json:"error,omitempty"`
-	StartedAt  time.Time `json:"started_at,omitempty"`
-	Duration   string    `json:"duration,omitempty"`
-	Attempt    int       `json:"attempt"`
+	StepName  string    `json:"step_name"`
+	Tool      string    `json:"tool"`
+	Status    string    `json:"status"` // pending, running, completed, failed, skipped
+	Output    any       `json:"output,omitempty"`
+	Error     string    `json:"error,omitempty"`
+	StartedAt time.Time `json:"started_at,omitempty"`
+	Duration  string    `json:"duration,omitempty"`
+	Attempt   int       `json:"attempt"`
 }
 
 // AuditEntry records a timestamped log of execution events.
@@ -80,13 +80,13 @@ type AuditEntry struct {
 
 // Engine manages runbooks and their execution.
 type Engine struct {
-	mu                 sync.RWMutex
-	runbooks           map[string]*Runbook
-	executions         map[string]*Execution
-	agenticRunbooks    map[string]*AgenticRunbook
-	agenticExecutions  map[string]*AgenticExecution
-	logger             *slog.Logger
-	nextID             int64
+	mu                sync.RWMutex
+	runbooks          map[string]*Runbook
+	executions        map[string]*Execution
+	agenticRunbooks   map[string]*AgenticRunbook
+	agenticExecutions map[string]*AgenticExecution
+	logger            *slog.Logger
+	nextID            int64
 }
 
 // NewEngine creates a new runbook engine with built-in runbooks.

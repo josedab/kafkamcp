@@ -121,9 +121,9 @@ func TestGetRunbook_NotFound(t *testing.T) {
 func TestListExecutions_FilterByRunbook(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
-	e.Execute("rb_rolling_restart_check", "agent1", nil)
-	e.Execute("rb_partition_reassign", "agent1", nil)
-	e.Execute("rb_rolling_restart_check", "agent1", nil)
+	_, _ = e.Execute("rb_rolling_restart_check", "agent1", nil)
+	_, _ = e.Execute("rb_partition_reassign", "agent1", nil)
+	_, _ = e.Execute("rb_rolling_restart_check", "agent1", nil)
 
 	filtered := e.ListExecutions("rb_rolling_restart_check", 0)
 	for _, ex := range filtered {
@@ -139,7 +139,7 @@ func TestListExecutions_FilterByRunbook(t *testing.T) {
 func TestListExecutions_DefaultLimit(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
-	e.Execute("rb_rolling_restart_check", "agent1", nil)
+	_, _ = e.Execute("rb_rolling_restart_check", "agent1", nil)
 
 	// limit <= 0 defaults to 50
 	results := e.ListExecutions("", 0)
@@ -152,7 +152,7 @@ func TestListExecutions_WithLimit(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
 	for i := 0; i < 5; i++ {
-		e.Execute("rb_rolling_restart_check", "agent1", nil)
+		_, _ = e.Execute("rb_rolling_restart_check", "agent1", nil)
 	}
 
 	results := e.ListExecutions("", 2)
@@ -173,8 +173,8 @@ func TestListExecutions_Empty(t *testing.T) {
 func TestListExecutions_SortedByTime(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
-	e.Execute("rb_rolling_restart_check", "agent1", nil)
-	e.Execute("rb_partition_reassign", "agent1", nil)
+	_, _ = e.Execute("rb_rolling_restart_check", "agent1", nil)
+	_, _ = e.Execute("rb_partition_reassign", "agent1", nil)
 
 	results := e.ListExecutions("", 0)
 	if len(results) < 2 {
@@ -210,7 +210,7 @@ func TestDeleteRunbook_NotFound(t *testing.T) {
 func TestDeleteRunbook_Isolation(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
-	e.DeleteRunbook("rb_partition_reassign")
+	_ = e.DeleteRunbook("rb_partition_reassign")
 
 	// Other runbooks should still exist
 	_, err := e.GetRunbook("rb_topic_migration")
@@ -254,7 +254,7 @@ func TestEnableRunbook_NotFound(t *testing.T) {
 func TestEnableRunbook_Idempotent(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
-	e.EnableRunbook("rb_rolling_restart_check", true)
+	_ = e.EnableRunbook("rb_rolling_restart_check", true)
 	err := e.EnableRunbook("rb_rolling_restart_check", true)
 	if err != nil {
 		t.Fatalf("idempotent enable: %v", err)
@@ -268,7 +268,7 @@ func TestEnableRunbook_Idempotent(t *testing.T) {
 func TestExecute_DisabledRunbook(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
-	e.EnableRunbook("rb_rolling_restart_check", false)
+	_ = e.EnableRunbook("rb_rolling_restart_check", false)
 
 	_, err := e.Execute("rb_rolling_restart_check", "agent1", nil)
 	if err == nil {

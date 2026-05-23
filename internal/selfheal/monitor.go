@@ -9,12 +9,12 @@ import (
 // GroupHealth represents the health assessment of a consumer group.
 type GroupHealth struct {
 	GroupID     string             `json:"group_id"`
-	HealthScore int               `json:"health_score"`
-	Status     string             `json:"status"`
-	Issues     []HealthIssue      `json:"issues"`
-	Metrics    GroupMetrics        `json:"metrics"`
+	HealthScore int                `json:"health_score"`
+	Status      string             `json:"status"`
+	Issues      []HealthIssue      `json:"issues"`
+	Metrics     GroupMetrics       `json:"metrics"`
 	Remediation *RemediationAction `json:"remediation,omitempty"`
-	Timestamp  string             `json:"timestamp"`
+	Timestamp   string             `json:"timestamp"`
 }
 
 // HealthIssue describes a specific problem detected in a consumer group.
@@ -42,13 +42,13 @@ type RemediationAction struct {
 	AutoExecute bool   `json:"auto_execute"`
 }
 
-// Policy defines health thresholds and remediation behaviour for consumer groups.
+// Policy defines health thresholds and remediation behavior for consumer groups.
 type Policy struct {
-	GroupPattern    string   `json:"group_pattern"`
-	MaxLag          int64    `json:"max_lag"`
-	MaxRebalanceRate int     `json:"max_rebalance_rate"`
-	AutoRemediate   bool     `json:"auto_remediate"`
-	Actions         []string `json:"actions"`
+	GroupPattern     string   `json:"group_pattern"`
+	MaxLag           int64    `json:"max_lag"`
+	MaxRebalanceRate int      `json:"max_rebalance_rate"`
+	AutoRemediate    bool     `json:"auto_remediate"`
+	Actions          []string `json:"actions"`
 }
 
 const maxHistoryPerGroup = 50
@@ -92,8 +92,8 @@ func (m *Monitor) EvaluateHealth(groupID string, lag int64, memberCount int, com
 	gh := &GroupHealth{
 		GroupID:     groupID,
 		HealthScore: score,
-		Status:     status,
-		Issues:     issues,
+		Status:      status,
+		Issues:      issues,
 		Metrics: GroupMetrics{
 			TotalLag:       lag,
 			LagTrend:       m.computeLagTrend(groupID, lag),
@@ -224,7 +224,7 @@ func (m *Monitor) suggestRemediation(score int, issues []HealthIssue) *Remediati
 		if issue.Type == "rebalance_storm" && issue.Severity == "critical" {
 			return &RemediationAction{
 				Action:      "restart_consumer",
-				Reason:      "rebalance storm detected; restarting consumers may stabilise the group",
+				Reason:      "rebalance storm detected; restarting consumers may stabilize the group",
 				AutoExecute: false,
 			}
 		}
@@ -306,7 +306,7 @@ type HealingResult struct {
 	Action    string         `json:"action"`
 	Success   bool           `json:"success"`
 	Message   string         `json:"message"`
-	Health    *GroupHealth    `json:"health"`
+	Health    *GroupHealth   `json:"health"`
 	Diagnosis *RootCause     `json:"diagnosis,omitempty"`
 	Playbook  []PlaybookStep `json:"playbook"`
 	Timestamp string         `json:"timestamp"`
@@ -314,7 +314,7 @@ type HealingResult struct {
 
 // RootCause represents the diagnosed root cause of a consumer group issue.
 type RootCause struct {
-	Category    string   `json:"category"` // "stuck_partition", "slow_consumer", "gc_pressure", "network_timeout", "rebalance_storm", "no_members"
+	Category    string   `json:"category"`   // "stuck_partition", "slow_consumer", "gc_pressure", "network_timeout", "rebalance_storm", "no_members"
 	Confidence  float64  `json:"confidence"` // 0.0-1.0
 	Description string   `json:"description"`
 	Evidence    []string `json:"evidence"`

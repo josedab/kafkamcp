@@ -11,55 +11,56 @@ import (
 // AgentRole defines what an agent specializes in.
 type AgentRole string
 
+// RoleMonitor and related values define constants for this package.
 const (
-	RoleMonitor    AgentRole = "monitor"
-	RoleOperator   AgentRole = "operator"
-	RoleAnalyst    AgentRole = "analyst"
-	RoleSecurity   AgentRole = "security"
-	RolePipeline   AgentRole = "pipeline"
+	RoleMonitor     AgentRole = "monitor"
+	RoleOperator    AgentRole = "operator"
+	RoleAnalyst     AgentRole = "analyst"
+	RoleSecurity    AgentRole = "security"
+	RolePipeline    AgentRole = "pipeline"
 	RoleCoordinator AgentRole = "coordinator"
 )
 
 // OrchestratedAgent represents an agent participating in orchestration.
 type OrchestratedAgent struct {
-	ID           string    `json:"id"`
-	Name         string    `json:"name"`
-	Role         AgentRole `json:"role"`
-	Capabilities []string  `json:"capabilities"`
-	Status       string    `json:"status"` // idle, busy, offline
-	CurrentTask  string    `json:"current_task,omitempty"`
-	LastHeartbeat time.Time `json:"last_heartbeat"`
-	TasksCompleted int64   `json:"tasks_completed"`
+	ID             string    `json:"id"`
+	Name           string    `json:"name"`
+	Role           AgentRole `json:"role"`
+	Capabilities   []string  `json:"capabilities"`
+	Status         string    `json:"status"` // idle, busy, offline
+	CurrentTask    string    `json:"current_task,omitempty"`
+	LastHeartbeat  time.Time `json:"last_heartbeat"`
+	TasksCompleted int64     `json:"tasks_completed"`
 }
 
 // Orchestration represents a multi-agent orchestration session.
 type Orchestration struct {
-	ID          string                `json:"id"`
-	Name        string                `json:"name"`
-	Description string                `json:"description,omitempty"`
-	Agents      []string              `json:"agents"`
-	Steps       []OrchestrationStep   `json:"steps"`
-	Context     map[string]any        `json:"context"`
-	Status      string                `json:"status"` // pending, running, completed, failed
-	CreatedBy   string                `json:"created_by"`
-	CreatedAt   time.Time             `json:"created_at"`
-	CompletedAt *time.Time            `json:"completed_at,omitempty"`
-	Results     []StepResult          `json:"results,omitempty"`
+	ID          string              `json:"id"`
+	Name        string              `json:"name"`
+	Description string              `json:"description,omitempty"`
+	Agents      []string            `json:"agents"`
+	Steps       []OrchestrationStep `json:"steps"`
+	Context     map[string]any      `json:"context"`
+	Status      string              `json:"status"` // pending, running, completed, failed
+	CreatedBy   string              `json:"created_by"`
+	CreatedAt   time.Time           `json:"created_at"`
+	CompletedAt *time.Time          `json:"completed_at,omitempty"`
+	Results     []StepResult        `json:"results,omitempty"`
 }
 
 // OrchestrationStep defines a step in a multi-agent orchestration.
 type OrchestrationStep struct {
-	ID           string   `json:"id"`
-	Name         string   `json:"name"`
-	AssignTo     string   `json:"assign_to,omitempty"`      // specific agent or role
-	AssignRole   string   `json:"assign_role,omitempty"`    // role-based assignment
-	Tool         string   `json:"tool"`
-	Args         map[string]any `json:"args,omitempty"`
-	DependsOn    []string `json:"depends_on,omitempty"`
-	Condition    string   `json:"condition,omitempty"`
-	Timeout      string   `json:"timeout,omitempty"`
-	OnFailure    string   `json:"on_failure,omitempty"` // skip, abort, retry
-	MaxRetries   int      `json:"max_retries,omitempty"`
+	ID         string         `json:"id"`
+	Name       string         `json:"name"`
+	AssignTo   string         `json:"assign_to,omitempty"`   // specific agent or role
+	AssignRole string         `json:"assign_role,omitempty"` // role-based assignment
+	Tool       string         `json:"tool"`
+	Args       map[string]any `json:"args,omitempty"`
+	DependsOn  []string       `json:"depends_on,omitempty"`
+	Condition  string         `json:"condition,omitempty"`
+	Timeout    string         `json:"timeout,omitempty"`
+	OnFailure  string         `json:"on_failure,omitempty"` // skip, abort, retry
+	MaxRetries int            `json:"max_retries,omitempty"`
 }
 
 // StepResult captures the outcome of an orchestration step.
@@ -76,13 +77,13 @@ type StepResult struct {
 
 // Handoff represents a task handoff between agents.
 type Handoff struct {
-	ID          string         `json:"id"`
-	FromAgent   string         `json:"from_agent"`
-	ToAgent     string         `json:"to_agent"`
-	Context     map[string]any `json:"context"`
-	Message     string         `json:"message"`
-	Status      string         `json:"status"` // pending, accepted, rejected, completed
-	CreatedAt   time.Time      `json:"created_at"`
+	ID        string         `json:"id"`
+	FromAgent string         `json:"from_agent"`
+	ToAgent   string         `json:"to_agent"`
+	Context   map[string]any `json:"context"`
+	Message   string         `json:"message"`
+	Status    string         `json:"status"` // pending, accepted, rejected, completed
+	CreatedAt time.Time      `json:"created_at"`
 }
 
 // Engine orchestrates multi-agent Kafka operations.
@@ -117,11 +118,11 @@ func (e *Engine) RegisterAgent(id, name string, role AgentRole, capabilities []s
 	defer e.mu.Unlock()
 
 	agent := &OrchestratedAgent{
-		ID:           id,
-		Name:         name,
-		Role:         role,
-		Capabilities: capabilities,
-		Status:       "idle",
+		ID:            id,
+		Name:          name,
+		Role:          role,
+		Capabilities:  capabilities,
+		Status:        "idle",
 		LastHeartbeat: time.Now(),
 	}
 	e.agents[id] = agent

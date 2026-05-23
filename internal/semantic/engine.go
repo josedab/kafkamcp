@@ -23,17 +23,17 @@ type Engine struct {
 
 // IndexedDocument represents a semantically indexed Kafka message.
 type IndexedDocument struct {
-	ID        string            `json:"id"`
-	Topic     string            `json:"topic"`
-	Partition int32             `json:"partition"`
-	Offset    int64             `json:"offset"`
-	Key       string            `json:"key,omitempty"`
-	Content   string            `json:"content"`
-	Tokens    []string          `json:"-"`
+	ID        string             `json:"id"`
+	Topic     string             `json:"topic"`
+	Partition int32              `json:"partition"`
+	Offset    int64              `json:"offset"`
+	Key       string             `json:"key,omitempty"`
+	Content   string             `json:"content"`
+	Tokens    []string           `json:"-"`
 	TF        map[string]float64 `json:"-"`
-	Vector    []float64         `json:"vector,omitempty"`
-	Timestamp time.Time         `json:"timestamp"`
-	Metadata  map[string]string `json:"metadata,omitempty"`
+	Vector    []float64          `json:"vector,omitempty"`
+	Timestamp time.Time          `json:"timestamp"`
+	Metadata  map[string]string  `json:"metadata,omitempty"`
 }
 
 // SearchResult represents a single search result with relevance score.

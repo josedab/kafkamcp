@@ -29,7 +29,7 @@ func TestDiscoverClusters_CancelledContext(t *testing.T) {
 	cancel()
 	result := e.DiscoverClusters(ctx)
 	if result == nil {
-		t.Fatal("expected non-nil result even with cancelled context")
+		t.Fatal("expected non-nil result even with canceled context")
 	}
 }
 

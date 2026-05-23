@@ -58,20 +58,20 @@ type Condition struct {
 
 // ApprovalGate defines a human-in-the-loop gate.
 type ApprovalGate struct {
-	Required    bool          `json:"required" yaml:"required"`
-	Approvers   []string      `json:"approvers,omitempty" yaml:"approvers,omitempty"`
-	Timeout     string        `json:"timeout,omitempty" yaml:"timeout,omitempty"`
-	Message     string        `json:"message,omitempty" yaml:"message,omitempty"`
-	Escalation  string        `json:"escalation,omitempty" yaml:"escalation,omitempty"`
+	Required   bool     `json:"required" yaml:"required"`
+	Approvers  []string `json:"approvers,omitempty" yaml:"approvers,omitempty"`
+	Timeout    string   `json:"timeout,omitempty" yaml:"timeout,omitempty"`
+	Message    string   `json:"message,omitempty" yaml:"message,omitempty"`
+	Escalation string   `json:"escalation,omitempty" yaml:"escalation,omitempty"`
 }
 
 // BlastRadiusConfig limits the scope of operations.
 type BlastRadiusConfig struct {
-	MaxTopics     int      `json:"max_topics,omitempty" yaml:"max_topics,omitempty"`
-	MaxPartitions int      `json:"max_partitions,omitempty" yaml:"max_partitions,omitempty"`
-	MaxBrokers    int      `json:"max_brokers,omitempty" yaml:"max_brokers,omitempty"`
+	MaxTopics       int      `json:"max_topics,omitempty" yaml:"max_topics,omitempty"`
+	MaxPartitions   int      `json:"max_partitions,omitempty" yaml:"max_partitions,omitempty"`
+	MaxBrokers      int      `json:"max_brokers,omitempty" yaml:"max_brokers,omitempty"`
 	AllowedClusters []string `json:"allowed_clusters,omitempty" yaml:"allowed_clusters,omitempty"`
-	ExcludeTopics []string `json:"exclude_topics,omitempty" yaml:"exclude_topics,omitempty"`
+	ExcludeTopics   []string `json:"exclude_topics,omitempty" yaml:"exclude_topics,omitempty"`
 }
 
 // AgenticExecution tracks an agentic runbook execution with checkpointing.

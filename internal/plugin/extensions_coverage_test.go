@@ -17,11 +17,13 @@ type mockFailInitPlugin struct {
 	version string
 }
 
-func (p *mockFailInitPlugin) Name() string                                     { return p.name }
-func (p *mockFailInitPlugin) Version() string                                  { return p.version }
-func (p *mockFailInitPlugin) Description() string                              { return "fail init" }
-func (p *mockFailInitPlugin) Init(_ context.Context, _ map[string]any) error   { return fmt.Errorf("init exploded") }
-func (p *mockFailInitPlugin) Close() error                                     { return nil }
+func (p *mockFailInitPlugin) Name() string        { return p.name }
+func (p *mockFailInitPlugin) Version() string     { return p.version }
+func (p *mockFailInitPlugin) Description() string { return "fail init" }
+func (p *mockFailInitPlugin) Init(_ context.Context, _ map[string]any) error {
+	return fmt.Errorf("init exploded")
+}
+func (p *mockFailInitPlugin) Close() error { return nil }
 
 func TestExtendedRegistry_RegisterWithManifest_InitFailureRevokesCapabilities(t *testing.T) {
 	t.Parallel()
@@ -119,11 +121,11 @@ type successInitPlugin struct {
 	version string
 }
 
-func (p *successInitPlugin) Name() string                                     { return p.name }
-func (p *successInitPlugin) Version() string                                  { return p.version }
-func (p *successInitPlugin) Description() string                              { return "test" }
-func (p *successInitPlugin) Init(_ context.Context, _ map[string]any) error   { return nil }
-func (p *successInitPlugin) Close() error                                     { return nil }
+func (p *successInitPlugin) Name() string                                   { return p.name }
+func (p *successInitPlugin) Version() string                                { return p.version }
+func (p *successInitPlugin) Description() string                            { return "test" }
+func (p *successInitPlugin) Init(_ context.Context, _ map[string]any) error { return nil }
+func (p *successInitPlugin) Close() error                                   { return nil }
 
 func TestExtendedRegistry_ConcurrentRegistration(t *testing.T) {
 	t.Parallel()

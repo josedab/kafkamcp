@@ -79,14 +79,14 @@ func buildOpPatterns() []opPattern {
 				}
 				if m[2] != "" {
 					var n int
-					fmt.Sscanf(m[2], "%d", &n)
+					_, _ = fmt.Sscanf(m[2], "%d", &n)
 					if n > 0 {
 						cmd.Parameters["partitions"] = n
 					}
 				}
 				if m[3] != "" {
 					var n int
-					fmt.Sscanf(m[3], "%d", &n)
+					_, _ = fmt.Sscanf(m[3], "%d", &n)
 					if n > 0 {
 						cmd.Parameters["replication_factor"] = n
 					}
@@ -124,7 +124,7 @@ func buildOpPatterns() []opPattern {
 			action:  "scale_partitions",
 			extract: func(m []string) OperationalCommand {
 				var n int
-				fmt.Sscanf(m[2], "%d", &n)
+				_, _ = fmt.Sscanf(m[2], "%d", &n)
 				return OperationalCommand{
 					Resource:   "topic",
 					Name:       m[1],

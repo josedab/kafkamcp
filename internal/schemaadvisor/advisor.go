@@ -12,22 +12,23 @@ import (
 // CompatibilityLevel represents schema compatibility mode.
 type CompatibilityLevel string
 
+// CompatBackward and related values define constants for this package.
 const (
-	CompatBackward     CompatibilityLevel = "BACKWARD"
-	CompatForward      CompatibilityLevel = "FORWARD"
-	CompatFull         CompatibilityLevel = "FULL"
-	CompatNone         CompatibilityLevel = "NONE"
-	CompatTransitive   CompatibilityLevel = "BACKWARD_TRANSITIVE"
+	CompatBackward   CompatibilityLevel = "BACKWARD"
+	CompatForward    CompatibilityLevel = "FORWARD"
+	CompatFull       CompatibilityLevel = "FULL"
+	CompatNone       CompatibilityLevel = "NONE"
+	CompatTransitive CompatibilityLevel = "BACKWARD_TRANSITIVE"
 )
 
 // SchemaVersion represents a version in schema history.
 type SchemaVersion struct {
-	Version     int               `json:"version"`
-	Schema      string            `json:"schema"`
-	SchemaType  string            `json:"schema_type"` // AVRO, PROTOBUF, JSON
-	Subject     string            `json:"subject"`
-	Timestamp   time.Time         `json:"timestamp"`
-	Fields      []FieldInfo       `json:"fields,omitempty"`
+	Version    int         `json:"version"`
+	Schema     string      `json:"schema"`
+	SchemaType string      `json:"schema_type"` // AVRO, PROTOBUF, JSON
+	Subject    string      `json:"subject"`
+	Timestamp  time.Time   `json:"timestamp"`
+	Fields     []FieldInfo `json:"fields,omitempty"`
 }
 
 // FieldInfo describes a field in a schema.
@@ -41,15 +42,15 @@ type FieldInfo struct {
 
 // CompatibilityPrediction is the result of predicting compatibility issues.
 type CompatibilityPrediction struct {
-	Subject          string             `json:"subject"`
-	CurrentVersion   int                `json:"current_version"`
-	Compatibility    CompatibilityLevel `json:"compatibility_level"`
-	IsCompatible     bool               `json:"is_compatible"`
-	BreakingChanges  []BreakingChange   `json:"breaking_changes,omitempty"`
-	Warnings         []string           `json:"warnings,omitempty"`
-	Suggestions      []string           `json:"suggestions,omitempty"`
-	RiskLevel        string             `json:"risk_level"` // low, medium, high, critical
-	AffectedConsumers int              `json:"affected_consumers"`
+	Subject           string             `json:"subject"`
+	CurrentVersion    int                `json:"current_version"`
+	Compatibility     CompatibilityLevel `json:"compatibility_level"`
+	IsCompatible      bool               `json:"is_compatible"`
+	BreakingChanges   []BreakingChange   `json:"breaking_changes,omitempty"`
+	Warnings          []string           `json:"warnings,omitempty"`
+	Suggestions       []string           `json:"suggestions,omitempty"`
+	RiskLevel         string             `json:"risk_level"` // low, medium, high, critical
+	AffectedConsumers int                `json:"affected_consumers"`
 }
 
 // BreakingChange describes a specific compatibility issue.
@@ -63,12 +64,12 @@ type BreakingChange struct {
 
 // MigrationPlan describes how to evolve a schema from one version to another.
 type MigrationPlan struct {
-	Subject      string           `json:"subject"`
-	FromVersion  int              `json:"from_version"`
-	ToVersion    int              `json:"to_version"`
-	Steps        []MigrationStep  `json:"steps"`
+	Subject       string          `json:"subject"`
+	FromVersion   int             `json:"from_version"`
+	ToVersion     int             `json:"to_version"`
+	Steps         []MigrationStep `json:"steps"`
 	EstimatedRisk string          `json:"estimated_risk"`
-	Rollback     string           `json:"rollback_strategy"`
+	Rollback      string          `json:"rollback_strategy"`
 	Prerequisites []string        `json:"prerequisites,omitempty"`
 }
 
@@ -83,13 +84,13 @@ type MigrationStep struct {
 
 // EvolutionAdvice provides recommendations based on schema history.
 type EvolutionAdvice struct {
-	Subject        string            `json:"subject"`
-	SchemaType     string            `json:"schema_type"`
-	VersionCount   int               `json:"version_count"`
-	Patterns       []EvolutionPattern `json:"patterns"`
-	BestPractices  []string          `json:"best_practices"`
-	Antipatterns   []string          `json:"antipatterns,omitempty"`
-	HealthScore    float64           `json:"health_score"` // 0-100
+	Subject       string             `json:"subject"`
+	SchemaType    string             `json:"schema_type"`
+	VersionCount  int                `json:"version_count"`
+	Patterns      []EvolutionPattern `json:"patterns"`
+	BestPractices []string           `json:"best_practices"`
+	Antipatterns  []string           `json:"antipatterns,omitempty"`
+	HealthScore   float64            `json:"health_score"` // 0-100
 }
 
 // EvolutionPattern describes a detected pattern in schema evolution.
@@ -102,10 +103,10 @@ type EvolutionPattern struct {
 
 // Advisor analyzes schema registry history and provides evolution recommendations.
 type Advisor struct {
-	mu       sync.RWMutex
-	history  map[string][]SchemaVersion // subject -> versions
-	advice   map[string]*EvolutionAdvice
-	logger   *slog.Logger
+	mu      sync.RWMutex
+	history map[string][]SchemaVersion // subject -> versions
+	advice  map[string]*EvolutionAdvice
+	logger  *slog.Logger
 }
 
 // NewAdvisor creates a new schema evolution advisor.
@@ -181,11 +182,11 @@ func (a *Advisor) PredictCompatibility(subject, newSchema, schemaType string, co
 	for name, oldField := range oldMap {
 		if _, exists := newMap[name]; !exists {
 			bc := BreakingChange{
-				Field:      name,
-				ChangeType: "removed",
-				Severity:   "error",
+				Field:       name,
+				ChangeType:  "removed",
+				Severity:    "error",
 				Description: fmt.Sprintf("Field %q was removed", name),
-				Mitigation: fmt.Sprintf("Add field %q back with a default value, or use NONE compatibility", name),
+				Mitigation:  fmt.Sprintf("Add field %q back with a default value, or use NONE compatibility", name),
 			}
 			if compatLevel == CompatBackward || compatLevel == CompatFull || compatLevel == CompatTransitive {
 				prediction.IsCompatible = false
@@ -513,14 +514,14 @@ type UsagePattern struct {
 	FieldName    string  `json:"field_name"`
 	AddedVersion int     `json:"added_in_version"`
 	Stability    float64 `json:"stability_score"` // 0-1, how stable this field has been
-	UsageType    string  `json:"usage_type"`       // key, value, metadata, timestamp
+	UsageType    string  `json:"usage_type"`      // key, value, metadata, timestamp
 	ChangeCount  int     `json:"change_count"`
 }
 
 // SchemaRecommendation is an ML-powered suggestion for schema evolution.
 type SchemaRecommendation struct {
-	Type        string  `json:"type"`        // add_field, remove_field, rename, restructure, optimize
-	Confidence  float64 `json:"confidence"`  // 0-1
+	Type        string  `json:"type"`       // add_field, remove_field, rename, restructure, optimize
+	Confidence  float64 `json:"confidence"` // 0-1
 	Field       string  `json:"field,omitempty"`
 	Description string  `json:"description"`
 	Impact      string  `json:"impact"` // low, medium, high
@@ -530,13 +531,13 @@ type SchemaRecommendation struct {
 
 // SchemaIntelligence provides ML-powered analysis results.
 type SchemaIntelligence struct {
-	Subject          string                 `json:"subject"`
-	SchemaType       string                 `json:"schema_type"`
-	UsagePatterns    []UsagePattern         `json:"usage_patterns"`
-	Recommendations  []SchemaRecommendation `json:"recommendations"`
-	EvolutionScore   float64                `json:"evolution_score"` // 0-100
-	ComplexityScore  float64                `json:"complexity_score"` // 0-100
-	Prediction       string                 `json:"evolution_prediction"`
+	Subject         string                 `json:"subject"`
+	SchemaType      string                 `json:"schema_type"`
+	UsagePatterns   []UsagePattern         `json:"usage_patterns"`
+	Recommendations []SchemaRecommendation `json:"recommendations"`
+	EvolutionScore  float64                `json:"evolution_score"`  // 0-100
+	ComplexityScore float64                `json:"complexity_score"` // 0-100
+	Prediction      string                 `json:"evolution_prediction"`
 }
 
 // AnalyzeIntelligent performs ML-inspired analysis of schema evolution patterns.

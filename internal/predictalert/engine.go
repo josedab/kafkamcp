@@ -12,37 +12,37 @@ import (
 // LagSample records consumer group lag at a point in time.
 type LagSample struct {
 	GroupID     string    `json:"group_id"`
-	TotalLag   int64     `json:"total_lag"`
-	MemberCount int      `json:"member_count"`
-	Timestamp  time.Time `json:"timestamp"`
+	TotalLag    int64     `json:"total_lag"`
+	MemberCount int       `json:"member_count"`
+	Timestamp   time.Time `json:"timestamp"`
 }
 
 // Alert represents a predictive alert.
 type Alert struct {
-	ID          string    `json:"id"`
-	GroupID     string    `json:"group_id"`
-	Type        string    `json:"type"` // lag_spike, rebalance_storm, stalled_consumer, uneven_load
-	Severity    string    `json:"severity"` // info, warning, critical
-	Message     string    `json:"message"`
-	Prediction  string    `json:"prediction,omitempty"`
-	Confidence  float64   `json:"confidence"`
-	CreatedAt   time.Time `json:"created_at"`
-	Acknowledged bool    `json:"acknowledged"`
+	ID           string    `json:"id"`
+	GroupID      string    `json:"group_id"`
+	Type         string    `json:"type"`     // lag_spike, rebalance_storm, stalled_consumer, uneven_load
+	Severity     string    `json:"severity"` // info, warning, critical
+	Message      string    `json:"message"`
+	Prediction   string    `json:"prediction,omitempty"`
+	Confidence   float64   `json:"confidence"`
+	CreatedAt    time.Time `json:"created_at"`
+	Acknowledged bool      `json:"acknowledged"`
 }
 
 // GroupAnalysis provides predictive analysis for a consumer group.
 type GroupAnalysis struct {
-	GroupID           string   `json:"group_id"`
-	CurrentLag        int64   `json:"current_lag"`
-	LagTrend          string  `json:"lag_trend"` // increasing, decreasing, stable, volatile
-	LagGrowthRate     float64 `json:"lag_growth_rate_per_min"`
-	PredictedLag1h    int64   `json:"predicted_lag_1h"`
-	PredictedLag6h    int64   `json:"predicted_lag_6h"`
-	RebalanceRisk     string  `json:"rebalance_risk"` // low, medium, high
-	ConsumptionRate   float64 `json:"consumption_rate_per_sec"`
-	Alerts            []Alert `json:"alerts"`
-	Recommendations   []string `json:"recommendations,omitempty"`
-	SampleCount       int     `json:"sample_count"`
+	GroupID         string   `json:"group_id"`
+	CurrentLag      int64    `json:"current_lag"`
+	LagTrend        string   `json:"lag_trend"` // increasing, decreasing, stable, volatile
+	LagGrowthRate   float64  `json:"lag_growth_rate_per_min"`
+	PredictedLag1h  int64    `json:"predicted_lag_1h"`
+	PredictedLag6h  int64    `json:"predicted_lag_6h"`
+	RebalanceRisk   string   `json:"rebalance_risk"` // low, medium, high
+	ConsumptionRate float64  `json:"consumption_rate_per_sec"`
+	Alerts          []Alert  `json:"alerts"`
+	Recommendations []string `json:"recommendations,omitempty"`
+	SampleCount     int      `json:"sample_count"`
 }
 
 // Engine performs predictive analysis on consumer group metrics.
@@ -70,9 +70,9 @@ func (e *Engine) RecordSample(groupID string, totalLag int64, memberCount int) {
 
 	sample := LagSample{
 		GroupID:     groupID,
-		TotalLag:   totalLag,
+		TotalLag:    totalLag,
 		MemberCount: memberCount,
-		Timestamp:  time.Now(),
+		Timestamp:   time.Now(),
 	}
 
 	e.samples[groupID] = append(e.samples[groupID], sample)
@@ -241,41 +241,41 @@ func (e *Engine) generateAlerts(analysis *GroupAnalysis, samples []LagSample) []
 	if analysis.LagTrend == "increasing" && analysis.PredictedLag1h > analysis.CurrentLag*2 {
 		e.nextID++
 		alerts = append(alerts, Alert{
-			ID:       fmt.Sprintf("alert_%d", e.nextID),
-			GroupID:  analysis.GroupID,
-			Type:     "lag_spike",
-			Severity: "warning",
-			Message:  fmt.Sprintf("Consumer lag is increasing at %.0f msgs/min. Predicted to reach %d in 1 hour.", analysis.LagGrowthRate, analysis.PredictedLag1h),
+			ID:         fmt.Sprintf("alert_%d", e.nextID),
+			GroupID:    analysis.GroupID,
+			Type:       "lag_spike",
+			Severity:   "warning",
+			Message:    fmt.Sprintf("Consumer lag is increasing at %.0f msgs/min. Predicted to reach %d in 1 hour.", analysis.LagGrowthRate, analysis.PredictedLag1h),
 			Prediction: fmt.Sprintf("Lag will grow from %d to ~%d within 1 hour", analysis.CurrentLag, analysis.PredictedLag1h),
 			Confidence: 0.75,
-			CreatedAt: time.Now(),
+			CreatedAt:  time.Now(),
 		})
 	}
 
 	if analysis.CurrentLag > 0 && analysis.ConsumptionRate == 0 && len(samples) > 5 {
 		e.nextID++
 		alerts = append(alerts, Alert{
-			ID:       fmt.Sprintf("alert_%d", e.nextID),
-			GroupID:  analysis.GroupID,
-			Type:     "stalled_consumer",
-			Severity: "critical",
-			Message:  fmt.Sprintf("Consumer group appears stalled with %d lag and zero consumption rate", analysis.CurrentLag),
+			ID:         fmt.Sprintf("alert_%d", e.nextID),
+			GroupID:    analysis.GroupID,
+			Type:       "stalled_consumer",
+			Severity:   "critical",
+			Message:    fmt.Sprintf("Consumer group appears stalled with %d lag and zero consumption rate", analysis.CurrentLag),
 			Confidence: 0.85,
-			CreatedAt: time.Now(),
+			CreatedAt:  time.Now(),
 		})
 	}
 
 	if analysis.RebalanceRisk == "high" {
 		e.nextID++
 		alerts = append(alerts, Alert{
-			ID:       fmt.Sprintf("alert_%d", e.nextID),
-			GroupID:  analysis.GroupID,
-			Type:     "rebalance_storm",
-			Severity: "warning",
-			Message:  "Frequent membership changes detected. Risk of rebalance storm.",
+			ID:         fmt.Sprintf("alert_%d", e.nextID),
+			GroupID:    analysis.GroupID,
+			Type:       "rebalance_storm",
+			Severity:   "warning",
+			Message:    "Frequent membership changes detected. Risk of rebalance storm.",
 			Prediction: "Continued instability may cause processing delays",
 			Confidence: 0.70,
-			CreatedAt: time.Now(),
+			CreatedAt:  time.Now(),
 		})
 	}
 

@@ -65,7 +65,7 @@ func TestQuotaEnforcement(t *testing.T) {
 	})
 
 	// First topic OK
-	e.Exec(sb.ID, "kafka_create_topic", map[string]any{"topic": "t1"}, nil, "", 0)
+	_, _ = e.Exec(sb.ID, "kafka_create_topic", map[string]any{"topic": "t1"}, nil, "", 0)
 
 	// Second topic should fail quota
 	_, err := e.Exec(sb.ID, "kafka_create_topic", map[string]any{"topic": "t2"}, nil, "", 0)
@@ -78,8 +78,8 @@ func TestList(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
 
-	e.Create("sb1", "", "agent-1", 3600, nil)
-	e.Create("sb2", "", "agent-2", 3600, nil)
+	_, _ = e.Create("sb1", "", "agent-1", 3600, nil)
+	_, _ = e.Create("sb2", "", "agent-2", 3600, nil)
 
 	list := e.List("agent-1")
 	if len(list) != 1 {
@@ -97,8 +97,8 @@ func TestPromotionReport(t *testing.T) {
 	e := NewEngine(testLogger())
 
 	sb, _ := e.Create("promo-test", "", "agent-1", 3600, nil)
-	e.Exec(sb.ID, "kafka_produce", nil, nil, "", 0)
-	e.Exec(sb.ID, "kafka_consume", nil, nil, "", 0)
+	_, _ = e.Exec(sb.ID, "kafka_produce", nil, nil, "", 0)
+	_, _ = e.Exec(sb.ID, "kafka_consume", nil, nil, "", 0)
 
 	report, err := e.GeneratePromotionReport(sb.ID)
 	if err != nil {

@@ -52,12 +52,12 @@ type ResourceDefinition struct {
 
 // PluginInfo contains metadata about a registered plugin.
 type PluginInfo struct {
-	Name        string             `json:"name"`
-	Version     string             `json:"version"`
-	Description string             `json:"description"`
-	Status      string             `json:"status"` // "loaded", "error", "unloaded"
-	LoadedAt    string             `json:"loaded_at"`
-	Tools       []ToolDefinition   `json:"tools,omitempty"`
+	Name        string               `json:"name"`
+	Version     string               `json:"version"`
+	Description string               `json:"description"`
+	Status      string               `json:"status"` // "loaded", "error", "unloaded"
+	LoadedAt    string               `json:"loaded_at"`
+	Tools       []ToolDefinition     `json:"tools,omitempty"`
 	Resources   []ResourceDefinition `json:"resources,omitempty"`
 }
 

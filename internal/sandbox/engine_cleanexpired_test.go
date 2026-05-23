@@ -17,8 +17,8 @@ func TestCleanExpired_NoSandboxes(t *testing.T) {
 func TestCleanExpired_AllActiveNonExpired(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.Create("sb1", "", "agent-1", 3600, nil)
-	e.Create("sb2", "", "agent-2", 3600, nil)
+	_, _ = e.Create("sb1", "", "agent-1", 3600, nil)
+	_, _ = e.Create("sb2", "", "agent-2", 3600, nil)
 
 	cleaned := e.CleanExpired()
 	if cleaned != 0 {
@@ -60,7 +60,7 @@ func TestCleanExpired_MixedStatuses(t *testing.T) {
 	e := NewEngine(testLogger())
 
 	// Active, not expired
-	e.Create("active-sb", "", "agent-1", 3600, nil)
+	_, _ = e.Create("active-sb", "", "agent-1", 3600, nil)
 
 	// Active, expired
 	expiredSb, _ := e.Create("will-expire", "", "agent-2", 1, nil)
@@ -70,7 +70,7 @@ func TestCleanExpired_MixedStatuses(t *testing.T) {
 
 	// Destroyed (not active, should not be cleaned)
 	destroyedSb, _ := e.Create("destroyed-sb", "", "agent-3", 1, nil)
-	e.Destroy(destroyedSb.ID)
+	_ = e.Destroy(destroyedSb.ID)
 	e.mu.Lock()
 	e.sandboxes[destroyedSb.ID].ExpiresAt = time.Now().Add(-1 * time.Minute)
 	e.mu.Unlock()

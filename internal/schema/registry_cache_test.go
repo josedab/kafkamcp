@@ -46,7 +46,7 @@ func TestGetSubjectVersions_Success(t *testing.T) {
 	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/subjects/orders-value/versions" {
-			json.NewEncoder(w).Encode([]int{1, 2, 3})
+			_ = json.NewEncoder(w).Encode([]int{1, 2, 3})
 			return
 		}
 		w.WriteHeader(http.StatusNotFound)
@@ -87,7 +87,7 @@ func TestGetLatestSchema_Success(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/subjects/orders-value/versions/latest":
-			json.NewEncoder(w).Encode(map[string]any{
+			_ = json.NewEncoder(w).Encode(map[string]any{
 				"subject":    "orders-value",
 				"version":    2,
 				"id":         42,
@@ -95,7 +95,7 @@ func TestGetLatestSchema_Success(t *testing.T) {
 				"schema":     `{"type":"record","name":"Order","fields":[{"name":"id","type":"string"}]}`,
 			})
 		case "/config/orders-value":
-			json.NewEncoder(w).Encode(map[string]string{"compatibilityLevel": "BACKWARD"})
+			_ = json.NewEncoder(w).Encode(map[string]string{"compatibilityLevel": "BACKWARD"})
 		default:
 			w.WriteHeader(http.StatusNotFound)
 		}
@@ -126,7 +126,7 @@ func TestGetLatestSchema_Success(t *testing.T) {
 func TestIsAvailable_True(t *testing.T) {
 	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode([]string{"subject-a"})
+		_ = json.NewEncoder(w).Encode([]string{"subject-a"})
 	}))
 	defer srv.Close()
 

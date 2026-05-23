@@ -10,20 +10,20 @@ import (
 
 // AgentConfig represents a shareable agent configuration.
 type AgentConfig struct {
-	Name        string            `json:"name"`
-	Version     string            `json:"version"`
-	Description string            `json:"description"`
-	Author      string            `json:"author"`
-	Category    string            `json:"category"` // "monitoring", "operations", "analytics", "pipeline", "security"
-	Tags        []string          `json:"tags"`
-	Tools       []string          `json:"tools"`
-	Prompts     []AgentPrompt     `json:"prompts,omitempty"`
-	Workflows   []AgentWorkflow   `json:"workflows,omitempty"`
-	Config      map[string]any    `json:"config,omitempty"`
-	Downloads   int               `json:"downloads"`
-	Rating      float64           `json:"rating"`
-	Verified    bool              `json:"verified"`
-	PublishedAt string            `json:"published_at"`
+	Name        string          `json:"name"`
+	Version     string          `json:"version"`
+	Description string          `json:"description"`
+	Author      string          `json:"author"`
+	Category    string          `json:"category"` // "monitoring", "operations", "analytics", "pipeline", "security"
+	Tags        []string        `json:"tags"`
+	Tools       []string        `json:"tools"`
+	Prompts     []AgentPrompt   `json:"prompts,omitempty"`
+	Workflows   []AgentWorkflow `json:"workflows,omitempty"`
+	Config      map[string]any  `json:"config,omitempty"`
+	Downloads   int             `json:"downloads"`
+	Rating      float64         `json:"rating"`
+	Verified    bool            `json:"verified"`
+	PublishedAt string          `json:"published_at"`
 }
 
 // AgentPrompt is a reusable prompt template in an agent configuration.
@@ -58,9 +58,9 @@ type ToolBundle struct {
 
 // AgentConfigStore manages shareable agent configurations and tool bundles.
 type AgentConfigStore struct {
-	mu       sync.RWMutex
-	configs  map[string]*AgentConfig
-	bundles  map[string]*ToolBundle
+	mu      sync.RWMutex
+	configs map[string]*AgentConfig
+	bundles map[string]*ToolBundle
 }
 
 // NewAgentConfigStore creates a new agent config store with built-in entries.
@@ -78,8 +78,8 @@ func (s *AgentConfigStore) seedDefaults() {
 		{
 			Name: "kafka-ops-agent", Version: "1.0.0",
 			Description: "Production Kafka operations agent with monitoring, alerting, and remediation capabilities",
-			Author: "kafkamcp", Category: "operations",
-			Tags: []string{"ops", "monitoring", "production"},
+			Author:      "kafkamcp", Category: "operations",
+			Tags:  []string{"ops", "monitoring", "production"},
 			Tools: []string{"kafka_list_topics", "kafka_describe_topic", "kafka_consumer_groups", "kafka_cluster_info", "kafka_anomaly_detect"},
 			Prompts: []AgentPrompt{
 				{Name: "health-check", Template: "Check the health of all Kafka clusters and report any issues", Description: "Cluster health check"},
@@ -93,25 +93,25 @@ func (s *AgentConfigStore) seedDefaults() {
 		{
 			Name: "schema-governance-agent", Version: "1.0.0",
 			Description: "Schema governance agent for managing schema evolution, compatibility, and compliance",
-			Author: "kafkamcp", Category: "security",
-			Tags: []string{"schema", "governance", "compliance"},
-			Tools: []string{"kafka_schema_list", "kafka_schema_get", "kafka_check_compatibility", "kafka_schema_evolution_plan"},
+			Author:      "kafkamcp", Category: "security",
+			Tags:   []string{"schema", "governance", "compliance"},
+			Tools:  []string{"kafka_schema_list", "kafka_schema_get", "kafka_check_compatibility", "kafka_schema_evolution_plan"},
 			Rating: 4.5, Verified: true, PublishedAt: "2025-02-01T00:00:00Z",
 		},
 		{
 			Name: "data-pipeline-agent", Version: "1.0.0",
 			Description: "Agent for building and managing data pipelines with natural language",
-			Author: "kafkamcp", Category: "pipeline",
-			Tags: []string{"pipeline", "etl", "streaming"},
-			Tools: []string{"kafka_pipeline_create", "kafka_pipeline_run", "kafka_pipeline_list", "kafka_nl_query"},
+			Author:      "kafkamcp", Category: "pipeline",
+			Tags:   []string{"pipeline", "etl", "streaming"},
+			Tools:  []string{"kafka_pipeline_create", "kafka_pipeline_run", "kafka_pipeline_list", "kafka_nl_query"},
 			Rating: 4.3, Verified: true, PublishedAt: "2025-03-01T00:00:00Z",
 		},
 		{
 			Name: "cost-optimizer-agent", Version: "0.9.0",
 			Description: "Agent for analyzing Kafka costs and providing optimization recommendations",
-			Author: "community", Category: "analytics",
-			Tags: []string{"cost", "finops", "optimization"},
-			Tools: []string{"kafka_cost_analyze", "kafka_cost_waste_detect", "kafka_cost_whatif"},
+			Author:      "community", Category: "analytics",
+			Tags:   []string{"cost", "finops", "optimization"},
+			Tools:  []string{"kafka_cost_analyze", "kafka_cost_waste_detect", "kafka_cost_whatif"},
 			Rating: 4.1, Verified: false, PublishedAt: "2025-04-01T00:00:00Z",
 		},
 	}
@@ -123,23 +123,23 @@ func (s *AgentConfigStore) seedDefaults() {
 		{
 			Name: "monitoring-essentials", Version: "1.0.0",
 			Description: "Essential monitoring tools: cluster health, consumer lag, anomaly detection, and alerting",
-			Author: "kafkamcp", Category: "monitoring",
+			Author:      "kafkamcp", Category: "monitoring",
 			Tools: []string{"kafka_cluster_info", "kafka_list_topics", "kafka_consumer_groups", "kafka_anomaly_detect", "kafka_consumer_lag_analyze"},
-			Tags: []string{"monitoring", "health", "alerting"}, Rating: 4.7, Verified: true, PublishedAt: "2025-01-20T00:00:00Z",
+			Tags:  []string{"monitoring", "health", "alerting"}, Rating: 4.7, Verified: true, PublishedAt: "2025-01-20T00:00:00Z",
 		},
 		{
 			Name: "security-toolkit", Version: "1.0.0",
 			Description: "Security and governance tools: ACLs, masking, compliance, and audit",
-			Author: "kafkamcp", Category: "security",
+			Author:      "kafkamcp", Category: "security",
 			Tools: []string{"kafka_manage_acls", "kafka_mask_message", "kafka_compliance_report", "kafka_audit_trail"},
-			Tags: []string{"security", "acl", "compliance"}, Rating: 4.6, Verified: true, PublishedAt: "2025-02-15T00:00:00Z",
+			Tags:  []string{"security", "acl", "compliance"}, Rating: 4.6, Verified: true, PublishedAt: "2025-02-15T00:00:00Z",
 		},
 		{
 			Name: "developer-toolkit", Version: "1.0.0",
 			Description: "Developer tools: topic CRUD, message produce/consume, schema management",
-			Author: "kafkamcp", Category: "development",
+			Author:      "kafkamcp", Category: "development",
 			Tools: []string{"kafka_create_topic", "kafka_produce", "kafka_consume", "kafka_schema_list", "kafka_schema_get"},
-			Tags: []string{"development", "testing", "debugging"}, Rating: 4.5, Verified: true, PublishedAt: "2025-03-10T00:00:00Z",
+			Tags:  []string{"development", "testing", "debugging"}, Rating: 4.5, Verified: true, PublishedAt: "2025-03-10T00:00:00Z",
 		},
 	}
 	for i := range defaultBundles {

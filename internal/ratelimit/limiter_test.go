@@ -72,7 +72,7 @@ func TestLimiterGlobal(t *testing.T) {
 func TestPersistence_RoundTrip(t *testing.T) {
 	t.Parallel()
 	be := backend.NewInMemory()
-	defer be.Close()
+	defer func() { _ = be.Close() }()
 	ctx := context.Background()
 
 	l1, err := NewWithBackend(ctx, 60, be, slog.New(slog.NewTextHandler(io.Discard, nil)))
@@ -101,7 +101,7 @@ func TestPersistence_RoundTrip(t *testing.T) {
 	// Token state may refill over the interval since last_refill; rather
 	// than racing the clock, just confirm we didn't lose ALL accounting:
 	// the bucket must NOT report 5 fresh tokens (which would mean we
-	// dropped persistence and re-initialised to full).
+	// dropped persistence and re-initialized to full).
 	st := l2.Status()
 	if len(st) != 1 || st[0].AgentID != "alice" {
 		t.Fatalf("unexpected status: %+v", st)

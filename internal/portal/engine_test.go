@@ -122,7 +122,7 @@ func TestReviewRequestValidation(t *testing.T) {
 	}
 
 	// Approve, then try to review again
-	e.ReviewRequest(req.ID, "admin", "approved", "")
+	_, _ = e.ReviewRequest(req.ID, "admin", "approved", "")
 	if _, err := e.ReviewRequest(req.ID, "admin", "approved", ""); err == nil {
 		t.Error("expected error for reviewing already-approved request")
 	}
@@ -142,9 +142,9 @@ func TestListRequests(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
 
-	e.SubmitRequest(RequestTopicCreate, "u1", "t1", "", "", "", nil)
-	e.SubmitRequest(RequestSchemaChange, "u2", "t2", "", "", "", nil)
-	e.SubmitRequest(RequestAccessRevoke, "u3", "t3", "", "", "", nil) // auto-approved
+	_, _ = e.SubmitRequest(RequestTopicCreate, "u1", "t1", "", "", "", nil)
+	_, _ = e.SubmitRequest(RequestSchemaChange, "u2", "t2", "", "", "", nil)
+	_, _ = e.SubmitRequest(RequestAccessRevoke, "u3", "t3", "", "", "", nil) // auto-approved
 
 	pending := e.ListRequests(StatusPending, "")
 	if len(pending) != 2 {
@@ -171,8 +171,8 @@ func TestDashboard(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
 
-	e.SubmitRequest(RequestTopicCreate, "u1", "t1", "", "", "", nil)
-	e.SubmitRequest(RequestSchemaChange, "u2", "t2", "", "", "", nil)
+	_, _ = e.SubmitRequest(RequestTopicCreate, "u1", "t1", "", "", "", nil)
+	_, _ = e.SubmitRequest(RequestSchemaChange, "u2", "t2", "", "", "", nil)
 
 	dashboard := e.GetDashboard()
 	if dashboard.TotalRequests != 2 {
@@ -192,8 +192,8 @@ func TestDashboardComplianceScore(t *testing.T) {
 	e := NewEngine(slog.Default())
 
 	// Auto-approved
-	e.SubmitRequest(RequestAccessRevoke, "u1", "t1", "", "", "", nil)
-	e.SubmitRequest(RequestAccessRevoke, "u2", "t2", "", "", "", nil)
+	_, _ = e.SubmitRequest(RequestAccessRevoke, "u1", "t1", "", "", "", nil)
+	_, _ = e.SubmitRequest(RequestAccessRevoke, "u2", "t2", "", "", "", nil)
 
 	dashboard := e.GetDashboard()
 	if dashboard.ComplianceScore != 100 {

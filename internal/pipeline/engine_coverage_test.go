@@ -407,8 +407,8 @@ func TestListRunsAll(t *testing.T) {
 	e := newTestEngine()
 	steps := []Step{{Type: "filter", Name: "f", Config: map[string]string{"field": "value", "operator": "exists"}}}
 	pipe, _ := e.CreatePipeline("test", "src", "", "agent", steps)
-	e.Execute(pipe.ID, []PipelineMessage{{Value: "hi"}})
-	e.Execute(pipe.ID, []PipelineMessage{{Value: "hello"}})
+	_, _, _ = e.Execute(pipe.ID, []PipelineMessage{{Value: "hi"}})
+	_, _, _ = e.Execute(pipe.ID, []PipelineMessage{{Value: "hello"}})
 
 	runs := e.ListRuns("", 0)
 	if len(runs) != 2 {
@@ -422,8 +422,8 @@ func TestListRunsFilterByPipeline(t *testing.T) {
 	steps := []Step{{Type: "filter", Name: "f", Config: map[string]string{"field": "value", "operator": "exists"}}}
 	pipe1, _ := e.CreatePipeline("test1", "src", "", "agent", steps)
 	pipe2, _ := e.CreatePipeline("test2", "src", "", "agent", steps)
-	e.Execute(pipe1.ID, []PipelineMessage{{Value: "hi"}})
-	e.Execute(pipe2.ID, []PipelineMessage{{Value: "hello"}})
+	_, _, _ = e.Execute(pipe1.ID, []PipelineMessage{{Value: "hi"}})
+	_, _, _ = e.Execute(pipe2.ID, []PipelineMessage{{Value: "hello"}})
 
 	runs := e.ListRuns(pipe1.ID, 0)
 	if len(runs) != 1 {
@@ -446,7 +446,7 @@ func TestListRunsWithLimit(t *testing.T) {
 	steps := []Step{{Type: "filter", Name: "f", Config: map[string]string{"field": "value", "operator": "exists"}}}
 	pipe, _ := e.CreatePipeline("test", "src", "", "agent", steps)
 	for i := 0; i < 5; i++ {
-		e.Execute(pipe.ID, []PipelineMessage{{Value: "hi"}})
+		_, _, _ = e.Execute(pipe.ID, []PipelineMessage{{Value: "hi"}})
 	}
 
 	runs := e.ListRuns("", 2)

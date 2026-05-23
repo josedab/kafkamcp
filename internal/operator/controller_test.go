@@ -33,8 +33,8 @@ func TestListInstances(t *testing.T) {
 	t.Parallel()
 	c := NewController(slog.Default())
 
-	c.CreateInstance("inst1", "ns1", KafkaMCPSpec{})
-	c.CreateInstance("inst2", "ns2", KafkaMCPSpec{})
+	_, _ = c.CreateInstance("inst1", "ns1", KafkaMCPSpec{})
+	_, _ = c.CreateInstance("inst2", "ns2", KafkaMCPSpec{})
 
 	all := c.ListInstances("")
 	if len(all) != 2 {
@@ -51,7 +51,7 @@ func TestScaleInstance(t *testing.T) {
 	t.Parallel()
 	c := NewController(slog.Default())
 
-	c.CreateInstance("test", "default", KafkaMCPSpec{Replicas: 1})
+	_, _ = c.CreateInstance("test", "default", KafkaMCPSpec{Replicas: 1})
 
 	inst, err := c.ScaleInstance("test", "default", 5)
 	if err != nil {
@@ -66,7 +66,7 @@ func TestDeleteInstance(t *testing.T) {
 	t.Parallel()
 	c := NewController(slog.Default())
 
-	c.CreateInstance("test", "default", KafkaMCPSpec{})
+	_, _ = c.CreateInstance("test", "default", KafkaMCPSpec{})
 
 	err := c.DeleteInstance("test", "default")
 	if err != nil {

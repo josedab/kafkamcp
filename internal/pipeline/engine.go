@@ -23,37 +23,37 @@ type Engine struct {
 
 // Pipeline defines a streaming function pipeline.
 type Pipeline struct {
-	ID          string     `json:"id"`
-	Name        string     `json:"name"`
-	Description string     `json:"description,omitempty"`
-	SourceTopic string     `json:"source_topic"`
-	SinkTopic   string     `json:"sink_topic,omitempty"`
-	Steps       []Step     `json:"steps"`
-	CreatedBy   string     `json:"created_by"`
-	CreatedAt   time.Time  `json:"created_at"`
-	Status      string     `json:"status"` // active, paused, stopped
+	ID          string    `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description,omitempty"`
+	SourceTopic string    `json:"source_topic"`
+	SinkTopic   string    `json:"sink_topic,omitempty"`
+	Steps       []Step    `json:"steps"`
+	CreatedBy   string    `json:"created_by"`
+	CreatedAt   time.Time `json:"created_at"`
+	Status      string    `json:"status"` // active, paused, stopped
 }
 
 // Step is a single processing step in a pipeline.
 type Step struct {
-	Type       string            `json:"type"` // filter, map, enrich, transform, aggregate
-	Name       string            `json:"name"`
-	Config     map[string]string `json:"config"`
-	Order      int               `json:"order"`
+	Type   string            `json:"type"` // filter, map, enrich, transform, aggregate
+	Name   string            `json:"name"`
+	Config map[string]string `json:"config"`
+	Order  int               `json:"order"`
 }
 
 // PipelineRun tracks the execution of a pipeline on a batch of messages.
 type PipelineRun struct {
-	ID           string    `json:"id"`
-	PipelineID   string    `json:"pipeline_id"`
-	InputCount   int       `json:"input_count"`
-	OutputCount  int       `json:"output_count"`
-	FilteredOut  int       `json:"filtered_out"`
-	ErrorCount   int       `json:"error_count"`
-	Duration     string    `json:"duration"`
-	StartedAt    time.Time `json:"started_at"`
-	CompletedAt  time.Time `json:"completed_at"`
-	Status       string    `json:"status"` // running, completed, failed
+	ID          string    `json:"id"`
+	PipelineID  string    `json:"pipeline_id"`
+	InputCount  int       `json:"input_count"`
+	OutputCount int       `json:"output_count"`
+	FilteredOut int       `json:"filtered_out"`
+	ErrorCount  int       `json:"error_count"`
+	Duration    string    `json:"duration"`
+	StartedAt   time.Time `json:"started_at"`
+	CompletedAt time.Time `json:"completed_at"`
+	Status      string    `json:"status"` // running, completed, failed
 }
 
 // PipelineMessage is a message flowing through the pipeline.

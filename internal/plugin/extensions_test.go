@@ -26,12 +26,12 @@ type mockLifecyclePlugin struct {
 	hookErr error
 }
 
-func (p *mockLifecyclePlugin) Name() string                                  { return p.name }
-func (p *mockLifecyclePlugin) Version() string                               { return p.version }
-func (p *mockLifecyclePlugin) Description() string                           { return p.desc }
+func (p *mockLifecyclePlugin) Name() string                                   { return p.name }
+func (p *mockLifecyclePlugin) Version() string                                { return p.version }
+func (p *mockLifecyclePlugin) Description() string                            { return p.desc }
 func (p *mockLifecyclePlugin) Init(_ context.Context, _ map[string]any) error { return nil }
-func (p *mockLifecyclePlugin) Close() error                                  { p.closed = true; return nil }
-func (p *mockLifecyclePlugin) SupportedHooks() []LifecycleHook               { return p.hooks }
+func (p *mockLifecyclePlugin) Close() error                                   { p.closed = true; return nil }
+func (p *mockLifecyclePlugin) SupportedHooks() []LifecycleHook                { return p.hooks }
 func (p *mockLifecyclePlugin) OnHook(_ context.Context, hook LifecycleHook, _ map[string]any) error {
 	p.hookLog = append(p.hookLog, hook)
 	return p.hookErr
@@ -321,7 +321,7 @@ func TestLoadManifest_ValidFile(t *testing.T) {
 	}
 	data, _ := json.Marshal(manifest)
 	path := filepath.Join(t.TempDir(), "manifest.json")
-	os.WriteFile(path, data, 0644)
+	_ = os.WriteFile(path, data, 0644)
 
 	m, err := LoadManifest(path)
 	if err != nil {
@@ -343,7 +343,7 @@ func TestLoadManifest_FileNotFound(t *testing.T) {
 func TestLoadManifest_InvalidJSON(t *testing.T) {
 	t.Parallel()
 	path := filepath.Join(t.TempDir(), "bad.json")
-	os.WriteFile(path, []byte("not json"), 0644)
+	_ = os.WriteFile(path, []byte("not json"), 0644)
 
 	_, err := LoadManifest(path)
 	if err == nil {
@@ -355,7 +355,7 @@ func TestLoadManifest_FailsValidation(t *testing.T) {
 	t.Parallel()
 	data, _ := json.Marshal(map[string]string{"version": "1.0.0"})
 	path := filepath.Join(t.TempDir(), "incomplete.json")
-	os.WriteFile(path, data, 0644)
+	_ = os.WriteFile(path, data, 0644)
 
 	_, err := LoadManifest(path)
 	if err == nil {
@@ -467,12 +467,12 @@ func TestExtendedRegistry_UnregisterWithLifecycle(t *testing.T) {
 		hooks:   []LifecycleHook{HookShutdown},
 	}
 	manifest := &Manifest{
-		Name:    "unreg-plugin",
-		Version: "1.0.0",
+		Name:         "unreg-plugin",
+		Version:      "1.0.0",
 		Capabilities: PluginCapabilities{Tools: []string{"t1"}},
 	}
 
-	er.RegisterWithManifest(context.Background(), p, manifest, map[string]any{})
+	_ = er.RegisterWithManifest(context.Background(), p, manifest, map[string]any{})
 
 	err := er.UnregisterWithLifecycle(context.Background(), "unreg-plugin")
 	if err != nil {

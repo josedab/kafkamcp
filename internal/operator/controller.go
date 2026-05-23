@@ -20,29 +20,29 @@ type Controller struct {
 
 // KafkaMCPInstance represents a managed KafkaMCP deployment.
 type KafkaMCPInstance struct {
-	Name        string                 `json:"name"`
-	Namespace   string                 `json:"namespace"`
-	Spec        KafkaMCPSpec           `json:"spec"`
-	Status      KafkaMCPStatus         `json:"status"`
-	Labels      map[string]string      `json:"labels,omitempty"`
-	Annotations map[string]string      `json:"annotations,omitempty"`
-	CreatedAt   time.Time              `json:"created_at"`
-	UpdatedAt   time.Time              `json:"updated_at"`
+	Name        string            `json:"name"`
+	Namespace   string            `json:"namespace"`
+	Spec        KafkaMCPSpec      `json:"spec"`
+	Status      KafkaMCPStatus    `json:"status"`
+	Labels      map[string]string `json:"labels,omitempty"`
+	Annotations map[string]string `json:"annotations,omitempty"`
+	CreatedAt   time.Time         `json:"created_at"`
+	UpdatedAt   time.Time         `json:"updated_at"`
 }
 
 // KafkaMCPSpec is the desired state for a KafkaMCP instance.
 type KafkaMCPSpec struct {
-	Replicas       int               `json:"replicas" yaml:"replicas"`
-	Image          string            `json:"image" yaml:"image"`
-	Version        string            `json:"version" yaml:"version"`
-	Transport      string            `json:"transport" yaml:"transport"`
-	Port           int               `json:"port" yaml:"port"`
-	Clusters       []ClusterRef      `json:"clusters" yaml:"clusters"`
-	Resources      ResourceSpec      `json:"resources" yaml:"resources"`
-	AutoScale      *AutoScaleSpec    `json:"auto_scale,omitempty" yaml:"auto_scale,omitempty"`
-	HealthCheck    HealthCheckSpec   `json:"health_check" yaml:"health_check"`
-	Policies       PolicySpec        `json:"policies,omitempty" yaml:"policies,omitempty"`
-	Telemetry      TelemetrySpec     `json:"telemetry,omitempty" yaml:"telemetry,omitempty"`
+	Replicas    int             `json:"replicas" yaml:"replicas"`
+	Image       string          `json:"image" yaml:"image"`
+	Version     string          `json:"version" yaml:"version"`
+	Transport   string          `json:"transport" yaml:"transport"`
+	Port        int             `json:"port" yaml:"port"`
+	Clusters    []ClusterRef    `json:"clusters" yaml:"clusters"`
+	Resources   ResourceSpec    `json:"resources" yaml:"resources"`
+	AutoScale   *AutoScaleSpec  `json:"auto_scale,omitempty" yaml:"auto_scale,omitempty"`
+	HealthCheck HealthCheckSpec `json:"health_check" yaml:"health_check"`
+	Policies    PolicySpec      `json:"policies,omitempty" yaml:"policies,omitempty"`
+	Telemetry   TelemetrySpec   `json:"telemetry,omitempty" yaml:"telemetry,omitempty"`
 }
 
 // ClusterRef references a Kafka cluster to connect to.
@@ -72,10 +72,10 @@ type AutoScaleSpec struct {
 
 // HealthCheckSpec defines liveness and readiness probes.
 type HealthCheckSpec struct {
-	Enabled            bool `json:"enabled" yaml:"enabled"`
-	IntervalSeconds    int  `json:"interval_seconds" yaml:"interval_seconds"`
-	TimeoutSeconds     int  `json:"timeout_seconds" yaml:"timeout_seconds"`
-	FailureThreshold   int  `json:"failure_threshold" yaml:"failure_threshold"`
+	Enabled          bool `json:"enabled" yaml:"enabled"`
+	IntervalSeconds  int  `json:"interval_seconds" yaml:"interval_seconds"`
+	TimeoutSeconds   int  `json:"timeout_seconds" yaml:"timeout_seconds"`
+	FailureThreshold int  `json:"failure_threshold" yaml:"failure_threshold"`
 }
 
 // PolicySpec defines RBAC policies for the operator.

@@ -32,53 +32,53 @@ type Sandbox struct {
 
 // ResourceQuotas defines resource limits for a sandbox.
 type ResourceQuotas struct {
-	MaxTopics         int   `json:"max_topics"`
-	MaxPartitions     int   `json:"max_partitions_per_topic"`
-	MaxMessages       int64 `json:"max_messages"`
-	MaxStorageBytes   int64 `json:"max_storage_bytes"`
-	MaxDurationSec    int64 `json:"max_duration_sec"`
+	MaxTopics       int   `json:"max_topics"`
+	MaxPartitions   int   `json:"max_partitions_per_topic"`
+	MaxMessages     int64 `json:"max_messages"`
+	MaxStorageBytes int64 `json:"max_storage_bytes"`
+	MaxDurationSec  int64 `json:"max_duration_sec"`
 }
 
 // ResourceUsage tracks actual resource consumption.
 type ResourceUsage struct {
-	TopicCount        int   `json:"topic_count"`
-	TotalPartitions   int   `json:"total_partitions"`
-	MessagesProduced  int64 `json:"messages_produced"`
-	MessagesConsumed  int64 `json:"messages_consumed"`
-	StorageBytesUsed  int64 `json:"storage_bytes_used"`
-	OperationCount    int   `json:"operation_count"`
+	TopicCount       int   `json:"topic_count"`
+	TotalPartitions  int   `json:"total_partitions"`
+	MessagesProduced int64 `json:"messages_produced"`
+	MessagesConsumed int64 `json:"messages_consumed"`
+	StorageBytesUsed int64 `json:"storage_bytes_used"`
+	OperationCount   int   `json:"operation_count"`
 }
 
 // SandboxOp records an operation performed in a sandbox.
 type SandboxOp struct {
-	Tool      string    `json:"tool"`
+	Tool      string         `json:"tool"`
 	Args      map[string]any `json:"args,omitempty"`
-	Status    string    `json:"status"` // success, error
-	Result    any       `json:"result,omitempty"`
-	Error     string    `json:"error,omitempty"`
-	Duration  string    `json:"duration"`
-	Timestamp time.Time `json:"timestamp"`
+	Status    string         `json:"status"` // success, error
+	Result    any            `json:"result,omitempty"`
+	Error     string         `json:"error,omitempty"`
+	Duration  string         `json:"duration"`
+	Timestamp time.Time      `json:"timestamp"`
 }
 
 // PromotionReport summarizes sandbox usage for promotion decisions.
 type PromotionReport struct {
-	SandboxID     string       `json:"sandbox_id"`
-	SandboxName   string       `json:"sandbox_name"`
-	Owner         string       `json:"owner"`
-	Duration      string       `json:"duration"`
+	SandboxID     string         `json:"sandbox_id"`
+	SandboxName   string         `json:"sandbox_name"`
+	Owner         string         `json:"owner"`
+	Duration      string         `json:"duration"`
 	Usage         *ResourceUsage `json:"usage"`
 	TopOperations map[string]int `json:"top_operations"`
-	Topics        []string     `json:"topics"`
-	Schemas       []string     `json:"schemas"`
-	Ready         bool         `json:"ready_for_promotion"`
-	Warnings      []string     `json:"warnings,omitempty"`
+	Topics        []string       `json:"topics"`
+	Schemas       []string       `json:"schemas"`
+	Ready         bool           `json:"ready_for_promotion"`
+	Warnings      []string       `json:"warnings,omitempty"`
 }
 
 // Engine manages sandbox lifecycle and operations.
 type Engine struct {
-	mu        sync.RWMutex
-	sandboxes map[string]*Sandbox
-	logger    *slog.Logger
+	mu          sync.RWMutex
+	sandboxes   map[string]*Sandbox
+	logger      *slog.Logger
 	stopCleanup chan struct{}
 }
 
@@ -279,7 +279,7 @@ func (e *Engine) List(owner string) []Sandbox {
 	return result
 }
 
-// PromotionReport generates a report for promoting sandbox resources to production.
+// GeneratePromotionReport generates a report for promoting sandbox resources to production.
 func (e *Engine) GeneratePromotionReport(sandboxID string) (*PromotionReport, error) {
 	e.mu.RLock()
 	defer e.mu.RUnlock()

@@ -9,12 +9,14 @@ import (
 	"strings"
 	"sync"
 	"time"
+
 	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
 // DraftStatus tracks the lifecycle of a schema draft.
 type DraftStatus string
 
+// StatusDraft and related values define constants for this package.
 const (
 	StatusDraft     DraftStatus = "draft"
 	StatusTesting   DraftStatus = "testing"
@@ -26,6 +28,7 @@ const (
 // SchemaType identifies the schema format.
 type SchemaType string
 
+// SchemaAvro and related values define constants for this package.
 const (
 	SchemaAvro     SchemaType = "AVRO"
 	SchemaProtobuf SchemaType = "PROTOBUF"
@@ -34,26 +37,26 @@ const (
 
 // Draft represents a schema being worked on in the playground.
 type Draft struct {
-	ID           string      `json:"id"`
-	Subject      string      `json:"subject"`
-	SchemaType   SchemaType  `json:"schema_type"`
-	Schema       string      `json:"schema"`
-	Status       DraftStatus `json:"status"`
-	Version      int         `json:"version"`
-	CreatedBy    string      `json:"created_by"`
-	CreatedAt    time.Time   `json:"created_at"`
-	UpdatedAt    time.Time   `json:"updated_at"`
-	TestResults  []TestResult `json:"test_results,omitempty"`
-	Validations  []Validation `json:"validations,omitempty"`
+	ID          string       `json:"id"`
+	Subject     string       `json:"subject"`
+	SchemaType  SchemaType   `json:"schema_type"`
+	Schema      string       `json:"schema"`
+	Status      DraftStatus  `json:"status"`
+	Version     int          `json:"version"`
+	CreatedBy   string       `json:"created_by"`
+	CreatedAt   time.Time    `json:"created_at"`
+	UpdatedAt   time.Time    `json:"updated_at"`
+	TestResults []TestResult `json:"test_results,omitempty"`
+	Validations []Validation `json:"validations,omitempty"`
 }
 
 // TestResult from testing a sample message against a schema.
 type TestResult struct {
-	MessageJSON string    `json:"message_json"`
-	Valid       bool      `json:"valid"`
-	Errors      []string  `json:"errors,omitempty"`
+	MessageJSON string         `json:"message_json"`
+	Valid       bool           `json:"valid"`
+	Errors      []string       `json:"errors,omitempty"`
 	FieldMap    []FieldMapping `json:"field_map,omitempty"`
-	TestedAt    time.Time `json:"tested_at"`
+	TestedAt    time.Time      `json:"tested_at"`
 }
 
 // FieldMapping shows how a field in a message maps to the schema.
@@ -68,34 +71,34 @@ type FieldMapping struct {
 
 // Validation represents a compatibility check result.
 type Validation struct {
-	Against      string   `json:"against"`
-	Compatible   bool     `json:"compatible"`
-	CompatLevel  string   `json:"compatibility_level"`
-	Issues       []string `json:"issues,omitempty"`
-	ValidatedAt  time.Time `json:"validated_at"`
+	Against     string    `json:"against"`
+	Compatible  bool      `json:"compatible"`
+	CompatLevel string    `json:"compatibility_level"`
+	Issues      []string  `json:"issues,omitempty"`
+	ValidatedAt time.Time `json:"validated_at"`
 }
 
 // EvolutionImpact describes the impact of schema evolution.
 type EvolutionImpact struct {
-	DraftID       string       `json:"draft_id"`
-	Subject       string       `json:"subject"`
-	CurrentVersion int         `json:"current_version"`
-	NewVersion    int          `json:"new_version"`
-	AddedFields   []FieldDiff  `json:"added_fields,omitempty"`
-	RemovedFields []FieldDiff  `json:"removed_fields,omitempty"`
-	ModifiedFields []FieldDiff `json:"modified_fields,omitempty"`
-	BreakingChange bool        `json:"breaking_change"`
-	DataLossRisk   bool        `json:"data_loss_risk"`
-	Recommendations []string   `json:"recommendations,omitempty"`
+	DraftID         string      `json:"draft_id"`
+	Subject         string      `json:"subject"`
+	CurrentVersion  int         `json:"current_version"`
+	NewVersion      int         `json:"new_version"`
+	AddedFields     []FieldDiff `json:"added_fields,omitempty"`
+	RemovedFields   []FieldDiff `json:"removed_fields,omitempty"`
+	ModifiedFields  []FieldDiff `json:"modified_fields,omitempty"`
+	BreakingChange  bool        `json:"breaking_change"`
+	DataLossRisk    bool        `json:"data_loss_risk"`
+	Recommendations []string    `json:"recommendations,omitempty"`
 }
 
 // FieldDiff describes a field change between schema versions.
 type FieldDiff struct {
-	Name     string `json:"name"`
-	OldType  string `json:"old_type,omitempty"`
-	NewType  string `json:"new_type,omitempty"`
-	Required bool   `json:"required"`
-	HasDefault bool `json:"has_default"`
+	Name       string `json:"name"`
+	OldType    string `json:"old_type,omitempty"`
+	NewType    string `json:"new_type,omitempty"`
+	Required   bool   `json:"required"`
+	HasDefault bool   `json:"has_default"`
 }
 
 // Engine manages the schema playground.

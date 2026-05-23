@@ -27,7 +27,7 @@ func TestRegisterSchema_Success(t *testing.T) {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]int{"id": 42})
+		_ = json.NewEncoder(w).Encode(map[string]int{"id": 42})
 	}))
 	defer ts.Close()
 
@@ -50,15 +50,15 @@ func TestRegisterSchema_EmptyTypeDefaultsAVRO(t *testing.T) {
 	var receivedType string
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var body map[string]any
-		json.NewDecoder(r.Body).Decode(&body)
+		_ = json.NewDecoder(r.Body).Decode(&body)
 		receivedType = body["schemaType"].(string)
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]int{"id": 1})
+		_ = json.NewEncoder(w).Encode(map[string]int{"id": 1})
 	}))
 	defer ts.Close()
 
 	client, _ := NewClient(ts.URL, "", "", 10, 60)
-	client.RegisterSchema(context.Background(), "test", `{}`, "")
+	_, _ = client.RegisterSchema(context.Background(), "test", `{}`, "")
 
 	if receivedType != "AVRO" {
 		t.Errorf("expected AVRO default, got %q", receivedType)
@@ -70,15 +70,15 @@ func TestRegisterSchema_ProtobufType(t *testing.T) {
 	var receivedType string
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var body map[string]any
-		json.NewDecoder(r.Body).Decode(&body)
+		_ = json.NewDecoder(r.Body).Decode(&body)
 		receivedType = body["schemaType"].(string)
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]int{"id": 2})
+		_ = json.NewEncoder(w).Encode(map[string]int{"id": 2})
 	}))
 	defer ts.Close()
 
 	client, _ := NewClient(ts.URL, "", "", 10, 60)
-	client.RegisterSchema(context.Background(), "test", `syntax = "proto3";`, "PROTOBUF")
+	_, _ = client.RegisterSchema(context.Background(), "test", `syntax = "proto3";`, "PROTOBUF")
 
 	if receivedType != "PROTOBUF" {
 		t.Errorf("expected PROTOBUF, got %q", receivedType)
@@ -90,15 +90,15 @@ func TestRegisterSchema_JSONType(t *testing.T) {
 	var receivedType string
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var body map[string]any
-		json.NewDecoder(r.Body).Decode(&body)
+		_ = json.NewDecoder(r.Body).Decode(&body)
 		receivedType = body["schemaType"].(string)
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]int{"id": 3})
+		_ = json.NewEncoder(w).Encode(map[string]int{"id": 3})
 	}))
 	defer ts.Close()
 
 	client, _ := NewClient(ts.URL, "", "", 10, 60)
-	client.RegisterSchema(context.Background(), "test", `{"type":"object"}`, "JSON")
+	_, _ = client.RegisterSchema(context.Background(), "test", `{"type":"object"}`, "JSON")
 
 	if receivedType != "JSON" {
 		t.Errorf("expected JSON, got %q", receivedType)
@@ -111,7 +111,7 @@ func TestRegisterSchema_BasicAuth(t *testing.T) {
 	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotUser, gotPass, _ = r.BasicAuth()
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]int{"id": 5})
+		_ = json.NewEncoder(w).Encode(map[string]int{"id": 5})
 	}))
 	defer ts.Close()
 
@@ -123,7 +123,7 @@ func TestRegisterSchema_BasicAuth(t *testing.T) {
 		cache:      NewCache(10, 60),
 	}
 
-	client.RegisterSchema(context.Background(), "test", `{}`, "AVRO")
+	_, _ = client.RegisterSchema(context.Background(), "test", `{}`, "AVRO")
 
 	if gotUser != "myuser" || gotPass != "mypass" {
 		t.Errorf("expected myuser:mypass, got %s:%s", gotUser, gotPass)
@@ -134,7 +134,7 @@ func TestRegisterSchema_HTTP409Conflict(t *testing.T) {
 	t.Parallel()
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusConflict)
-		w.Write([]byte(`{"error_code":409,"message":"schema already exists"}`))
+		_, _ = w.Write([]byte(`{"error_code":409,"message":"schema already exists"}`))
 	}))
 	defer ts.Close()
 
@@ -149,7 +149,7 @@ func TestRegisterSchema_HTTP422InvalidSchema(t *testing.T) {
 	t.Parallel()
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(422)
-		w.Write([]byte(`{"error_code":42201,"message":"invalid schema"}`))
+		_, _ = w.Write([]byte(`{"error_code":42201,"message":"invalid schema"}`))
 	}))
 	defer ts.Close()
 
@@ -165,16 +165,16 @@ func TestRegisterSchema_JSONEscapedBody(t *testing.T) {
 	var receivedSchema string
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var body map[string]any
-		json.NewDecoder(r.Body).Decode(&body)
+		_ = json.NewDecoder(r.Body).Decode(&body)
 		receivedSchema = body["schema"].(string)
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]int{"id": 10})
+		_ = json.NewEncoder(w).Encode(map[string]int{"id": 10})
 	}))
 	defer ts.Close()
 
 	client, _ := NewClient(ts.URL, "", "", 10, 60)
 	schemaStr := `{"type":"record","name":"Test","fields":[]}`
-	client.RegisterSchema(context.Background(), "test", schemaStr, "AVRO")
+	_, _ = client.RegisterSchema(context.Background(), "test", schemaStr, "AVRO")
 
 	if receivedSchema != schemaStr {
 		t.Errorf("expected schema to be properly escaped, got %q", receivedSchema)
@@ -187,12 +187,12 @@ func TestRegisterSchema_ContentTypeHeader(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotContentType = r.Header.Get("Content-Type")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]int{"id": 1})
+		_ = json.NewEncoder(w).Encode(map[string]int{"id": 1})
 	}))
 	defer ts.Close()
 
 	client, _ := NewClient(ts.URL, "", "", 10, 60)
-	client.RegisterSchema(context.Background(), "test", `{}`, "AVRO")
+	_, _ = client.RegisterSchema(context.Background(), "test", `{}`, "AVRO")
 
 	if gotContentType != "application/vnd.schemaregistry.v1+json" {
 		t.Errorf("expected schema registry content type, got %q", gotContentType)

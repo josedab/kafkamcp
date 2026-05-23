@@ -12,6 +12,7 @@ import (
 // RecordingStatus describes the state of a recording session.
 type RecordingStatus string
 
+// RecordingActive and related values define constants for this package.
 const (
 	RecordingActive    RecordingStatus = "active"
 	RecordingStopped   RecordingStatus = "stopped"
@@ -20,45 +21,45 @@ const (
 
 // Recording captures a production message sequence for replay.
 type Recording struct {
-	ID          string          `json:"id"`
-	Name        string          `json:"name"`
-	Topic       string          `json:"topic"`
-	Cluster     string          `json:"cluster"`
-	Status      RecordingStatus `json:"status"`
+	ID          string            `json:"id"`
+	Name        string            `json:"name"`
+	Topic       string            `json:"topic"`
+	Cluster     string            `json:"cluster"`
+	Status      RecordingStatus   `json:"status"`
 	Messages    []RecordedMessage `json:"messages"`
-	StartOffset map[int32]int64 `json:"start_offsets"`
-	EndOffset   map[int32]int64 `json:"end_offsets,omitempty"`
-	MaxMessages int             `json:"max_messages"`
-	StartedAt   string          `json:"started_at"`
-	StoppedAt   string          `json:"stopped_at,omitempty"`
-	DurationMs  int64           `json:"duration_ms,omitempty"`
+	StartOffset map[int32]int64   `json:"start_offsets"`
+	EndOffset   map[int32]int64   `json:"end_offsets,omitempty"`
+	MaxMessages int               `json:"max_messages"`
+	StartedAt   string            `json:"started_at"`
+	StoppedAt   string            `json:"stopped_at,omitempty"`
+	DurationMs  int64             `json:"duration_ms,omitempty"`
 }
 
 // RecordedMessage is a captured message in a recording.
 type RecordedMessage struct {
-	Partition int32  `json:"partition"`
-	Offset    int64  `json:"offset"`
-	Key       string `json:"key,omitempty"`
-	Value     string `json:"value"`
+	Partition int32             `json:"partition"`
+	Offset    int64             `json:"offset"`
+	Key       string            `json:"key,omitempty"`
+	Value     string            `json:"value"`
 	Headers   map[string]string `json:"headers,omitempty"`
-	Timestamp string `json:"timestamp"`
-	Size      int    `json:"size_bytes"`
+	Timestamp string            `json:"timestamp"`
+	Size      int               `json:"size_bytes"`
 }
 
 // ReplaySession tracks replay of a recording with time dilation and assertions.
 type ReplaySession struct {
-	ID              string            `json:"id"`
-	RecordingID     string            `json:"recording_id"`
-	Name            string            `json:"name"`
-	Status          string            `json:"status"` // pending, running, completed, failed
-	TimeDilation    float64           `json:"time_dilation"` // 1.0 = realtime, 0.5 = 2x faster, 2.0 = 2x slower
-	SandboxID       string            `json:"sandbox_id,omitempty"`
-	MessagesReplayed int              `json:"messages_replayed"`
+	ID               string            `json:"id"`
+	RecordingID      string            `json:"recording_id"`
+	Name             string            `json:"name"`
+	Status           string            `json:"status"`        // pending, running, completed, failed
+	TimeDilation     float64           `json:"time_dilation"` // 1.0 = realtime, 0.5 = 2x faster, 2.0 = 2x slower
+	SandboxID        string            `json:"sandbox_id,omitempty"`
+	MessagesReplayed int               `json:"messages_replayed"`
 	Assertions       []Assertion       `json:"assertions,omitempty"`
 	AssertionResults []AssertionResult `json:"assertion_results,omitempty"`
-	StartedAt       string            `json:"started_at,omitempty"`
-	CompletedAt     string            `json:"completed_at,omitempty"`
-	CreatedAt       string            `json:"created_at"`
+	StartedAt        string            `json:"started_at,omitempty"`
+	CompletedAt      string            `json:"completed_at,omitempty"`
+	CreatedAt        string            `json:"created_at"`
 }
 
 // Assertion defines a check to run during replay.
@@ -97,15 +98,15 @@ type RegressionSuite struct {
 
 // RegressionResult captures the result of running a regression suite.
 type RegressionResult struct {
-	SuiteID    string            `json:"suite_id"`
-	SuiteName  string            `json:"suite_name"`
-	SessionID  string            `json:"session_id"`
-	Passed     bool              `json:"passed"`
-	TotalTests int               `json:"total_tests"`
-	PassedTests int              `json:"passed_tests"`
-	FailedTests int              `json:"failed_tests"`
-	Results    []AssertionResult `json:"results"`
-	RunAt      string            `json:"run_at"`
+	SuiteID     string            `json:"suite_id"`
+	SuiteName   string            `json:"suite_name"`
+	SessionID   string            `json:"session_id"`
+	Passed      bool              `json:"passed"`
+	TotalTests  int               `json:"total_tests"`
+	PassedTests int               `json:"passed_tests"`
+	FailedTests int               `json:"failed_tests"`
+	Results     []AssertionResult `json:"results"`
+	RunAt       string            `json:"run_at"`
 }
 
 // CreateRecording starts a message recording session.

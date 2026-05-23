@@ -17,7 +17,7 @@ func TestListSubjects_Success(t *testing.T) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode([]string{"topic-value", "topic-key", "orders-value"})
+		_ = json.NewEncoder(w).Encode([]string{"topic-value", "topic-key", "orders-value"})
 	}))
 	defer srv.Close()
 
@@ -38,7 +38,7 @@ func TestListSubjects_EmptyRegistry(t *testing.T) {
 	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode([]string{})
+		_ = json.NewEncoder(w).Encode([]string{})
 	}))
 	defer srv.Close()
 
@@ -65,7 +65,7 @@ func TestListSubjects_Unauthorized(t *testing.T) {
 	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte(`{"error_code":401,"message":"Unauthorized"}`))
+		_, _ = w.Write([]byte(`{"error_code":401,"message":"Unauthorized"}`))
 	}))
 	defer srv.Close()
 
@@ -88,7 +88,7 @@ func TestGetSchema_CacheMiss(t *testing.T) {
 		case "/subjects/user-value/versions/1":
 			reqCount.Add(1)
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]any{
+			_ = json.NewEncoder(w).Encode(map[string]any{
 				"subject":    "user-value",
 				"version":    1,
 				"id":         10,
@@ -97,7 +97,7 @@ func TestGetSchema_CacheMiss(t *testing.T) {
 			})
 		case "/config/user-value":
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]string{"compatibilityLevel": "BACKWARD"})
+			_ = json.NewEncoder(w).Encode(map[string]string{"compatibilityLevel": "BACKWARD"})
 		default:
 			http.NotFound(w, r)
 		}
@@ -127,7 +127,7 @@ func TestGetSchema_NotFound(t *testing.T) {
 	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(`{"error_code":40401,"message":"Subject not found"}`))
+		_, _ = w.Write([]byte(`{"error_code":40401,"message":"Subject not found"}`))
 	}))
 	defer srv.Close()
 
@@ -148,7 +148,7 @@ func TestGetSchema_CacheHit(t *testing.T) {
 		case "/subjects/order-value/versions/latest":
 			schemaReqCount.Add(1)
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]any{
+			_ = json.NewEncoder(w).Encode(map[string]any{
 				"subject":    "order-value",
 				"version":    3,
 				"id":         42,
@@ -157,7 +157,7 @@ func TestGetSchema_CacheHit(t *testing.T) {
 			})
 		case "/config/order-value":
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]string{"compatibilityLevel": "FULL"})
+			_ = json.NewEncoder(w).Encode(map[string]string{"compatibilityLevel": "FULL"})
 		default:
 			http.NotFound(w, r)
 		}
@@ -192,7 +192,7 @@ func TestCheckCompatibility_Compatible(t *testing.T) {
 	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]any{"is_compatible": true})
+		_ = json.NewEncoder(w).Encode(map[string]any{"is_compatible": true})
 	}))
 	defer srv.Close()
 
@@ -211,7 +211,7 @@ func TestCheckCompatibility_Incompatible(t *testing.T) {
 	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]any{
+		_ = json.NewEncoder(w).Encode(map[string]any{
 			"is_compatible": false,
 			"messages":      []string{"field removed without default"},
 		})
@@ -236,7 +236,7 @@ func TestCheckCompatibility_MalformedJSON(t *testing.T) {
 	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{not valid json`))
+		_, _ = w.Write([]byte(`{not valid json`))
 	}))
 	defer srv.Close()
 
@@ -252,7 +252,7 @@ func TestHTTPErrors_400(t *testing.T) {
 	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"error_code":400,"message":"Bad Request"}`))
+		_, _ = w.Write([]byte(`{"error_code":400,"message":"Bad Request"}`))
 	}))
 	defer srv.Close()
 
@@ -267,7 +267,7 @@ func TestHTTPErrors_404(t *testing.T) {
 	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(`{"error_code":404,"message":"Not Found"}`))
+		_, _ = w.Write([]byte(`{"error_code":404,"message":"Not Found"}`))
 	}))
 	defer srv.Close()
 
@@ -282,7 +282,7 @@ func TestHTTPErrors_500(t *testing.T) {
 	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`{"error_code":500,"message":"Internal Server Error"}`))
+		_, _ = w.Write([]byte(`{"error_code":500,"message":"Internal Server Error"}`))
 	}))
 	defer srv.Close()
 
@@ -299,7 +299,7 @@ func TestDoRequest_BasicAuth(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotUser, gotPass, _ = r.BasicAuth()
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode([]string{})
+		_ = json.NewEncoder(w).Encode([]string{})
 	}))
 	defer srv.Close()
 
@@ -319,7 +319,7 @@ func TestDoRequest_AcceptHeader(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotAccept = r.Header.Get("Accept")
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode([]string{})
+		_ = json.NewEncoder(w).Encode([]string{})
 	}))
 	defer srv.Close()
 
@@ -359,7 +359,7 @@ func TestCheckCompatibility_DefaultVersionAndType(t *testing.T) {
 			t.Errorf("expected path %q, got %q", expectedPath, r.URL.Path)
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]any{"is_compatible": true})
+		_ = json.NewEncoder(w).Encode(map[string]any{"is_compatible": true})
 	}))
 	defer srv.Close()
 
@@ -377,7 +377,7 @@ func TestCheckCompatibility_HTTPError(t *testing.T) {
 	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`{"error_code":500}`))
+		_, _ = w.Write([]byte(`{"error_code":500}`))
 	}))
 	defer srv.Close()
 

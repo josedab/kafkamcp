@@ -4,26 +4,23 @@ import (
 	"fmt"
 	"log/slog"
 	"sync"
-	"sync/atomic"
 	"time"
+
 	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
-var bookmarkCounter atomic.Uint64
-var simulationCounter atomic.Uint64
-
 // Bookmark captures message state at a point in time.
 type Bookmark struct {
-	ID          string            `json:"id"`
-	Name        string            `json:"name"`
-	Topic       string            `json:"topic"`
-	Cluster     string            `json:"cluster"`
-	Offsets     map[int32]int64   `json:"offsets"`
-	Timestamp   string            `json:"timestamp"`
-	MessageCount int              `json:"message_count"`
+	ID             string          `json:"id"`
+	Name           string          `json:"name"`
+	Topic          string          `json:"topic"`
+	Cluster        string          `json:"cluster"`
+	Offsets        map[int32]int64 `json:"offsets"`
+	Timestamp      string          `json:"timestamp"`
+	MessageCount   int             `json:"message_count"`
 	SampleMessages []SampleMessage `json:"sample_messages,omitempty"`
-	CreatedAt   string            `json:"created_at"`
-	Tags        []string          `json:"tags,omitempty"`
+	CreatedAt      string          `json:"created_at"`
+	Tags           []string        `json:"tags,omitempty"`
 }
 
 // SampleMessage is a captured message for bookmark reference.
@@ -53,28 +50,28 @@ type DiffResult struct {
 
 // FieldChange tracks a schema/content change between windows.
 type FieldChange struct {
-	Field     string `json:"field"`
+	Field      string `json:"field"`
 	ChangeType string `json:"change_type"` // added, removed, type_changed, value_distribution_changed
-	OldValue  string `json:"old_value,omitempty"`
-	NewValue  string `json:"new_value,omitempty"`
+	OldValue   string `json:"old_value,omitempty"`
+	NewValue   string `json:"new_value,omitempty"`
 }
 
 // Simulation represents a consumer group replay simulation.
 type Simulation struct {
-	ID              string             `json:"id"`
-	Name            string             `json:"name"`
-	Topic           string             `json:"topic"`
-	GroupID         string             `json:"group_id"`
-	FromBookmark    string             `json:"from_bookmark,omitempty"`
-	StartOffset     map[int32]int64    `json:"start_offsets"`
-	EndOffset       map[int32]int64    `json:"end_offsets,omitempty"`
-	Status          string             `json:"status"` // pending, running, completed, failed
-	MessagesReplayed int               `json:"messages_replayed"`
-	ErrorCount      int                `json:"error_count"`
-	Predictions     []ReplayPrediction `json:"predictions,omitempty"`
-	StartedAt       string             `json:"started_at,omitempty"`
-	CompletedAt     string             `json:"completed_at,omitempty"`
-	CreatedAt       string             `json:"created_at"`
+	ID               string             `json:"id"`
+	Name             string             `json:"name"`
+	Topic            string             `json:"topic"`
+	GroupID          string             `json:"group_id"`
+	FromBookmark     string             `json:"from_bookmark,omitempty"`
+	StartOffset      map[int32]int64    `json:"start_offsets"`
+	EndOffset        map[int32]int64    `json:"end_offsets,omitempty"`
+	Status           string             `json:"status"` // pending, running, completed, failed
+	MessagesReplayed int                `json:"messages_replayed"`
+	ErrorCount       int                `json:"error_count"`
+	Predictions      []ReplayPrediction `json:"predictions,omitempty"`
+	StartedAt        string             `json:"started_at,omitempty"`
+	CompletedAt      string             `json:"completed_at,omitempty"`
+	CreatedAt        string             `json:"created_at"`
 }
 
 // ReplayPrediction estimates what would happen if messages were replayed.
@@ -250,14 +247,14 @@ func (e *Engine) CreateSimulation(name, topic, groupID string, startOffsets map[
 	defer e.mu.Unlock()
 
 	sim := &Simulation{
-		ID:          randid.New("sim"),
-		Name:        name,
-		Topic:       topic,
-		GroupID:     groupID,
+		ID:           randid.New("sim"),
+		Name:         name,
+		Topic:        topic,
+		GroupID:      groupID,
 		FromBookmark: fromBookmark,
-		StartOffset: startOffsets,
-		Status:      "pending",
-		CreatedAt:   time.Now().UTC().Format(time.RFC3339),
+		StartOffset:  startOffsets,
+		Status:       "pending",
+		CreatedAt:    time.Now().UTC().Format(time.RFC3339),
 	}
 
 	// Generate predictions

@@ -262,7 +262,7 @@ func TestStop_CancelsContext(t *testing.T) {
 	am.Stop()
 
 	if am.ctx.Err() == nil {
-		t.Error("expected context to be cancelled after Stop")
+		t.Error("expected context to be canceled after Stop")
 	}
 }
 

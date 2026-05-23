@@ -24,8 +24,8 @@ func TestEvaluateReadAllowed(t *testing.T) {
 	pe := newTestEngine()
 
 	d := pe.Evaluate(PolicyInput{
-		Agent:  "any-agent",
-		Action: "read",
+		Agent:    "any-agent",
+		Action:   "read",
 		Resource: "topic",
 	})
 
@@ -39,8 +39,8 @@ func TestEvaluateDeleteDenied(t *testing.T) {
 	pe := newTestEngine()
 
 	d := pe.Evaluate(PolicyInput{
-		Agent:  "some-agent",
-		Action: "delete",
+		Agent:    "some-agent",
+		Action:   "delete",
 		Resource: "topic",
 	})
 
@@ -54,8 +54,8 @@ func TestEvaluateAnonymousWriteDenied(t *testing.T) {
 	pe := newTestEngine()
 
 	d := pe.Evaluate(PolicyInput{
-		Agent:  "anonymous",
-		Action: "write",
+		Agent:    "anonymous",
+		Action:   "write",
 		Resource: "topic",
 	})
 
@@ -83,8 +83,8 @@ allow {
 	}
 
 	d := pe.Evaluate(PolicyInput{
-		Agent:  "writer-agent",
-		Action: "write",
+		Agent:    "writer-agent",
+		Action:   "write",
 		Resource: "topic",
 	})
 	if !d.Allowed {
@@ -97,8 +97,8 @@ func TestSimulate(t *testing.T) {
 	pe := newTestEngine()
 
 	result := pe.Simulate(PolicyInput{
-		Agent:  "test-agent",
-		Action: "read",
+		Agent:    "test-agent",
+		Action:   "read",
 		Resource: "topic",
 	})
 

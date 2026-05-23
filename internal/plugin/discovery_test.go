@@ -17,7 +17,7 @@ func TestReviewStore(t *testing.T) {
 		t.Error("expected review ID")
 	}
 
-	rs.AddReview("kafka-metrics-exporter", "plugin", "user2", 5.0, "Excellent", "Love it")
+	_, _ = rs.AddReview("kafka-metrics-exporter", "plugin", "user2", 5.0, "Excellent", "Love it")
 
 	reviews := rs.GetReviews("kafka-metrics-exporter")
 	if len(reviews) != 2 {
@@ -91,7 +91,7 @@ func TestGetStats(t *testing.T) {
 	marketplace := NewMarketplace(registry)
 	store := NewAgentConfigStore()
 	reviewStore := NewReviewStore()
-	reviewStore.AddReview("test", "plugin", "user", 4.0, "Good", "Nice")
+	_, _ = reviewStore.AddReview("test", "plugin", "user", 4.0, "Good", "Nice")
 
 	stats := marketplace.GetStats(store, reviewStore)
 	if stats.TotalPlugins == 0 {

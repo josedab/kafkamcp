@@ -13,49 +13,51 @@ import (
 // RequestType identifies the kind of governance request.
 type RequestType string
 
+// RequestTopicCreate and related values define constants for this package.
 const (
-	RequestTopicCreate   RequestType = "topic_create"
-	RequestTopicModify   RequestType = "topic_modify"
-	RequestTopicDelete   RequestType = "topic_delete"
-	RequestSchemaChange  RequestType = "schema_change"
-	RequestAccessGrant   RequestType = "access_grant"
-	RequestAccessRevoke  RequestType = "access_revoke"
+	RequestTopicCreate  RequestType = "topic_create"
+	RequestTopicModify  RequestType = "topic_modify"
+	RequestTopicDelete  RequestType = "topic_delete"
+	RequestSchemaChange RequestType = "schema_change"
+	RequestAccessGrant  RequestType = "access_grant"
+	RequestAccessRevoke RequestType = "access_revoke"
 )
 
 // RequestStatus tracks the lifecycle of a governance request.
 type RequestStatus string
 
+// StatusPending and related values define constants for this package.
 const (
-	StatusPending    RequestStatus = "pending"
-	StatusApproved   RequestStatus = "approved"
-	StatusRejected   RequestStatus = "rejected"
-	StatusExecuting  RequestStatus = "executing"
-	StatusCompleted  RequestStatus = "completed"
-	StatusFailed     RequestStatus = "failed"
+	StatusPending   RequestStatus = "pending"
+	StatusApproved  RequestStatus = "approved"
+	StatusRejected  RequestStatus = "rejected"
+	StatusExecuting RequestStatus = "executing"
+	StatusCompleted RequestStatus = "completed"
+	StatusFailed    RequestStatus = "failed"
 )
 
 // GovernanceRequest is a self-service governance request.
 type GovernanceRequest struct {
-	ID          string            `json:"id"`
-	Type        RequestType       `json:"type"`
-	Status      RequestStatus     `json:"status"`
-	Requester   string            `json:"requester"`
-	Title       string            `json:"title"`
-	Description string            `json:"description"`
-	Parameters  map[string]any    `json:"parameters"`
-	Cluster     string            `json:"cluster,omitempty"`
-	Topic       string            `json:"topic,omitempty"`
-	ApprovalChain []ApprovalStep  `json:"approval_chain"`
-	CreatedAt   string            `json:"created_at"`
-	UpdatedAt   string            `json:"updated_at"`
-	CompletedAt string            `json:"completed_at,omitempty"`
+	ID            string         `json:"id"`
+	Type          RequestType    `json:"type"`
+	Status        RequestStatus  `json:"status"`
+	Requester     string         `json:"requester"`
+	Title         string         `json:"title"`
+	Description   string         `json:"description"`
+	Parameters    map[string]any `json:"parameters"`
+	Cluster       string         `json:"cluster,omitempty"`
+	Topic         string         `json:"topic,omitempty"`
+	ApprovalChain []ApprovalStep `json:"approval_chain"`
+	CreatedAt     string         `json:"created_at"`
+	UpdatedAt     string         `json:"updated_at"`
+	CompletedAt   string         `json:"completed_at,omitempty"`
 }
 
 // ApprovalStep is a step in the approval chain.
 type ApprovalStep struct {
 	Order      int    `json:"order"`
 	Approver   string `json:"approver"`
-	Role       string `json:"role"` // team_lead, admin, security, compliance
+	Role       string `json:"role"`   // team_lead, admin, security, compliance
 	Status     string `json:"status"` // pending, approved, rejected
 	Comment    string `json:"comment,omitempty"`
 	ReviewedAt string `json:"reviewed_at,omitempty"`
@@ -63,38 +65,38 @@ type ApprovalStep struct {
 
 // DashboardData aggregates portal metrics for the governance dashboard.
 type DashboardData struct {
-	TotalRequests     int                     `json:"total_requests"`
-	PendingRequests   int                     `json:"pending_requests"`
-	ApprovedRequests  int                     `json:"approved_requests"`
-	RejectedRequests  int                     `json:"rejected_requests"`
-	CompletedRequests int                     `json:"completed_requests"`
-	RequestsByType    map[RequestType]int     `json:"requests_by_type"`
-	RecentRequests    []GovernanceRequest     `json:"recent_requests"`
-	ComplianceScore   int                     `json:"compliance_score"`
-	CostSummary       *CostSummary            `json:"cost_summary,omitempty"`
-	GeneratedAt       string                  `json:"generated_at"`
+	TotalRequests     int                 `json:"total_requests"`
+	PendingRequests   int                 `json:"pending_requests"`
+	ApprovedRequests  int                 `json:"approved_requests"`
+	RejectedRequests  int                 `json:"rejected_requests"`
+	CompletedRequests int                 `json:"completed_requests"`
+	RequestsByType    map[RequestType]int `json:"requests_by_type"`
+	RecentRequests    []GovernanceRequest `json:"recent_requests"`
+	ComplianceScore   int                 `json:"compliance_score"`
+	CostSummary       *CostSummary        `json:"cost_summary,omitempty"`
+	GeneratedAt       string              `json:"generated_at"`
 }
 
 // CostSummary provides cost overview for the dashboard.
 type CostSummary struct {
-	TotalCostPerHour  float64            `json:"total_cost_per_hour"`
-	TopCostTopics     []TopicCostEntry   `json:"top_cost_topics"`
-	CostTrend         string             `json:"cost_trend"` // increasing, stable, decreasing
+	TotalCostPerHour float64          `json:"total_cost_per_hour"`
+	TopCostTopics    []TopicCostEntry `json:"top_cost_topics"`
+	CostTrend        string           `json:"cost_trend"` // increasing, stable, decreasing
 }
 
 // TopicCostEntry tracks cost for a single topic.
 type TopicCostEntry struct {
-	Topic     string  `json:"topic"`
+	Topic       string  `json:"topic"`
 	CostPerHour float64 `json:"cost_per_hour"`
 	Percentage  float64 `json:"percentage"`
 }
 
 // WorkflowTemplate defines an approval workflow for a request type.
 type WorkflowTemplate struct {
-	RequestType    RequestType    `json:"request_type"`
-	ApprovalSteps  []string       `json:"approval_steps"` // roles required
-	AutoApprove    bool           `json:"auto_approve"`
-	RequireComment bool           `json:"require_comment"`
+	RequestType    RequestType `json:"request_type"`
+	ApprovalSteps  []string    `json:"approval_steps"` // roles required
+	AutoApprove    bool        `json:"auto_approve"`
+	RequireComment bool        `json:"require_comment"`
 }
 
 // Engine manages the governance portal data layer.
@@ -118,33 +120,33 @@ func NewEngine(logger *slog.Logger) *Engine {
 
 func (e *Engine) initDefaultWorkflows() {
 	e.workflows[RequestTopicCreate] = &WorkflowTemplate{
-		RequestType:   RequestTopicCreate,
-		ApprovalSteps: []string{"team_lead", "admin"},
+		RequestType:    RequestTopicCreate,
+		ApprovalSteps:  []string{"team_lead", "admin"},
 		RequireComment: true,
 	}
 	e.workflows[RequestTopicDelete] = &WorkflowTemplate{
-		RequestType:   RequestTopicDelete,
-		ApprovalSteps: []string{"team_lead", "admin", "security"},
+		RequestType:    RequestTopicDelete,
+		ApprovalSteps:  []string{"team_lead", "admin", "security"},
 		RequireComment: true,
 	}
 	e.workflows[RequestSchemaChange] = &WorkflowTemplate{
-		RequestType:   RequestSchemaChange,
-		ApprovalSteps: []string{"team_lead"},
+		RequestType:    RequestSchemaChange,
+		ApprovalSteps:  []string{"team_lead"},
 		RequireComment: true,
 	}
 	e.workflows[RequestAccessGrant] = &WorkflowTemplate{
-		RequestType:   RequestAccessGrant,
-		ApprovalSteps: []string{"security"},
+		RequestType:    RequestAccessGrant,
+		ApprovalSteps:  []string{"security"},
 		RequireComment: false,
 	}
 	e.workflows[RequestAccessRevoke] = &WorkflowTemplate{
 		RequestType:   RequestAccessRevoke,
 		ApprovalSteps: []string{"security"},
-		AutoApprove:    true,
+		AutoApprove:   true,
 	}
 	e.workflows[RequestTopicModify] = &WorkflowTemplate{
-		RequestType:   RequestTopicModify,
-		ApprovalSteps: []string{"team_lead"},
+		RequestType:    RequestTopicModify,
+		ApprovalSteps:  []string{"team_lead"},
 		RequireComment: false,
 	}
 }

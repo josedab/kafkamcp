@@ -10,20 +10,20 @@ import (
 
 // ReplicationLink represents a monitored replication link between clusters.
 type ReplicationLink struct {
-	Source      string            `json:"source_cluster"`
-	Target      string            `json:"target_cluster"`
-	Type        string            `json:"type"` // "mirrormaker2", "cluster_linking"
+	Source      string             `json:"source_cluster"`
+	Target      string             `json:"target_cluster"`
+	Type        string             `json:"type"` // "mirrormaker2", "cluster_linking"
 	Topics      []TopicReplication `json:"topics"`
-	Status      string            `json:"status"` // "active", "lagging", "error", "unknown"
-	LastChecked string            `json:"last_checked"`
+	Status      string             `json:"status"` // "active", "lagging", "error", "unknown"
+	LastChecked string             `json:"last_checked"`
 }
 
 // TopicReplication tracks replication state for a single topic.
 type TopicReplication struct {
-	Topic      string               `json:"topic"`
+	Topic      string                 `json:"topic"`
 	Partitions []PartitionReplication `json:"partitions"`
-	TotalLag   int64                `json:"total_lag"`
-	Status     string               `json:"status"`
+	TotalLag   int64                  `json:"total_lag"`
+	Status     string                 `json:"status"`
 }
 
 // PartitionReplication tracks replication lag for a single partition.
@@ -38,13 +38,13 @@ type PartitionReplication struct {
 // Alert represents a replication lag alert.
 type Alert struct {
 	Source    string `json:"source_cluster"`
-	Target   string `json:"target_cluster"`
-	Topic    string `json:"topic"`
-	Partition int32 `json:"partition"`
-	Lag      int64  `json:"lag"`
-	Threshold int64 `json:"threshold"`
-	Severity string `json:"severity"` // "warning", "critical"
-	Time     string `json:"time"`
+	Target    string `json:"target_cluster"`
+	Topic     string `json:"topic"`
+	Partition int32  `json:"partition"`
+	Lag       int64  `json:"lag"`
+	Threshold int64  `json:"threshold"`
+	Severity  string `json:"severity"` // "warning", "critical"
+	Time      string `json:"time"`
 }
 
 // ReplicationStatus is the overall replication status across all links.
@@ -192,12 +192,12 @@ func (m *Monitor) UpdateTopicLag(source, target, topic string, partition int32, 
 		alert := Alert{
 			Source:    source,
 			Target:    target,
-			Topic:    topic,
+			Topic:     topic,
 			Partition: partition,
-			Lag:      lag,
+			Lag:       lag,
 			Threshold: m.config.WarningLagThreshold,
-			Severity: severity,
-			Time:     time.Now().UTC().Format(time.RFC3339),
+			Severity:  severity,
+			Time:      time.Now().UTC().Format(time.RFC3339),
 		}
 		m.alerts = append(m.alerts, alert)
 		// Keep last 1000 alerts

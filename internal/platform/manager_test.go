@@ -51,9 +51,9 @@ func TestConfluentCloudBackend(t *testing.T) {
 func TestDetectPlatform(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		name       string
-		props      map[string]string
-		wantType   PlatformType
+		name     string
+		props    map[string]string
+		wantType PlatformType
 	}{
 		{"kafka", map[string]string{}, PlatformKafka},
 		{"redpanda", map[string]string{"redpanda.admin.url": "http://localhost:9644"}, PlatformRedpanda},

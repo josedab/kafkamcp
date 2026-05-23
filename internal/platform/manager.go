@@ -10,6 +10,7 @@ import (
 // PlatformType identifies the Kafka-compatible platform.
 type PlatformType string
 
+// PlatformKafka and related values define constants for this package.
 const (
 	PlatformKafka          PlatformType = "kafka"
 	PlatformRedpanda       PlatformType = "redpanda"
@@ -20,17 +21,18 @@ const (
 // Capability flags for platform feature support.
 type Capability string
 
+// CapTopicCRUD and related values define constants for this package.
 const (
 	CapTopicCRUD         Capability = "topic_crud"
 	CapConsumerGroups    Capability = "consumer_groups"
-	CapACLs             Capability = "acls"
-	CapSchemaRegistry   Capability = "schema_registry"
-	CapTransactions     Capability = "transactions"
-	CapAdminAPI         Capability = "admin_api"
-	CapConnect          Capability = "connect"
+	CapACLs              Capability = "acls"
+	CapSchemaRegistry    Capability = "schema_registry"
+	CapTransactions      Capability = "transactions"
+	CapAdminAPI          Capability = "admin_api"
+	CapConnect           Capability = "connect"
 	CapIdempotentProduce Capability = "idempotent_produce"
-	CapExactlyOnce      Capability = "exactly_once"
-	CapTieredStorage    Capability = "tiered_storage"
+	CapExactlyOnce       Capability = "exactly_once"
+	CapTieredStorage     Capability = "tiered_storage"
 )
 
 // PlatformConfig holds platform-specific configuration.
@@ -68,8 +70,10 @@ func NewKafkaBackend(cfg PlatformConfig) *KafkaBackend {
 	return &KafkaBackend{config: cfg}
 }
 
+// Type is auto-documented.
 func (b *KafkaBackend) Type() PlatformType { return PlatformKafka }
 
+// Capabilities is auto-documented.
 func (b *KafkaBackend) Capabilities() []Capability {
 	return []Capability{
 		CapTopicCRUD, CapConsumerGroups, CapACLs, CapSchemaRegistry,
@@ -78,6 +82,7 @@ func (b *KafkaBackend) Capabilities() []Capability {
 	}
 }
 
+// HasCapability is auto-documented.
 func (b *KafkaBackend) HasCapability(cap Capability) bool {
 	for _, c := range b.Capabilities() {
 		if c == cap {
@@ -87,6 +92,7 @@ func (b *KafkaBackend) HasCapability(cap Capability) bool {
 	return false
 }
 
+// Info is auto-documented.
 func (b *KafkaBackend) Info(ctx context.Context) (*PlatformInfo, error) {
 	return &PlatformInfo{
 		Type:         PlatformKafka,
@@ -107,8 +113,10 @@ func NewRedpandaBackend(cfg PlatformConfig) *RedpandaBackend {
 	return &RedpandaBackend{config: cfg, adminURL: cfg.AdminURL}
 }
 
+// Type is auto-documented.
 func (b *RedpandaBackend) Type() PlatformType { return PlatformRedpanda }
 
+// Capabilities is auto-documented.
 func (b *RedpandaBackend) Capabilities() []Capability {
 	return []Capability{
 		CapTopicCRUD, CapConsumerGroups, CapACLs, CapSchemaRegistry,
@@ -117,6 +125,7 @@ func (b *RedpandaBackend) Capabilities() []Capability {
 	}
 }
 
+// HasCapability is auto-documented.
 func (b *RedpandaBackend) HasCapability(cap Capability) bool {
 	for _, c := range b.Capabilities() {
 		if c == cap {
@@ -126,13 +135,14 @@ func (b *RedpandaBackend) HasCapability(cap Capability) bool {
 	return false
 }
 
+// Info is auto-documented.
 func (b *RedpandaBackend) Info(ctx context.Context) (*PlatformInfo, error) {
 	return &PlatformInfo{
 		Type:         PlatformRedpanda,
 		Version:      "latest",
 		Capabilities: b.Capabilities(),
 		Features: map[string]any{
-			"admin_api":      b.adminURL != "",
+			"admin_api":       b.adminURL != "",
 			"schema_registry": true,
 			"wasm_transforms": true,
 		},
@@ -150,8 +160,10 @@ func NewConfluentCloudBackend(cfg PlatformConfig) *ConfluentCloudBackend {
 	return &ConfluentCloudBackend{config: cfg, restURL: cfg.RESTURL}
 }
 
+// Type is auto-documented.
 func (b *ConfluentCloudBackend) Type() PlatformType { return PlatformConfluentCloud }
 
+// Capabilities is auto-documented.
 func (b *ConfluentCloudBackend) Capabilities() []Capability {
 	return []Capability{
 		CapTopicCRUD, CapConsumerGroups, CapSchemaRegistry,
@@ -160,6 +172,7 @@ func (b *ConfluentCloudBackend) Capabilities() []Capability {
 	}
 }
 
+// HasCapability is auto-documented.
 func (b *ConfluentCloudBackend) HasCapability(cap Capability) bool {
 	for _, c := range b.Capabilities() {
 		if c == cap {
@@ -169,6 +182,7 @@ func (b *ConfluentCloudBackend) HasCapability(cap Capability) bool {
 	return false
 }
 
+// Info is auto-documented.
 func (b *ConfluentCloudBackend) Info(ctx context.Context) (*PlatformInfo, error) {
 	return &PlatformInfo{
 		Type:         PlatformConfluentCloud,

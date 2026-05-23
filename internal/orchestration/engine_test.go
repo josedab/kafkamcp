@@ -29,8 +29,8 @@ func TestRegisterAgent(t *testing.T) {
 func TestCreateOrchestration(t *testing.T) {
 	t.Parallel()
 	e := newTestEngine()
-	e.RegisterAgent("agent-1", "Monitor", RoleMonitor, nil)
-	e.RegisterAgent("agent-2", "Operator", RoleOperator, nil)
+	_, _ = e.RegisterAgent("agent-1", "Monitor", RoleMonitor, nil)
+	_, _ = e.RegisterAgent("agent-2", "Operator", RoleOperator, nil)
 
 	steps := []OrchestrationStep{
 		{ID: "s1", Name: "Check health", Tool: "kafka_cluster_info", AssignTo: "agent-1"},
@@ -98,22 +98,22 @@ func TestGetReadyStepsAndComplete(t *testing.T) {
 	}
 
 	// Complete s1 -> s2, s3 become ready
-	e.CompleteStep(orch.ID, "s1", "a1", "completed", map[string]any{"ok": true}, "")
+	_ = e.CompleteStep(orch.ID, "s1", "a1", "completed", map[string]any{"ok": true}, "")
 	ready, _ = e.GetReadySteps(orch.ID)
 	if len(ready) != 2 {
 		t.Errorf("expected 2 ready steps, got %d", len(ready))
 	}
 
 	// Complete s2 and s3 -> s4 becomes ready
-	e.CompleteStep(orch.ID, "s2", "a1", "completed", nil, "")
-	e.CompleteStep(orch.ID, "s3", "a2", "completed", nil, "")
+	_ = e.CompleteStep(orch.ID, "s2", "a1", "completed", nil, "")
+	_ = e.CompleteStep(orch.ID, "s3", "a2", "completed", nil, "")
 	ready, _ = e.GetReadySteps(orch.ID)
 	if len(ready) != 1 || ready[0].ID != "s4" {
 		t.Errorf("expected only s4 ready, got %v", ready)
 	}
 
 	// Complete s4 -> orchestration completes
-	e.CompleteStep(orch.ID, "s4", "a1", "completed", nil, "")
+	_ = e.CompleteStep(orch.ID, "s4", "a1", "completed", nil, "")
 	o, _ := e.GetOrchestration(orch.ID)
 	if o.Status != "completed" {
 		t.Errorf("expected completed, got %s", o.Status)
@@ -123,8 +123,8 @@ func TestGetReadyStepsAndComplete(t *testing.T) {
 func TestHandoffs(t *testing.T) {
 	t.Parallel()
 	e := newTestEngine()
-	e.RegisterAgent("a1", "Agent 1", RoleMonitor, nil)
-	e.RegisterAgent("a2", "Agent 2", RoleOperator, nil)
+	_, _ = e.RegisterAgent("a1", "Agent 1", RoleMonitor, nil)
+	_, _ = e.RegisterAgent("a2", "Agent 2", RoleOperator, nil)
 
 	h, err := e.CreateHandoff("a1", "a2", "Please investigate this lag issue", map[string]any{"topic": "orders"})
 	if err != nil {
@@ -155,7 +155,7 @@ func TestSharedContext(t *testing.T) {
 	steps := []OrchestrationStep{{ID: "s1", Name: "a", Tool: "t"}}
 	orch, _ := e.CreateOrchestration("test", "", "c", steps)
 
-	e.UpdateSharedContext(orch.ID, "findings", "lag detected")
+	_ = e.UpdateSharedContext(orch.ID, "findings", "lag detected")
 	ctx, _ := e.GetSharedContext(orch.ID)
 	if ctx["findings"] != "lag detected" {
 		t.Error("expected shared context value")
@@ -165,9 +165,9 @@ func TestSharedContext(t *testing.T) {
 func TestFindAgentByRole(t *testing.T) {
 	t.Parallel()
 	e := newTestEngine()
-	e.RegisterAgent("a1", "Mon 1", RoleMonitor, nil)
-	e.RegisterAgent("a2", "Mon 2", RoleMonitor, nil)
-	e.RegisterAgent("a3", "Op 1", RoleOperator, nil)
+	_, _ = e.RegisterAgent("a1", "Mon 1", RoleMonitor, nil)
+	_, _ = e.RegisterAgent("a2", "Mon 2", RoleMonitor, nil)
+	_, _ = e.RegisterAgent("a3", "Op 1", RoleOperator, nil)
 
 	monitors := e.FindAgentByRole(RoleMonitor)
 	if len(monitors) != 2 {

@@ -207,7 +207,7 @@ func TestRunSimulation_AlreadyCompleted(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
 	sim := e.CreateSimulation("replay-1", "orders", "g", map[int32]int64{0: 500}, "")
-	e.RunSimulation(sim.ID)
+	_, _ = e.RunSimulation(sim.ID)
 
 	_, err := e.RunSimulation(sim.ID)
 	if err == nil {

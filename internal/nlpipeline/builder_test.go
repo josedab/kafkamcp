@@ -136,15 +136,15 @@ func TestListAndDelete(t *testing.T) {
 	t.Parallel()
 	b := newTestBuilder()
 
-	b.Generate("Filter from t1", "a")
-	b.Generate("Transform from t2", "a")
+	_, _ = b.Generate("Filter from t1", "a")
+	_, _ = b.Generate("Transform from t2", "a")
 
 	all := b.ListPipelines()
 	if len(all) != 2 {
 		t.Errorf("expected 2 pipelines, got %d", len(all))
 	}
 
-	b.DeletePipeline(all[0].ID)
+	_ = b.DeletePipeline(all[0].ID)
 	all = b.ListPipelines()
 	if len(all) != 1 {
 		t.Errorf("expected 1 pipeline, got %d", len(all))

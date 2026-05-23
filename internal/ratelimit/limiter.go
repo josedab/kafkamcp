@@ -4,7 +4,7 @@
 // [engine.Store] so that quotas survive process restarts: an attacker
 // cannot bypass a tight quota by crashing the process. Persistence is
 // opt-in via [NewWithBackend]; the legacy [New] constructor stays
-// in-memory and matches the historical behaviour bit-for-bit.
+// in-memory and matches the historical behavior bit-for-bit.
 package ratelimit
 
 import (
@@ -24,7 +24,7 @@ type Limiter struct {
 	global  *bucket
 
 	// store persists bucket state across restarts. When nil the limiter
-	// is purely in-memory (legacy behaviour).
+	// is purely in-memory (legacy behavior).
 	store  *engine.Store[bucketRecord]
 	logger *slog.Logger
 }

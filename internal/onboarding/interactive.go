@@ -10,14 +10,14 @@ import (
 
 // OnboardingSession tracks a user's interactive onboarding progress.
 type OnboardingSession struct {
-	ID              string           `json:"id"`
-	AgentID         string           `json:"agent_id"`
-	CurrentStep     int              `json:"current_step"`
-	Steps           []InteractiveStep `json:"steps"`
-	Context         SessionContext   `json:"context"`
-	StartedAt       time.Time        `json:"started_at"`
-	CompletedAt     *time.Time       `json:"completed_at,omitempty"`
-	Status          string           `json:"status"` // active, completed, abandoned
+	ID          string            `json:"id"`
+	AgentID     string            `json:"agent_id"`
+	CurrentStep int               `json:"current_step"`
+	Steps       []InteractiveStep `json:"steps"`
+	Context     SessionContext    `json:"context"`
+	StartedAt   time.Time         `json:"started_at"`
+	CompletedAt *time.Time        `json:"completed_at,omitempty"`
+	Status      string            `json:"status"` // active, completed, abandoned
 }
 
 // InteractiveStep is an onboarding step with contextual guidance.

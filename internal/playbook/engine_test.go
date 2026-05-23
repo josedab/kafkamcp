@@ -69,7 +69,7 @@ func TestExecutePlaybook(t *testing.T) {
 
 	// Complete steps
 	for i := range exec.Steps {
-		e.CompleteStep(exec.ID, i, "completed", nil, "")
+		_ = e.CompleteStep(exec.ID, i, "completed", nil, "")
 	}
 
 	got, _ := e.GetExecution(exec.ID)
@@ -81,7 +81,7 @@ func TestExecutePlaybook(t *testing.T) {
 func TestExecuteDisabledPlaybook(t *testing.T) {
 	t.Parallel()
 	e := newTestEngine()
-	e.EnablePlaybook("pb_high_lag", false)
+	_ = e.EnablePlaybook("pb_high_lag", false)
 
 	_, err := e.Execute("pb_high_lag", "agent", nil)
 	if err == nil {
@@ -159,8 +159,8 @@ func TestListExecutions(t *testing.T) {
 	t.Parallel()
 	e := newTestEngine()
 
-	e.Execute("pb_under_replicated", "a1", nil)
-	e.Execute("pb_throughput_spike", "a2", nil)
+	_, _ = e.Execute("pb_under_replicated", "a1", nil)
+	_, _ = e.Execute("pb_throughput_spike", "a2", nil)
 
 	execs := e.ListExecutions("", 10)
 	if len(execs) != 2 {

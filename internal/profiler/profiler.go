@@ -20,20 +20,20 @@ type ToolCall struct {
 
 // AgentProfile contains performance metrics for a single agent.
 type AgentProfile struct {
-	AgentID        string             `json:"agent_id"`
-	TotalCalls     int                `json:"total_calls"`
-	UniqueTtools   int                `json:"unique_tools"`
-	AvgLatencyMs   float64            `json:"avg_latency_ms"`
-	P50LatencyMs   float64            `json:"p50_latency_ms"`
-	P95LatencyMs   float64            `json:"p95_latency_ms"`
-	P99LatencyMs   float64            `json:"p99_latency_ms"`
-	ErrorRate      float64            `json:"error_rate"`
-	ToolBreakdown  []ToolStats        `json:"tool_breakdown"`
-	RedundantCalls []RedundantCall    `json:"redundant_calls,omitempty"`
-	Optimizations  []Optimization     `json:"optimizations,omitempty"`
-	EfficiencyScore int               `json:"efficiency_score"` // 0-100
-	ProfiledSince  string             `json:"profiled_since"`
-	ProfiledUntil  string             `json:"profiled_until"`
+	AgentID         string          `json:"agent_id"`
+	TotalCalls      int             `json:"total_calls"`
+	UniqueTtools    int             `json:"unique_tools"`
+	AvgLatencyMs    float64         `json:"avg_latency_ms"`
+	P50LatencyMs    float64         `json:"p50_latency_ms"`
+	P95LatencyMs    float64         `json:"p95_latency_ms"`
+	P99LatencyMs    float64         `json:"p99_latency_ms"`
+	ErrorRate       float64         `json:"error_rate"`
+	ToolBreakdown   []ToolStats     `json:"tool_breakdown"`
+	RedundantCalls  []RedundantCall `json:"redundant_calls,omitempty"`
+	Optimizations   []Optimization  `json:"optimizations,omitempty"`
+	EfficiencyScore int             `json:"efficiency_score"` // 0-100
+	ProfiledSince   string          `json:"profiled_since"`
+	ProfiledUntil   string          `json:"profiled_until"`
 }
 
 // ToolStats has per-tool statistics.
@@ -64,11 +64,11 @@ type Optimization struct {
 
 // SlowQuery identifies slow tool calls.
 type SlowQuery struct {
-	Tool        string  `json:"tool"`
+	Tool         string  `json:"tool"`
 	AvgLatencyMs float64 `json:"avg_latency_ms"`
 	MaxLatencyMs int64   `json:"max_latency_ms"`
-	CallCount   int     `json:"call_count"`
-	Threshold   float64 `json:"threshold_ms"`
+	CallCount    int     `json:"call_count"`
+	Threshold    float64 `json:"threshold_ms"`
 }
 
 // Profiler tracks and analyzes agent performance.
@@ -201,9 +201,9 @@ func (p *Profiler) GetSlowQueries(agentID string, thresholdMs float64) []SlowQue
 	}
 
 	type toolAgg struct {
-		totalMs  float64
-		maxMs    int64
-		count    int
+		totalMs float64
+		maxMs   int64
+		count   int
 	}
 	aggs := make(map[string]*toolAgg)
 
@@ -272,10 +272,6 @@ func (p *Profiler) detectRedundantCalls(calls []ToolCall) []RedundantCall {
 	var redundant []RedundantCall
 
 	// Detect consecutive identical calls within a short window
-	type callKey struct {
-		tool string
-		args string
-	}
 	windowMs := int64(5000) // 5 second window
 
 	for i := 0; i < len(calls); i++ {

@@ -47,7 +47,7 @@ func TestIsAvailableUnreachable(t *testing.T) {
 func TestIsAvailableReachable(t *testing.T) {
 	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode([]string{})
+		_ = json.NewEncoder(w).Encode([]string{})
 	}))
 	defer srv.Close()
 
@@ -64,7 +64,7 @@ func TestListSubjects(t *testing.T) {
 			http.Error(w, "not found", http.StatusNotFound)
 			return
 		}
-		json.NewEncoder(w).Encode([]string{"orders-value", "payments-value"})
+		_ = json.NewEncoder(w).Encode([]string{"orders-value", "payments-value"})
 	}))
 	defer srv.Close()
 
@@ -83,7 +83,7 @@ func TestListSubjectsWithAuth(t *testing.T) {
 	var gotAuth string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotAuth = r.Header.Get("Authorization")
-		json.NewEncoder(w).Encode([]string{})
+		_ = json.NewEncoder(w).Encode([]string{})
 	}))
 	defer srv.Close()
 
@@ -116,7 +116,7 @@ func TestListSubjectsHTTPError(t *testing.T) {
 func TestGetSubjectVersions(t *testing.T) {
 	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode([]int{1, 2, 3})
+		_ = json.NewEncoder(w).Encode([]int{1, 2, 3})
 	}))
 	defer srv.Close()
 
@@ -134,7 +134,7 @@ func TestGetSchemaVersionValidation(t *testing.T) {
 	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]any{})
+		_ = json.NewEncoder(w).Encode(map[string]any{})
 	}))
 	defer srv.Close()
 
@@ -152,7 +152,7 @@ func TestGetSchemaLatest(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case r.URL.Path == "/subjects/test-value/versions/latest":
-			json.NewEncoder(w).Encode(map[string]any{
+			_ = json.NewEncoder(w).Encode(map[string]any{
 				"subject":    "test-value",
 				"version":    1,
 				"id":         42,
@@ -160,7 +160,7 @@ func TestGetSchemaLatest(t *testing.T) {
 				"schema":     `{"type":"record","name":"Test","fields":[{"name":"id","type":"int"}]}`,
 			})
 		case r.URL.Path == "/config/test-value":
-			json.NewEncoder(w).Encode(map[string]any{"compatibilityLevel": "BACKWARD"})
+			_ = json.NewEncoder(w).Encode(map[string]any{"compatibilityLevel": "BACKWARD"})
 		default:
 			http.Error(w, "not found", http.StatusNotFound)
 		}
@@ -191,14 +191,14 @@ func TestGetSchemaDefaultType(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case r.URL.Path == "/subjects/test/versions/1":
-			json.NewEncoder(w).Encode(map[string]any{
+			_ = json.NewEncoder(w).Encode(map[string]any{
 				"subject": "test",
 				"version": 1,
 				"id":      1,
 				"schema":  `{"type":"string"}`,
 			})
 		case r.URL.Path == "/config/test":
-			json.NewEncoder(w).Encode(map[string]any{})
+			_ = json.NewEncoder(w).Encode(map[string]any{})
 		}
 	}))
 	defer srv.Close()
@@ -220,18 +220,18 @@ func TestGetSchemaCaching(t *testing.T) {
 		switch {
 		case r.URL.Path == "/subjects/cached/versions/1":
 			callCount++
-			json.NewEncoder(w).Encode(map[string]any{
+			_ = json.NewEncoder(w).Encode(map[string]any{
 				"subject": "cached", "version": 1, "id": 1, "schema": `"string"`,
 			})
 		case r.URL.Path == "/config/cached":
-			json.NewEncoder(w).Encode(map[string]any{})
+			_ = json.NewEncoder(w).Encode(map[string]any{})
 		}
 	}))
 	defer srv.Close()
 
 	client, _ := NewClient(srv.URL, "", "", 100, 300)
-	client.GetSchema(context.Background(), "cached", "1")
-	client.GetSchema(context.Background(), "cached", "1")
+	_, _ = client.GetSchema(context.Background(), "cached", "1")
+	_, _ = client.GetSchema(context.Background(), "cached", "1")
 
 	if callCount != 1 {
 		t.Errorf("expected 1 HTTP call (cached), got %d", callCount)
@@ -444,7 +444,7 @@ func TestCheckCompatibilityInvalidVersion(t *testing.T) {
 func TestCheckCompatibilityDefaultVersion(t *testing.T) {
 	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode(map[string]any{"is_compatible": true})
+		_ = json.NewEncoder(w).Encode(map[string]any{"is_compatible": true})
 	}))
 	defer srv.Close()
 
@@ -461,7 +461,7 @@ func TestCheckCompatibilityDefaultVersion(t *testing.T) {
 func TestCheckCompatibilityNotCompatible(t *testing.T) {
 	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode(map[string]any{
+		_ = json.NewEncoder(w).Encode(map[string]any{
 			"is_compatible": false,
 			"messages":      []string{"Breaking change detected"},
 		})

@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+
 	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
@@ -36,11 +37,11 @@ type Policy struct {
 
 // PolicyBundle groups related policies.
 type PolicyBundle struct {
-	ID          string    `json:"id"`
-	Name        string    `json:"name"`
-	Policies    []string  `json:"policy_ids"`
-	Version     string    `json:"version"`
-	LoadedAt    time.Time `json:"loaded_at"`
+	ID       string    `json:"id"`
+	Name     string    `json:"name"`
+	Policies []string  `json:"policy_ids"`
+	Version  string    `json:"version"`
+	LoadedAt time.Time `json:"loaded_at"`
 }
 
 // PolicyInput is the input to a policy evaluation.
@@ -461,13 +462,13 @@ func (pe *PolicyEngine) ExportPolicies() (string, error) {
 
 // PolicyValidation describes the result of validating a Rego policy.
 type PolicyValidation struct {
-	Valid       bool     `json:"valid"`
-	Errors      []string `json:"errors,omitempty"`
-	Warnings    []string `json:"warnings,omitempty"`
-	RuleCount   int      `json:"rule_count"`
-	HasAllow    bool     `json:"has_allow_rule"`
-	HasDeny     bool     `json:"has_deny_rule"`
-	HasPackage  bool     `json:"has_package_declaration"`
+	Valid      bool     `json:"valid"`
+	Errors     []string `json:"errors,omitempty"`
+	Warnings   []string `json:"warnings,omitempty"`
+	RuleCount  int      `json:"rule_count"`
+	HasAllow   bool     `json:"has_allow_rule"`
+	HasDeny    bool     `json:"has_deny_rule"`
+	HasPackage bool     `json:"has_package_declaration"`
 }
 
 // PolicyImpact predicts the impact of adding/modifying a policy.

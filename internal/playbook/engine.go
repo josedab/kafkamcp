@@ -11,6 +11,7 @@ import (
 // TriggerType defines what anomaly pattern activates a playbook.
 type TriggerType string
 
+// TriggerHighLag and related values define constants for this package.
 const (
 	TriggerHighLag         TriggerType = "high_consumer_lag"
 	TriggerBrokerDown      TriggerType = "broker_down"
@@ -25,16 +26,16 @@ const (
 
 // Playbook defines a set of remediation steps triggered by anomaly patterns.
 type Playbook struct {
-	ID          string          `json:"id"`
-	Name        string          `json:"name"`
-	Description string          `json:"description,omitempty"`
-	Trigger     TriggerConfig   `json:"trigger"`
+	ID          string            `json:"id"`
+	Name        string            `json:"name"`
+	Description string            `json:"description,omitempty"`
+	Trigger     TriggerConfig     `json:"trigger"`
 	Steps       []RemediationStep `json:"steps"`
-	Cooldown    string          `json:"cooldown,omitempty"`   // min time between executions
-	MaxRetries  int             `json:"max_retries,omitempty"`
-	Enabled     bool            `json:"enabled"`
-	CreatedBy   string          `json:"created_by"`
-	CreatedAt   time.Time       `json:"created_at"`
+	Cooldown    string            `json:"cooldown,omitempty"` // min time between executions
+	MaxRetries  int               `json:"max_retries,omitempty"`
+	Enabled     bool              `json:"enabled"`
+	CreatedBy   string            `json:"created_by"`
+	CreatedAt   time.Time         `json:"created_at"`
 }
 
 // TriggerConfig defines when a playbook should be activated.
@@ -52,32 +53,32 @@ type RemediationStep struct {
 	Name        string            `json:"name"`
 	Tool        string            `json:"tool"`
 	Args        map[string]string `json:"args,omitempty"`
-	Condition   string            `json:"condition,omitempty"` // skip condition
+	Condition   string            `json:"condition,omitempty"`  // skip condition
 	OnFailure   string            `json:"on_failure,omitempty"` // continue, abort, skip
 	Description string            `json:"description,omitempty"`
 }
 
 // PlaybookExecution tracks a playbook run.
 type PlaybookExecution struct {
-	ID          string            `json:"id"`
-	PlaybookID  string            `json:"playbook_id"`
-	TriggerInfo map[string]any    `json:"trigger_info"`
-	Steps       []StepExecution   `json:"steps"`
-	Status      string            `json:"status"` // running, completed, failed, aborted
-	StartedAt   time.Time         `json:"started_at"`
-	CompletedAt *time.Time        `json:"completed_at,omitempty"`
-	ExecutedBy  string            `json:"executed_by"`
+	ID          string          `json:"id"`
+	PlaybookID  string          `json:"playbook_id"`
+	TriggerInfo map[string]any  `json:"trigger_info"`
+	Steps       []StepExecution `json:"steps"`
+	Status      string          `json:"status"` // running, completed, failed, aborted
+	StartedAt   time.Time       `json:"started_at"`
+	CompletedAt *time.Time      `json:"completed_at,omitempty"`
+	ExecutedBy  string          `json:"executed_by"`
 }
 
 // StepExecution tracks a single step's execution.
 type StepExecution struct {
-	StepName   string    `json:"step_name"`
-	Tool       string    `json:"tool"`
-	Status     string    `json:"status"` // pending, running, completed, failed, skipped
-	Output     any       `json:"output,omitempty"`
-	Error      string    `json:"error,omitempty"`
-	StartedAt  time.Time `json:"started_at,omitempty"`
-	Duration   string    `json:"duration,omitempty"`
+	StepName  string    `json:"step_name"`
+	Tool      string    `json:"tool"`
+	Status    string    `json:"status"` // pending, running, completed, failed, skipped
+	Output    any       `json:"output,omitempty"`
+	Error     string    `json:"error,omitempty"`
+	StartedAt time.Time `json:"started_at,omitempty"`
+	Duration  string    `json:"duration,omitempty"`
 }
 
 // Engine manages playbooks and their execution.

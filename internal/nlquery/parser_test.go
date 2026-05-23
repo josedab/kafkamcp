@@ -323,9 +323,9 @@ func TestExtractTimeRangeVariants(t *testing.T) {
 	e := newTestEngine()
 
 	tests := []struct {
-		query    string
-		wantNil  bool
-		wantDur  string
+		query   string
+		wantNil bool
+		wantDur string
 	}{
 		{"from the last 5 minutes", false, "5 minutes"},
 		{"over the last 1 week", false, "1 weeks"},

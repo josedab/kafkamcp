@@ -87,8 +87,8 @@ func TestInteractiveOnboarder_GetProgress(t *testing.T) {
 	onboarder := NewInteractiveOnboarder(engine)
 	session := onboarder.StartSession(context.Background(), "agent-1")
 
-	onboarder.AdvanceStep(session.ID, "done")
-	onboarder.SkipStep(session.ID)
+	_, _ = onboarder.AdvanceStep(session.ID, "done")
+	_, _ = onboarder.SkipStep(session.ID)
 
 	progress := onboarder.GetProgress(session.ID)
 	if progress["completed"].(int) != 1 {

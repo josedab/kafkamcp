@@ -10,7 +10,7 @@ import (
 func TestUpdateInstance_ExistingInstance(t *testing.T) {
 	t.Parallel()
 	c := NewController(slog.Default())
-	c.CreateInstance("test", "default", KafkaMCPSpec{Replicas: 1})
+	_, _ = c.CreateInstance("test", "default", KafkaMCPSpec{Replicas: 1})
 
 	newSpec := KafkaMCPSpec{Replicas: 5, Image: "custom/image", Version: "v2"}
 	inst, err := c.UpdateInstance("test", "default", newSpec)
@@ -29,7 +29,7 @@ func TestUpdateInstance_ExistingInstance(t *testing.T) {
 func TestUpdateInstance_SetsUpdatingThenRunning(t *testing.T) {
 	t.Parallel()
 	c := NewController(slog.Default())
-	c.CreateInstance("test", "ns", KafkaMCPSpec{Replicas: 1})
+	_, _ = c.CreateInstance("test", "ns", KafkaMCPSpec{Replicas: 1})
 
 	// After UpdateInstance, reconcile is called which sets phase to Running
 	inst, err := c.UpdateInstance("test", "ns", KafkaMCPSpec{Replicas: 3})
@@ -55,7 +55,7 @@ func TestUpdateInstance_NonExistent(t *testing.T) {
 func TestUpdateInstance_PreservesNameNamespace(t *testing.T) {
 	t.Parallel()
 	c := NewController(slog.Default())
-	c.CreateInstance("myapp", "production", KafkaMCPSpec{Replicas: 1})
+	_, _ = c.CreateInstance("myapp", "production", KafkaMCPSpec{Replicas: 1})
 
 	inst, err := c.UpdateInstance("myapp", "production", KafkaMCPSpec{Replicas: 10})
 	if err != nil {
@@ -97,7 +97,7 @@ func TestRun_ShutdownOnContextCancel(t *testing.T) {
 func TestRun_ReconcilesTicker(t *testing.T) {
 	t.Parallel()
 	c := NewController(slog.Default())
-	c.CreateInstance("test", "default", KafkaMCPSpec{Replicas: 2})
+	_, _ = c.CreateInstance("test", "default", KafkaMCPSpec{Replicas: 2})
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

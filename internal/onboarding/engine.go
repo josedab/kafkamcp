@@ -54,10 +54,10 @@ type SuggestedPolicy struct {
 
 // QuickstartGuide provides a step-by-step onboarding guide.
 type QuickstartGuide struct {
-	Steps       []QuickstartStep `json:"steps"`
-	ConfigYAML  string           `json:"config_yaml"`
-	Completed   int              `json:"completed"`
-	Total       int              `json:"total"`
+	Steps      []QuickstartStep `json:"steps"`
+	ConfigYAML string           `json:"config_yaml"`
+	Completed  int              `json:"completed"`
+	Total      int              `json:"total"`
 }
 
 // QuickstartStep is a single onboarding step.
@@ -272,7 +272,7 @@ func checkPort(ctx context.Context, addr string) bool {
 	if err != nil {
 		return false
 	}
-	conn.Close()
+	_ = conn.Close()
 	return true
 }
 

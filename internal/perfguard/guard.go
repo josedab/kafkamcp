@@ -12,6 +12,7 @@ import (
 // MetricName identifies a performance metric.
 type MetricName string
 
+// MetricProduceLatency and related values define constants for this package.
 const (
 	MetricProduceLatency MetricName = "produce_latency_ms"
 	MetricConsumeLatency MetricName = "consume_latency_ms"
@@ -29,41 +30,41 @@ type Sample struct {
 
 // Baseline stores statistical baseline for a metric.
 type Baseline struct {
-	AgentID    string     `json:"agent_id"`
-	Metric     MetricName `json:"metric"`
-	Mean       float64    `json:"mean"`
-	StdDev     float64    `json:"std_dev"`
-	P50        float64    `json:"p50"`
-	P95        float64    `json:"p95"`
-	P99        float64    `json:"p99"`
-	SampleCount int      `json:"sample_count"`
-	UpdatedAt  time.Time  `json:"updated_at"`
+	AgentID     string     `json:"agent_id"`
+	Metric      MetricName `json:"metric"`
+	Mean        float64    `json:"mean"`
+	StdDev      float64    `json:"std_dev"`
+	P50         float64    `json:"p50"`
+	P95         float64    `json:"p95"`
+	P99         float64    `json:"p99"`
+	SampleCount int        `json:"sample_count"`
+	UpdatedAt   time.Time  `json:"updated_at"`
 }
 
 // Regression represents a detected performance regression.
 type Regression struct {
-	ID          string     `json:"id"`
-	AgentID     string     `json:"agent_id"`
-	Metric      MetricName `json:"metric"`
-	Severity    string     `json:"severity"` // warning, critical
-	CurrentMean float64    `json:"current_mean"`
-	BaselineMean float64   `json:"baseline_mean"`
-	ChangePercent float64  `json:"change_percent"`
-	CUSUMValue  float64    `json:"cusum_value"`
-	DetectedAt  time.Time  `json:"detected_at"`
-	Message     string     `json:"message"`
-	AutoThrottled bool    `json:"auto_throttled"`
+	ID            string     `json:"id"`
+	AgentID       string     `json:"agent_id"`
+	Metric        MetricName `json:"metric"`
+	Severity      string     `json:"severity"` // warning, critical
+	CurrentMean   float64    `json:"current_mean"`
+	BaselineMean  float64    `json:"baseline_mean"`
+	ChangePercent float64    `json:"change_percent"`
+	CUSUMValue    float64    `json:"cusum_value"`
+	DetectedAt    time.Time  `json:"detected_at"`
+	Message       string     `json:"message"`
+	AutoThrottled bool       `json:"auto_throttled"`
 }
 
 // ThrottleStatus tracks per-agent throttle state.
 type ThrottleStatus struct {
-	AgentID      string    `json:"agent_id"`
-	Throttled    bool      `json:"throttled"`
-	Reason       string    `json:"reason,omitempty"`
-	ThrottledAt  time.Time `json:"throttled_at,omitempty"`
-	ExpiresAt    time.Time `json:"expires_at,omitempty"`
-	OriginalRate int       `json:"original_rate,omitempty"`
-	ThrottledRate int      `json:"throttled_rate,omitempty"`
+	AgentID       string    `json:"agent_id"`
+	Throttled     bool      `json:"throttled"`
+	Reason        string    `json:"reason,omitempty"`
+	ThrottledAt   time.Time `json:"throttled_at,omitempty"`
+	ExpiresAt     time.Time `json:"expires_at,omitempty"`
+	OriginalRate  int       `json:"original_rate,omitempty"`
+	ThrottledRate int       `json:"throttled_rate,omitempty"`
 }
 
 // GuardConfig configures the performance guard.
@@ -95,10 +96,10 @@ func DefaultGuardConfig() GuardConfig {
 }
 
 type agentMetrics struct {
-	samples    []Sample
-	baseline   *Baseline
-	cusumPos   float64
-	cusumNeg   float64
+	samples  []Sample
+	baseline *Baseline
+	cusumPos float64
+	cusumNeg float64
 }
 
 // Guard manages performance monitoring and regression detection.

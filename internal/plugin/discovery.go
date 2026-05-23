@@ -50,14 +50,14 @@ type DiscoveryResult struct {
 
 // MarketplaceStats provides aggregate marketplace statistics.
 type MarketplaceStats struct {
-	TotalPlugins     int              `json:"total_plugins"`
-	TotalAgentConfigs int             `json:"total_agent_configs"`
-	TotalToolBundles int              `json:"total_tool_bundles"`
-	TotalReviews     int              `json:"total_reviews"`
-	TotalDownloads   int              `json:"total_downloads"`
-	Categories       []CategoryInfo   `json:"categories"`
-	FeaturedItems    []FeaturedItem   `json:"featured_items"`
-	TopRated         []MarketplaceEntry `json:"top_rated"`
+	TotalPlugins      int                `json:"total_plugins"`
+	TotalAgentConfigs int                `json:"total_agent_configs"`
+	TotalToolBundles  int                `json:"total_tool_bundles"`
+	TotalReviews      int                `json:"total_reviews"`
+	TotalDownloads    int                `json:"total_downloads"`
+	Categories        []CategoryInfo     `json:"categories"`
+	FeaturedItems     []FeaturedItem     `json:"featured_items"`
+	TopRated          []MarketplaceEntry `json:"top_rated"`
 }
 
 // ReviewStore manages marketplace reviews.

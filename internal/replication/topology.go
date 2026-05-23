@@ -16,23 +16,23 @@ import (
 
 // Topology represents the discovered replication topology across clusters.
 type Topology struct {
-	Clusters []ClusterNode      `json:"clusters"`
-	Links    []TopologyLink     `json:"links"`
-	Type     string             `json:"type"` // "hub-spoke", "mesh", "chain", "single"
-	DetectedAt string           `json:"detected_at"`
+	Clusters   []ClusterNode  `json:"clusters"`
+	Links      []TopologyLink `json:"links"`
+	Type       string         `json:"type"` // "hub-spoke", "mesh", "chain", "single"
+	DetectedAt string         `json:"detected_at"`
 }
 
 // ClusterNode represents a cluster in the topology.
 type ClusterNode struct {
-	Name     string   `json:"name"`
-	Role     string   `json:"role"` // "source", "target", "bidirectional"
-	Topics   int      `json:"topics"`
-	IsOnline bool     `json:"is_online"`
+	Name     string `json:"name"`
+	Role     string `json:"role"` // "source", "target", "bidirectional"
+	Topics   int    `json:"topics"`
+	IsOnline bool   `json:"is_online"`
 }
 
 // TopologyLink represents a replication link in the topology.
 type TopologyLink struct {
-	Source    string `json:"source"`
+	Source   string `json:"source"`
 	Target   string `json:"target"`
 	Type     string `json:"type"` // "mirrormaker2", "cluster_linking", "custom"
 	Topics   int    `json:"topics"`
@@ -42,24 +42,24 @@ type TopologyLink struct {
 
 // AlertNotification represents a threshold alert for MCP notification.
 type AlertNotification struct {
-	ID        string `json:"id"`
-	Severity  string `json:"severity"`
-	Source    string `json:"source_cluster"`
-	Target   string `json:"target_cluster"`
-	Topic    string `json:"topic"`
-	Partition int32 `json:"partition"`
-	CurrentLag int64 `json:"current_lag"`
-	Threshold int64 `json:"threshold"`
-	Message  string `json:"message"`
-	Time     string `json:"time"`
-	Resolved bool   `json:"resolved"`
+	ID         string `json:"id"`
+	Severity   string `json:"severity"`
+	Source     string `json:"source_cluster"`
+	Target     string `json:"target_cluster"`
+	Topic      string `json:"topic"`
+	Partition  int32  `json:"partition"`
+	CurrentLag int64  `json:"current_lag"`
+	Threshold  int64  `json:"threshold"`
+	Message    string `json:"message"`
+	Time       string `json:"time"`
+	Resolved   bool   `json:"resolved"`
 }
 
 // NotificationConfig configures how alerts are delivered.
 type NotificationConfig struct {
-	WebhookURL    string        `json:"webhook_url,omitempty" yaml:"webhook_url,omitempty"`
-	MCPChannel    bool          `json:"mcp_channel" yaml:"mcp_channel"`
-	CooldownMins  int           `json:"cooldown_mins" yaml:"cooldown_mins"`
+	WebhookURL   string `json:"webhook_url,omitempty" yaml:"webhook_url,omitempty"`
+	MCPChannel   bool   `json:"mcp_channel" yaml:"mcp_channel"`
+	CooldownMins int    `json:"cooldown_mins" yaml:"cooldown_mins"`
 }
 
 // TopologyDetector auto-discovers replication topologies.
@@ -217,8 +217,8 @@ func NewAlertManager(ctx context.Context, config NotificationConfig) (*AlertMana
 	}
 	ctx, cancel := context.WithCancel(ctx)
 	return &AlertManager{
-		config:     config,
-		cooldowns:  make(map[string]time.Time),
+		config:    config,
+		cooldowns: make(map[string]time.Time),
 		httpClient: &http.Client{
 			Timeout: 10 * time.Second,
 			Transport: &http.Transport{
@@ -331,7 +331,7 @@ func (am *AlertManager) sendWebhook(notif *AlertNotification) error {
 		am.logger.Error("webhook delivery failed", "error", err, "alert_id", notif.ID, "severity", notif.Severity, "webhook_url", redactURL(am.config.WebhookURL))
 		return fmt.Errorf("webhook delivery: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		am.logger.Warn("webhook returned non-2xx status", "status", resp.StatusCode, "alert_id", notif.ID, "severity", notif.Severity, "webhook_url", redactURL(am.config.WebhookURL))

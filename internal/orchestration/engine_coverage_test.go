@@ -21,10 +21,10 @@ func TestListOrchestrations_Multiple(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
 
-	e.CreateOrchestration("orch-1", "desc1", "coord", []OrchestrationStep{
+	_, _ = e.CreateOrchestration("orch-1", "desc1", "coord", []OrchestrationStep{
 		{ID: "s1", Name: "step1", Tool: "tool1"},
 	})
-	e.CreateOrchestration("orch-2", "desc2", "coord", []OrchestrationStep{
+	_, _ = e.CreateOrchestration("orch-2", "desc2", "coord", []OrchestrationStep{
 		{ID: "s1", Name: "step1", Tool: "tool1"},
 	})
 
@@ -41,12 +41,12 @@ func TestListOrchestrations_FilterByStatus(t *testing.T) {
 	orch1, _ := e.CreateOrchestration("active", "", "c", []OrchestrationStep{
 		{ID: "s1", Name: "a", Tool: "t"},
 	})
-	e.CreateOrchestration("pending", "", "c", []OrchestrationStep{
+	_, _ = e.CreateOrchestration("pending", "", "c", []OrchestrationStep{
 		{ID: "s1", Name: "a", Tool: "t"},
 	})
 
 	// Complete orch1
-	e.CompleteStep(orch1.ID, "s1", "a1", "completed", nil, "")
+	_ = e.CompleteStep(orch1.ID, "s1", "a1", "completed", nil, "")
 
 	result := e.ListOrchestrations()
 	completed := 0
@@ -65,7 +65,7 @@ func TestListOrchestrations_FilterByStatus(t *testing.T) {
 func TestAgentHeartbeat_Valid(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
-	e.RegisterAgent("agent-1", "Monitor", RoleMonitor, nil)
+	_, _ = e.RegisterAgent("agent-1", "Monitor", RoleMonitor, nil)
 
 	before := time.Now()
 	time.Sleep(1 * time.Millisecond)
@@ -94,7 +94,7 @@ func TestAgentHeartbeat_Unregistered(t *testing.T) {
 func TestAgentHeartbeat_AfterTimeout(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
-	e.RegisterAgent("agent-1", "Monitor", RoleMonitor, nil)
+	_, _ = e.RegisterAgent("agent-1", "Monitor", RoleMonitor, nil)
 
 	// Simulate stale heartbeat
 	e.mu.Lock()
@@ -133,7 +133,7 @@ func TestCompleteStep_DownstreamUnlock(t *testing.T) {
 		t.Fatalf("expected 1 ready step, got %d", len(ready))
 	}
 
-	e.CompleteStep(orch.ID, "s1", "a1", "completed", nil, "")
+	_ = e.CompleteStep(orch.ID, "s1", "a1", "completed", nil, "")
 
 	// After completing s1, both s2 and s3 should be ready
 	ready, _ = e.GetReadySteps(orch.ID)
@@ -145,7 +145,7 @@ func TestCompleteStep_DownstreamUnlock(t *testing.T) {
 func TestCompleteStep_AlreadyCompleted(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
-	e.RegisterAgent("a1", "Agent", RoleOperator, nil)
+	_, _ = e.RegisterAgent("a1", "Agent", RoleOperator, nil)
 
 	steps := []OrchestrationStep{
 		{ID: "s1", Name: "First", Tool: "t1"},
@@ -185,8 +185,8 @@ func TestCreateHandoff_EmptyFromTo(t *testing.T) {
 func TestCreateHandoff_WithContext(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
-	e.RegisterAgent("a1", "From", RoleMonitor, nil)
-	e.RegisterAgent("a2", "To", RoleOperator, nil)
+	_, _ = e.RegisterAgent("a1", "From", RoleMonitor, nil)
+	_, _ = e.RegisterAgent("a2", "To", RoleOperator, nil)
 
 	ctx := map[string]any{"topic": "orders", "lag": 5000}
 	h, err := e.CreateHandoff("a1", "a2", "Please fix lag", ctx)

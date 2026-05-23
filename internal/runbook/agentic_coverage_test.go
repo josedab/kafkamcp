@@ -153,7 +153,7 @@ func TestResumeExecution_FromPausedState(t *testing.T) {
 	}
 
 	// Approve to clear pending, then set back to paused for resume
-	e.ApproveStep(exec.ID, "admin")
+	_ = e.ApproveStep(exec.ID, "admin")
 
 	// Set to paused again to test resume
 	e.mu.Lock()
@@ -226,13 +226,13 @@ func TestResumeExecution_CheckpointPreservation(t *testing.T) {
 		t.Fatalf("ExecuteAgentic: %v", err)
 	}
 
-	e.ApproveStep(exec.ID, "admin")
+	_ = e.ApproveStep(exec.ID, "admin")
 	e.mu.Lock()
 	exec.Status = "paused"
 	exec.Checkpoint = 3
 	e.mu.Unlock()
 
-	e.ResumeExecution(exec.ID)
+	_ = e.ResumeExecution(exec.ID)
 
 	updated, _ := e.GetAgenticExecution(exec.ID)
 	if updated.Checkpoint != 3 {
@@ -270,8 +270,8 @@ func TestGetAgenticRunbook_NonExisting(t *testing.T) {
 func TestListAgenticRunbooks_Unfiltered(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
-	e.CreateAgenticRunbook(testRunbookYAML, "a")
-	e.CreateAgenticRunbook(testRunbookNoRollbackYAML, "b")
+	_, _ = e.CreateAgenticRunbook(testRunbookYAML, "a")
+	_, _ = e.CreateAgenticRunbook(testRunbookNoRollbackYAML, "b")
 
 	all := e.ListAgenticRunbooks("")
 	if len(all) < 2 {
@@ -282,7 +282,7 @@ func TestListAgenticRunbooks_Unfiltered(t *testing.T) {
 func TestListAgenticRunbooks_FilteredByCategory(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
-	e.CreateAgenticRunbook(testRunbookYAML, "a") // category: operations
+	_, _ = e.CreateAgenticRunbook(testRunbookYAML, "a") // category: operations
 
 	ops := e.ListAgenticRunbooks("operations")
 	for _, rb := range ops {
@@ -308,7 +308,7 @@ func TestListAgenticExecutions_DefaultLimit(t *testing.T) {
 	e := NewEngine(slog.Default())
 	rb, _ := e.CreateAgenticRunbook(testRunbookNoRollbackYAML, "a")
 	for i := 0; i < 3; i++ {
-		e.ExecuteAgentic(rb.ID, "a", nil, true)
+		_, _ = e.ExecuteAgentic(rb.ID, "a", nil, true)
 	}
 
 	result := e.ListAgenticExecutions(0) // 0 should default to 50
@@ -322,7 +322,7 @@ func TestListAgenticExecutions_CustomLimit(t *testing.T) {
 	e := NewEngine(slog.Default())
 	rb, _ := e.CreateAgenticRunbook(testRunbookNoRollbackYAML, "a")
 	for i := 0; i < 5; i++ {
-		e.ExecuteAgentic(rb.ID, "a", nil, true)
+		_, _ = e.ExecuteAgentic(rb.ID, "a", nil, true)
 	}
 
 	result := e.ListAgenticExecutions(2)
@@ -335,7 +335,7 @@ func TestListAgenticExecutions_LimitGreaterThanTotal(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
 	rb, _ := e.CreateAgenticRunbook(testRunbookNoRollbackYAML, "a")
-	e.ExecuteAgentic(rb.ID, "a", nil, true)
+	_, _ = e.ExecuteAgentic(rb.ID, "a", nil, true)
 
 	result := e.ListAgenticExecutions(100)
 	if len(result) < 1 {

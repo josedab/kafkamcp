@@ -47,9 +47,9 @@ func TestSetPolicyComplianceViolation(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(nil)
 	err := e.SetPolicy(RetentionPolicy{
-		Topic:              "medical-records",
-		TargetRetentionMs:  1000, // Way too short for HIPAA
-		Compliance:         ComplianceHIPAA,
+		Topic:             "medical-records",
+		TargetRetentionMs: 1000, // Way too short for HIPAA
+		Compliance:        ComplianceHIPAA,
 	})
 	if err == nil {
 		t.Error("expected HIPAA compliance error")

@@ -11,25 +11,25 @@ import (
 
 // PipelineSpec is a generated pipeline specification from natural language.
 type PipelineSpec struct {
-	ID           string              `json:"id"`
-	Name         string              `json:"name"`
-	Description  string              `json:"description"`
-	OriginalNL   string              `json:"original_nl"`
-	SourceTopic  string              `json:"source_topic"`
-	SinkTopic    string              `json:"sink_topic,omitempty"`
-	Steps        []PipelineStepSpec  `json:"steps"`
+	ID            string             `json:"id"`
+	Name          string             `json:"name"`
+	Description   string             `json:"description"`
+	OriginalNL    string             `json:"original_nl"`
+	SourceTopic   string             `json:"source_topic"`
+	SinkTopic     string             `json:"sink_topic,omitempty"`
+	Steps         []PipelineStepSpec `json:"steps"`
 	ConnectConfig *ConnectConfig     `json:"connect_config,omitempty"`
-	Status       string              `json:"status"` // draft, validated, deployed, stopped
-	CreatedBy    string              `json:"created_by"`
-	CreatedAt    time.Time           `json:"created_at"`
+	Status        string             `json:"status"` // draft, validated, deployed, stopped
+	CreatedBy     string             `json:"created_by"`
+	CreatedAt     time.Time          `json:"created_at"`
 }
 
 // PipelineStepSpec is a single step in a generated pipeline.
 type PipelineStepSpec struct {
-	Type       string            `json:"type"` // filter, map, transform, enrich, aggregate, join, sink
-	Name       string            `json:"name"`
-	Config     map[string]string `json:"config"`
-	Order      int               `json:"order"`
+	Type   string            `json:"type"` // filter, map, transform, enrich, aggregate, join, sink
+	Name   string            `json:"name"`
+	Config map[string]string `json:"config"`
+	Order  int               `json:"order"`
 }
 
 // ConnectConfig represents a generated Kafka Connect configuration.
@@ -42,7 +42,7 @@ type ConnectConfig struct {
 
 // ParseResult is the result of parsing a natural language pipeline description.
 type ParseResult struct {
-	Intent       string   `json:"intent"`       // filter, transform, aggregate, route, sync, etl
+	Intent       string   `json:"intent"` // filter, transform, aggregate, route, sync, etl
 	SourceTopic  string   `json:"source_topic"`
 	SinkTopic    string   `json:"sink_topic,omitempty"`
 	Filters      []string `json:"filters,omitempty"`
@@ -370,8 +370,8 @@ func generateConnectConfig(spec *PipelineSpec) *ConnectConfig {
 		TasksMax:       1,
 		Properties: map[string]string{
 			"topics":             spec.SourceTopic,
-			"source.cluster":    "source",
-			"target.cluster":    "target",
+			"source.cluster":     "source",
+			"target.cluster":     "target",
 			"replication.factor": "1",
 		},
 	}

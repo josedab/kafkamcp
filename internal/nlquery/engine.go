@@ -9,14 +9,14 @@ import (
 
 // QueryPlan represents the decomposed NL query execution plan.
 type QueryPlan struct {
-	Intent      string            `json:"intent"`
-	Topics      []string          `json:"topics"`
-	Filters     []Filter          `json:"filters"`
-	Aggregation *AggregationStep  `json:"aggregation,omitempty"`
-	TimeRange   *TimeRange        `json:"time_range,omitempty"`
-	Limit       int               `json:"limit"`
-	SortBy      string            `json:"sort_by,omitempty"`
-	RawQuery    string            `json:"raw_query"`
+	Intent      string           `json:"intent"`
+	Topics      []string         `json:"topics"`
+	Filters     []Filter         `json:"filters"`
+	Aggregation *AggregationStep `json:"aggregation,omitempty"`
+	TimeRange   *TimeRange       `json:"time_range,omitempty"`
+	Limit       int              `json:"limit"`
+	SortBy      string           `json:"sort_by,omitempty"`
+	RawQuery    string           `json:"raw_query"`
 }
 
 // Filter represents a field-level filter condition.
@@ -51,10 +51,10 @@ type QueryResult struct {
 
 // Provenance tracks where data came from.
 type Provenance struct {
-	TopicsScanned    []string `json:"topics_scanned"`
-	MessagesScanned  int      `json:"messages_scanned"`
-	MessagesMatched  int      `json:"messages_matched"`
-	FiltersApplied   int      `json:"filters_applied"`
+	TopicsScanned   []string `json:"topics_scanned"`
+	MessagesScanned int      `json:"messages_scanned"`
+	MessagesMatched int      `json:"messages_matched"`
+	FiltersApplied  int      `json:"filters_applied"`
 }
 
 // SchemaInfo provides field information for a topic.
@@ -65,22 +65,22 @@ type SchemaInfo struct {
 
 // ExecutionResult represents the result of executing a parsed query plan.
 type ExecutionResult struct {
-	Plan         QueryPlan        `json:"plan"`
-	Data         []map[string]any `json:"data"`
-	TotalCount   int              `json:"total_count"`
-	Provenance   Provenance       `json:"provenance"`
-	Duration     string           `json:"duration"`
-	FromCache    bool             `json:"from_cache,omitempty"`
-	Suggestions  []string         `json:"suggestions,omitempty"`
+	Plan        QueryPlan        `json:"plan"`
+	Data        []map[string]any `json:"data"`
+	TotalCount  int              `json:"total_count"`
+	Provenance  Provenance       `json:"provenance"`
+	Duration    string           `json:"duration"`
+	FromCache   bool             `json:"from_cache,omitempty"`
+	Suggestions []string         `json:"suggestions,omitempty"`
 }
 
 // QueryHistoryEntry records a past query for auto-suggest and re-use.
 type QueryHistoryEntry struct {
-	Query     string    `json:"query"`
-	Plan      QueryPlan `json:"plan"`
-	Timestamp time.Time `json:"timestamp"`
-	ResultCount int     `json:"result_count"`
-	DurationMs  int64   `json:"duration_ms"`
+	Query       string    `json:"query"`
+	Plan        QueryPlan `json:"plan"`
+	Timestamp   time.Time `json:"timestamp"`
+	ResultCount int       `json:"result_count"`
+	DurationMs  int64     `json:"duration_ms"`
 }
 
 // CachedResult stores a cached query result with expiry.

@@ -13,12 +13,13 @@ import (
 // LifecycleHook defines lifecycle events plugins can respond to.
 type LifecycleHook string
 
+// HookInit and related values define constants for this package.
 const (
-	HookInit         LifecycleHook = "init"
+	HookInit          LifecycleHook = "init"
 	HookRegisterTools LifecycleHook = "register_tools"
-	HookShutdown     LifecycleHook = "shutdown"
-	HookHealthCheck  LifecycleHook = "health_check"
-	HookConfigReload LifecycleHook = "config_reload"
+	HookShutdown      LifecycleHook = "shutdown"
+	HookHealthCheck   LifecycleHook = "health_check"
+	HookConfigReload  LifecycleHook = "config_reload"
 )
 
 // LifecyclePlugin extends Plugin with lifecycle hook support.
@@ -32,32 +33,32 @@ type LifecyclePlugin interface {
 
 // Manifest describes a plugin's metadata, capabilities, and security requirements.
 type Manifest struct {
-	APIVersion  string            `json:"api_version" yaml:"api_version"`
-	Name        string            `json:"name" yaml:"name"`
-	Version     string            `json:"version" yaml:"version"`
-	Description string            `json:"description" yaml:"description"`
-	Author      string            `json:"author,omitempty" yaml:"author,omitempty"`
-	License     string            `json:"license,omitempty" yaml:"license,omitempty"`
-	Homepage    string            `json:"homepage,omitempty" yaml:"homepage,omitempty"`
-	Entrypoint  string            `json:"entrypoint" yaml:"entrypoint"`
-	Type        string            `json:"type" yaml:"type"` // "native", "grpc", "wasm"
-	Capabilities PluginCapabilities `json:"capabilities" yaml:"capabilities"`
-	Config      map[string]ConfigParam `json:"config,omitempty" yaml:"config,omitempty"`
-	Dependencies []string          `json:"dependencies,omitempty" yaml:"dependencies,omitempty"`
+	APIVersion   string                 `json:"api_version" yaml:"api_version"`
+	Name         string                 `json:"name" yaml:"name"`
+	Version      string                 `json:"version" yaml:"version"`
+	Description  string                 `json:"description" yaml:"description"`
+	Author       string                 `json:"author,omitempty" yaml:"author,omitempty"`
+	License      string                 `json:"license,omitempty" yaml:"license,omitempty"`
+	Homepage     string                 `json:"homepage,omitempty" yaml:"homepage,omitempty"`
+	Entrypoint   string                 `json:"entrypoint" yaml:"entrypoint"`
+	Type         string                 `json:"type" yaml:"type"` // "native", "grpc", "wasm"
+	Capabilities PluginCapabilities     `json:"capabilities" yaml:"capabilities"`
+	Config       map[string]ConfigParam `json:"config,omitempty" yaml:"config,omitempty"`
+	Dependencies []string               `json:"dependencies,omitempty" yaml:"dependencies,omitempty"`
 }
 
 // PluginCapabilities declares what a plugin needs access to.
 type PluginCapabilities struct {
-	Tools     []string `json:"tools,omitempty" yaml:"tools,omitempty"`         // Tools this plugin provides
-	Resources []string `json:"resources,omitempty" yaml:"resources,omitempty"` // Resources this plugin provides
-	Hooks     []string `json:"hooks,omitempty" yaml:"hooks,omitempty"`         // Lifecycle hooks to subscribe to
-	Network   bool     `json:"network,omitempty" yaml:"network,omitempty"`     // Whether plugin needs network access
-	FileSystem bool    `json:"filesystem,omitempty" yaml:"filesystem,omitempty"` // Whether plugin needs filesystem access
+	Tools      []string `json:"tools,omitempty" yaml:"tools,omitempty"`           // Tools this plugin provides
+	Resources  []string `json:"resources,omitempty" yaml:"resources,omitempty"`   // Resources this plugin provides
+	Hooks      []string `json:"hooks,omitempty" yaml:"hooks,omitempty"`           // Lifecycle hooks to subscribe to
+	Network    bool     `json:"network,omitempty" yaml:"network,omitempty"`       // Whether plugin needs network access
+	FileSystem bool     `json:"filesystem,omitempty" yaml:"filesystem,omitempty"` // Whether plugin needs filesystem access
 }
 
 // ConfigParam describes a configuration parameter for a plugin.
 type ConfigParam struct {
-	Type        string `json:"type" yaml:"type"`         // "string", "int", "bool", "secret"
+	Type        string `json:"type" yaml:"type"` // "string", "int", "bool", "secret"
 	Description string `json:"description" yaml:"description"`
 	Default     any    `json:"default,omitempty" yaml:"default,omitempty"`
 	Required    bool   `json:"required" yaml:"required"`
@@ -65,15 +66,15 @@ type ConfigParam struct {
 
 // SecuritySandbox enforces capability-based security for plugins.
 type SecuritySandbox struct {
-	mu           sync.RWMutex
-	allowed      map[string]*PluginCapabilities // plugin name -> allowed caps
+	mu            sync.RWMutex
+	allowed       map[string]*PluginCapabilities // plugin name -> allowed caps
 	denyByDefault bool
 }
 
 // NewSecuritySandbox creates a new security sandbox with deny-by-default policy.
 func NewSecuritySandbox() *SecuritySandbox {
 	return &SecuritySandbox{
-		allowed:      make(map[string]*PluginCapabilities),
+		allowed:       make(map[string]*PluginCapabilities),
 		denyByDefault: true,
 	}
 }
@@ -148,22 +149,28 @@ func (s *SecuritySandbox) CheckFileSystemAccess(pluginName string) bool {
 
 // GRPCSidecar defines the interface for communicating with language-agnostic plugin sidecars.
 type GRPCSidecar struct {
-	Name       string `json:"name"`
-	Address    string `json:"address"` // e.g., "localhost:50051"
-	Status     string `json:"status"`  // "connected", "disconnected", "error"
-	StartedAt  time.Time `json:"started_at"`
-	HealthURL  string `json:"health_url,omitempty"`
+	Name      string    `json:"name"`
+	Address   string    `json:"address"` // e.g., "localhost:50051"
+	Status    string    `json:"status"`  // "connected", "disconnected", "error"
+	StartedAt time.Time `json:"started_at"`
+	HealthURL string    `json:"health_url,omitempty"`
 }
 
 // SidecarManager manages gRPC-based plugin sidecars.
 type SidecarManager struct {
 	mu       sync.RWMutex
 	sidecars map[string]*GRPCSidecar
-	logger   interface{ Info(string, ...any); Warn(string, ...any) }
+	logger   interface {
+		Info(string, ...any)
+		Warn(string, ...any)
+	}
 }
 
 // NewSidecarManager creates a new sidecar manager.
-func NewSidecarManager(logger interface{ Info(string, ...any); Warn(string, ...any) }) *SidecarManager {
+func NewSidecarManager(logger interface {
+	Info(string, ...any)
+	Warn(string, ...any)
+}) *SidecarManager {
 	return &SidecarManager{
 		sidecars: make(map[string]*GRPCSidecar),
 		logger:   logger,

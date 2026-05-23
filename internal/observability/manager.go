@@ -245,8 +245,8 @@ func (m *Manager) CreateIncident(title, severity, source string, context map[str
 		Title:     title,
 		Severity:  severity,
 		Source:    source,
-		Status:   "open",
-		Context:  context,
+		Status:    "open",
+		Context:   context,
 		CreatedAt: time.Now().UTC().Format(time.RFC3339),
 	}
 

@@ -20,7 +20,7 @@ func TestListSubjectsDetailed_AllSucceed(t *testing.T) {
 
 		switch {
 		case r.URL.Path == "/subjects":
-			json.NewEncoder(w).Encode([]string{"user-value", "order-value", "payment-value"})
+			_ = json.NewEncoder(w).Encode([]string{"user-value", "order-value", "payment-value"})
 
 		case strings.HasSuffix(r.URL.Path, "/versions"):
 			subject := strings.TrimPrefix(r.URL.Path, "/subjects/")
@@ -30,12 +30,12 @@ func TestListSubjectsDetailed_AllSucceed(t *testing.T) {
 				"order-value":   {1},
 				"payment-value": {1, 2},
 			}
-			json.NewEncoder(w).Encode(versions[subject])
+			_ = json.NewEncoder(w).Encode(versions[subject])
 
 		case strings.Contains(r.URL.Path, "/versions/latest"):
 			subject := strings.TrimPrefix(r.URL.Path, "/subjects/")
 			subject = strings.TrimSuffix(subject, "/versions/latest")
-			json.NewEncoder(w).Encode(map[string]any{
+			_ = json.NewEncoder(w).Encode(map[string]any{
 				"subject":    subject,
 				"version":    1,
 				"id":         10,
@@ -44,7 +44,7 @@ func TestListSubjectsDetailed_AllSucceed(t *testing.T) {
 			})
 
 		case strings.HasPrefix(r.URL.Path, "/config/"):
-			json.NewEncoder(w).Encode(map[string]string{"compatibilityLevel": "BACKWARD"})
+			_ = json.NewEncoder(w).Encode(map[string]string{"compatibilityLevel": "BACKWARD"})
 
 		default:
 			http.NotFound(w, r)
@@ -99,13 +99,13 @@ func TestListSubjectsDetailed_PartialFailure(t *testing.T) {
 
 		switch {
 		case r.URL.Path == "/subjects":
-			json.NewEncoder(w).Encode([]string{"good-subject", "bad-subject"})
+			_ = json.NewEncoder(w).Encode([]string{"good-subject", "bad-subject"})
 
 		case strings.Contains(r.URL.Path, "good-subject/versions") && !strings.Contains(r.URL.Path, "latest"):
-			json.NewEncoder(w).Encode([]int{1, 2})
+			_ = json.NewEncoder(w).Encode([]int{1, 2})
 
 		case strings.Contains(r.URL.Path, "good-subject/versions/latest"):
-			json.NewEncoder(w).Encode(map[string]any{
+			_ = json.NewEncoder(w).Encode(map[string]any{
 				"subject":    "good-subject",
 				"version":    2,
 				"id":         5,
@@ -115,10 +115,10 @@ func TestListSubjectsDetailed_PartialFailure(t *testing.T) {
 
 		case strings.Contains(r.URL.Path, "bad-subject/versions"):
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(`{"error_code":500}`))
+			_, _ = w.Write([]byte(`{"error_code":500}`))
 
 		case strings.HasPrefix(r.URL.Path, "/config/"):
-			json.NewEncoder(w).Encode(map[string]string{"compatibilityLevel": "FULL"})
+			_ = json.NewEncoder(w).Encode(map[string]string{"compatibilityLevel": "FULL"})
 
 		default:
 			http.NotFound(w, r)
@@ -150,7 +150,7 @@ func TestListSubjectsDetailed_EmptySubjects(t *testing.T) {
 	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode([]string{})
+		_ = json.NewEncoder(w).Encode([]string{})
 	}))
 	defer srv.Close()
 
@@ -181,7 +181,7 @@ func TestListSubjectsDetailed_SemaphoreLimiting(t *testing.T) {
 
 		switch {
 		case r.URL.Path == "/subjects":
-			json.NewEncoder(w).Encode(subjectNames)
+			_ = json.NewEncoder(w).Encode(subjectNames)
 
 		case strings.HasSuffix(r.URL.Path, "/versions") && !strings.Contains(r.URL.Path, "latest"):
 			cur := currentConcurrent.Add(1)
@@ -192,17 +192,17 @@ func TestListSubjectsDetailed_SemaphoreLimiting(t *testing.T) {
 					break
 				}
 			}
-			json.NewEncoder(w).Encode([]int{1})
+			_ = json.NewEncoder(w).Encode([]int{1})
 			currentConcurrent.Add(-1)
 
 		case strings.Contains(r.URL.Path, "/versions/latest"):
-			json.NewEncoder(w).Encode(map[string]any{
+			_ = json.NewEncoder(w).Encode(map[string]any{
 				"subject": "test", "version": 1, "id": 1,
 				"schemaType": "AVRO", "schema": `{"type":"string"}`,
 			})
 
 		case strings.HasPrefix(r.URL.Path, "/config/"):
-			json.NewEncoder(w).Encode(map[string]string{"compatibilityLevel": "NONE"})
+			_ = json.NewEncoder(w).Encode(map[string]string{"compatibilityLevel": "NONE"})
 
 		default:
 			http.NotFound(w, r)
@@ -232,13 +232,13 @@ func TestListSubjectsDetailed_CompatibilityParsing(t *testing.T) {
 
 		switch {
 		case r.URL.Path == "/subjects":
-			json.NewEncoder(w).Encode([]string{"test-subject"})
+			_ = json.NewEncoder(w).Encode([]string{"test-subject"})
 
 		case strings.HasSuffix(r.URL.Path, "/versions") && !strings.Contains(r.URL.Path, "latest"):
-			json.NewEncoder(w).Encode([]int{1})
+			_ = json.NewEncoder(w).Encode([]int{1})
 
 		case strings.Contains(r.URL.Path, "/versions/latest"):
-			json.NewEncoder(w).Encode(map[string]any{
+			_ = json.NewEncoder(w).Encode(map[string]any{
 				"subject":    "test-subject",
 				"version":    1,
 				"id":         1,
@@ -247,7 +247,7 @@ func TestListSubjectsDetailed_CompatibilityParsing(t *testing.T) {
 			})
 
 		case strings.HasPrefix(r.URL.Path, "/config/"):
-			json.NewEncoder(w).Encode(map[string]string{"compatibilityLevel": "FULL_TRANSITIVE"})
+			_ = json.NewEncoder(w).Encode(map[string]string{"compatibilityLevel": "FULL_TRANSITIVE"})
 
 		default:
 			http.NotFound(w, r)
