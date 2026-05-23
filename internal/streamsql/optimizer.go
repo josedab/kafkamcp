@@ -12,12 +12,12 @@ import (
 
 // CostModel defines the cost parameters for query optimization.
 type CostModel struct {
-	CPUCostPerMessage    float64 `json:"cpu_cost_per_message"`     // cost units per message processed
-	NetworkCostPerMB     float64 `json:"network_cost_per_mb"`      // cost units per MB transferred
-	StorageCostPerGB     float64 `json:"storage_cost_per_gb_hour"` // cost units per GB/hour
-	AggregationOverhead  float64 `json:"aggregation_overhead"`     // multiplier for aggregation ops
-	JoinOverhead         float64 `json:"join_overhead"`            // multiplier for join ops
-	WindowOverhead       float64 `json:"window_overhead"`          // multiplier for windowed ops
+	CPUCostPerMessage   float64 `json:"cpu_cost_per_message"`     // cost units per message processed
+	NetworkCostPerMB    float64 `json:"network_cost_per_mb"`      // cost units per MB transferred
+	StorageCostPerGB    float64 `json:"storage_cost_per_gb_hour"` // cost units per GB/hour
+	AggregationOverhead float64 `json:"aggregation_overhead"`     // multiplier for aggregation ops
+	JoinOverhead        float64 `json:"join_overhead"`            // multiplier for join ops
+	WindowOverhead      float64 `json:"window_overhead"`          // multiplier for windowed ops
 }
 
 // DefaultCostModel returns a reasonable default cost model.
@@ -44,17 +44,17 @@ type TopicStats struct {
 
 // ExecutionPlan describes how a query will be executed with cost estimates.
 type ExecutionPlan struct {
-	ID                string          `json:"id"`
-	QuerySQL          string          `json:"query_sql"`
-	Strategy          string          `json:"strategy"` // full_scan, partition_pruned, indexed, sampled
-	EstimatedCost     float64         `json:"estimated_cost"`
-	EstimatedMessages int64           `json:"estimated_messages"`
-	EstimatedTimeMs   int64           `json:"estimated_time_ms"`
-	EstimatedDataMB   float64         `json:"estimated_data_mb"`
-	Steps             []PlanStep      `json:"steps"`
-	Optimizations     []Optimization  `json:"optimizations"`
-	BudgetStatus      string          `json:"budget_status"` // within_budget, warning, over_budget
-	GeneratedAt       string          `json:"generated_at"`
+	ID                string         `json:"id"`
+	QuerySQL          string         `json:"query_sql"`
+	Strategy          string         `json:"strategy"` // full_scan, partition_pruned, indexed, sampled
+	EstimatedCost     float64        `json:"estimated_cost"`
+	EstimatedMessages int64          `json:"estimated_messages"`
+	EstimatedTimeMs   int64          `json:"estimated_time_ms"`
+	EstimatedDataMB   float64        `json:"estimated_data_mb"`
+	Steps             []PlanStep     `json:"steps"`
+	Optimizations     []Optimization `json:"optimizations"`
+	BudgetStatus      string         `json:"budget_status"` // within_budget, warning, over_budget
+	GeneratedAt       string         `json:"generated_at"`
 }
 
 // PlanStep is a step in the execution plan.
@@ -76,13 +76,13 @@ type Optimization struct {
 
 // Budget defines spending limits for query execution.
 type Budget struct {
-	ID            string  `json:"id"`
-	Name          string  `json:"name"`
+	ID              string  `json:"id"`
+	Name            string  `json:"name"`
 	MaxCostPerQuery float64 `json:"max_cost_per_query"`
 	MaxCostPerHour  float64 `json:"max_cost_per_hour"`
 	CurrentSpend    float64 `json:"current_spend_this_hour"`
 	AlertThreshold  float64 `json:"alert_threshold"` // 0.0-1.0
-	Status          string  `json:"status"`           // active, warning, exceeded
+	Status          string  `json:"status"`          // active, warning, exceeded
 	CreatedAt       string  `json:"created_at"`
 }
 

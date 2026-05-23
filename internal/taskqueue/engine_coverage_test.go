@@ -10,7 +10,7 @@ import (
 func TestHeartbeatValid(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.Publish("q", "task1", "a1", PriorityMedium, 3, nil, 0)
+	_, _ = e.Publish("q", "task1", "a1", PriorityMedium, 3, nil, 0)
 	task, _ := e.Claim("worker", "q")
 
 	err := e.Heartbeat("worker", task.ID)
@@ -36,7 +36,7 @@ func TestHeartbeatNonExistent(t *testing.T) {
 func TestHeartbeatNotClaimedByAgent(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.Publish("q", "task1", "a1", PriorityMedium, 3, nil, 0)
+	_, _ = e.Publish("q", "task1", "a1", PriorityMedium, 3, nil, 0)
 	task, _ := e.Claim("worker1", "q")
 
 	err := e.Heartbeat("worker2", task.ID)
@@ -52,7 +52,7 @@ func TestReassignStaleTask(t *testing.T) {
 	e := NewEngine(testLogger())
 	e.heartbeatTTL = 1 * time.Millisecond
 
-	e.Publish("q", "task1", "a1", PriorityMedium, 3, nil, 0)
+	_, _ = e.Publish("q", "task1", "a1", PriorityMedium, 3, nil, 0)
 	task, _ := e.Claim("worker", "q")
 
 	// Wait for heartbeat to expire
@@ -75,7 +75,7 @@ func TestReassignStaleTask(t *testing.T) {
 func TestReassignStaleNone(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.Publish("q", "task1", "a1", PriorityMedium, 3, nil, 0)
+	_, _ = e.Publish("q", "task1", "a1", PriorityMedium, 3, nil, 0)
 
 	reassigned := e.ReassignStale()
 	if reassigned != 0 {
@@ -88,9 +88,9 @@ func TestReassignStaleRunningTask(t *testing.T) {
 	e := NewEngine(testLogger())
 	e.heartbeatTTL = 1 * time.Millisecond
 
-	e.Publish("q", "task1", "a1", PriorityMedium, 3, nil, 0)
+	_, _ = e.Publish("q", "task1", "a1", PriorityMedium, 3, nil, 0)
 	task, _ := e.Claim("worker", "q")
-	e.Heartbeat("worker", task.ID)
+	_ = e.Heartbeat("worker", task.ID)
 
 	time.Sleep(5 * time.Millisecond)
 
@@ -130,9 +130,9 @@ func TestGetTaskNonExistent(t *testing.T) {
 func TestListTasksByStatus(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.Publish("q", "t1", "a1", PriorityMedium, 3, nil, 0)
-	e.Publish("q", "t2", "a1", PriorityMedium, 3, nil, 0)
-	e.Claim("worker", "q")
+	_, _ = e.Publish("q", "t1", "a1", PriorityMedium, 3, nil, 0)
+	_, _ = e.Publish("q", "t2", "a1", PriorityMedium, 3, nil, 0)
+	_, _ = e.Claim("worker", "q")
 
 	tasks := e.ListTasks("q", "pending", 50)
 	if len(tasks) != 1 {
@@ -143,8 +143,8 @@ func TestListTasksByStatus(t *testing.T) {
 func TestListTasksByQueue(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.Publish("q1", "t1", "a1", PriorityMedium, 3, nil, 0)
-	e.Publish("q2", "t2", "a1", PriorityMedium, 3, nil, 0)
+	_, _ = e.Publish("q1", "t1", "a1", PriorityMedium, 3, nil, 0)
+	_, _ = e.Publish("q2", "t2", "a1", PriorityMedium, 3, nil, 0)
 
 	tasks := e.ListTasks("q1", "", 50)
 	if len(tasks) != 1 {
@@ -165,7 +165,7 @@ func TestListTasksLimit(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
 	for i := 0; i < 5; i++ {
-		e.Publish("q", "t", "a1", PriorityMedium, 3, nil, 0)
+		_, _ = e.Publish("q", "t", "a1", PriorityMedium, 3, nil, 0)
 	}
 
 	tasks := e.ListTasks("q", "", 2)
@@ -177,7 +177,7 @@ func TestListTasksLimit(t *testing.T) {
 func TestListTasksDefaultLimit(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.Publish("q", "t", "a1", PriorityMedium, 3, nil, 0)
+	_, _ = e.Publish("q", "t", "a1", PriorityMedium, 3, nil, 0)
 
 	tasks := e.ListTasks("q", "", 0)
 	if len(tasks) != 1 {
@@ -190,8 +190,8 @@ func TestListTasksDefaultLimit(t *testing.T) {
 func TestStatsAllPending(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.Publish("q", "t1", "a1", PriorityMedium, 3, nil, 0)
-	e.Publish("q", "t2", "a1", PriorityMedium, 3, nil, 0)
+	_, _ = e.Publish("q", "t1", "a1", PriorityMedium, 3, nil, 0)
+	_, _ = e.Publish("q", "t2", "a1", PriorityMedium, 3, nil, 0)
 
 	stats := e.Stats("q")
 	if len(stats) != 1 {
@@ -209,9 +209,9 @@ func TestStatsAllPending(t *testing.T) {
 func TestStatsCompleted(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.Publish("q", "t1", "a1", PriorityMedium, 3, nil, 0)
+	_, _ = e.Publish("q", "t1", "a1", PriorityMedium, 3, nil, 0)
 	task, _ := e.Claim("worker", "q")
-	e.Complete("worker", task.ID, "completed", "done", "")
+	_, _ = e.Complete("worker", task.ID, "completed", "done", "")
 
 	stats := e.Stats("q")
 	if stats[0].Completed != 1 {
@@ -231,8 +231,8 @@ func TestStatsEmpty(t *testing.T) {
 func TestStatsAllQueues(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.Publish("q1", "t1", "a1", PriorityMedium, 3, nil, 0)
-	e.Publish("q2", "t2", "a1", PriorityMedium, 3, nil, 0)
+	_, _ = e.Publish("q1", "t1", "a1", PriorityMedium, 3, nil, 0)
+	_, _ = e.Publish("q2", "t2", "a1", PriorityMedium, 3, nil, 0)
 
 	stats := e.Stats("")
 	if len(stats) != 2 {
@@ -245,7 +245,7 @@ func TestStatsAllQueues(t *testing.T) {
 func TestCompleteFailedRetryThenDeadLetter(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.Publish("q", "t1", "a1", PriorityMedium, 1, nil, 0) // maxRetries=1
+	_, _ = e.Publish("q", "t1", "a1", PriorityMedium, 1, nil, 0) // maxRetries=1
 
 	task, _ := e.Claim("worker", "q")
 	result, _ := e.Complete("worker", task.ID, "failed", nil, "err")
@@ -257,7 +257,7 @@ func TestCompleteFailedRetryThenDeadLetter(t *testing.T) {
 func TestCompleteInvalidStatus(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.Publish("q", "t1", "a1", PriorityMedium, 3, nil, 0)
+	_, _ = e.Publish("q", "t1", "a1", PriorityMedium, 3, nil, 0)
 	task, _ := e.Claim("worker", "q")
 
 	_, err := e.Complete("worker", task.ID, "invalid", nil, "")
@@ -269,7 +269,7 @@ func TestCompleteInvalidStatus(t *testing.T) {
 func TestCompleteWrongAgent(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.Publish("q", "t1", "a1", PriorityMedium, 3, nil, 0)
+	_, _ = e.Publish("q", "t1", "a1", PriorityMedium, 3, nil, 0)
 	task, _ := e.Claim("worker1", "q")
 
 	_, err := e.Complete("worker2", task.ID, "completed", nil, "")
@@ -357,8 +357,8 @@ func TestClaimEmptyQueue(t *testing.T) {
 func TestClaimNoPendingTasks(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.Publish("q", "t1", "a1", PriorityMedium, 3, nil, 0)
-	e.Claim("worker", "q")
+	_, _ = e.Publish("q", "t1", "a1", PriorityMedium, 3, nil, 0)
+	_, _ = e.Claim("worker", "q")
 
 	_, err := e.Claim("worker2", "q")
 	if err == nil {

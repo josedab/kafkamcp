@@ -17,13 +17,13 @@ var validTenantIDRegex = regexp.MustCompile(`^[a-zA-Z0-9_\-]{1,128}$`)
 
 // ControlPlane manages the multi-tenant SaaS control plane.
 type ControlPlane struct {
-	mu          sync.RWMutex
-	tenantMgr   *Manager
-	regions     []RegionConfig
-	billing     map[string]*BillingInfo
-	quotas      map[string]*ResourceQuota
-	ssoConfigs  map[string]*SSOConfig
-	isolation   map[string]*NetworkIsolation
+	mu           sync.RWMutex
+	tenantMgr    *Manager
+	regions      []RegionConfig
+	billing      map[string]*BillingInfo
+	quotas       map[string]*ResourceQuota
+	ssoConfigs   map[string]*SSOConfig
+	isolation    map[string]*NetworkIsolation
 	usageRecords []UsageBillingRecord
 }
 
@@ -149,9 +149,9 @@ func (api *ControlPlaneAPI) handleTenantByID(w http.ResponseWriter, r *http.Requ
 	}
 
 	api.writeJSON(w, map[string]any{
-		"tenant":   tenant,
-		"quota":    api.cp.GetResourceQuota(tenantID),
-		"network":  api.cp.GetNetworkIsolation(tenantID),
+		"tenant":  tenant,
+		"quota":   api.cp.GetResourceQuota(tenantID),
+		"network": api.cp.GetNetworkIsolation(tenantID),
 	})
 }
 

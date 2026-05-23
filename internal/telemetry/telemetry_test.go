@@ -217,7 +217,7 @@ func TestNewProviderDefaultServiceName(t *testing.T) {
 	if err != nil {
 		t.Skipf("skipping: %v", err)
 	}
-	defer provider.Shutdown(context.Background())
+	defer func() { _ = provider.Shutdown(context.Background()) }()
 	if provider.tp == nil {
 		t.Error("expected trace provider to be created")
 	}
@@ -235,7 +235,7 @@ func TestNewProviderDefaultSampleRate(t *testing.T) {
 	if err != nil {
 		t.Skipf("skipping: %v", err)
 	}
-	defer provider.Shutdown(context.Background())
+	defer func() { _ = provider.Shutdown(context.Background()) }()
 	if provider.tp == nil {
 		t.Error("expected trace provider to be created")
 	}
@@ -253,7 +253,7 @@ func TestNewProviderNegativeSampleRate(t *testing.T) {
 	if err != nil {
 		t.Skipf("skipping: %v", err)
 	}
-	defer provider.Shutdown(context.Background())
+	_ = provider.Shutdown(context.Background())
 }
 
 func TestProviderShutdownWithTP(t *testing.T) {

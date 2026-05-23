@@ -17,6 +17,7 @@ const (
 // MetricType identifies the type of metric being tracked.
 type MetricType string
 
+// MetricThroughputIn and related values define constants for this package.
 const (
 	MetricThroughputIn  MetricType = "throughput_in"
 	MetricThroughputOut MetricType = "throughput_out"
@@ -30,10 +31,10 @@ const (
 
 // DataPoint represents a single time-series observation.
 type DataPoint struct {
-	Timestamp time.Time  `json:"timestamp"`
-	Value     float64    `json:"value"`
-	Metric    MetricType `json:"metric"`
-	Source    string     `json:"source"`
+	Timestamp time.Time         `json:"timestamp"`
+	Value     float64           `json:"value"`
+	Metric    MetricType        `json:"metric"`
+	Source    string            `json:"source"`
 	Labels    map[string]string `json:"labels,omitempty"`
 }
 
@@ -45,25 +46,25 @@ type Window struct {
 
 // QueryResult contains the result of a time-series query.
 type QueryResult struct {
-	Metric    MetricType  `json:"metric"`
-	Source    string      `json:"source"`
-	Window    string      `json:"window"`
-	Points    []DataPoint `json:"points"`
-	Stats     Stats       `json:"stats"`
-	Trend     Trend       `json:"trend"`
+	Metric MetricType  `json:"metric"`
+	Source string      `json:"source"`
+	Window string      `json:"window"`
+	Points []DataPoint `json:"points"`
+	Stats  Stats       `json:"stats"`
+	Trend  Trend       `json:"trend"`
 }
 
 // Stats contains statistical summary of a time-series.
 type Stats struct {
-	Count    int     `json:"count"`
-	Min      float64 `json:"min"`
-	Max      float64 `json:"max"`
-	Mean     float64 `json:"mean"`
-	Median   float64 `json:"median"`
-	StdDev   float64 `json:"std_dev"`
-	P50      float64 `json:"p50"`
-	P95      float64 `json:"p95"`
-	P99      float64 `json:"p99"`
+	Count  int     `json:"count"`
+	Min    float64 `json:"min"`
+	Max    float64 `json:"max"`
+	Mean   float64 `json:"mean"`
+	Median float64 `json:"median"`
+	StdDev float64 `json:"std_dev"`
+	P50    float64 `json:"p50"`
+	P95    float64 `json:"p95"`
+	P99    float64 `json:"p99"`
 }
 
 // Trend describes the overall trend in the time-series.
@@ -76,26 +77,26 @@ type Trend struct {
 
 // ComparisonResult contains the result of comparing two time windows.
 type ComparisonResult struct {
-	Metric       MetricType `json:"metric"`
-	Source       string     `json:"source"`
-	BaseWindow   string     `json:"base_window"`
-	CompWindow   string     `json:"compare_window"`
-	BaseStats    Stats      `json:"base_stats"`
-	CompStats    Stats      `json:"compare_stats"`
-	ChangePct    float64    `json:"change_pct"`
-	Significant  bool       `json:"significant"`
-	Assessment   string     `json:"assessment"`
+	Metric      MetricType `json:"metric"`
+	Source      string     `json:"source"`
+	BaseWindow  string     `json:"base_window"`
+	CompWindow  string     `json:"compare_window"`
+	BaseStats   Stats      `json:"base_stats"`
+	CompStats   Stats      `json:"compare_stats"`
+	ChangePct   float64    `json:"change_pct"`
+	Significant bool       `json:"significant"`
+	Assessment  string     `json:"assessment"`
 }
 
 // BaselineResult represents a baseline analysis.
 type BaselineResult struct {
-	Metric       MetricType `json:"metric"`
-	Source       string     `json:"source"`
-	Baseline     Stats      `json:"baseline"`
-	Current      Stats      `json:"current"`
-	Deviations   []Deviation `json:"deviations,omitempty"`
-	HealthScore  float64    `json:"health_score"`
-	Assessment   string     `json:"assessment"`
+	Metric      MetricType  `json:"metric"`
+	Source      string      `json:"source"`
+	Baseline    Stats       `json:"baseline"`
+	Current     Stats       `json:"current"`
+	Deviations  []Deviation `json:"deviations,omitempty"`
+	HealthScore float64     `json:"health_score"`
+	Assessment  string      `json:"assessment"`
 }
 
 // Deviation represents a point where metrics deviate from baseline.

@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/kafkamcp/kafkamcp/internal/auth"
 	"github.com/mark3labs/mcp-go/mcp"
+
+	"github.com/kafkamcp/kafkamcp/internal/auth"
 )
 
 // handleTimeTravel handles point-in-time topic queries.

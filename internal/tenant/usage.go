@@ -221,7 +221,7 @@ func (ut *UsageTracker) ExportCSV(tenantID string, start, end time.Time) (string
 
 	var buf strings.Builder
 	w := csv.NewWriter(&buf)
-	w.Write([]string{"timestamp", "tenant_id", "agent_id", "tool_name", "cluster", "messages", "bytes"})
+	_ = w.Write([]string{"timestamp", "tenant_id", "agent_id", "tool_name", "cluster", "messages", "bytes"})
 
 	for _, r := range ut.records {
 		if r.TenantID != tenantID {
@@ -230,7 +230,7 @@ func (ut *UsageTracker) ExportCSV(tenantID string, start, end time.Time) (string
 		if r.Timestamp.Before(start) || r.Timestamp.After(end) {
 			continue
 		}
-		w.Write([]string{
+		_ = w.Write([]string{
 			r.Timestamp.UTC().Format(time.RFC3339),
 			r.TenantID,
 			r.AgentID,

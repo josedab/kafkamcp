@@ -88,7 +88,7 @@ type Engine struct {
 	// persisted state. defStore holds view definitions keyed by viewID;
 	// recStore holds records keyed by viewID + "\x00" + recordKey. Both
 	// are nil when no backend was supplied — in that case the engine
-	// runs entirely in-process (legacy behaviour).
+	// runs entirely in-process (legacy behavior).
 	defStore *engine.Store[ViewDefinition]
 	recStore *engine.Store[ViewRecord]
 }

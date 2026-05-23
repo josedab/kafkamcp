@@ -24,7 +24,7 @@ func TestDeliver_MatchingSubscription(t *testing.T) {
 	defer srv.Close()
 
 	m := NewManager(slog.Default())
-	m.Subscribe(Subscription{ID: "s1", URL: srv.URL, Events: []string{"message"}})
+	_, _ = m.Subscribe(Subscription{ID: "s1", URL: srv.URL, Events: []string{"message"}})
 
 	count := m.Deliver(WebhookEvent{ID: "e1", Type: "message", Topic: "orders"})
 	if count != 1 {
@@ -39,7 +39,7 @@ func TestDeliver_MatchingSubscription(t *testing.T) {
 func TestDeliver_NoMatchingSubscription(t *testing.T) {
 	t.Parallel()
 	m := NewManager(slog.Default())
-	m.Subscribe(Subscription{ID: "s1", URL: "http://example.com", Events: []string{"schema_change"}})
+	_, _ = m.Subscribe(Subscription{ID: "s1", URL: "http://example.com", Events: []string{"schema_change"}})
 
 	count := m.Deliver(WebhookEvent{ID: "e1", Type: "message", Topic: "orders"})
 	if count != 0 {
@@ -50,7 +50,7 @@ func TestDeliver_NoMatchingSubscription(t *testing.T) {
 func TestDeliver_InactiveSubscription(t *testing.T) {
 	t.Parallel()
 	m := NewManager(slog.Default())
-	m.Subscribe(Subscription{ID: "s1", URL: "http://example.com", Events: []string{"message"}})
+	_, _ = m.Subscribe(Subscription{ID: "s1", URL: "http://example.com", Events: []string{"message"}})
 
 	// Deactivate
 	m.mu.Lock()
@@ -317,8 +317,8 @@ func TestConcurrentDeliver(t *testing.T) {
 	defer srv.Close()
 
 	m := NewManager(slog.Default())
-	m.Subscribe(Subscription{ID: "s1", URL: srv.URL, Events: []string{"*"}})
-	m.Subscribe(Subscription{ID: "s2", URL: srv.URL, Events: []string{"*"}})
+	_, _ = m.Subscribe(Subscription{ID: "s1", URL: srv.URL, Events: []string{"*"}})
+	_, _ = m.Subscribe(Subscription{ID: "s2", URL: srv.URL, Events: []string{"*"}})
 
 	var wg sync.WaitGroup
 	for i := 0; i < 10; i++ {

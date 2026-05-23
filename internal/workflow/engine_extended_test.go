@@ -203,7 +203,7 @@ func TestCompleteAllSteps(t *testing.T) {
 	exec, _ := e.StartExecution("dlq-investigation", map[string]any{"topic": "t"})
 
 	for i := 0; i < exec.TotalSteps; i++ {
-		e.CompleteStep(exec.ID, StepResult{Status: "success"})
+		_ = e.CompleteStep(exec.ID, StepResult{Status: "success"})
 	}
 
 	result, _ := e.GetExecution(exec.ID)
@@ -218,7 +218,7 @@ func TestCompleteAllSteps(t *testing.T) {
 func TestCompleteStepFailedWithStopOnError(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
-	e.RegisterTemplate(Template{
+	_ = e.RegisterTemplate(Template{
 		Name: "fail-test",
 		Steps: []Step{
 			{ID: "s1", Name: "Step 1", Tool: "tool1", OnError: "stop"},
@@ -226,7 +226,7 @@ func TestCompleteStepFailedWithStopOnError(t *testing.T) {
 	})
 	exec, _ := e.StartExecution("fail-test", map[string]any{})
 
-	e.CompleteStep(exec.ID, StepResult{Status: "failed", Error: "boom"})
+	_ = e.CompleteStep(exec.ID, StepResult{Status: "failed", Error: "boom"})
 
 	result, _ := e.GetExecution(exec.ID)
 	if result.Status != "failed" {
@@ -283,7 +283,7 @@ func TestGetNextStepAfterCompletion(t *testing.T) {
 	exec, _ := e.StartExecution("dlq-investigation", map[string]any{"topic": "t"})
 
 	for i := 0; i < exec.TotalSteps; i++ {
-		e.CompleteStep(exec.ID, StepResult{Status: "success"})
+		_ = e.CompleteStep(exec.ID, StepResult{Status: "success"})
 	}
 
 	step, err := e.GetNextStep(exec.ID)
@@ -379,7 +379,7 @@ func TestGetStepOnErrorDefault(t *testing.T) {
 	exec, _ := e.StartExecution("dlq-investigation", map[string]any{"topic": "t"})
 
 	// Complete first step as failed - default OnError is "continue"
-	e.CompleteStep(exec.ID, StepResult{Status: "failed", Error: "test error"})
+	_ = e.CompleteStep(exec.ID, StepResult{Status: "failed", Error: "test error"})
 
 	result, _ := e.GetExecution(exec.ID)
 	if result.Status == "failed" {

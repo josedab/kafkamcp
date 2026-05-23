@@ -8,18 +8,20 @@ import (
 	"regexp"
 	"sync"
 	"time"
+
 	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
 // RequestStatus represents the state of a topic provisioning request.
 type RequestStatus string
 
+// StatusPending and related values define constants for this package.
 const (
-	StatusPending   RequestStatus = "pending"
-	StatusApproved  RequestStatus = "approved"
-	StatusRejected  RequestStatus = "rejected"
-	StatusCreated   RequestStatus = "created"
-	StatusExpired   RequestStatus = "expired"
+	StatusPending  RequestStatus = "pending"
+	StatusApproved RequestStatus = "approved"
+	StatusRejected RequestStatus = "rejected"
+	StatusCreated  RequestStatus = "created"
+	StatusExpired  RequestStatus = "expired"
 )
 
 // TopicRequest is a self-service topic provisioning request.
@@ -56,10 +58,10 @@ type ApprovalStep struct {
 
 // ApprovalChainConfig defines the approval workflow.
 type ApprovalChainConfig struct {
-	Steps             []ApprovalStepConfig `json:"steps" yaml:"steps"`
-	AutoApprovePatterns []string           `json:"auto_approve_patterns" yaml:"auto_approve_patterns"`
-	DefaultTimeout    time.Duration        `json:"default_timeout" yaml:"default_timeout"`
-	WebhookURL        string               `json:"webhook_url,omitempty" yaml:"webhook_url,omitempty"`
+	Steps               []ApprovalStepConfig `json:"steps" yaml:"steps"`
+	AutoApprovePatterns []string             `json:"auto_approve_patterns" yaml:"auto_approve_patterns"`
+	DefaultTimeout      time.Duration        `json:"default_timeout" yaml:"default_timeout"`
+	WebhookURL          string               `json:"webhook_url,omitempty" yaml:"webhook_url,omitempty"`
 }
 
 // ApprovalStepConfig defines a step template.

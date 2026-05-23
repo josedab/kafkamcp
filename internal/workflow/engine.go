@@ -11,12 +11,12 @@ import (
 
 // Template represents a reusable workflow template.
 type Template struct {
-	Name        string            `json:"name" yaml:"name"`
-	Description string            `json:"description" yaml:"description"`
-	Category    string            `json:"category" yaml:"category"`
-	Parameters  []Parameter       `json:"parameters" yaml:"parameters"`
-	Steps       []Step            `json:"steps" yaml:"steps"`
-	Tags        []string          `json:"tags,omitempty" yaml:"tags,omitempty"`
+	Name        string      `json:"name" yaml:"name"`
+	Description string      `json:"description" yaml:"description"`
+	Category    string      `json:"category" yaml:"category"`
+	Parameters  []Parameter `json:"parameters" yaml:"parameters"`
+	Steps       []Step      `json:"steps" yaml:"steps"`
+	Tags        []string    `json:"tags,omitempty" yaml:"tags,omitempty"`
 }
 
 // Parameter defines a template input parameter.
@@ -42,7 +42,7 @@ type Step struct {
 type Execution struct {
 	ID           string         `json:"id"`
 	TemplateName string         `json:"template_name"`
-	Status       string         `json:"status"` // running, completed, failed, cancelled
+	Status       string         `json:"status"` // running, completed, failed, canceled
 	CurrentStep  int            `json:"current_step"`
 	TotalSteps   int            `json:"total_steps"`
 	Parameters   map[string]any `json:"parameters"`

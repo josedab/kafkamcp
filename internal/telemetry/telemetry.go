@@ -14,15 +14,16 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 )
 
 // Config holds OpenTelemetry configuration.
 type Config struct {
-	Enabled      bool   `yaml:"enabled" json:"enabled"`
-	Endpoint     string `yaml:"endpoint" json:"endpoint"`         // OTLP endpoint (e.g., "localhost:4318")
-	Insecure     bool   `yaml:"insecure" json:"insecure"`         // Use HTTP instead of HTTPS
-	ServiceName  string `yaml:"service_name" json:"service_name"` // Service name for traces
-	SampleRate   float64 `yaml:"sample_rate" json:"sample_rate"`  // 0.0-1.0, default 1.0
+	Enabled     bool    `yaml:"enabled" json:"enabled"`
+	Endpoint    string  `yaml:"endpoint" json:"endpoint"`         // OTLP endpoint (e.g., "localhost:4318")
+	Insecure    bool    `yaml:"insecure" json:"insecure"`         // Use HTTP instead of HTTPS
+	ServiceName string  `yaml:"service_name" json:"service_name"` // Service name for traces
+	SampleRate  float64 `yaml:"sample_rate" json:"sample_rate"`   // 0.0-1.0, default 1.0
 }
 
 // Provider wraps the OTel trace provider and exposes a tracer.
@@ -36,7 +37,7 @@ type Provider struct {
 func NewProvider(ctx context.Context, cfg Config, logger *slog.Logger) (*Provider, error) {
 	if !cfg.Enabled {
 		return &Provider{
-			tracer: trace.NewNoopTracerProvider().Tracer("kafkamcp"),
+			tracer: noop.NewTracerProvider().Tracer("kafkamcp"),
 			logger: logger,
 		}, nil
 	}

@@ -87,7 +87,7 @@ func TestInstanceTransition(t *testing.T) {
 func TestTerminalState(t *testing.T) {
 	e := NewEngine(slog.Default())
 	inst, _ := e.CreateInstance("sm_order_flow", nil)
-	e.Transition(inst.ID, "cancel", "agent-1")
+	_, _ = e.Transition(inst.ID, "cancel", "agent-1")
 
 	_, err := e.Transition(inst.ID, "validate", "agent-1")
 	if err == nil {
@@ -293,8 +293,8 @@ func TestGetInstance_NonExistent(t *testing.T) {
 
 func TestListInstances_FilterByMachineID(t *testing.T) {
 	e := NewEngine(slog.Default())
-	e.CreateInstance("sm_order_flow", nil)
-	e.CreateInstance("sm_order_flow", nil)
+	_, _ = e.CreateInstance("sm_order_flow", nil)
+	_, _ = e.CreateInstance("sm_order_flow", nil)
 
 	instances := e.ListInstances("sm_order_flow")
 	if len(instances) != 2 {
@@ -312,8 +312,8 @@ func TestListInstances_EmptyResults(t *testing.T) {
 
 func TestListInstances_AllInstances(t *testing.T) {
 	e := NewEngine(slog.Default())
-	e.CreateInstance("sm_order_flow", nil)
-	e.CreateInstance("sm_order_flow", nil)
+	_, _ = e.CreateInstance("sm_order_flow", nil)
+	_, _ = e.CreateInstance("sm_order_flow", nil)
 
 	// Empty machineID returns all
 	instances := e.ListInstances("")
@@ -328,7 +328,7 @@ func TestListInstances_DifferentStates(t *testing.T) {
 	inst2, _ := e.CreateInstance("sm_order_flow", nil)
 
 	// Transition one
-	e.Transition(inst1.ID, "validate", "agent-1")
+	_, _ = e.Transition(inst1.ID, "validate", "agent-1")
 
 	instances := e.ListInstances("sm_order_flow")
 	states := make(map[string]int)
@@ -434,7 +434,7 @@ func TestStartSaga_NoSagaDefined(t *testing.T) {
 	e := NewEngine(slog.Default())
 
 	// Create a machine without saga
-	e.CreateMachine(`
+	_, _ = e.CreateMachine(`
 name: "No Saga"
 initial_state: "s1"
 states:
@@ -460,7 +460,7 @@ states:
 func TestCompleteSagaStep_AllSteps(t *testing.T) {
 	e := NewEngine(slog.Default())
 	inst, _ := e.CreateInstance("sm_order_flow", nil)
-	e.StartSaga(inst.ID)
+	_, _ = e.StartSaga(inst.ID)
 
 	// Complete all 3 steps
 	for i := 0; i < 3; i++ {

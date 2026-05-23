@@ -49,10 +49,10 @@ func New(transport Transport, opts ...Option) *Client {
 
 // TopicSummary contains summarized topic information.
 type TopicSummary struct {
-	Name             string `json:"name"`
-	Partitions       int    `json:"partitions"`
-	ReplicationFactor int   `json:"replication_factor"`
-	MessageCount     int64  `json:"message_count_estimate"`
+	Name              string `json:"name"`
+	Partitions        int    `json:"partitions"`
+	ReplicationFactor int    `json:"replication_factor"`
+	MessageCount      int64  `json:"message_count_estimate"`
 }
 
 // Message represents a consumed Kafka message.
@@ -194,9 +194,9 @@ func (c *Client) Close() error {
 // ConsumerGroupSummary contains summarized consumer group information.
 type ConsumerGroupSummary struct {
 	GroupID     string `json:"group_id"`
-	State      string `json:"state"`
-	MemberCount int   `json:"member_count"`
-	TotalLag   int64  `json:"total_lag"`
+	State       string `json:"state"`
+	MemberCount int    `json:"member_count"`
+	TotalLag    int64  `json:"total_lag"`
 }
 
 // ListConsumerGroups returns all consumer groups.

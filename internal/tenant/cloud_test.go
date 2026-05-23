@@ -121,8 +121,8 @@ func TestControlPlane_GetResourceQuota_DefaultsByPlan(t *testing.T) {
 	cp := NewControlPlane(mgr)
 
 	tests := []struct {
-		plan    string
-		maxCPU  int
+		plan   string
+		maxCPU int
 	}{
 		{"free", 500},
 		{"pro", 2000},
@@ -487,7 +487,7 @@ func TestControlPlaneAPI_HandleTenants_GET(t *testing.T) {
 		t.Fatalf("expected 200, got %d", w.Code)
 	}
 	var body map[string]any
-	json.Unmarshal(w.Body.Bytes(), &body)
+	_ = json.Unmarshal(w.Body.Bytes(), &body)
 	if body["total"] == nil {
 		t.Error("expected 'total' field in response")
 	}
@@ -575,7 +575,7 @@ func TestControlPlaneAPI_HandleRegions_MethodNotAllowed(t *testing.T) {
 func TestControlPlaneAPI_HandleBilling_GET(t *testing.T) {
 	t.Parallel()
 	cp, tenantID := setupControlPlane(t)
-	cp.SetupBilling(tenantID, BillingInfo{PlanID: "pro", Status: "active"})
+	_ = cp.SetupBilling(tenantID, BillingInfo{PlanID: "pro", Status: "active"})
 	api := NewControlPlaneAPI(cp, "test-key")
 	handler := api.Handler()
 

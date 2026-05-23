@@ -59,10 +59,10 @@ func TestExecute(t *testing.T) {
 	e := NewEngine(slog.Default())
 
 	manifest := PluginManifest{
-		Name:    "exec-test",
-		Version: "1.0.0",
+		Name:     "exec-test",
+		Version:  "1.0.0",
 		Language: LangGo,
-		Exports: []ExportDef{{Name: "process"}},
+		Exports:  []ExportDef{{Name: "process"}},
 	}
 	plugin, _ := e.LoadPlugin(manifest, testWASMBytes)
 
@@ -111,7 +111,7 @@ func TestExecuteContextCancellation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Execute should not return error, got: %v", err)
 	}
-	// With a cancelled context and short timeout, should either succeed quickly
+	// With a canceled context and short timeout, should either succeed quickly
 	// or time out — both are valid
 	_ = result
 }
@@ -219,8 +219,8 @@ func TestListPlugins(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
 
-	e.LoadPlugin(PluginManifest{Name: "a", Exports: []ExportDef{{Name: "x"}}}, testWASMBytes)
-	e.LoadPlugin(PluginManifest{Name: "b", Exports: []ExportDef{{Name: "y"}}}, testWASMBytes)
+	_, _ = e.LoadPlugin(PluginManifest{Name: "a", Exports: []ExportDef{{Name: "x"}}}, testWASMBytes)
+	_, _ = e.LoadPlugin(PluginManifest{Name: "b", Exports: []ExportDef{{Name: "y"}}}, testWASMBytes)
 
 	plugins := e.ListPlugins()
 	if len(plugins) != 2 {

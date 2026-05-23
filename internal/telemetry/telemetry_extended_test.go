@@ -36,7 +36,7 @@ func TestNewProvider_SampleRateZero(t *testing.T) {
 	if err != nil {
 		t.Skipf("skipping: %v", err)
 	}
-	defer p.Shutdown(context.Background())
+	defer func() { _ = p.Shutdown(context.Background()) }()
 	if p.tp == nil {
 		t.Error("expected non-nil TracerProvider (sample rate 0 should default to 1.0)")
 	}
@@ -49,7 +49,7 @@ func TestNewProvider_SampleRateHalf(t *testing.T) {
 	if err != nil {
 		t.Skipf("skipping: %v", err)
 	}
-	defer p.Shutdown(context.Background())
+	defer func() { _ = p.Shutdown(context.Background()) }()
 	if p.tp == nil {
 		t.Error("expected non-nil TracerProvider")
 	}
@@ -62,7 +62,7 @@ func TestNewProvider_SampleRateFull(t *testing.T) {
 	if err != nil {
 		t.Skipf("skipping: %v", err)
 	}
-	defer p.Shutdown(context.Background())
+	defer func() { _ = p.Shutdown(context.Background()) }()
 	if p.tp == nil {
 		t.Error("expected non-nil TracerProvider")
 	}
@@ -110,7 +110,7 @@ func TestStartToolSpan_Attributes(t *testing.T) {
 		tracer: tp.Tracer("kafkamcp"),
 		logger: slog.Default(),
 	}
-	defer p.Shutdown(context.Background())
+	defer func() { _ = p.Shutdown(context.Background()) }()
 
 	ctx, span := p.StartToolSpan(context.Background(), "kafka_list_topics", "agent-1", "prod")
 	if ctx == nil {
@@ -148,7 +148,7 @@ func TestSetSpanResult_Success(t *testing.T) {
 	t.Parallel()
 	exporter := tracetest.NewInMemoryExporter()
 	tp := sdktrace.NewTracerProvider(sdktrace.WithSyncer(exporter))
-	defer tp.Shutdown(context.Background())
+	defer func() { _ = tp.Shutdown(context.Background()) }()
 
 	_, span := tp.Tracer("test").Start(context.Background(), "test-op")
 	SetSpanResult(span, "success", 42, nil)
@@ -174,7 +174,7 @@ func TestSetSpanResult_WithError(t *testing.T) {
 	t.Parallel()
 	exporter := tracetest.NewInMemoryExporter()
 	tp := sdktrace.NewTracerProvider(sdktrace.WithSyncer(exporter))
-	defer tp.Shutdown(context.Background())
+	defer func() { _ = tp.Shutdown(context.Background()) }()
 
 	_, span := tp.Tracer("test").Start(context.Background(), "test-op")
 	testErr := errors.New("connection refused")

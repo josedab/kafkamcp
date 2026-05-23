@@ -158,7 +158,7 @@ func TestWriteJSON_ValidPayload(t *testing.T) {
 	}
 
 	var result map[string]string
-	json.Unmarshal(w.Body.Bytes(), &result)
+	_ = json.Unmarshal(w.Body.Bytes(), &result)
 	if result["key"] != "value" {
 		t.Errorf("expected value, got %s", result["key"])
 	}
@@ -227,8 +227,8 @@ func TestSecurityHeaders(t *testing.T) {
 
 	expected := map[string]string{
 		"X-Content-Type-Options": "nosniff",
-		"X-Frame-Options":       "DENY",
-		"Cache-Control":         "no-store",
+		"X-Frame-Options":        "DENY",
+		"Cache-Control":          "no-store",
 	}
 	for k, v := range expected {
 		if w.Header().Get(k) != v {

@@ -297,6 +297,12 @@ doctor: ## Check development environment prerequisites
 	@printf "Python 3.8+:     "; command -v python3 >/dev/null 2>&1 && echo "OK ($$(python3 --version 2>&1))" || echo "NOT FOUND (needed for SDK tests: make sdk-test)"
 	@printf "Node.js 18+:     "; command -v node >/dev/null 2>&1 && echo "OK ($$(node --version 2>&1))" || echo "NOT FOUND (needed for SDK setup: make sdk-setup)"
 	@echo ""
+	@echo "=== KafkaMCP module deps (required for new subsystems) ==="
+	@printf "SQLite (persistence backend):     "; go list -m modernc.org/sqlite >/dev/null 2>&1 && echo "OK ($$(go list -m modernc.org/sqlite | awk '{print $$2}'))" || echo "NOT FOUND (needed for server.persistence.backend: sqlite)"
+	@printf "go-oidc (OIDC identity):          "; go list -m github.com/coreos/go-oidc/v3 >/dev/null 2>&1 && echo "OK ($$(go list -m github.com/coreos/go-oidc/v3 | awk '{print $$2}'))" || echo "NOT FOUND (needed for policy.identity.provider: oidc)"
+	@printf "hamba/avro (Avro codec):          "; go list -m github.com/hamba/avro/v2 >/dev/null 2>&1 && echo "OK ($$(go list -m github.com/hamba/avro/v2 | awk '{print $$2}'))" || echo "NOT FOUND (needed for Avro wire-format codec)"
+	@printf "protocompile (Protobuf codec):    "; go list -m github.com/bufbuild/protocompile >/dev/null 2>&1 && echo "OK ($$(go list -m github.com/bufbuild/protocompile | awk '{print $$2}'))" || echo "NOT FOUND (needed for Protobuf wire-format codec)"
+	@echo ""
 	@echo "Run 'make setup' to install missing dev dependencies."
 
 quickstart: ## One-command setup: install deps, start Kafka, build, and run

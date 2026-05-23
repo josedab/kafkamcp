@@ -77,7 +77,7 @@ func TestFilterExpression_Match_KeyEquals(t *testing.T) {
 func TestFilterExpression_Match_KeyRegex(t *testing.T) {
 	t.Parallel()
 	f := &FilterExpression{Field: "key", Operator: "regex", Value: `^order-\d+$`}
-	f.Compile()
+	_ = f.Compile()
 
 	event := MessageEvent{Key: "order-123"}
 	if !f.Match(event) {
@@ -319,7 +319,7 @@ func TestHasSubscriptionsForTopic_Matching(t *testing.T) {
 	defer mgr.Close()
 
 	// Create a subscription with a matching topic pattern
-	mgr.Subscribe("agent-1", "orders.*", "", "", "", nil)
+	_, _ = mgr.Subscribe("agent-1", "orders.*", "", "", "", nil)
 
 	pool := NewConsumerPool(context.Background(), mgr, nil, "default", 10)
 	defer pool.Stop()
@@ -334,7 +334,7 @@ func TestHasSubscriptionsForTopic_NoMatch(t *testing.T) {
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
-	mgr.Subscribe("agent-1", "orders.*", "", "", "", nil)
+	_, _ = mgr.Subscribe("agent-1", "orders.*", "", "", "", nil)
 
 	pool := NewConsumerPool(context.Background(), mgr, nil, "default", 10)
 	defer pool.Stop()
@@ -362,7 +362,7 @@ func TestHasSubscriptionsForTopic_ExactMatch(t *testing.T) {
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
-	mgr.Subscribe("agent-1", "orders", "", "", "", nil)
+	_, _ = mgr.Subscribe("agent-1", "orders", "", "", "", nil)
 
 	pool := NewConsumerPool(context.Background(), mgr, nil, "default", 10)
 	defer pool.Stop()
@@ -405,7 +405,7 @@ func TestRunConsumer_SkipsNonMatchingTopics(t *testing.T) {
 	defer mgr.Close()
 
 	// Subscribe to "orders" only
-	mgr.Subscribe("agent-1", "orders", "", "", "", nil)
+	_, _ = mgr.Subscribe("agent-1", "orders", "", "", "", nil)
 
 	pool := NewConsumerPool(context.Background(), mgr, nil, "default", 10)
 	defer pool.Stop()
@@ -435,7 +435,7 @@ func TestRunConsumer_WithMockKafka(t *testing.T) {
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
-	mgr.Subscribe("agent-1", "orders", "", "", "", nil)
+	_, _ = mgr.Subscribe("agent-1", "orders", "", "", "", nil)
 
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
@@ -475,7 +475,7 @@ func TestRunConsumer_HandlesConsumeError(t *testing.T) {
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
-	mgr.Subscribe("agent-1", "orders", "", "", "", nil)
+	_, _ = mgr.Subscribe("agent-1", "orders", "", "", "", nil)
 
 	mock := &kafka.MockKafkaManager{
 		ConsumeFn: func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]kafka.Message, error) {
@@ -522,7 +522,7 @@ func TestConsumerPool_ConcurrentEnsureConsumer(t *testing.T) {
 		go func(idx int) {
 			defer wg.Done()
 			topic := fmt.Sprintf("topic-%d", idx%5)
-			pool.EnsureConsumer(topic)
+			_ = pool.EnsureConsumer(topic)
 		}(i)
 	}
 	wg.Wait()

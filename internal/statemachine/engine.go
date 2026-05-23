@@ -11,16 +11,16 @@ import (
 
 // StateMachineDefinition defines a finite state machine in YAML.
 type StateMachineDefinition struct {
-	ID           string              `json:"id" yaml:"id"`
-	Name         string              `json:"name" yaml:"name"`
-	Description  string              `json:"description,omitempty" yaml:"description,omitempty"`
-	Topic        string              `json:"topic" yaml:"topic"`
-	InitialState string              `json:"initial_state" yaml:"initial_state"`
-	States       []StateDefinition   `json:"states" yaml:"states"`
-	Transitions  []TransitionDef     `json:"transitions" yaml:"transitions"`
-	Saga         *SagaDefinition     `json:"saga,omitempty" yaml:"saga,omitempty"`
-	CreatedBy    string              `json:"created_by" yaml:"created_by"`
-	CreatedAt    time.Time           `json:"created_at" yaml:"created_at"`
+	ID           string            `json:"id" yaml:"id"`
+	Name         string            `json:"name" yaml:"name"`
+	Description  string            `json:"description,omitempty" yaml:"description,omitempty"`
+	Topic        string            `json:"topic" yaml:"topic"`
+	InitialState string            `json:"initial_state" yaml:"initial_state"`
+	States       []StateDefinition `json:"states" yaml:"states"`
+	Transitions  []TransitionDef   `json:"transitions" yaml:"transitions"`
+	Saga         *SagaDefinition   `json:"saga,omitempty" yaml:"saga,omitempty"`
+	CreatedBy    string            `json:"created_by" yaml:"created_by"`
+	CreatedAt    time.Time         `json:"created_at" yaml:"created_at"`
 }
 
 // StateDefinition defines a state in the FSM.
@@ -34,12 +34,12 @@ type StateDefinition struct {
 
 // TransitionDef defines a valid state transition.
 type TransitionDef struct {
-	From      string            `json:"from" yaml:"from"`
-	To        string            `json:"to" yaml:"to"`
-	Event     string            `json:"event" yaml:"event"`
-	Guard     string            `json:"guard,omitempty" yaml:"guard,omitempty"` // condition
-	Action    string            `json:"action,omitempty" yaml:"action,omitempty"` // tool to execute
-	Metadata  map[string]string `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	From     string            `json:"from" yaml:"from"`
+	To       string            `json:"to" yaml:"to"`
+	Event    string            `json:"event" yaml:"event"`
+	Guard    string            `json:"guard,omitempty" yaml:"guard,omitempty"`   // condition
+	Action   string            `json:"action,omitempty" yaml:"action,omitempty"` // tool to execute
+	Metadata map[string]string `json:"metadata,omitempty" yaml:"metadata,omitempty"`
 }
 
 // SagaDefinition defines saga compensation steps.
@@ -57,15 +57,15 @@ type SagaStep struct {
 
 // Instance represents an active FSM instance.
 type Instance struct {
-	ID              string           `json:"id"`
-	MachineID       string           `json:"machine_id"`
-	MachineName     string           `json:"machine_name"`
-	CurrentState    string           `json:"current_state"`
-	Data            map[string]any   `json:"data,omitempty"`
-	History         []TransitionLog  `json:"history"`
-	SagaState       *SagaState       `json:"saga_state,omitempty"`
-	CreatedAt       time.Time        `json:"created_at"`
-	UpdatedAt       time.Time        `json:"updated_at"`
+	ID           string          `json:"id"`
+	MachineID    string          `json:"machine_id"`
+	MachineName  string          `json:"machine_name"`
+	CurrentState string          `json:"current_state"`
+	Data         map[string]any  `json:"data,omitempty"`
+	History      []TransitionLog `json:"history"`
+	SagaState    *SagaState      `json:"saga_state,omitempty"`
+	CreatedAt    time.Time       `json:"created_at"`
+	UpdatedAt    time.Time       `json:"updated_at"`
 }
 
 // TransitionLog records a state transition.
@@ -79,20 +79,20 @@ type TransitionLog struct {
 
 // SagaState tracks saga execution progress.
 type SagaState struct {
-	Status        string         `json:"status"` // running, completed, compensating, failed
-	CurrentStep   int            `json:"current_step"`
-	CompletedSteps []string      `json:"completed_steps"`
-	FailedStep    string         `json:"failed_step,omitempty"`
-	Error         string         `json:"error,omitempty"`
+	Status         string   `json:"status"` // running, completed, compensating, failed
+	CurrentStep    int      `json:"current_step"`
+	CompletedSteps []string `json:"completed_steps"`
+	FailedStep     string   `json:"failed_step,omitempty"`
+	Error          string   `json:"error,omitempty"`
 }
 
 // Engine manages state machine definitions and instances.
 type Engine struct {
-	mu          sync.RWMutex
-	machines    map[string]*StateMachineDefinition
-	instances   map[string]*Instance
-	nextID      int64
-	logger      *slog.Logger
+	mu        sync.RWMutex
+	machines  map[string]*StateMachineDefinition
+	instances map[string]*Instance
+	nextID    int64
+	logger    *slog.Logger
 }
 
 // NewEngine creates a new state machine engine.
@@ -109,8 +109,8 @@ func NewEngine(logger *slog.Logger) *Engine {
 func (e *Engine) seedBuiltins() {
 	e.machines["sm_order_flow"] = &StateMachineDefinition{
 		ID: "sm_order_flow", Name: "Order Processing",
-		Description: "Order lifecycle state machine",
-		Topic:       "order-events",
+		Description:  "Order lifecycle state machine",
+		Topic:        "order-events",
 		InitialState: "created",
 		States: []StateDefinition{
 			{Name: "created", Description: "Order created"},
@@ -118,16 +118,16 @@ func (e *Engine) seedBuiltins() {
 			{Name: "payment_pending", Description: "Awaiting payment"},
 			{Name: "paid", Description: "Payment received"},
 			{Name: "fulfilled", Description: "Order fulfilled", Terminal: true},
-			{Name: "cancelled", Description: "Order cancelled", Terminal: true},
+			{Name: "canceled", Description: "Order canceled", Terminal: true},
 		},
 		Transitions: []TransitionDef{
 			{From: "created", To: "validated", Event: "validate"},
 			{From: "validated", To: "payment_pending", Event: "request_payment"},
 			{From: "payment_pending", To: "paid", Event: "payment_received"},
 			{From: "paid", To: "fulfilled", Event: "fulfill"},
-			{From: "created", To: "cancelled", Event: "cancel"},
-			{From: "validated", To: "cancelled", Event: "cancel"},
-			{From: "payment_pending", To: "cancelled", Event: "cancel"},
+			{From: "created", To: "canceled", Event: "cancel"},
+			{From: "validated", To: "canceled", Event: "cancel"},
+			{From: "payment_pending", To: "canceled", Event: "cancel"},
 		},
 		Saga: &SagaDefinition{
 			Steps: []SagaStep{

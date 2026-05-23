@@ -17,35 +17,35 @@ import (
 
 // Subscription represents a registered watch on topic patterns.
 type Subscription struct {
-	ID           string            `json:"id"`
-	AgentID      string            `json:"agent_id"`
-	TopicPattern string            `json:"topic_pattern"`
-	KeyFilter    string            `json:"key_filter,omitempty"`
-	ValueFilter  string            `json:"value_filter,omitempty"`
-	Headers      map[string]string `json:"headers,omitempty"`
-	WebhookURL   string            `json:"webhook_url,omitempty"`
-	MaxRetries   int               `json:"max_retries"`
-	CreatedAt    time.Time         `json:"created_at"`
-	Active       bool              `json:"active"`
-	Filters      []FilterExpression `json:"filters,omitempty"`
-	Paused       bool              `json:"paused"`
-	ExpiresAt    *time.Time        `json:"expires_at,omitempty"`
-	DeliveryCount int64            `json:"delivery_count"`
-	LastMatchAt  *time.Time        `json:"last_match_at,omitempty"`
+	ID            string             `json:"id"`
+	AgentID       string             `json:"agent_id"`
+	TopicPattern  string             `json:"topic_pattern"`
+	KeyFilter     string             `json:"key_filter,omitempty"`
+	ValueFilter   string             `json:"value_filter,omitempty"`
+	Headers       map[string]string  `json:"headers,omitempty"`
+	WebhookURL    string             `json:"webhook_url,omitempty"`
+	MaxRetries    int                `json:"max_retries"`
+	CreatedAt     time.Time          `json:"created_at"`
+	Active        bool               `json:"active"`
+	Filters       []FilterExpression `json:"filters,omitempty"`
+	Paused        bool               `json:"paused"`
+	ExpiresAt     *time.Time         `json:"expires_at,omitempty"`
+	DeliveryCount int64              `json:"delivery_count"`
+	LastMatchAt   *time.Time         `json:"last_match_at,omitempty"`
 }
 
 // Notification is a message pushed to an agent when a subscription matches.
 type Notification struct {
-	SubscriptionID string         `json:"subscription_id"`
-	AgentID        string         `json:"agent_id"`
-	Topic          string         `json:"topic"`
-	Partition      int32          `json:"partition"`
-	Offset         int64          `json:"offset"`
-	Timestamp      string         `json:"timestamp"`
-	Key            any            `json:"key"`
-	Value          any            `json:"value"`
+	SubscriptionID string            `json:"subscription_id"`
+	AgentID        string            `json:"agent_id"`
+	Topic          string            `json:"topic"`
+	Partition      int32             `json:"partition"`
+	Offset         int64             `json:"offset"`
+	Timestamp      string            `json:"timestamp"`
+	Key            any               `json:"key"`
+	Value          any               `json:"value"`
 	Headers        map[string]string `json:"headers,omitempty"`
-	DeliveredAt    string         `json:"delivered_at"`
+	DeliveredAt    string            `json:"delivered_at"`
 }
 
 // DeliveryResult tracks the outcome of a notification delivery attempt.
@@ -298,7 +298,7 @@ func (m *Manager) deliverNotification(ctx context.Context, sub *Subscription, no
 				case <-ctx.Done():
 					timer.Stop()
 					result.Status = "failed"
-					result.LastError = "context cancelled"
+					result.LastError = "context canceled"
 					return result
 				}
 				timer.Stop()
@@ -339,7 +339,7 @@ func (m *Manager) sendWebhook(ctx context.Context, url string, notif Notificatio
 	if err != nil {
 		return fmt.Errorf("sending webhook: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
 		return nil

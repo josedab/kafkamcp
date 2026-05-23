@@ -12,17 +12,17 @@ import (
 
 // Composition defines a composite tool built from atomic MCP tools.
 type Composition struct {
-	ID          string            `json:"id" yaml:"id"`
-	Name        string            `json:"name" yaml:"name"`
-	Description string            `json:"description,omitempty" yaml:"description,omitempty"`
-	Category    string            `json:"category,omitempty" yaml:"category,omitempty"`
-	Version     string            `json:"version,omitempty" yaml:"version,omitempty"`
-	Tags        []string          `json:"tags,omitempty" yaml:"tags,omitempty"`
+	ID          string             `json:"id" yaml:"id"`
+	Name        string             `json:"name" yaml:"name"`
+	Description string             `json:"description,omitempty" yaml:"description,omitempty"`
+	Category    string             `json:"category,omitempty" yaml:"category,omitempty"`
+	Version     string             `json:"version,omitempty" yaml:"version,omitempty"`
+	Tags        []string           `json:"tags,omitempty" yaml:"tags,omitempty"`
 	Parameters  []CompositionParam `json:"parameters,omitempty" yaml:"parameters,omitempty"`
-	Steps       []CompositionStep `json:"steps" yaml:"steps"`
-	CreatedBy   string            `json:"created_by" yaml:"created_by"`
-	CreatedAt   time.Time         `json:"created_at" yaml:"created_at"`
-	Shared      bool              `json:"shared" yaml:"shared"`
+	Steps       []CompositionStep  `json:"steps" yaml:"steps"`
+	CreatedBy   string             `json:"created_by" yaml:"created_by"`
+	CreatedAt   time.Time          `json:"created_at" yaml:"created_at"`
+	Shared      bool               `json:"shared" yaml:"shared"`
 }
 
 // CompositionParam defines an input parameter for the composition.
@@ -51,28 +51,28 @@ type CompositionStep struct {
 
 // CompositionExecution tracks a composition run.
 type CompositionExecution struct {
-	ID             string                 `json:"id"`
-	CompositionID  string                 `json:"composition_id"`
-	Name           string                 `json:"name"`
-	Status         string                 `json:"status"` // running, completed, failed
-	Parameters     map[string]any         `json:"parameters,omitempty"`
-	Steps          []StepExecution        `json:"steps"`
-	Outputs        map[string]any         `json:"outputs,omitempty"`
-	StartedAt      time.Time              `json:"started_at"`
-	CompletedAt    *time.Time             `json:"completed_at,omitempty"`
-	ExecutedBy     string                 `json:"executed_by"`
+	ID            string          `json:"id"`
+	CompositionID string          `json:"composition_id"`
+	Name          string          `json:"name"`
+	Status        string          `json:"status"` // running, completed, failed
+	Parameters    map[string]any  `json:"parameters,omitempty"`
+	Steps         []StepExecution `json:"steps"`
+	Outputs       map[string]any  `json:"outputs,omitempty"`
+	StartedAt     time.Time       `json:"started_at"`
+	CompletedAt   *time.Time      `json:"completed_at,omitempty"`
+	ExecutedBy    string          `json:"executed_by"`
 }
 
 // StepExecution tracks a single step's execution.
 type StepExecution struct {
-	StepID   string    `json:"step_id"`
-	StepName string    `json:"step_name"`
-	Tool     string    `json:"tool"`
-	Status   string    `json:"status"` // pending, running, completed, failed, skipped
-	Output   any       `json:"output,omitempty"`
-	Error    string    `json:"error,omitempty"`
-	Duration string    `json:"duration,omitempty"`
-	Attempt  int       `json:"attempt"`
+	StepID   string `json:"step_id"`
+	StepName string `json:"step_name"`
+	Tool     string `json:"tool"`
+	Status   string `json:"status"` // pending, running, completed, failed, skipped
+	Output   any    `json:"output,omitempty"`
+	Error    string `json:"error,omitempty"`
+	Duration string `json:"duration,omitempty"`
+	Attempt  int    `json:"attempt"`
 }
 
 // Engine manages tool compositions.

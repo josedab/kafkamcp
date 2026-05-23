@@ -7,13 +7,13 @@ import (
 
 // BillingInfo holds tenant billing information.
 type BillingInfo struct {
-	StripeCustomerID   string    `json:"stripe_customer_id,omitempty"`
-	StripeSubscriptionID string  `json:"stripe_subscription_id,omitempty"`
-	PlanID             string    `json:"plan_id"`
-	BillingEmail       string    `json:"billing_email"`
-	CurrentPeriodStart time.Time `json:"current_period_start"`
-	CurrentPeriodEnd   time.Time `json:"current_period_end"`
-	Status             string    `json:"status"` // "active", "past_due", "cancelled"
+	StripeCustomerID     string    `json:"stripe_customer_id,omitempty"`
+	StripeSubscriptionID string    `json:"stripe_subscription_id,omitempty"`
+	PlanID               string    `json:"plan_id"`
+	BillingEmail         string    `json:"billing_email"`
+	CurrentPeriodStart   time.Time `json:"current_period_start"`
+	CurrentPeriodEnd     time.Time `json:"current_period_end"`
+	Status               string    `json:"status"` // "active", "past_due", "canceled"
 }
 
 // UsageBillingRecord records usage for billing purposes.
@@ -70,9 +70,9 @@ func (cp *ControlPlane) RecordUsagePeriod(record UsageBillingRecord) {
 func (cp *ControlPlane) computeCost(record UsageBillingRecord) float64 {
 	// Usage-based pricing
 	const (
-		costPerToolCall    = 0.0001  // $0.01 per 100 calls
-		costPerMessage     = 0.00001 // $0.01 per 1000 messages
-		costPerGB          = 0.10    // $0.10 per GB transferred
+		costPerToolCall = 0.0001  // $0.01 per 100 calls
+		costPerMessage  = 0.00001 // $0.01 per 1000 messages
+		costPerGB       = 0.10    // $0.10 per GB transferred
 	)
 
 	cost := float64(record.ToolCalls) * costPerToolCall

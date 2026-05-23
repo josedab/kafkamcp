@@ -49,12 +49,12 @@ type DeliveryAttempt struct {
 }
 
 const (
-	maxRetries          = 3
-	maxHistoryPerSub    = 100
-	deliveryTimeout     = 10 * time.Second
-	initialBackoff      = 1 * time.Second
-	signatureHeader     = "X-Webhook-Signature"
-	eventTypeHeader     = "X-Webhook-Event"
+	maxRetries       = 3
+	maxHistoryPerSub = 100
+	deliveryTimeout  = 10 * time.Second
+	initialBackoff   = 1 * time.Second
+	signatureHeader  = "X-Webhook-Signature"
+	eventTypeHeader  = "X-Webhook-Event"
 )
 
 // Manager manages webhook subscriptions and event delivery.
@@ -270,7 +270,7 @@ func (m *Manager) doPost(sub *Subscription, eventType string, body []byte) (int,
 	if err != nil {
 		return 0, err
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	return resp.StatusCode, nil
 }
 

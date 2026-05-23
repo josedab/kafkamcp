@@ -38,7 +38,7 @@ func TestSubscription_PausedMatchSkipped(t *testing.T) {
 	defer m.Close()
 
 	sub, _ := m.Subscribe("agent-1", "orders.*", "", "", "", nil)
-	m.PauseSubscription(sub.ID, "agent-1")
+	_ = m.PauseSubscription(sub.ID, "agent-1")
 
 	ctx := context.Background()
 	results := m.ProcessMessage(ctx, MessageEvent{
@@ -110,7 +110,7 @@ func TestConcurrentSubscriptions(t *testing.T) {
 		wg.Add(1)
 		go func(idx int) {
 			defer wg.Done()
-			m.Subscribe("agent-1", "test.*", "", "", "", nil)
+			_, _ = m.Subscribe("agent-1", "test.*", "", "", "", nil)
 		}(i)
 	}
 	wg.Wait()

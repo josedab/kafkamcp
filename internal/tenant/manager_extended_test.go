@@ -54,8 +54,8 @@ func TestListTenants(t *testing.T) {
 	}
 
 	// Add tenants
-	m.CreateTenant("Tenant A", "a@test.com", "free")
-	m.CreateTenant("Tenant B", "b@test.com", "pro")
+	_, _, _ = m.CreateTenant("Tenant A", "a@test.com", "free")
+	_, _, _ = m.CreateTenant("Tenant B", "b@test.com", "pro")
 
 	tenants = m.ListTenants()
 	if len(tenants) != 2 {
@@ -130,7 +130,7 @@ func TestCheckLimitsEnterprise(t *testing.T) {
 	tenant, _, _ := m.CreateTenant("Enterprise", "ent@test.com", "enterprise")
 
 	// Record massive usage
-	m.RecordUsage(tenant.ID, 999999999, 0, 0, 0)
+	_ = m.RecordUsage(tenant.ID, 999999999, 0, 0, 0)
 
 	// Enterprise has unlimited (-1), so should never exceed
 	err := m.CheckLimits(tenant.ID)

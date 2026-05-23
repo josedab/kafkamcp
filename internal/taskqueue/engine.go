@@ -20,46 +20,46 @@ const (
 
 // Task represents a work item in the task queue.
 type Task struct {
-	ID          string         `json:"id"`
-	Queue       string         `json:"queue"`
-	Type        string         `json:"type"`
-	Priority    int            `json:"priority"` // 0=critical, 1=high, 2=medium, 3=low
-	Payload     map[string]any `json:"payload"`
-	Status      string         `json:"status"` // pending, claimed, running, completed, failed, dead_letter
-	CreatedBy   string         `json:"created_by"`
-	ClaimedBy   string         `json:"claimed_by,omitempty"`
-	CreatedAt   time.Time      `json:"created_at"`
-	ClaimedAt   *time.Time     `json:"claimed_at,omitempty"`
-	CompletedAt *time.Time     `json:"completed_at,omitempty"`
-	Deadline    *time.Time     `json:"deadline,omitempty"`
-	MaxRetries  int            `json:"max_retries"`
-	RetryCount  int            `json:"retry_count"`
-	Result      any            `json:"result,omitempty"`
-	Error       string         `json:"error,omitempty"`
-	LastHeartbeat *time.Time   `json:"last_heartbeat,omitempty"`
+	ID            string         `json:"id"`
+	Queue         string         `json:"queue"`
+	Type          string         `json:"type"`
+	Priority      int            `json:"priority"` // 0=critical, 1=high, 2=medium, 3=low
+	Payload       map[string]any `json:"payload"`
+	Status        string         `json:"status"` // pending, claimed, running, completed, failed, dead_letter
+	CreatedBy     string         `json:"created_by"`
+	ClaimedBy     string         `json:"claimed_by,omitempty"`
+	CreatedAt     time.Time      `json:"created_at"`
+	ClaimedAt     *time.Time     `json:"claimed_at,omitempty"`
+	CompletedAt   *time.Time     `json:"completed_at,omitempty"`
+	Deadline      *time.Time     `json:"deadline,omitempty"`
+	MaxRetries    int            `json:"max_retries"`
+	RetryCount    int            `json:"retry_count"`
+	Result        any            `json:"result,omitempty"`
+	Error         string         `json:"error,omitempty"`
+	LastHeartbeat *time.Time     `json:"last_heartbeat,omitempty"`
 }
 
 // QueueStats holds statistics about a task queue.
 type QueueStats struct {
-	Queue       string `json:"queue"`
-	Pending     int    `json:"pending"`
-	Claimed     int    `json:"claimed"`
-	Running     int    `json:"running"`
-	Completed   int    `json:"completed"`
-	Failed      int    `json:"failed"`
-	DeadLetter  int    `json:"dead_letter"`
-	AvgWaitMs   int64  `json:"avg_wait_ms"`
-	AvgRunMs    int64  `json:"avg_run_ms"`
+	Queue      string `json:"queue"`
+	Pending    int    `json:"pending"`
+	Claimed    int    `json:"claimed"`
+	Running    int    `json:"running"`
+	Completed  int    `json:"completed"`
+	Failed     int    `json:"failed"`
+	DeadLetter int    `json:"dead_letter"`
+	AvgWaitMs  int64  `json:"avg_wait_ms"`
+	AvgRunMs   int64  `json:"avg_run_ms"`
 }
 
 // Engine manages task queues and task lifecycle.
 type Engine struct {
-	mu            sync.RWMutex
-	tasks         map[string]*Task          // taskID -> task
-	queues        map[string][]*Task         // queue -> tasks (for fast queue access)
-	heartbeatTTL  time.Duration
-	logger        *slog.Logger
-	nextID        int64
+	mu           sync.RWMutex
+	tasks        map[string]*Task   // taskID -> task
+	queues       map[string][]*Task // queue -> tasks (for fast queue access)
+	heartbeatTTL time.Duration
+	logger       *slog.Logger
+	nextID       int64
 }
 
 // NewEngine creates a new task queue engine.

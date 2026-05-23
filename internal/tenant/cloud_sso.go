@@ -4,11 +4,11 @@ import "fmt"
 
 // SSOConfig holds SSO/OIDC authentication configuration.
 type SSOConfig struct {
-	Provider     string `json:"provider" yaml:"provider"`         // "oidc", "saml", "github", "google"
-	ClientID     string `json:"client_id" yaml:"client_id"`
-	ClientSecret string `json:"-" yaml:"client_secret"`
-	IssuerURL    string `json:"issuer_url" yaml:"issuer_url"`
-	CallbackURL  string `json:"callback_url" yaml:"callback_url"`
+	Provider     string   `json:"provider" yaml:"provider"` // "oidc", "saml", "github", "google"
+	ClientID     string   `json:"client_id" yaml:"client_id"`
+	ClientSecret string   `json:"-" yaml:"client_secret"`
+	IssuerURL    string   `json:"issuer_url" yaml:"issuer_url"`
+	CallbackURL  string   `json:"callback_url" yaml:"callback_url"`
 	Scopes       []string `json:"scopes,omitempty" yaml:"scopes,omitempty"`
 }
 

@@ -13,10 +13,10 @@ import (
 
 // TopicTemplate defines a declarative topic configuration.
 type TopicTemplate struct {
-	APIVersion string          `json:"api_version" yaml:"api_version"`
-	Kind       string          `json:"kind" yaml:"kind"`
+	APIVersion string           `json:"api_version" yaml:"api_version"`
+	Kind       string           `json:"kind" yaml:"kind"`
 	Metadata   TemplateMetadata `json:"metadata" yaml:"metadata"`
-	Spec       TopicSpec       `json:"spec" yaml:"spec"`
+	Spec       TopicSpec        `json:"spec" yaml:"spec"`
 }
 
 // TemplateMetadata contains template identification.
@@ -77,7 +77,6 @@ type Engine struct {
 	mu        sync.RWMutex
 	templates map[string]*TopicTemplate
 	logger    *slog.Logger
-	nextID    int64
 }
 
 // NewEngine creates a new topic template engine.

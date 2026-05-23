@@ -120,8 +120,8 @@ func TestReject(t *testing.T) {
 func TestListRequests(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(DefaultApprovalChainConfig(), nil)
-	e.SubmitRequest(TopicRequest{TopicName: "prod.a", RequestedBy: "a", Justification: "j"})
-	e.SubmitRequest(TopicRequest{TopicName: "dev.b", RequestedBy: "a", Justification: "j"}) // auto-approved
+	_, _ = e.SubmitRequest(TopicRequest{TopicName: "prod.a", RequestedBy: "a", Justification: "j"})
+	_, _ = e.SubmitRequest(TopicRequest{TopicName: "dev.b", RequestedBy: "a", Justification: "j"}) // auto-approved
 
 	pending := e.ListRequests(StatusPending, 10)
 	if len(pending) != 1 {

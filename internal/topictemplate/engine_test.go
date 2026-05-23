@@ -117,7 +117,7 @@ func TestGetTemplate_Exists(t *testing.T) {
 		Metadata: TemplateMetadata{Name: "my-tmpl"},
 		Spec:     TopicSpec{TopicName: "topic1", Partitions: 3, ReplicationFactor: 1},
 	}
-	e.SaveTemplate(tmpl, "agent")
+	_ = e.SaveTemplate(tmpl, "agent")
 
 	got, err := e.GetTemplate("my-tmpl")
 	if err != nil {
@@ -144,7 +144,7 @@ func TestDeleteTemplate_Success(t *testing.T) {
 		Metadata: TemplateMetadata{Name: "del-tmpl"},
 		Spec:     TopicSpec{TopicName: "topic1", Partitions: 3, ReplicationFactor: 1},
 	}
-	e.SaveTemplate(tmpl, "agent")
+	_ = e.SaveTemplate(tmpl, "agent")
 
 	err := e.DeleteTemplate("del-tmpl")
 	if err != nil {
@@ -170,10 +170,10 @@ func TestDeleteTemplate_Isolation(t *testing.T) {
 	e := NewEngine(slog.Default())
 	t1 := &TopicTemplate{Metadata: TemplateMetadata{Name: "tmpl-a"}, Spec: TopicSpec{TopicName: "a", Partitions: 1, ReplicationFactor: 1}}
 	t2 := &TopicTemplate{Metadata: TemplateMetadata{Name: "tmpl-b"}, Spec: TopicSpec{TopicName: "b", Partitions: 1, ReplicationFactor: 1}}
-	e.SaveTemplate(t1, "agent")
-	e.SaveTemplate(t2, "agent")
+	_ = e.SaveTemplate(t1, "agent")
+	_ = e.SaveTemplate(t2, "agent")
 
-	e.DeleteTemplate("tmpl-a")
+	_ = e.DeleteTemplate("tmpl-a")
 
 	_, err := e.GetTemplate("tmpl-b")
 	if err != nil {

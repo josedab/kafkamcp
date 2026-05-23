@@ -15,6 +15,7 @@ import (
 // VectorDBType represents the target vector database.
 type VectorDBType string
 
+// DBPinecone and related values define constants for this package.
 const (
 	DBPinecone VectorDBType = "pinecone"
 	DBWeaviate VectorDBType = "weaviate"
@@ -26,65 +27,66 @@ const (
 // EmbeddingModel represents the embedding model to use.
 type EmbeddingModel string
 
+// ModelSimpleHash and related values define constants for this package.
 const (
-	ModelSimpleHash  EmbeddingModel = "simple-hash"   // built-in hash-based
-	ModelTFIDF       EmbeddingModel = "tfidf"          // built-in TF-IDF
-	ModelOpenAI      EmbeddingModel = "openai"         // external API
-	ModelCohere      EmbeddingModel = "cohere"         // external API
-	ModelSentence    EmbeddingModel = "sentence-transformers" // external
+	ModelSimpleHash EmbeddingModel = "simple-hash"           // built-in hash-based
+	ModelTFIDF      EmbeddingModel = "tfidf"                 // built-in TF-IDF
+	ModelOpenAI     EmbeddingModel = "openai"                // external API
+	ModelCohere     EmbeddingModel = "cohere"                // external API
+	ModelSentence   EmbeddingModel = "sentence-transformers" // external
 )
 
 // SyncBridge defines a Kafka-to-VectorDB sync configuration.
 type SyncBridge struct {
-	ID             string         `json:"id"`
-	Name           string         `json:"name"`
-	Description    string         `json:"description,omitempty"`
-	SourceTopic    string         `json:"source_topic"`
-	SourceCluster  string         `json:"source_cluster,omitempty"`
-	VectorDB       VectorDBConfig `json:"vector_db"`
+	ID             string          `json:"id"`
+	Name           string          `json:"name"`
+	Description    string          `json:"description,omitempty"`
+	SourceTopic    string          `json:"source_topic"`
+	SourceCluster  string          `json:"source_cluster,omitempty"`
+	VectorDB       VectorDBConfig  `json:"vector_db"`
 	Embedding      EmbeddingConfig `json:"embedding"`
-	ContentField   string         `json:"content_field,omitempty"`
-	MetadataFields []string       `json:"metadata_fields,omitempty"`
-	Status         string         `json:"status"` // active, paused, stopped, error
-	CreatedBy      string         `json:"created_by"`
-	CreatedAt      time.Time      `json:"created_at"`
-	Stats          SyncStats      `json:"stats"`
+	ContentField   string          `json:"content_field,omitempty"`
+	MetadataFields []string        `json:"metadata_fields,omitempty"`
+	Status         string          `json:"status"` // active, paused, stopped, error
+	CreatedBy      string          `json:"created_by"`
+	CreatedAt      time.Time       `json:"created_at"`
+	Stats          SyncStats       `json:"stats"`
 }
 
 // VectorDBConfig configures the target vector database.
 type VectorDBConfig struct {
-	Type        VectorDBType      `json:"type"`
-	URL         string            `json:"url,omitempty"`
-	Collection  string            `json:"collection"`
-	Namespace   string            `json:"namespace,omitempty"`
-	Dimension   int               `json:"dimension"`
-	Properties  map[string]string `json:"properties,omitempty"`
+	Type       VectorDBType      `json:"type"`
+	URL        string            `json:"url,omitempty"`
+	Collection string            `json:"collection"`
+	Namespace  string            `json:"namespace,omitempty"`
+	Dimension  int               `json:"dimension"`
+	Properties map[string]string `json:"properties,omitempty"`
 }
 
 // EmbeddingConfig configures embedding generation.
 type EmbeddingConfig struct {
-	Model      EmbeddingModel `json:"model"`
-	Dimension  int            `json:"dimension"`
-	BatchSize  int            `json:"batch_size,omitempty"`
+	Model     EmbeddingModel `json:"model"`
+	Dimension int            `json:"dimension"`
+	BatchSize int            `json:"batch_size,omitempty"`
 }
 
 // SyncStats tracks sync bridge performance.
 type SyncStats struct {
-	DocumentsSynced  int64     `json:"documents_synced"`
-	DocumentsFailed  int64     `json:"documents_failed"`
-	EmbeddingsGenerated int64  `json:"embeddings_generated"`
-	BytesProcessed   int64     `json:"bytes_processed"`
-	LastSyncTime     time.Time `json:"last_sync_time,omitempty"`
-	AvgEmbeddingMs   float64   `json:"avg_embedding_ms"`
+	DocumentsSynced     int64     `json:"documents_synced"`
+	DocumentsFailed     int64     `json:"documents_failed"`
+	EmbeddingsGenerated int64     `json:"embeddings_generated"`
+	BytesProcessed      int64     `json:"bytes_processed"`
+	LastSyncTime        time.Time `json:"last_sync_time,omitempty"`
+	AvgEmbeddingMs      float64   `json:"avg_embedding_ms"`
 }
 
 // VectorDocument represents a document prepared for vector DB insertion.
 type VectorDocument struct {
-	ID        string            `json:"id"`
-	Content   string            `json:"content"`
-	Embedding []float64         `json:"embedding"`
-	Metadata  map[string]any    `json:"metadata,omitempty"`
-	Source    DocumentSource     `json:"source"`
+	ID        string         `json:"id"`
+	Content   string         `json:"content"`
+	Embedding []float64      `json:"embedding"`
+	Metadata  map[string]any `json:"metadata,omitempty"`
+	Source    DocumentSource `json:"source"`
 }
 
 // DocumentSource tracks where a document came from.

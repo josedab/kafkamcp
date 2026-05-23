@@ -35,8 +35,8 @@ func TestPriorityOrdering(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
 
-	e.Publish("q", "low-task", "a1", PriorityLow, 0, nil, 0)
-	e.Publish("q", "critical-task", "a1", PriorityCritical, 0, nil, 0)
+	_, _ = e.Publish("q", "low-task", "a1", PriorityLow, 0, nil, 0)
+	_, _ = e.Publish("q", "critical-task", "a1", PriorityCritical, 0, nil, 0)
 
 	claimed, _ := e.Claim("worker", "q")
 	if claimed.Type != "critical-task" {
@@ -48,7 +48,7 @@ func TestCompleteAndRetry(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
 
-	e.Publish("q", "task1", "a1", PriorityMedium, 2, nil, 0)
+	_, _ = e.Publish("q", "task1", "a1", PriorityMedium, 2, nil, 0)
 	task, _ := e.Claim("worker", "q")
 
 	// Fail it (should retry)
@@ -69,8 +69,8 @@ func TestStats(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
 
-	e.Publish("build", "t1", "a1", PriorityMedium, 3, nil, 0)
-	e.Publish("build", "t2", "a1", PriorityHigh, 3, nil, 0)
+	_, _ = e.Publish("build", "t1", "a1", PriorityMedium, 3, nil, 0)
+	_, _ = e.Publish("build", "t2", "a1", PriorityHigh, 3, nil, 0)
 
 	stats := e.Stats("build")
 	if len(stats) != 1 {

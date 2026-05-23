@@ -16,9 +16,9 @@ func TestListViews_EmptyEngine(t *testing.T) {
 func TestListViews_MultipleViews(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.CreateView("view-a", "topic-a", "_key", "", "", 0, 0, nil, nil, "", "", "agent-1")
-	e.CreateView("view-b", "topic-b", "_key", "count", "", 0, 0, nil, nil, "", "", "agent-2")
-	e.CreateView("view-c", "topic-c", "_key", "sum", "", 0, 0, nil, nil, "", "", "agent-1")
+	_, _ = e.CreateView("view-a", "topic-a", "_key", "", "", 0, 0, nil, nil, "", "", "agent-1")
+	_, _ = e.CreateView("view-b", "topic-b", "_key", "count", "", 0, 0, nil, nil, "", "", "agent-2")
+	_, _ = e.CreateView("view-c", "topic-c", "_key", "sum", "", 0, 0, nil, nil, "", "", "agent-1")
 
 	views := e.ListViews()
 	if len(views) != 3 {
@@ -39,7 +39,7 @@ func TestListViews_MultipleViews(t *testing.T) {
 func TestListViews_Immutability(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.CreateView("immutable-test", "topic-a", "_key", "", "", 0, 0, nil, nil, "", "", "agent-1")
+	_, _ = e.CreateView("immutable-test", "topic-a", "_key", "", "", 0, 0, nil, nil, "", "", "agent-1")
 
 	views := e.ListViews()
 	if len(views) != 1 {

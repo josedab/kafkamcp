@@ -10,23 +10,23 @@ import (
 
 // Tenant represents a tenant in the multi-tenant system.
 type Tenant struct {
-	ID          string            `json:"id"`
-	Name        string            `json:"name"`
-	Email       string            `json:"email"`
-	Plan        string            `json:"plan"` // "free", "pro", "enterprise"
-	APIKeys     []APIKey          `json:"api_keys"`
-	Clusters    []TenantCluster   `json:"clusters"`
-	Usage       UsageMetrics      `json:"usage"`
-	Limits      TenantLimits      `json:"limits"`
-	CreatedAt   time.Time         `json:"created_at"`
-	Status      string            `json:"status"` // "active", "suspended", "deleted"
-	Metadata    map[string]string `json:"metadata,omitempty"`
+	ID        string            `json:"id"`
+	Name      string            `json:"name"`
+	Email     string            `json:"email"`
+	Plan      string            `json:"plan"` // "free", "pro", "enterprise"
+	APIKeys   []APIKey          `json:"api_keys"`
+	Clusters  []TenantCluster   `json:"clusters"`
+	Usage     UsageMetrics      `json:"usage"`
+	Limits    TenantLimits      `json:"limits"`
+	CreatedAt time.Time         `json:"created_at"`
+	Status    string            `json:"status"` // "active", "suspended", "deleted"
+	Metadata  map[string]string `json:"metadata,omitempty"`
 }
 
 // APIKey represents a tenant API key.
 type APIKey struct {
 	ID        string    `json:"id"`
-	KeyHash   string    `json:"-"` // stored hashed
+	KeyHash   string    `json:"-"`      // stored hashed
 	Prefix    string    `json:"prefix"` // first 8 chars for identification
 	Name      string    `json:"name"`
 	CreatedAt time.Time `json:"created_at"`

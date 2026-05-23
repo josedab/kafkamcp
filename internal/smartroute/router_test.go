@@ -84,7 +84,7 @@ func TestRecordStepResultCompletion(t *testing.T) {
 
 	plan, _ := r.ClassifyAndPlan("explore cluster topics")
 	for _, step := range plan.Steps {
-		r.RecordStepResult(plan.ID, StepResult{StepID: step.ID, Tool: step.Tool, Status: "completed"})
+		_ = r.RecordStepResult(plan.ID, StepResult{StepID: step.ID, Tool: step.Tool, Status: "completed"})
 	}
 
 	result, err := r.GetResult(plan.ID)

@@ -157,7 +157,7 @@ func TestConsumeDefaults(t *testing.T) {
 		},
 	}
 	c := New(tr)
-	c.Consume(context.Background(), "test", 0, "")
+	_, _ = c.Consume(context.Background(), "test", 0, "")
 }
 
 func TestConsumeError(t *testing.T) {
@@ -358,7 +358,7 @@ func TestListConsumerGroupsWithCluster(t *testing.T) {
 		},
 	}
 	c := New(tr)
-	c.ListConsumerGroups(context.Background(), "prod")
+	_, _ = c.ListConsumerGroups(context.Background(), "prod")
 }
 
 func TestListConsumerGroupsError(t *testing.T) {
@@ -793,7 +793,7 @@ func TestGetAnomaliesNoFilters(t *testing.T) {
 		},
 	}
 	c := New(tr)
-	c.GetAnomalies(context.Background(), "", 0)
+	_, _ = c.GetAnomalies(context.Background(), "", 0)
 }
 
 func TestGetAnomaliesError(t *testing.T) {
@@ -841,7 +841,7 @@ func TestAdvisorScanNoCluster(t *testing.T) {
 		},
 	}
 	c := New(tr)
-	c.AdvisorScan(context.Background(), "")
+	_, _ = c.AdvisorScan(context.Background(), "")
 }
 
 func TestAdvisorScanError(t *testing.T) {

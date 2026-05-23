@@ -99,10 +99,10 @@ func TestListSubscriptionsFilterByAgent(t *testing.T) {
 	m := NewManager(testLogger())
 	defer m.Close()
 
-	m.Subscribe("agent-a", "t1.*", "", "", "", nil)
-	m.Subscribe("agent-b", "t2.*", "", "", "", nil)
-	m.Subscribe("agent-a", "t3.*", "", "", "", nil)
-	m.Subscribe("agent-c", "t4.*", "", "", "", nil)
+	_, _ = m.Subscribe("agent-a", "t1.*", "", "", "", nil)
+	_, _ = m.Subscribe("agent-b", "t2.*", "", "", "", nil)
+	_, _ = m.Subscribe("agent-a", "t3.*", "", "", "", nil)
+	_, _ = m.Subscribe("agent-c", "t4.*", "", "", "", nil)
 
 	subs := m.ListSubscriptions("agent-a")
 	if len(subs) != 2 {
@@ -120,7 +120,7 @@ func TestProcessMessageValueFilter(t *testing.T) {
 	m := NewManager(testLogger())
 	defer m.Close()
 
-	m.Subscribe("agent-1", "events.*", "", "important", "", nil)
+	_, _ = m.Subscribe("agent-1", "events.*", "", "important", "", nil)
 
 	ctx := context.Background()
 
@@ -150,8 +150,8 @@ func TestProcessMessageMultipleSubscriptionsMatch(t *testing.T) {
 	m := NewManager(testLogger())
 	defer m.Close()
 
-	m.Subscribe("agent-1", "orders.*", "", "", "", nil)
-	m.Subscribe("agent-2", "orders.*", "", "", "", nil)
+	_, _ = m.Subscribe("agent-1", "orders.*", "", "", "", nil)
+	_, _ = m.Subscribe("agent-2", "orders.*", "", "", "", nil)
 
 	ctx := context.Background()
 	results := m.ProcessMessage(ctx, MessageEvent{
@@ -169,7 +169,7 @@ func TestProcessMessageHeaderKeyPresent(t *testing.T) {
 	defer m.Close()
 
 	// Subscribe with header key only (empty value means just check presence)
-	m.Subscribe("agent-1", "orders.*", "", "", "", map[string]string{"trace-id": ""})
+	_, _ = m.Subscribe("agent-1", "orders.*", "", "", "", map[string]string{"trace-id": ""})
 
 	ctx := context.Background()
 
@@ -204,7 +204,7 @@ func TestNotificationChannel(t *testing.T) {
 		t.Fatal("expected non-nil notification channel")
 	}
 
-	m.Subscribe("agent-1", "test.*", "", "", "", nil)
+	_, _ = m.Subscribe("agent-1", "test.*", "", "", "", nil)
 
 	ctx := context.Background()
 	m.ProcessMessage(ctx, MessageEvent{
@@ -230,13 +230,13 @@ func TestActiveSubscriptionCountAfterUnsubscribe(t *testing.T) {
 	defer m.Close()
 
 	sub1, _ := m.Subscribe("agent-1", "a.*", "", "", "", nil)
-	m.Subscribe("agent-1", "b.*", "", "", "", nil)
+	_, _ = m.Subscribe("agent-1", "b.*", "", "", "", nil)
 
 	if m.ActiveSubscriptionCount() != 2 {
 		t.Fatalf("expected 2, got %d", m.ActiveSubscriptionCount())
 	}
 
-	m.Unsubscribe(sub1.ID, "agent-1")
+	_ = m.Unsubscribe(sub1.ID, "agent-1")
 	if m.ActiveSubscriptionCount() != 1 {
 		t.Fatalf("expected 1 after unsubscribe, got %d", m.ActiveSubscriptionCount())
 	}
@@ -315,8 +315,8 @@ func TestWebhookDeliveryFailure(t *testing.T) {
 func TestCloseRemovesSubscriptions(t *testing.T) {
 	t.Parallel()
 	m := NewManager(testLogger())
-	m.Subscribe("agent-1", "a.*", "", "", "", nil)
-	m.Subscribe("agent-2", "b.*", "", "", "", nil)
+	_, _ = m.Subscribe("agent-1", "a.*", "", "", "", nil)
+	_, _ = m.Subscribe("agent-2", "b.*", "", "", "", nil)
 
 	m.Close()
 
@@ -330,7 +330,7 @@ func TestProcessMessageContextCancelled(t *testing.T) {
 	m := NewManager(testLogger())
 	defer m.Close()
 
-	m.Subscribe("agent-1", "test.*", "", "", "", nil)
+	_, _ = m.Subscribe("agent-1", "test.*", "", "", "", nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
@@ -341,6 +341,6 @@ func TestProcessMessageContextCancelled(t *testing.T) {
 		Timestamp: time.Now(),
 	})
 	if len(results) != 1 {
-		t.Errorf("expected 1 result even with cancelled ctx, got %d", len(results))
+		t.Errorf("expected 1 result even with canceled ctx, got %d", len(results))
 	}
 }

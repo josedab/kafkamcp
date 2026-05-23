@@ -15,8 +15,8 @@ import (
 
 // FilterExpression defines a structured filter for subscription matching.
 type FilterExpression struct {
-	Field    string `json:"field"`              // "key", "value", "header.<name>"
-	Operator string `json:"operator"`           // "contains", "equals", "regex", "exists"
+	Field    string `json:"field"`    // "key", "value", "header.<name>"
+	Operator string `json:"operator"` // "contains", "equals", "regex", "exists"
 	Value    string `json:"value,omitempty"`
 	compiled *regexp.Regexp
 }
@@ -205,10 +205,10 @@ func (p *ConsumerPool) Stop() {
 
 // DeliveryTracker tracks notification delivery statistics.
 type DeliveryTracker struct {
-	mu           sync.RWMutex
-	delivered    atomic.Int64
-	failed       atomic.Int64
-	retried      atomic.Int64
+	mu             sync.RWMutex
+	delivered      atomic.Int64
+	failed         atomic.Int64
+	retried        atomic.Int64
 	bySubscription map[string]*SubscriptionDeliveryStats
 }
 
@@ -260,9 +260,9 @@ func (dt *DeliveryTracker) Stats() map[string]any {
 	defer dt.mu.RUnlock()
 	return map[string]any{
 		"total_delivered": dt.delivered.Load(),
-		"total_failed":   dt.failed.Load(),
-		"total_retried":  dt.retried.Load(),
-		"subscriptions":  len(dt.bySubscription),
+		"total_failed":    dt.failed.Load(),
+		"total_retried":   dt.retried.Load(),
+		"subscriptions":   len(dt.bySubscription),
 	}
 }
 

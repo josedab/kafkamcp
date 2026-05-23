@@ -32,7 +32,7 @@ func TestPauseSubscription_Idempotent(t *testing.T) {
 
 	sub, _ := mgr.Subscribe("agent-1", "orders.*", "", "", "", nil)
 
-	mgr.PauseSubscription(sub.ID, "agent-1")
+	_ = mgr.PauseSubscription(sub.ID, "agent-1")
 	err := mgr.PauseSubscription(sub.ID, "agent-1")
 	if err != nil {
 		t.Error("expected pause to be idempotent")
@@ -74,7 +74,7 @@ func TestResumeSubscription(t *testing.T) {
 	defer mgr.Close()
 
 	sub, _ := mgr.Subscribe("agent-1", "orders.*", "", "", "", nil)
-	mgr.PauseSubscription(sub.ID, "agent-1")
+	_ = mgr.PauseSubscription(sub.ID, "agent-1")
 
 	err := mgr.ResumeSubscription(sub.ID, "agent-1")
 	if err != nil {
@@ -118,7 +118,7 @@ func TestResumeSubscription_WrongAgent(t *testing.T) {
 	defer mgr.Close()
 
 	sub, _ := mgr.Subscribe("agent-1", "orders.*", "", "", "", nil)
-	mgr.PauseSubscription(sub.ID, "agent-1")
+	_ = mgr.PauseSubscription(sub.ID, "agent-1")
 
 	err := mgr.ResumeSubscription(sub.ID, "agent-2")
 	if err == nil {
@@ -133,7 +133,7 @@ func TestExpireStale_NoExpired(t *testing.T) {
 	mgr := NewManager(testWatchLogger())
 	defer mgr.Close()
 
-	mgr.Subscribe("agent-1", "orders.*", "", "", "", nil)
+	_, _ = mgr.Subscribe("agent-1", "orders.*", "", "", "", nil)
 
 	expired := mgr.ExpireStale()
 	if expired != 0 {
@@ -190,7 +190,7 @@ func TestExpireStale_MixedExpirations(t *testing.T) {
 
 	sub1, _ := mgr.Subscribe("agent-1", "orders.*", "", "", "", nil)
 	sub2, _ := mgr.Subscribe("agent-1", "payments.*", "", "", "", nil)
-	mgr.Subscribe("agent-1", "users.*", "", "", "", nil) // no expiration
+	_, _ = mgr.Subscribe("agent-1", "users.*", "", "", "", nil) // no expiration
 
 	past := time.Now().Add(-1 * time.Hour)
 	future := time.Now().Add(1 * time.Hour)
@@ -213,19 +213,19 @@ func TestActiveSubscriptionCount_ExcludesPaused(t *testing.T) {
 	defer mgr.Close()
 
 	sub1, _ := mgr.Subscribe("agent-1", "orders.*", "", "", "", nil)
-	mgr.Subscribe("agent-1", "payments.*", "", "", "", nil)
+	_, _ = mgr.Subscribe("agent-1", "payments.*", "", "", "", nil)
 
 	if mgr.ActiveSubscriptionCount() != 2 {
 		t.Errorf("expected 2 active, got %d", mgr.ActiveSubscriptionCount())
 	}
 
-	mgr.PauseSubscription(sub1.ID, "agent-1")
+	_ = mgr.PauseSubscription(sub1.ID, "agent-1")
 
 	if mgr.ActiveSubscriptionCount() != 1 {
 		t.Errorf("expected 1 active after pause, got %d", mgr.ActiveSubscriptionCount())
 	}
 
-	mgr.ResumeSubscription(sub1.ID, "agent-1")
+	_ = mgr.ResumeSubscription(sub1.ID, "agent-1")
 
 	if mgr.ActiveSubscriptionCount() != 2 {
 		t.Errorf("expected 2 active after resume, got %d", mgr.ActiveSubscriptionCount())

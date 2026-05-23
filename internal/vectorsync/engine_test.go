@@ -92,7 +92,7 @@ func TestSearchSimilar(t *testing.T) {
 		"Consumer group rebalancing is taking too long",
 	}
 	for i, d := range docs {
-		e.ProcessMessage(b.ID, fmt.Sprintf("k%d", i), d, 0, int64(i), "articles")
+		_, _ = e.ProcessMessage(b.ID, fmt.Sprintf("k%d", i), d, 0, int64(i), "articles")
 	}
 
 	results, err := e.SearchSimilar(b.ID, "Kafka consumer issues", 3)
@@ -127,10 +127,10 @@ func TestBridgeLifecycle(t *testing.T) {
 	}
 
 	// Resume
-	e.UpdateBridgeStatus(b.ID, "active")
+	_ = e.UpdateBridgeStatus(b.ID, "active")
 
 	// Delete
-	e.DeleteBridge(b.ID)
+	_ = e.DeleteBridge(b.ID)
 	if _, err := e.GetBridge(b.ID); err == nil {
 		t.Error("expected error after delete")
 	}
@@ -155,8 +155,8 @@ func TestListBridges(t *testing.T) {
 	e := newTestEngine()
 	vdb := VectorDBConfig{Type: DBPinecone, Collection: "c1"}
 	emb := EmbeddingConfig{Dimension: 32}
-	e.CreateBridge("b1", "t1", "a", vdb, emb)
-	e.CreateBridge("b2", "t2", "a", vdb, emb)
+	_, _ = e.CreateBridge("b1", "t1", "a", vdb, emb)
+	_, _ = e.CreateBridge("b2", "t2", "a", vdb, emb)
 
 	bridges := e.ListBridges()
 	if len(bridges) != 2 {

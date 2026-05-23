@@ -13,6 +13,7 @@ import (
 // PluginLanguage identifies the source language of a WASM plugin.
 type PluginLanguage string
 
+// LangRust and related values define constants for this package.
 const (
 	LangRust   PluginLanguage = "rust"
 	LangGo     PluginLanguage = "tinygo"
@@ -21,25 +22,41 @@ const (
 	LangOther  PluginLanguage = "other"
 )
 
+// Sandbox ceilings — single source of truth so LoadPlugin, DefaultSandboxConfig
+// and UpdateSandbox cannot drift apart (F19).
+const (
+	// MaxWASMSizeBytes is the largest WASM module the engine will accept.
+	MaxWASMSizeBytes = 50 * 1024 * 1024 // 50 MB
+
+	// MaxSandboxMemoryMB is the upper bound for any plugin's memory limit.
+	// LoadPlugin and UpdateSandbox both refuse values above this.
+	MaxSandboxMemoryMB = 512
+
+	// MaxSandboxTimeout is the upper bound for any plugin's execution
+	// timeout — same hard limit for LoadPlugin and UpdateSandbox.
+	MaxSandboxTimeout = 5 * time.Minute
+)
+
 // PluginStatus tracks plugin lifecycle state.
 type PluginStatus string
 
+// StatusLoaded and related values define constants for this package.
 const (
-	StatusLoaded    PluginStatus = "loaded"
-	StatusRunning   PluginStatus = "running"
-	StatusStopped   PluginStatus = "stopped"
-	StatusError     PluginStatus = "error"
+	StatusLoaded  PluginStatus = "loaded"
+	StatusRunning PluginStatus = "running"
+	StatusStopped PluginStatus = "stopped"
+	StatusError   PluginStatus = "error"
 )
 
 // SandboxConfig defines resource limits for a WASM plugin execution sandbox.
 type SandboxConfig struct {
-	MaxMemoryMB    int           `json:"max_memory_mb"`
-	MaxCPUTimeMs   int64         `json:"max_cpu_time_ms"`
-	MaxFuelUnits   uint64        `json:"max_fuel_units"`
-	AllowedHosts   []string      `json:"allowed_hosts,omitempty"`
-	AllowFS        bool          `json:"allow_fs"`
-	AllowNetwork   bool          `json:"allow_network"`
-	Timeout        time.Duration `json:"timeout"`
+	MaxMemoryMB  int           `json:"max_memory_mb"`
+	MaxCPUTimeMs int64         `json:"max_cpu_time_ms"`
+	MaxFuelUnits uint64        `json:"max_fuel_units"`
+	AllowedHosts []string      `json:"allowed_hosts,omitempty"`
+	AllowFS      bool          `json:"allow_fs"`
+	AllowNetwork bool          `json:"allow_network"`
+	Timeout      time.Duration `json:"timeout"`
 }
 
 // DefaultSandboxConfig returns safe default resource limits.
@@ -84,31 +101,31 @@ type PluginManifest struct {
 
 // ExportDef describes an exported function from a WASM module.
 type ExportDef struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	InputSchema string `json:"input_schema,omitempty"`
+	Name         string `json:"name"`
+	Description  string `json:"description"`
+	InputSchema  string `json:"input_schema,omitempty"`
 	OutputSchema string `json:"output_schema,omitempty"`
 }
 
 // ExecutionResult captures the outcome of running a WASM plugin function.
 type ExecutionResult struct {
-	PluginID    string        `json:"plugin_id"`
-	Function    string        `json:"function"`
-	Success     bool          `json:"success"`
-	Output      string        `json:"output,omitempty"`
-	Error       string        `json:"error,omitempty"`
-	DurationMs  int64         `json:"duration_ms"`
-	MemoryUsedMB float64      `json:"memory_used_mb"`
-	FuelConsumed uint64       `json:"fuel_consumed"`
-	ExecutedAt  string        `json:"executed_at"`
+	PluginID     string  `json:"plugin_id"`
+	Function     string  `json:"function"`
+	Success      bool    `json:"success"`
+	Output       string  `json:"output,omitempty"`
+	Error        string  `json:"error,omitempty"`
+	DurationMs   int64   `json:"duration_ms"`
+	MemoryUsedMB float64 `json:"memory_used_mb"`
+	FuelConsumed uint64  `json:"fuel_consumed"`
+	ExecutedAt   string  `json:"executed_at"`
 }
 
 // Engine manages WASM plugin lifecycle and execution.
 type Engine struct {
-	mu      sync.RWMutex
-	plugins map[string]*WASMPlugin
+	mu       sync.RWMutex
+	plugins  map[string]*WASMPlugin
 	wasmData map[string][]byte // plugin ID -> wasm bytes
-	logger  *slog.Logger
+	logger   *slog.Logger
 }
 
 // NewEngine creates a new WASM runtime engine.
@@ -128,8 +145,8 @@ func (e *Engine) LoadPlugin(manifest PluginManifest, wasmBytes []byte) (*WASMPlu
 	if len(wasmBytes) == 0 {
 		return nil, fmt.Errorf("wasm bytes are empty")
 	}
-	if len(wasmBytes) > 50*1024*1024 { // 50MB limit
-		return nil, fmt.Errorf("wasm module exceeds maximum size of 50MB")
+	if len(wasmBytes) > MaxWASMSizeBytes {
+		return nil, fmt.Errorf("wasm module exceeds maximum size of %d bytes", MaxWASMSizeBytes)
 	}
 
 	// Validate WASM magic bytes
@@ -316,11 +333,11 @@ func (e *Engine) UpdateSandbox(pluginID string, config SandboxConfig) error {
 		return fmt.Errorf("plugin %q not found", pluginID)
 	}
 
-	if config.MaxMemoryMB > 512 {
-		return fmt.Errorf("max memory cannot exceed 512MB")
+	if config.MaxMemoryMB > MaxSandboxMemoryMB {
+		return fmt.Errorf("max memory cannot exceed %d MB", MaxSandboxMemoryMB)
 	}
-	if config.Timeout > 5*time.Minute {
-		return fmt.Errorf("timeout cannot exceed 5 minutes")
+	if config.Timeout > MaxSandboxTimeout {
+		return fmt.Errorf("timeout cannot exceed %s", MaxSandboxTimeout)
 	}
 
 	p.Sandbox = config

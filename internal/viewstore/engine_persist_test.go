@@ -43,7 +43,7 @@ func TestEngine_PersistAndRestore(t *testing.T) {
 	if err != nil {
 		t.Fatalf("OpenSQLite (reopen): %v", err)
 	}
-	defer be2.Close()
+	defer func() { _ = be2.Close() }()
 	e2, err := viewstore.NewEngineWithBackend(ctx, logger, be2)
 	if err != nil {
 		t.Fatalf("NewEngineWithBackend (reopen): %v", err)

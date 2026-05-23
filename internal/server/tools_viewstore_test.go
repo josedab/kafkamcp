@@ -92,7 +92,7 @@ func TestHandleViewQuery_ValidQuery(t *testing.T) {
 
 	// Create a view first
 	view, _ := s.viewStoreEngine.CreateView("query-test", "orders", "_key", "", "", 0, 0, nil, nil, "", "", "agent-1")
-	s.viewStoreEngine.IngestRecord(view.ID, "key1", map[string]any{"amount": 100.0}, 1)
+	_ = s.viewStoreEngine.IngestRecord(view.ID, "key1", map[string]any{"amount": 100.0}, 1)
 
 	result, err := s.handleViewQuery(context.Background(), makeToolRequest(map[string]any{
 		"key_exact": "key1",
@@ -104,7 +104,7 @@ func TestHandleViewQuery_ValidQuery(t *testing.T) {
 
 	text := resultText(t, result)
 	var qr map[string]any
-	json.Unmarshal([]byte(text), &qr)
+	_ = json.Unmarshal([]byte(text), &qr)
 	if qr["total_count"].(float64) != 1 {
 		t.Errorf("expected 1 result, got %v", qr["total_count"])
 	}
@@ -123,7 +123,7 @@ func TestHandleViewStatus_InvalidAction(t *testing.T) {
 func TestHandleViewStatus_ListAction(t *testing.T) {
 	t.Parallel()
 	s := newTestServerWithViewStore(t, &kafka.MockKafkaManager{})
-	s.viewStoreEngine.CreateView("list-test", "orders", "_key", "", "", 0, 0, nil, nil, "", "", "agent-1")
+	_, _ = s.viewStoreEngine.CreateView("list-test", "orders", "_key", "", "", 0, 0, nil, nil, "", "", "agent-1")
 
 	result, err := s.handleViewStatus(context.Background(), makeToolRequest(nil), "agent-1",
 		map[string]any{"action": "list"}, time.Now())
@@ -163,7 +163,7 @@ func TestHandleViewStatus_StatsValidID(t *testing.T) {
 
 	text := resultText(t, result)
 	var stats map[string]any
-	json.Unmarshal([]byte(text), &stats)
+	_ = json.Unmarshal([]byte(text), &stats)
 	if stats["view_name"] != "stats-test" {
 		t.Errorf("expected view_name 'stats-test', got %v", stats["view_name"])
 	}

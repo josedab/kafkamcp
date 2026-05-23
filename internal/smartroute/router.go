@@ -6,6 +6,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+
 	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
@@ -20,22 +21,22 @@ type ToolNode struct {
 
 // IntentPattern maps a high-level intent to a chain of tools.
 type IntentPattern struct {
-	ID          string            `json:"id"`
-	Pattern     []string          `json:"pattern"`
-	Description string            `json:"description"`
-	ToolChain   []ToolStep        `json:"tool_chain"`
-	Priority    int               `json:"priority"`
+	ID          string     `json:"id"`
+	Pattern     []string   `json:"pattern"`
+	Description string     `json:"description"`
+	ToolChain   []ToolStep `json:"tool_chain"`
+	Priority    int        `json:"priority"`
 }
 
 // ToolStep represents a single step in an execution plan.
 type ToolStep struct {
-	ID         string            `json:"id"`
-	Tool       string            `json:"tool"`
-	Args       map[string]any    `json:"args,omitempty"`
-	DependsOn  []string          `json:"depends_on,omitempty"`
-	PassFrom   map[string]string `json:"pass_from,omitempty"`
-	Optional   bool              `json:"optional"`
-	Timeout    time.Duration     `json:"timeout,omitempty"`
+	ID        string            `json:"id"`
+	Tool      string            `json:"tool"`
+	Args      map[string]any    `json:"args,omitempty"`
+	DependsOn []string          `json:"depends_on,omitempty"`
+	PassFrom  map[string]string `json:"pass_from,omitempty"`
+	Optional  bool              `json:"optional"`
+	Timeout   time.Duration     `json:"timeout,omitempty"`
 }
 
 // ExecutionPlan represents a composed chain of tool calls.
@@ -50,12 +51,12 @@ type ExecutionPlan struct {
 
 // StepResult holds the result of executing a single step.
 type StepResult struct {
-	StepID    string         `json:"step_id"`
-	Tool      string         `json:"tool"`
-	Output    map[string]any `json:"output,omitempty"`
-	Error     string         `json:"error,omitempty"`
-	Duration  time.Duration  `json:"duration"`
-	Status    string         `json:"status"`
+	StepID   string         `json:"step_id"`
+	Tool     string         `json:"tool"`
+	Output   map[string]any `json:"output,omitempty"`
+	Error    string         `json:"error,omitempty"`
+	Duration time.Duration  `json:"duration"`
+	Status   string         `json:"status"`
 }
 
 // ExecutionResult holds the complete result of an execution plan.
@@ -267,16 +268,16 @@ func (r *Router) GetToolGraph() map[string]ToolNode {
 
 func defaultToolGraph() map[string]ToolNode {
 	return map[string]ToolNode{
-		"kafka_list_topics":       {Name: "kafka_list_topics", Category: "discovery", Produces: []string{"topic_list"}},
-		"kafka_topic_describe":    {Name: "kafka_topic_describe", Category: "discovery", DependsOn: []string{"topic_list"}, Produces: []string{"topic_detail"}},
-		"kafka_consumer_groups":   {Name: "kafka_consumer_groups", Category: "monitoring", Produces: []string{"group_list"}},
-		"kafka_lag_diagnosis":     {Name: "kafka_lag_diagnosis", Category: "diagnosis", DependsOn: []string{"group_list"}, Produces: []string{"lag_diagnosis"}},
-		"kafka_anomaly_detect":    {Name: "kafka_anomaly_detect", Category: "analytics", Produces: []string{"anomaly_report"}},
-		"kafka_lineage_trace":     {Name: "kafka_lineage_trace", Category: "governance", DependsOn: []string{"topic_detail"}, Produces: []string{"lineage_graph"}},
-		"kafka_consume":           {Name: "kafka_consume", Category: "data", DependsOn: []string{"topic_list"}, Produces: []string{"messages"}},
-		"kafka_forecast_topic":    {Name: "kafka_forecast_topic", Category: "analytics", DependsOn: []string{"topic_detail"}, Produces: []string{"forecast"}},
-		"kafka_cluster_info":      {Name: "kafka_cluster_info", Category: "discovery", Produces: []string{"cluster_info"}},
-		"kafka_schema_versions":   {Name: "kafka_schema_versions", Category: "schema", Produces: []string{"schema_info"}},
+		"kafka_list_topics":     {Name: "kafka_list_topics", Category: "discovery", Produces: []string{"topic_list"}},
+		"kafka_topic_describe":  {Name: "kafka_topic_describe", Category: "discovery", DependsOn: []string{"topic_list"}, Produces: []string{"topic_detail"}},
+		"kafka_consumer_groups": {Name: "kafka_consumer_groups", Category: "monitoring", Produces: []string{"group_list"}},
+		"kafka_lag_diagnosis":   {Name: "kafka_lag_diagnosis", Category: "diagnosis", DependsOn: []string{"group_list"}, Produces: []string{"lag_diagnosis"}},
+		"kafka_anomaly_detect":  {Name: "kafka_anomaly_detect", Category: "analytics", Produces: []string{"anomaly_report"}},
+		"kafka_lineage_trace":   {Name: "kafka_lineage_trace", Category: "governance", DependsOn: []string{"topic_detail"}, Produces: []string{"lineage_graph"}},
+		"kafka_consume":         {Name: "kafka_consume", Category: "data", DependsOn: []string{"topic_list"}, Produces: []string{"messages"}},
+		"kafka_forecast_topic":  {Name: "kafka_forecast_topic", Category: "analytics", DependsOn: []string{"topic_detail"}, Produces: []string{"forecast"}},
+		"kafka_cluster_info":    {Name: "kafka_cluster_info", Category: "discovery", Produces: []string{"cluster_info"}},
+		"kafka_schema_versions": {Name: "kafka_schema_versions", Category: "schema", Produces: []string{"schema_info"}},
 	}
 }
 

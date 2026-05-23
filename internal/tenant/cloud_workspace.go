@@ -16,30 +16,30 @@ type ResourceQuota struct {
 
 // RegionConfig defines a deployment region.
 type RegionConfig struct {
-	Name          string `json:"name" yaml:"name"`
-	Provider      string `json:"provider" yaml:"provider"` // "aws", "gcp", "azure"
-	Zone          string `json:"zone" yaml:"zone"`
-	Endpoint      string `json:"endpoint" yaml:"endpoint"`
-	IsActive      bool   `json:"is_active" yaml:"is_active"`
-	IsPrimary     bool   `json:"is_primary,omitempty" yaml:"is_primary,omitempty"`
+	Name      string `json:"name" yaml:"name"`
+	Provider  string `json:"provider" yaml:"provider"` // "aws", "gcp", "azure"
+	Zone      string `json:"zone" yaml:"zone"`
+	Endpoint  string `json:"endpoint" yaml:"endpoint"`
+	IsActive  bool   `json:"is_active" yaml:"is_active"`
+	IsPrimary bool   `json:"is_primary,omitempty" yaml:"is_primary,omitempty"`
 }
 
 // NetworkIsolation defines network isolation for a tenant.
 type NetworkIsolation struct {
-	VPCEnabled     bool     `json:"vpc_enabled" yaml:"vpc_enabled"`
-	AllowedCIDRs   []string `json:"allowed_cidrs,omitempty" yaml:"allowed_cidrs,omitempty"`
-	PrivateLink    bool     `json:"private_link" yaml:"private_link"`
-	TLSRequired    bool     `json:"tls_required" yaml:"tls_required"`
+	VPCEnabled   bool     `json:"vpc_enabled" yaml:"vpc_enabled"`
+	AllowedCIDRs []string `json:"allowed_cidrs,omitempty" yaml:"allowed_cidrs,omitempty"`
+	PrivateLink  bool     `json:"private_link" yaml:"private_link"`
+	TLSRequired  bool     `json:"tls_required" yaml:"tls_required"`
 }
 
 // AutoScaleConfig defines auto-scaling parameters for tenant instances.
 type AutoScaleConfig struct {
-	Enabled         bool    `json:"enabled" yaml:"enabled"`
-	MinInstances    int     `json:"min_instances" yaml:"min_instances"`
-	MaxInstances    int     `json:"max_instances" yaml:"max_instances"`
-	TargetCPUPercent float64 `json:"target_cpu_percent" yaml:"target_cpu_percent"`
-	ScaleUpCooldown  int    `json:"scale_up_cooldown_secs" yaml:"scale_up_cooldown_secs"`
-	ScaleDownCooldown int   `json:"scale_down_cooldown_secs" yaml:"scale_down_cooldown_secs"`
+	Enabled           bool    `json:"enabled" yaml:"enabled"`
+	MinInstances      int     `json:"min_instances" yaml:"min_instances"`
+	MaxInstances      int     `json:"max_instances" yaml:"max_instances"`
+	TargetCPUPercent  float64 `json:"target_cpu_percent" yaml:"target_cpu_percent"`
+	ScaleUpCooldown   int     `json:"scale_up_cooldown_secs" yaml:"scale_up_cooldown_secs"`
+	ScaleDownCooldown int     `json:"scale_down_cooldown_secs" yaml:"scale_down_cooldown_secs"`
 }
 
 // TenantInstance represents a running KafkaMCP instance for a tenant.

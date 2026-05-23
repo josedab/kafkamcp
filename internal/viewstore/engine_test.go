@@ -20,9 +20,9 @@ func TestCreateAndQueryView(t *testing.T) {
 	}
 
 	// Ingest records
-	e.IngestRecord(view.ID, "key1", map[string]any{"amount": 100.0}, 1)
-	e.IngestRecord(view.ID, "key2", map[string]any{"amount": 200.0}, 2)
-	e.IngestRecord(view.ID, "key1", map[string]any{"amount": 50.0}, 3) // aggregates
+	_ = e.IngestRecord(view.ID, "key1", map[string]any{"amount": 100.0}, 1)
+	_ = e.IngestRecord(view.ID, "key2", map[string]any{"amount": 200.0}, 2)
+	_ = e.IngestRecord(view.ID, "key1", map[string]any{"amount": 50.0}, 3) // aggregates
 
 	// Query
 	result, err := e.Query(view.ID, QueryOptions{})
@@ -39,8 +39,8 @@ func TestViewPointLookup(t *testing.T) {
 	e := NewEngine(testLogger())
 	view, _ := e.CreateView("lookup-test", "topic1", "_key", "", "", 0, 0, nil, nil, "", "", "agent-1")
 
-	e.IngestRecord(view.ID, "key1", map[string]any{"val": "a"}, 1)
-	e.IngestRecord(view.ID, "key2", map[string]any{"val": "b"}, 2)
+	_ = e.IngestRecord(view.ID, "key1", map[string]any{"val": "a"}, 1)
+	_ = e.IngestRecord(view.ID, "key2", map[string]any{"val": "b"}, 2)
 
 	result, _ := e.Query(view.ID, QueryOptions{KeyExact: "key1"})
 	if result.TotalCount != 1 {
@@ -53,8 +53,8 @@ func TestViewStats(t *testing.T) {
 	e := NewEngine(testLogger())
 	view, _ := e.CreateView("stats-test", "topic1", "_key", "", "", 0, 0, nil, nil, "", "", "agent-1")
 
-	e.IngestRecord(view.ID, "k1", map[string]any{}, 1)
-	e.IngestRecord(view.ID, "k2", map[string]any{}, 2)
+	_ = e.IngestRecord(view.ID, "k1", map[string]any{}, 1)
+	_ = e.IngestRecord(view.ID, "k2", map[string]any{}, 2)
 
 	stats, err := e.Stats(view.ID)
 	if err != nil {

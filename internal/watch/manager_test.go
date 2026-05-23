@@ -1,11 +1,11 @@
 package watch
 
 import (
-	"testing"
-	"time"
+	"context"
 	"log/slog"
 	"os"
-	"context"
+	"testing"
+	"time"
 )
 
 func testLogger() *slog.Logger {
@@ -123,9 +123,9 @@ func TestListSubscriptions(t *testing.T) {
 	m := NewManager(testLogger())
 	defer m.Close()
 
-	m.Subscribe("agent-1", "orders.*", "", "", "", nil)
-	m.Subscribe("agent-2", "payments.*", "", "", "", nil)
-	m.Subscribe("agent-1", "events.*", "", "", "", nil)
+	_, _ = m.Subscribe("agent-1", "orders.*", "", "", "", nil)
+	_, _ = m.Subscribe("agent-2", "payments.*", "", "", "", nil)
+	_, _ = m.Subscribe("agent-1", "events.*", "", "", "", nil)
 
 	all := m.ListSubscriptions("")
 	if len(all) != 3 {
@@ -143,14 +143,14 @@ func TestHeaderMatching(t *testing.T) {
 	m := NewManager(testLogger())
 	defer m.Close()
 
-	m.Subscribe("agent-1", "orders.*", "", "", "", map[string]string{"source": "web"})
+	_, _ = m.Subscribe("agent-1", "orders.*", "", "", "", map[string]string{"source": "web"})
 
 	ctx := context.Background()
 
 	// Should match
 	event1 := MessageEvent{
-		Topic:   "orders.created",
-		Headers: map[string]string{"source": "web"},
+		Topic:     "orders.created",
+		Headers:   map[string]string{"source": "web"},
 		Timestamp: time.Now(),
 	}
 	results := m.ProcessMessage(ctx, event1)
@@ -160,8 +160,8 @@ func TestHeaderMatching(t *testing.T) {
 
 	// Should not match
 	event2 := MessageEvent{
-		Topic:   "orders.created",
-		Headers: map[string]string{"source": "mobile"},
+		Topic:     "orders.created",
+		Headers:   map[string]string{"source": "mobile"},
 		Timestamp: time.Now(),
 	}
 	results = m.ProcessMessage(ctx, event2)

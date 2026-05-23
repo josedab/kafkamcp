@@ -25,31 +25,31 @@ type InteractionRecord struct {
 
 // DataLakeStats provides statistics about the telemetry data lake.
 type DataLakeStats struct {
-	TotalRecords       int            `json:"total_records"`
-	UniqueAgents       int            `json:"unique_agents"`
-	UniqueTools        int            `json:"unique_tools"`
-	UniqueClusters     int            `json:"unique_clusters"`
-	OldestRecord       string         `json:"oldest_record,omitempty"`
-	NewestRecord       string         `json:"newest_record,omitempty"`
-	RecordsByAgent     map[string]int `json:"records_by_agent"`
-	RecordsByTool      map[string]int `json:"records_by_tool"`
-	RecordsByStatus    map[string]int `json:"records_by_status"`
-	AvgLatencyMs       float64        `json:"avg_latency_ms"`
+	TotalRecords    int            `json:"total_records"`
+	UniqueAgents    int            `json:"unique_agents"`
+	UniqueTools     int            `json:"unique_tools"`
+	UniqueClusters  int            `json:"unique_clusters"`
+	OldestRecord    string         `json:"oldest_record,omitempty"`
+	NewestRecord    string         `json:"newest_record,omitempty"`
+	RecordsByAgent  map[string]int `json:"records_by_agent"`
+	RecordsByTool   map[string]int `json:"records_by_tool"`
+	RecordsByStatus map[string]int `json:"records_by_status"`
+	AvgLatencyMs    float64        `json:"avg_latency_ms"`
 }
 
 // AgentBehaviorReport summarizes an agent's interaction patterns.
 type AgentBehaviorReport struct {
-	AgentID          string              `json:"agent_id"`
-	TotalCalls       int                 `json:"total_calls"`
-	SuccessRate      float64             `json:"success_rate"`
-	AvgLatencyMs     float64             `json:"avg_latency_ms"`
-	P95LatencyMs     int64               `json:"p95_latency_ms"`
-	TopTools         []ToolUsage         `json:"top_tools"`
-	TopClusters      []ClusterUsage      `json:"top_clusters"`
-	ErrorPatterns    []ErrorPattern      `json:"error_patterns"`
-	ActivePeriods    []string            `json:"active_periods"`
-	FirstSeen        string              `json:"first_seen"`
-	LastSeen         string              `json:"last_seen"`
+	AgentID       string         `json:"agent_id"`
+	TotalCalls    int            `json:"total_calls"`
+	SuccessRate   float64        `json:"success_rate"`
+	AvgLatencyMs  float64        `json:"avg_latency_ms"`
+	P95LatencyMs  int64          `json:"p95_latency_ms"`
+	TopTools      []ToolUsage    `json:"top_tools"`
+	TopClusters   []ClusterUsage `json:"top_clusters"`
+	ErrorPatterns []ErrorPattern `json:"error_patterns"`
+	ActivePeriods []string       `json:"active_periods"`
+	FirstSeen     string         `json:"first_seen"`
+	LastSeen      string         `json:"last_seen"`
 }
 
 // ToolUsage tracks usage count for a tool.
@@ -74,10 +74,11 @@ type ErrorPattern struct {
 // ExportFormat defines the output format for data lake exports.
 type ExportFormat string
 
+// FormatJSON and related values define constants for this package.
 const (
-	FormatJSON    ExportFormat = "json"
-	FormatJSONL   ExportFormat = "jsonl"
-	FormatCSV     ExportFormat = "csv"
+	FormatJSON  ExportFormat = "json"
+	FormatJSONL ExportFormat = "jsonl"
+	FormatCSV   ExportFormat = "csv"
 )
 
 // ExportOptions configures data lake export.
