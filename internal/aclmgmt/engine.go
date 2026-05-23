@@ -35,14 +35,14 @@ type ACLDiffResult struct {
 
 // AuditResult summarizes an ACL audit.
 type AuditResult struct {
-	TotalACLs        int              `json:"total_acls"`
-	ByPrincipal      map[string]int   `json:"by_principal"`
-	ByResourceType   map[string]int   `json:"by_resource_type"`
-	OverPermissioned []AuditFinding   `json:"over_permissioned"`
-	WildcardRules    []AuditFinding   `json:"wildcard_rules"`
-	DenyRules        []ACLRule        `json:"deny_rules"`
-	Recommendations  []string         `json:"recommendations"`
-	AuditedAt        time.Time        `json:"audited_at"`
+	TotalACLs        int            `json:"total_acls"`
+	ByPrincipal      map[string]int `json:"by_principal"`
+	ByResourceType   map[string]int `json:"by_resource_type"`
+	OverPermissioned []AuditFinding `json:"over_permissioned"`
+	WildcardRules    []AuditFinding `json:"wildcard_rules"`
+	DenyRules        []ACLRule      `json:"deny_rules"`
+	Recommendations  []string       `json:"recommendations"`
+	AuditedAt        time.Time      `json:"audited_at"`
 }
 
 // AuditFinding describes a security concern found during audit.

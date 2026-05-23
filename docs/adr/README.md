@@ -16,6 +16,8 @@ ADRs document significant architectural decisions made during the project's deve
 | [ADR-006](006-persistent-engine-store.md) | Persistent Engine Store with Pluggable Backend | Accepted |
 | [ADR-007](007-agent-identity-oidc.md) | Agent Identity & OIDC Verification | Accepted |
 | [ADR-008](008-avro-wire-format-codec.md) | First-class Avro Wire-format Codec | Accepted |
+| [ADR-009](009-mtls-identity-provider.md) | mTLS Identity Provider | Accepted |
+| [ADR-010](010-protobuf-wire-codec.md) | First-class Protobuf Wire-format Codec | Accepted |
 
 ## Format
 

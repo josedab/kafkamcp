@@ -137,7 +137,7 @@ func TestMarkReadIdempotent(t *testing.T) {
 	c := newTestCoordinator()
 	msg, _ := c.SendMessage("a1", "a2", "notification", "test", "body")
 
-	c.MarkRead("a2", msg.ID)
+	_ = c.MarkRead("a2", msg.ID)
 	err := c.MarkRead("a2", msg.ID)
 	if err != nil {
 		t.Error("expected idempotent MarkRead to succeed")
@@ -303,8 +303,8 @@ func TestGetMessagesUnreadOnly(t *testing.T) {
 	t.Parallel()
 	c := newTestCoordinator()
 	msg, _ := c.SendMessage("a1", "a2", "request", "test", "body")
-	c.SendMessage("a1", "a2", "request", "test2", "body2")
-	c.MarkRead("a2", msg.ID)
+	_, _ = c.SendMessage("a1", "a2", "request", "test2", "body2")
+	_ = c.MarkRead("a2", msg.ID)
 
 	unread := c.GetMessages("a2", true)
 	if len(unread) != 1 {

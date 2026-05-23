@@ -14,8 +14,8 @@ func TestListInstances_FilterByOrgID(t *testing.T) {
 	org1, _ := m.CreateOrganization("Org1", "pro")
 	org2, _ := m.CreateOrganization("Org2", "starter")
 
-	m.ProvisionInstance(org1.ID, "inst-1", "standard", "us-east-1", InstanceConfig{BootstrapServers: "kafka:9092"})
-	m.ProvisionInstance(org2.ID, "inst-2", "standard", "eu-west-1", InstanceConfig{BootstrapServers: "kafka:9092"})
+	_, _ = m.ProvisionInstance(org1.ID, "inst-1", "standard", "us-east-1", InstanceConfig{BootstrapServers: "kafka:9092"})
+	_, _ = m.ProvisionInstance(org2.ID, "inst-2", "standard", "eu-west-1", InstanceConfig{BootstrapServers: "kafka:9092"})
 
 	instances := m.ListInstances(org1.ID)
 	if len(instances) != 1 {
@@ -32,8 +32,8 @@ func TestListInstances_AllWithEmptyOrgID(t *testing.T) {
 	org1, _ := m.CreateOrganization("Org1", "pro")
 	org2, _ := m.CreateOrganization("Org2", "starter")
 
-	m.ProvisionInstance(org1.ID, "inst-1", "", "", InstanceConfig{BootstrapServers: "kafka:9092"})
-	m.ProvisionInstance(org2.ID, "inst-2", "", "", InstanceConfig{BootstrapServers: "kafka:9092"})
+	_, _ = m.ProvisionInstance(org1.ID, "inst-1", "", "", InstanceConfig{BootstrapServers: "kafka:9092"})
+	_, _ = m.ProvisionInstance(org2.ID, "inst-2", "", "", InstanceConfig{BootstrapServers: "kafka:9092"})
 
 	instances := m.ListInstances("")
 	if len(instances) != 2 {
@@ -56,9 +56,9 @@ func TestListInstances_MultipleOrgs(t *testing.T) {
 	org1, _ := m.CreateOrganization("Org1", "pro")
 	org2, _ := m.CreateOrganization("Org2", "enterprise")
 
-	m.ProvisionInstance(org1.ID, "inst-1", "", "", InstanceConfig{BootstrapServers: "k:9092"})
-	m.ProvisionInstance(org1.ID, "inst-2", "", "", InstanceConfig{BootstrapServers: "k:9092"})
-	m.ProvisionInstance(org2.ID, "inst-3", "", "", InstanceConfig{BootstrapServers: "k:9092"})
+	_, _ = m.ProvisionInstance(org1.ID, "inst-1", "", "", InstanceConfig{BootstrapServers: "k:9092"})
+	_, _ = m.ProvisionInstance(org1.ID, "inst-2", "", "", InstanceConfig{BootstrapServers: "k:9092"})
+	_, _ = m.ProvisionInstance(org2.ID, "inst-3", "", "", InstanceConfig{BootstrapServers: "k:9092"})
 
 	org1Instances := m.ListInstances(org1.ID)
 	if len(org1Instances) != 2 {
@@ -100,8 +100,8 @@ func TestAddMember_Duplicate(t *testing.T) {
 	m := NewManager(slog.Default())
 	org, _ := m.CreateOrganization("Test Corp", "pro")
 
-	m.AddMember(org.ID, "user-1", "alice@test.com", "admin")
-	m.AddMember(org.ID, "user-2", "alice@test.com", "viewer")
+	_ = m.AddMember(org.ID, "user-1", "alice@test.com", "admin")
+	_ = m.AddMember(org.ID, "user-2", "alice@test.com", "viewer")
 
 	got, _ := m.GetOrganization(org.ID)
 	// Current implementation allows duplicates
@@ -127,7 +127,7 @@ func TestAddMember_UpdatesTimestamp(t *testing.T) {
 
 	beforeAdd := org.UpdatedAt
 	time.Sleep(1 * time.Millisecond)
-	m.AddMember(org.ID, "user-1", "bob@test.com", "viewer")
+	_ = m.AddMember(org.ID, "user-1", "bob@test.com", "viewer")
 
 	got, _ := m.GetOrganization(org.ID)
 	if !got.UpdatedAt.After(beforeAdd) {
@@ -140,7 +140,7 @@ func TestAddMember_AllFields(t *testing.T) {
 	m := NewManager(slog.Default())
 	org, _ := m.CreateOrganization("Corp", "pro")
 
-	m.AddMember(org.ID, "uid-123", "user@example.com", "operator")
+	_ = m.AddMember(org.ID, "uid-123", "user@example.com", "operator")
 
 	got, _ := m.GetOrganization(org.ID)
 	member := got.Members[0]

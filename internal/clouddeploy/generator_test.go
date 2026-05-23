@@ -124,7 +124,7 @@ func TestListTemplates(t *testing.T) {
 	t.Parallel()
 	g := NewGenerator(slog.Default())
 
-	g.Generate(DeploymentConfig{Provider: ProviderAWS, Service: ServiceMSK})
+	_, _ = g.Generate(DeploymentConfig{Provider: ProviderAWS, Service: ServiceMSK})
 	templates := g.ListTemplates()
 	if len(templates) == 0 {
 		t.Error("expected templates after generation")

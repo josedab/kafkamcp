@@ -205,7 +205,7 @@ func writeMarkdown(path string, tools []toolDef) error {
 
 	sb.WriteString("# KafkaMCP Tool Reference\n\n")
 	sb.WriteString(fmt.Sprintf("> Auto-generated on %s from `internal/server/register_*.go`.\n", time.Now().UTC().Format("2006-01-02")))
-	sb.WriteString("> Do not edit manually. Run `go generate ./internal/server/` to regenerate.\n\n")
+	sb.WriteString("> Do not edit manually. Run `make generate` to regenerate.\n\n")
 
 	// Tier summary
 	tierBuckets := map[string][]toolDef{}
@@ -297,18 +297,4 @@ func writeMarkdown(path string, tools []toolDef) error {
 	}
 
 	return os.WriteFile(path, []byte(sb.String()), 0644)
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }

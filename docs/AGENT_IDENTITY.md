@@ -39,7 +39,16 @@ The identity block lives under `policy.identity` in `kafkamcp.yaml`:
 policy:
   enabled: true
   identity:
-    provider: oidc      # none | static | oidc
+    provider: oidc      # none | static | oidc | mtls
+    # allow_header_fallback (optional, default depends on provider):
+    #   - `none`: defaults to `true` (legacy X-Agent-ID header trusted).
+    #   - `static`/`oidc`/`mtls`: defaults to `false`. When verification
+    #     returns "no credentials" we refuse to fall back to the
+    #     X-Agent-ID header — otherwise an attacker could bypass the
+    #     verifier simply by omitting the bearer token. Set this to
+    #     `true` only during a controlled migration where both
+    #     identity styles must temporarily coexist.
+    # allow_header_fallback: false
     static:
       tokens:
         - token: "supersecret"

@@ -180,10 +180,10 @@ func TestRingBufferSingleCapacity(t *testing.T) {
 func TestMeanStddevExtended(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		name     string
-		values   []float64
-		wantMean float64
-		wantStd  float64
+		name      string
+		values    []float64
+		wantMean  float64
+		wantStd   float64
 		tolerance float64
 	}{
 		{"two_values", []float64{0, 10}, 5, 5, 0.01},
@@ -235,10 +235,10 @@ func TestGenerateMessage(t *testing.T) {
 	d := NewDetector(DefaultConfig(), testLogger())
 
 	tests := []struct {
-		name      string
-		dp        DataPoint
-		mean      float64
-		zScore    float64
+		name         string
+		dp           DataPoint
+		mean         float64
+		zScore       float64
 		wantContains string
 	}{
 		{

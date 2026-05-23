@@ -119,7 +119,7 @@ func TestDecodePayloadAliasing(t *testing.T) {
 	t.Parallel()
 	// The returned payload slice intentionally shares storage with the
 	// input. This lets hot paths avoid an allocation. Document the
-	// behaviour with a test so future refactors don't regress it.
+	// behavior with a test so future refactors don't regress it.
 	in := []byte{0x00, 0x00, 0x00, 0x00, 0x07, 'x', 'y', 'z'}
 	_, payload, err := Decode(in)
 	if err != nil {
@@ -131,6 +131,6 @@ func TestDecodePayloadAliasing(t *testing.T) {
 	// Mutating the source should be visible through the returned slice.
 	in[HeaderLen] = 'Q'
 	if payload[0] != 'Q' {
-		t.Fatalf("payload[0] = %c, want Q (aliased slice not honoured)", payload[0])
+		t.Fatalf("payload[0] = %c, want Q (aliased slice not honored)", payload[0])
 	}
 }

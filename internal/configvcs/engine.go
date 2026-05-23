@@ -3,6 +3,7 @@
 package configvcs
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -14,18 +15,18 @@ import (
 
 // ConfigChange represents a versioned configuration change.
 type ConfigChange struct {
-	ID          string         `json:"id"`
-	Resource    string         `json:"resource"`    // topic, acl, schema, policy, cluster
-	ResourceID  string         `json:"resource_id"` // e.g., topic name
-	Action      string         `json:"action"`      // create, update, delete
-	Version     int            `json:"version"`
-	Before      map[string]any `json:"before,omitempty"`
-	After       map[string]any `json:"after,omitempty"`
-	Diff        []DiffEntry    `json:"diff,omitempty"`
-	Author      string         `json:"author"`
-	Message     string         `json:"message,omitempty"`
-	Timestamp   time.Time      `json:"timestamp"`
-	Tags        []string       `json:"tags,omitempty"`
+	ID         string         `json:"id"`
+	Resource   string         `json:"resource"`    // topic, acl, schema, policy, cluster
+	ResourceID string         `json:"resource_id"` // e.g., topic name
+	Action     string         `json:"action"`      // create, update, delete
+	Version    int            `json:"version"`
+	Before     map[string]any `json:"before,omitempty"`
+	After      map[string]any `json:"after,omitempty"`
+	Diff       []DiffEntry    `json:"diff,omitempty"`
+	Author     string         `json:"author"`
+	Message    string         `json:"message,omitempty"`
+	Timestamp  time.Time      `json:"timestamp"`
+	Tags       []string       `json:"tags,omitempty"`
 }
 
 // DiffEntry represents a single field change in a configuration diff.
@@ -48,13 +49,13 @@ type CompareResult struct {
 
 // RollbackResult holds the result of a rollback operation.
 type RollbackResult struct {
-	Resource     string         `json:"resource"`
-	ResourceID   string         `json:"resource_id"`
-	FromVersion  int            `json:"from_version"`
-	ToVersion    int            `json:"to_version"`
+	Resource       string         `json:"resource"`
+	ResourceID     string         `json:"resource_id"`
+	FromVersion    int            `json:"from_version"`
+	ToVersion      int            `json:"to_version"`
 	RestoredConfig map[string]any `json:"restored_config"`
-	NewVersion   int            `json:"new_version"`
-	ChangesCount int            `json:"changes_count"`
+	NewVersion     int            `json:"new_version"`
+	ChangesCount   int            `json:"changes_count"`
 }
 
 // AuditReport provides SOC2-ready audit trail.
@@ -69,10 +70,10 @@ type AuditReport struct {
 
 // Engine manages configuration version control.
 type Engine struct {
-	mu       sync.RWMutex
-	changes  map[string][]*ConfigChange // resource:resourceID -> ordered list of changes
-	logger   *slog.Logger
-	nextID   int64
+	mu      sync.RWMutex
+	changes map[string][]*ConfigChange // resource:resourceID -> ordered list of changes
+	logger  *slog.Logger
+	nextID  int64
 }
 
 // NewEngine creates a new config VCS engine.
@@ -105,13 +106,14 @@ func (e *Engine) RecordChange(resource, resourceID, action, author, message stri
 
 	// Calculate diff
 	var diff []DiffEntry
-	if before != nil && after != nil {
+	switch {
+	case before != nil && after != nil:
 		diff = computeDiff(before, after)
-	} else if after != nil {
+	case after != nil:
 		for k, v := range after {
 			diff = append(diff, DiffEntry{Field: k, NewValue: v, Type: "added"})
 		}
-	} else if before != nil {
+	case before != nil:
 		for k, v := range before {
 			diff = append(diff, DiffEntry{Field: k, OldValue: v, Type: "removed"})
 		}
@@ -347,5 +349,5 @@ func jsonEqual(a, b any) bool {
 	if err != nil {
 		return false
 	}
-	return string(aj) == string(bj)
+	return bytes.Equal(aj, bj)
 }

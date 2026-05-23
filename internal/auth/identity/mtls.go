@@ -17,7 +17,6 @@ package identity
 import (
 	"context"
 	"crypto/x509"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -31,7 +30,7 @@ type MTLSConfig struct {
 	// to the listed values. When empty all SPIFFE IDs whose trust
 	// domain matches at least one configured leaf cert are accepted —
 	// chain-of-trust is enforced by the TLS terminator, this allowlist
-	// is a secondary defence in depth.
+	// is a secondary defense in depth.
 	AllowedSPIFFEIDs []string
 
 	// AllowedTrustDomains, when non-empty, restricts the accepted
@@ -226,8 +225,3 @@ var (
 	_ Provider        = (*MTLSProvider)(nil)
 	_ RequestVerifier = (*MTLSProvider)(nil)
 )
-
-// errMTLSNoPeerCerts is returned by VerifyRequest when r.TLS is set
-// but no peer certificates were presented. Kept unexported so callers
-// match via [ErrNoCredentials].
-var errMTLSNoPeerCerts = errors.New("identity/mtls: no peer certificates")

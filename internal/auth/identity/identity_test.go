@@ -164,7 +164,7 @@ func TestContextHelpers(t *testing.T) {
 	}
 
 	// nil context is tolerated.
-	if got, ok := FromContext(nil); got != nil || ok {
+	if got, ok := FromContext(context.TODO()); got != nil || ok {
 		t.Errorf("nil context: got %v ok=%v", got, ok)
 	}
 }

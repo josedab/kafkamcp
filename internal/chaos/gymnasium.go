@@ -11,6 +11,7 @@ import (
 // DifficultyLevel represents the difficulty tier for gymnasium challenges.
 type DifficultyLevel string
 
+// DifficultyBeginner and related values define constants for this package.
 const (
 	DifficultyBeginner     DifficultyLevel = "beginner"
 	DifficultyIntermediate DifficultyLevel = "intermediate"
@@ -42,32 +43,32 @@ type Objective struct {
 
 // ChallengeAttempt tracks an agent's attempt at a challenge.
 type ChallengeAttempt struct {
-	ID              string               `json:"id"`
-	ChallengeID     string               `json:"challenge_id"`
-	ChallengeName   string               `json:"challenge_name"`
-	AgentID         string               `json:"agent_id"`
-	Status          string               `json:"status"` // active, completed, failed, timed_out
-	Score           int                  `json:"score"`
-	MaxScore        int                  `json:"max_score"`
-	CompletedObjs   []string             `json:"completed_objectives"`
-	ExperimentID    string               `json:"experiment_id,omitempty"`
-	StartedAt       time.Time            `json:"started_at"`
-	CompletedAt     *time.Time           `json:"completed_at,omitempty"`
-	Duration        string               `json:"duration,omitempty"`
-	Feedback        []string             `json:"feedback,omitempty"`
+	ID            string     `json:"id"`
+	ChallengeID   string     `json:"challenge_id"`
+	ChallengeName string     `json:"challenge_name"`
+	AgentID       string     `json:"agent_id"`
+	Status        string     `json:"status"` // active, completed, failed, timed_out
+	Score         int        `json:"score"`
+	MaxScore      int        `json:"max_score"`
+	CompletedObjs []string   `json:"completed_objectives"`
+	ExperimentID  string     `json:"experiment_id,omitempty"`
+	StartedAt     time.Time  `json:"started_at"`
+	CompletedAt   *time.Time `json:"completed_at,omitempty"`
+	Duration      string     `json:"duration,omitempty"`
+	Feedback      []string   `json:"feedback,omitempty"`
 }
 
 // AgentProgress tracks an agent's overall gymnasium progress.
 type AgentProgress struct {
-	AgentID          string                     `json:"agent_id"`
-	TotalScore       int                        `json:"total_score"`
-	ChallengesTotal  int                        `json:"challenges_completed"`
-	CurrentLevel     DifficultyLevel            `json:"current_level"`
-	Badges           []Badge                    `json:"badges"`
-	CompletedIDs     []string                   `json:"completed_challenge_ids"`
-	CategoryScores   map[string]int             `json:"category_scores"`
-	StreakDays       int                        `json:"streak_days"`
-	LastActivityAt   time.Time                  `json:"last_activity_at"`
+	AgentID         string          `json:"agent_id"`
+	TotalScore      int             `json:"total_score"`
+	ChallengesTotal int             `json:"challenges_completed"`
+	CurrentLevel    DifficultyLevel `json:"current_level"`
+	Badges          []Badge         `json:"badges"`
+	CompletedIDs    []string        `json:"completed_challenge_ids"`
+	CategoryScores  map[string]int  `json:"category_scores"`
+	StreakDays      int             `json:"streak_days"`
+	LastActivityAt  time.Time       `json:"last_activity_at"`
 }
 
 // Badge is an achievement earned through the gymnasium.
@@ -86,11 +87,11 @@ type Leaderboard struct {
 
 // LeaderboardEntry is a single leaderboard row.
 type LeaderboardEntry struct {
-	Rank    int    `json:"rank"`
-	AgentID string `json:"agent_id"`
-	Score   int    `json:"score"`
+	Rank    int             `json:"rank"`
+	AgentID string          `json:"agent_id"`
+	Score   int             `json:"score"`
 	Level   DifficultyLevel `json:"level"`
-	Badges  int    `json:"badges"`
+	Badges  int             `json:"badges"`
 }
 
 // Gymnasium manages gamified chaos training.
@@ -117,7 +118,7 @@ func (g *Gymnasium) initChallenges() {
 		{
 			ID: "ch-broker-down", Name: "Broker Down!", Difficulty: DifficultyBeginner,
 			Description: "A broker has gone offline. Identify affected topics, check replication status, and verify consumer groups can still operate.",
-			Category: "infrastructure", MaxScore: 100, TimeLimit: 10 * time.Minute,
+			Category:    "infrastructure", MaxScore: 100, TimeLimit: 10 * time.Minute,
 			Objectives: []Objective{
 				{ID: "detect-affected", Description: "List topics with under-replicated partitions", Points: 30, Type: "detect"},
 				{ID: "check-replication", Description: "Verify min.insync.replicas settings", Points: 30, Type: "detect"},
@@ -128,7 +129,7 @@ func (g *Gymnasium) initChallenges() {
 		{
 			ID: "ch-consumer-lag", Name: "Lag Spike Investigation", Difficulty: DifficultyBeginner,
 			Description: "Consumer lag is spiking. Diagnose the root cause and recommend fixes.",
-			Category: "consumer", MaxScore: 100, TimeLimit: 10 * time.Minute,
+			Category:    "consumer", MaxScore: 100, TimeLimit: 10 * time.Minute,
 			Objectives: []Objective{
 				{ID: "measure-lag", Description: "Measure current consumer lag across partitions", Points: 25, Type: "detect"},
 				{ID: "identify-slow", Description: "Identify the slowest partition", Points: 25, Type: "detect"},
@@ -139,7 +140,7 @@ func (g *Gymnasium) initChallenges() {
 		{
 			ID: "ch-rebalance-storm", Name: "Rebalance Storm", Difficulty: DifficultyIntermediate,
 			Description: "Consumer groups are caught in continuous rebalances. Stabilize the cluster.",
-			Category: "consumer", MaxScore: 150, TimeLimit: 15 * time.Minute,
+			Category:    "consumer", MaxScore: 150, TimeLimit: 15 * time.Minute,
 			PreReqs: []string{"ch-consumer-lag"},
 			Objectives: []Objective{
 				{ID: "detect-storm", Description: "Identify groups in rebalance loop", Points: 30, Type: "detect"},
@@ -151,7 +152,7 @@ func (g *Gymnasium) initChallenges() {
 		{
 			ID: "ch-schema-break", Name: "Schema Evolution Crisis", Difficulty: DifficultyIntermediate,
 			Description: "A breaking schema change was deployed. Fix deserialization failures and prevent future occurrences.",
-			Category: "data", MaxScore: 150, TimeLimit: 15 * time.Minute,
+			Category:    "data", MaxScore: 150, TimeLimit: 15 * time.Minute,
 			Objectives: []Objective{
 				{ID: "detect-failures", Description: "Find topics with deserialization errors", Points: 30, Type: "detect"},
 				{ID: "identify-change", Description: "Identify the incompatible schema change", Points: 40, Type: "detect"},
@@ -162,7 +163,7 @@ func (g *Gymnasium) initChallenges() {
 		{
 			ID: "ch-partition-hotspot", Name: "Partition Hotspot", Difficulty: DifficultyAdvanced,
 			Description: "One partition is receiving disproportionate traffic. Diagnose key distribution issues.",
-			Category: "producer", MaxScore: 200, TimeLimit: 20 * time.Minute,
+			Category:    "producer", MaxScore: 200, TimeLimit: 20 * time.Minute,
 			PreReqs: []string{"ch-broker-down"},
 			Objectives: []Objective{
 				{ID: "detect-skew", Description: "Identify partitions with skewed message distribution", Points: 40, Type: "detect"},
@@ -174,7 +175,7 @@ func (g *Gymnasium) initChallenges() {
 		{
 			ID: "ch-network-partition", Name: "Network Partition Recovery", Difficulty: DifficultyAdvanced,
 			Description: "A network partition has split the cluster. Manage split-brain recovery.",
-			Category: "network", MaxScore: 200, TimeLimit: 20 * time.Minute,
+			Category:    "network", MaxScore: 200, TimeLimit: 20 * time.Minute,
 			PreReqs: []string{"ch-broker-down", "ch-rebalance-storm"},
 			Objectives: []Objective{
 				{ID: "detect-split", Description: "Detect ISR shrinkage indicating partition", Points: 40, Type: "detect"},
@@ -186,7 +187,7 @@ func (g *Gymnasium) initChallenges() {
 		{
 			ID: "ch-cascading-failure", Name: "Cascading Failure", Difficulty: DifficultyExpert,
 			Description: "A producer flood is causing broker disk exhaustion, triggering consumer failures. Prevent complete cluster meltdown.",
-			Category: "infrastructure", MaxScore: 300, TimeLimit: 30 * time.Minute,
+			Category:    "infrastructure", MaxScore: 300, TimeLimit: 30 * time.Minute,
 			PreReqs: []string{"ch-network-partition", "ch-partition-hotspot"},
 			Objectives: []Objective{
 				{ID: "detect-flood", Description: "Identify the flood source and rate", Points: 40, Type: "detect"},

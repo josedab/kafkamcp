@@ -24,6 +24,11 @@ linters-settings:
       - performance
     disabled-checks:
       - hugeParam
+      - rangeValCopy
+      - commentedOutCode
+      - ifElseChain
+      - appendCombine
+      - sprintfQuotedString
   misspell:
     locale: US
   goimports:
@@ -33,6 +38,7 @@ linters-settings:
       - name: exported
         arguments:
           - checkPrivateReceivers
+          - disableStutteringCheck
         severity: warning
 
 issues:

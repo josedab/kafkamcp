@@ -85,20 +85,6 @@ func NewOIDC(ctx context.Context, cfg OIDCConfig) (*OIDCProvider, error) {
 	return &OIDCProvider{cfg: cfg, verifier: verifier}, nil
 }
 
-// newOIDCWithVerifier exists for tests so we don't need a real issuer.
-func newOIDCWithVerifier(cfg OIDCConfig, v *oidc.IDTokenVerifier) *OIDCProvider {
-	if cfg.AgentIDClaim == "" {
-		cfg.AgentIDClaim = "sub"
-	}
-	if cfg.GroupsClaim == "" {
-		cfg.GroupsClaim = "groups"
-	}
-	if cfg.EmailClaim == "" {
-		cfg.EmailClaim = "email"
-	}
-	return &OIDCProvider{cfg: cfg, verifier: v}
-}
-
 // Name implements Provider.
 func (*OIDCProvider) Name() string { return "oidc" }
 
@@ -110,7 +96,7 @@ func (p *OIDCProvider) Verify(ctx context.Context, h http.Header) (*AgentIdentit
 	}
 	idToken, err := p.verifier.Verify(ctx, tok)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrInvalidToken, err)
+		return nil, fmt.Errorf("%w: %w", ErrInvalidToken, err)
 	}
 
 	var claims map[string]any

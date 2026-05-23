@@ -11,17 +11,17 @@ import (
 
 // TimeSeriesAnalysis represents the result of analyzing a time-series metric.
 type TimeSeriesAnalysis struct {
-	Metric      string           `json:"metric"`
-	Source      string           `json:"source"`
-	DataPoints  int              `json:"data_points"`
-	TimeRange   TimeRange        `json:"time_range"`
-	Trend       TrendAnalysis    `json:"trend"`
-	Seasonality SeasonalityInfo  `json:"seasonality"`
-	Outliers    []OutlierPoint   `json:"outliers"`
-	Correlations []Correlation   `json:"correlations,omitempty"`
-	Statistics  DescriptiveStats `json:"statistics"`
-	ChartData   []ChartPoint     `json:"chart_data"`
-	Timestamp   string           `json:"timestamp"`
+	Metric       string           `json:"metric"`
+	Source       string           `json:"source"`
+	DataPoints   int              `json:"data_points"`
+	TimeRange    TimeRange        `json:"time_range"`
+	Trend        TrendAnalysis    `json:"trend"`
+	Seasonality  SeasonalityInfo  `json:"seasonality"`
+	Outliers     []OutlierPoint   `json:"outliers"`
+	Correlations []Correlation    `json:"correlations,omitempty"`
+	Statistics   DescriptiveStats `json:"statistics"`
+	ChartData    []ChartPoint     `json:"chart_data"`
+	Timestamp    string           `json:"timestamp"`
 }
 
 // TimeRange represents the time span of analyzed data.
@@ -33,9 +33,9 @@ type TimeRange struct {
 
 // TrendAnalysis contains Mann-Kendall trend test results.
 type TrendAnalysis struct {
-	Direction   string  `json:"direction"`   // "increasing", "decreasing", "no_trend"
-	Strength    float64 `json:"strength"`    // 0.0-1.0
-	Slope       float64 `json:"slope"`       // Sen's slope
+	Direction   string  `json:"direction"` // "increasing", "decreasing", "no_trend"
+	Strength    float64 `json:"strength"`  // 0.0-1.0
+	Slope       float64 `json:"slope"`     // Sen's slope
 	Significant bool    `json:"significant"`
 	PValue      float64 `json:"p_value"`
 }

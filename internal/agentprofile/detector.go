@@ -9,12 +9,14 @@ import (
 	"math"
 	"sync"
 	"time"
+
 	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
 // ThreatType categorizes detected threats.
 type ThreatType string
 
+// ThreatDataExfiltration and related values define constants for this package.
 const (
 	ThreatDataExfiltration    ThreatType = "data_exfiltration"
 	ThreatPrivilegeEscalation ThreatType = "privilege_escalation"
@@ -27,6 +29,7 @@ const (
 // Severity indicates how serious a threat alert is.
 type Severity string
 
+// SeverityLow and related values define constants for this package.
 const (
 	SeverityLow      Severity = "low"
 	SeverityMedium   Severity = "medium"
@@ -36,28 +39,28 @@ const (
 
 // ThreatAlert represents a detected anomalous behavior.
 type ThreatAlert struct {
-	ID          string     `json:"id"`
-	AgentID     string     `json:"agent_id"`
-	ThreatType  ThreatType `json:"threat_type"`
-	Severity    Severity   `json:"severity"`
-	Score       float64    `json:"score"`
-	Description string     `json:"description"`
+	ID          string         `json:"id"`
+	AgentID     string         `json:"agent_id"`
+	ThreatType  ThreatType     `json:"threat_type"`
+	Severity    Severity       `json:"severity"`
+	Score       float64        `json:"score"`
+	Description string         `json:"description"`
 	Details     map[string]any `json:"details,omitempty"`
-	DetectedAt  time.Time  `json:"detected_at"`
+	DetectedAt  time.Time      `json:"detected_at"`
 }
 
 // AgentProfile stores the baseline behavior for an agent.
 type AgentProfile struct {
-	AgentID         string            `json:"agent_id"`
-	TopicsAccessed  map[string]int64  `json:"topics_accessed"`
-	ReadCount       int64             `json:"read_count"`
-	WriteCount      int64             `json:"write_count"`
-	HourlyActivity  [24]int64         `json:"hourly_activity"`
-	DailyReadCounts []float64         `json:"-"`
+	AgentID          string           `json:"agent_id"`
+	TopicsAccessed   map[string]int64 `json:"topics_accessed"`
+	ReadCount        int64            `json:"read_count"`
+	WriteCount       int64            `json:"write_count"`
+	HourlyActivity   [24]int64        `json:"hourly_activity"`
+	DailyReadCounts  []float64        `json:"-"`
 	DailyWriteCounts []float64        `json:"-"`
-	FirstSeen       time.Time         `json:"first_seen"`
-	LastSeen        time.Time         `json:"last_seen"`
-	BaselineReady   bool              `json:"baseline_ready"`
+	FirstSeen        time.Time        `json:"first_seen"`
+	LastSeen         time.Time        `json:"last_seen"`
+	BaselineReady    bool             `json:"baseline_ready"`
 }
 
 // AccessEvent records a single agent access.
@@ -72,22 +75,22 @@ type AccessEvent struct {
 
 // DetectorConfig configures the threat detection engine.
 type DetectorConfig struct {
-	BaselineDays       int     `json:"baseline_days" yaml:"baseline_days"`
-	ZScoreThreshold    float64 `json:"z_score_threshold" yaml:"z_score_threshold"`
-	IQRMultiplier      float64 `json:"iqr_multiplier" yaml:"iqr_multiplier"`
-	MaxAlerts          int     `json:"max_alerts" yaml:"max_alerts"`
-	BulkReadThreshold  int     `json:"bulk_read_threshold" yaml:"bulk_read_threshold"`
-	ExfilBytesThreshold int64  `json:"exfil_bytes_threshold" yaml:"exfil_bytes_threshold"`
+	BaselineDays        int     `json:"baseline_days" yaml:"baseline_days"`
+	ZScoreThreshold     float64 `json:"z_score_threshold" yaml:"z_score_threshold"`
+	IQRMultiplier       float64 `json:"iqr_multiplier" yaml:"iqr_multiplier"`
+	MaxAlerts           int     `json:"max_alerts" yaml:"max_alerts"`
+	BulkReadThreshold   int     `json:"bulk_read_threshold" yaml:"bulk_read_threshold"`
+	ExfilBytesThreshold int64   `json:"exfil_bytes_threshold" yaml:"exfil_bytes_threshold"`
 }
 
 // DefaultDetectorConfig returns sensible defaults.
 func DefaultDetectorConfig() DetectorConfig {
 	return DetectorConfig{
-		BaselineDays:       7,
-		ZScoreThreshold:    3.0,
-		IQRMultiplier:      1.5,
-		MaxAlerts:          1000,
-		BulkReadThreshold:  1000,
+		BaselineDays:        7,
+		ZScoreThreshold:     3.0,
+		IQRMultiplier:       1.5,
+		MaxAlerts:           1000,
+		BulkReadThreshold:   1000,
 		ExfilBytesThreshold: 100 * 1024 * 1024, // 100MB
 	}
 }
@@ -195,10 +198,10 @@ func (d *Detector) Stats() map[string]any {
 	d.mu.RLock()
 	defer d.mu.RUnlock()
 	return map[string]any{
-		"profiles_count":      len(d.profiles),
-		"total_alerts":        len(d.alerts),
-		"z_score_threshold":   d.config.ZScoreThreshold,
-		"baseline_days":       d.config.BaselineDays,
+		"profiles_count":    len(d.profiles),
+		"total_alerts":      len(d.alerts),
+		"z_score_threshold": d.config.ZScoreThreshold,
+		"baseline_days":     d.config.BaselineDays,
 	}
 }
 

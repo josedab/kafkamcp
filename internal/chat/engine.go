@@ -6,11 +6,12 @@ import (
 	"strings"
 	"sync"
 	"time"
+
 	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
 const (
-	maxSessionAge     = 24 * time.Hour
+	maxSessionAge      = 24 * time.Hour
 	maxTurnsPerSession = 200
 	maxContextEntries  = 50
 )

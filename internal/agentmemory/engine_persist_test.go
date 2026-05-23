@@ -16,7 +16,7 @@ import (
 func TestPersistence_RoundTrip(t *testing.T) {
 	t.Parallel()
 	be := backend.NewInMemory()
-	defer be.Close()
+	defer func() { _ = be.Close() }()
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 	ctx := context.Background()
 
@@ -52,7 +52,7 @@ func TestPersistence_RoundTrip(t *testing.T) {
 func TestPersistence_TTLEvictionPropagates(t *testing.T) {
 	t.Parallel()
 	be := backend.NewInMemory()
-	defer be.Close()
+	defer func() { _ = be.Close() }()
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 	ctx := context.Background()
 

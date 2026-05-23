@@ -40,13 +40,13 @@ type LineageInfo struct {
 
 // SearchOptions defines search parameters for the catalog.
 type SearchOptions struct {
-	Query       string   `json:"query,omitempty"`
-	Type        string   `json:"type,omitempty"`
-	Tags        []string `json:"tags,omitempty"`
-	Owner       string   `json:"owner,omitempty"`
-	MinQuality  float64  `json:"min_quality,omitempty"`
-	Freshness   string   `json:"freshness,omitempty"`
-	Limit       int      `json:"limit,omitempty"`
+	Query      string   `json:"query,omitempty"`
+	Type       string   `json:"type,omitempty"`
+	Tags       []string `json:"tags,omitempty"`
+	Owner      string   `json:"owner,omitempty"`
+	MinQuality float64  `json:"min_quality,omitempty"`
+	Freshness  string   `json:"freshness,omitempty"`
+	Limit      int      `json:"limit,omitempty"`
 }
 
 // SearchResult is a catalog entry with relevance score.
@@ -57,14 +57,14 @@ type SearchResult struct {
 
 // CatalogStats contains aggregate statistics about the catalog.
 type CatalogStats struct {
-	TotalEntries   int               `json:"total_entries"`
-	ByType         map[string]int    `json:"by_type"`
-	ByFreshness    map[string]int    `json:"by_freshness"`
-	AvgQuality     float64           `json:"avg_quality_score"`
-	TopTags        map[string]int    `json:"top_tags"`
-	LastCrawl      time.Time         `json:"last_crawl"`
-	StaleCount     int               `json:"stale_count"`
-	UntaggedCount  int               `json:"untagged_count"`
+	TotalEntries  int            `json:"total_entries"`
+	ByType        map[string]int `json:"by_type"`
+	ByFreshness   map[string]int `json:"by_freshness"`
+	AvgQuality    float64        `json:"avg_quality_score"`
+	TopTags       map[string]int `json:"top_tags"`
+	LastCrawl     time.Time      `json:"last_crawl"`
+	StaleCount    int            `json:"stale_count"`
+	UntaggedCount int            `json:"untagged_count"`
 }
 
 // Engine manages the data catalog.

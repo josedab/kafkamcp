@@ -21,9 +21,9 @@ func TestNewEngine(t *testing.T) {
 func TestRegisterContract(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		name    string
+		name     string
 		contract Contract
-		wantErr bool
+		wantErr  bool
 	}{
 		{
 			name: "valid contract",

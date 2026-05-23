@@ -77,8 +77,8 @@ func TestGymnasium_CompleteAllObjectives(t *testing.T) {
 	g := NewGymnasium()
 	attempt, _ := g.StartChallenge("ch-broker-down", "agent-1")
 
-	g.CompleteObjective(attempt.ID, "detect-affected")
-	g.CompleteObjective(attempt.ID, "check-replication")
+	_, _ = g.CompleteObjective(attempt.ID, "detect-affected")
+	_, _ = g.CompleteObjective(attempt.ID, "check-replication")
 	result, _ := g.CompleteObjective(attempt.ID, "verify-consumers")
 
 	if result.Status != "completed" {
@@ -94,8 +94,8 @@ func TestGymnasium_FinishAttempt_Pass(t *testing.T) {
 	g := NewGymnasium()
 	attempt, _ := g.StartChallenge("ch-broker-down", "agent-1")
 	// Complete enough for >50%
-	g.CompleteObjective(attempt.ID, "detect-affected")
-	g.CompleteObjective(attempt.ID, "check-replication")
+	_, _ = g.CompleteObjective(attempt.ID, "detect-affected")
+	_, _ = g.CompleteObjective(attempt.ID, "check-replication")
 	result, err := g.FinishAttempt(attempt.ID)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -110,7 +110,7 @@ func TestGymnasium_FinishAttempt_Fail(t *testing.T) {
 	g := NewGymnasium()
 	attempt, _ := g.StartChallenge("ch-broker-down", "agent-1")
 	// Only 30 points out of 100 = 30% < 50%
-	g.CompleteObjective(attempt.ID, "detect-affected")
+	_, _ = g.CompleteObjective(attempt.ID, "detect-affected")
 	result, _ := g.FinishAttempt(attempt.ID)
 	if result.Status != "failed" {
 		t.Errorf("expected failed, got %s", result.Status)
@@ -121,9 +121,9 @@ func TestGymnasium_Progress(t *testing.T) {
 	t.Parallel()
 	g := NewGymnasium()
 	attempt, _ := g.StartChallenge("ch-broker-down", "agent-1")
-	g.CompleteObjective(attempt.ID, "detect-affected")
-	g.CompleteObjective(attempt.ID, "check-replication")
-	g.CompleteObjective(attempt.ID, "verify-consumers")
+	_, _ = g.CompleteObjective(attempt.ID, "detect-affected")
+	_, _ = g.CompleteObjective(attempt.ID, "check-replication")
+	_, _ = g.CompleteObjective(attempt.ID, "verify-consumers")
 
 	progress := g.GetProgress("agent-1")
 	if progress.ChallengesTotal != 1 {
@@ -143,13 +143,13 @@ func TestGymnasium_Leaderboard(t *testing.T) {
 
 	// Two agents complete challenges
 	a1, _ := g.StartChallenge("ch-broker-down", "agent-1")
-	g.CompleteObjective(a1.ID, "detect-affected")
-	g.CompleteObjective(a1.ID, "check-replication")
-	g.CompleteObjective(a1.ID, "verify-consumers")
+	_, _ = g.CompleteObjective(a1.ID, "detect-affected")
+	_, _ = g.CompleteObjective(a1.ID, "check-replication")
+	_, _ = g.CompleteObjective(a1.ID, "verify-consumers")
 
 	a2, _ := g.StartChallenge("ch-broker-down", "agent-2")
-	g.CompleteObjective(a2.ID, "detect-affected")
-	g.FinishAttempt(a2.ID)
+	_, _ = g.CompleteObjective(a2.ID, "detect-affected")
+	_, _ = g.FinishAttempt(a2.ID)
 
 	lb := g.GetLeaderboard(10)
 	if len(lb.Entries) != 2 {
@@ -173,7 +173,7 @@ func TestGymnasium_DuplicateObjective(t *testing.T) {
 	t.Parallel()
 	g := NewGymnasium()
 	attempt, _ := g.StartChallenge("ch-broker-down", "agent-1")
-	g.CompleteObjective(attempt.ID, "detect-affected")
+	_, _ = g.CompleteObjective(attempt.ID, "detect-affected")
 	result, _ := g.CompleteObjective(attempt.ID, "detect-affected")
 	if result.Score != 30 {
 		t.Errorf("duplicate objective should not add score, got %d", result.Score)
@@ -194,9 +194,9 @@ func TestGymnasium_PerfectBadgeWithTimeBonus(t *testing.T) {
 	t.Parallel()
 	g := NewGymnasium()
 	attempt, _ := g.StartChallenge("ch-broker-down", "agent-1")
-	g.CompleteObjective(attempt.ID, "detect-affected")
-	g.CompleteObjective(attempt.ID, "check-replication")
-	g.CompleteObjective(attempt.ID, "verify-consumers")
+	_, _ = g.CompleteObjective(attempt.ID, "detect-affected")
+	_, _ = g.CompleteObjective(attempt.ID, "check-replication")
+	_, _ = g.CompleteObjective(attempt.ID, "verify-consumers")
 
 	progress := g.GetProgress("agent-1")
 	hasPerfect := false
@@ -216,14 +216,14 @@ func TestGymnasium_DuplicateChallengeCompletion(t *testing.T) {
 	g := NewGymnasium()
 	// Complete same challenge twice
 	a1, _ := g.StartChallenge("ch-broker-down", "agent-1")
-	g.CompleteObjective(a1.ID, "detect-affected")
-	g.CompleteObjective(a1.ID, "check-replication")
-	g.CompleteObjective(a1.ID, "verify-consumers")
+	_, _ = g.CompleteObjective(a1.ID, "detect-affected")
+	_, _ = g.CompleteObjective(a1.ID, "check-replication")
+	_, _ = g.CompleteObjective(a1.ID, "verify-consumers")
 
 	a2, _ := g.StartChallenge("ch-broker-down", "agent-1")
-	g.CompleteObjective(a2.ID, "detect-affected")
-	g.CompleteObjective(a2.ID, "check-replication")
-	g.CompleteObjective(a2.ID, "verify-consumers")
+	_, _ = g.CompleteObjective(a2.ID, "detect-affected")
+	_, _ = g.CompleteObjective(a2.ID, "check-replication")
+	_, _ = g.CompleteObjective(a2.ID, "verify-consumers")
 
 	progress := g.GetProgress("agent-1")
 	// CompletedIDs should not have duplicates

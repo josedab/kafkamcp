@@ -29,22 +29,22 @@ type CompatibilityIssue struct {
 
 // ContractTestResult is the outcome of a contract compatibility test.
 type ContractTestResult struct {
-	Topic         string               `json:"topic"`
-	ProducerID    string               `json:"producer_id"`
-	ConsumerIDs   []string             `json:"consumer_ids"`
-	Compatible    bool                 `json:"compatible"`
-	Issues        []CompatibilityIssue `json:"issues"`
-	TestedAt      string               `json:"tested_at"`
-	Duration      string               `json:"duration"`
+	Topic       string               `json:"topic"`
+	ProducerID  string               `json:"producer_id"`
+	ConsumerIDs []string             `json:"consumer_ids"`
+	Compatible  bool                 `json:"compatible"`
+	Issues      []CompatibilityIssue `json:"issues"`
+	TestedAt    string               `json:"tested_at"`
+	Duration    string               `json:"duration"`
 }
 
 // ContractTestSuite defines a reusable suite of contract tests.
 type ContractTestSuite struct {
-	ID           string            `json:"id"`
-	Name         string            `json:"name"`
-	Topic        string            `json:"topic"`
-	TestCases    []ContractTestCase `json:"test_cases"`
-	CreatedAt    string            `json:"created_at"`
+	ID        string             `json:"id"`
+	Name      string             `json:"name"`
+	Topic     string             `json:"topic"`
+	TestCases []ContractTestCase `json:"test_cases"`
+	CreatedAt string             `json:"created_at"`
 }
 
 // ContractTestCase is a single test case within a suite.

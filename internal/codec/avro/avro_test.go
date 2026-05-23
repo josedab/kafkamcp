@@ -50,7 +50,7 @@ func TestEncodeDecodeRecord(t *testing.T) {
 	}
 	// hamba/avro v2 decodes the union into its underlying value (a bare
 	// string here, not a tagged map). This is the documented default and
-	// matches the wire-format consumer behaviour.
+	// matches the wire-format consumer behavior.
 	if got["email"] != "ada@example.com" {
 		t.Errorf("email = %v, want ada@example.com", got["email"])
 	}

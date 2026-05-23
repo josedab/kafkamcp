@@ -23,7 +23,7 @@
 // cached by schema text. The compiled descriptor is then used to
 // instantiate google.golang.org/protobuf/types/dynamicpb messages so
 // we don't need code-generated Go types per schema. This matches the
-// behaviour of confluent-kafka-go's GenericDeserializer.
+// behavior of confluent-kafka-go's GenericDeserializer.
 //
 // Cross-file imports are intentionally NOT supported: every schema
 // must be self-contained because the Schema Registry API also returns
@@ -112,7 +112,7 @@ func (c *Codec) parse(schemaStr string) (*schemaEntry, error) {
 	}
 	files, err := compiler.Compile(context.Background(), fakeFile)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrSchemaParse, err)
+		return nil, fmt.Errorf("%w: %w", ErrSchemaParse, err)
 	}
 	if len(files) == 0 {
 		return nil, fmt.Errorf("%w: compiler returned no files", ErrSchemaParse)
@@ -174,11 +174,11 @@ func (c *Codec) resolveMessage(entry *schemaEntry, idx []int) (protoreflect.Mess
 	return md, nil
 }
 
-// Encode serialises value (a map[string]any) into Confluent's
+// Encode serializes value (a map[string]any) into Confluent's
 // protobuf wire-format payload — message-index prefix followed by the
 // binary protobuf payload. The returned bytes are MEANT to be wrapped
 // by the Confluent magic byte + schema id (see internal/codec/wire).
-// When msgIndex is nil or {0} the optimised single-zero-byte prefix
+// When msgIndex is nil or {0} the optimized single-zero-byte prefix
 // is emitted.
 func (c *Codec) Encode(schemaStr string, msgIndex []int, value any) ([]byte, error) {
 	entry, err := c.parse(schemaStr)
@@ -230,7 +230,7 @@ func (c *Codec) Decode(schemaStr string, data []byte) (msgIndex []int, value any
 }
 
 // ParseSchema validates that schemaStr is a syntactically valid
-// .proto schema without serialising anything.
+// .proto schema without serializing anything.
 func (c *Codec) ParseSchema(schemaStr string) error {
 	_, err := c.parse(schemaStr)
 	return err

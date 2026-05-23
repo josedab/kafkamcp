@@ -313,7 +313,7 @@ func (l *Logger) RecentEntries(n int) []Entry {
 		if idx < 0 {
 			idx += count
 		}
-		idx = idx % count
+		idx %= count
 		result = append(result, l.entries[idx])
 	}
 

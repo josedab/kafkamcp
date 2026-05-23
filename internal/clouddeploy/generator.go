@@ -11,48 +11,50 @@ import (
 // CloudProvider represents a cloud platform.
 type CloudProvider string
 
+// ProviderAWS and related values define constants for this package.
 const (
-	ProviderAWS        CloudProvider = "aws"
-	ProviderGCP        CloudProvider = "gcp"
-	ProviderAzure      CloudProvider = "azure"
-	ProviderConfluent  CloudProvider = "confluent"
+	ProviderAWS       CloudProvider = "aws"
+	ProviderGCP       CloudProvider = "gcp"
+	ProviderAzure     CloudProvider = "azure"
+	ProviderConfluent CloudProvider = "confluent"
 )
 
 // KafkaService represents the cloud Kafka service.
 type KafkaService string
 
+// ServiceMSK and related values define constants for this package.
 const (
-	ServiceMSK           KafkaService = "aws-msk"
+	ServiceMSK            KafkaService = "aws-msk"
 	ServiceConfluentCloud KafkaService = "confluent-cloud"
-	ServiceEventHubs     KafkaService = "azure-event-hubs"
-	ServiceGCPKafka      KafkaService = "gcp-managed-kafka"
+	ServiceEventHubs      KafkaService = "azure-event-hubs"
+	ServiceGCPKafka       KafkaService = "gcp-managed-kafka"
 )
 
 // DeploymentConfig holds input for deployment template generation.
 type DeploymentConfig struct {
-	Provider       CloudProvider     `json:"provider"`
-	Service        KafkaService      `json:"service"`
-	Region         string            `json:"region"`
-	ClusterName    string            `json:"cluster_name"`
-	BootstrapServers string          `json:"bootstrap_servers,omitempty"`
-	SecurityProtocol string          `json:"security_protocol,omitempty"`
-	SASLMechanism  string            `json:"sasl_mechanism,omitempty"`
-	Namespace      string            `json:"namespace,omitempty"`
-	Replicas       int               `json:"replicas,omitempty"`
-	Transport      string            `json:"transport,omitempty"` // stdio, sse, streamable-http
-	Tags           map[string]string `json:"tags,omitempty"`
+	Provider         CloudProvider     `json:"provider"`
+	Service          KafkaService      `json:"service"`
+	Region           string            `json:"region"`
+	ClusterName      string            `json:"cluster_name"`
+	BootstrapServers string            `json:"bootstrap_servers,omitempty"`
+	SecurityProtocol string            `json:"security_protocol,omitempty"`
+	SASLMechanism    string            `json:"sasl_mechanism,omitempty"`
+	Namespace        string            `json:"namespace,omitempty"`
+	Replicas         int               `json:"replicas,omitempty"`
+	Transport        string            `json:"transport,omitempty"` // stdio, sse, streamable-http
+	Tags             map[string]string `json:"tags,omitempty"`
 }
 
 // DeploymentTemplate is a generated deployment artifact.
 type DeploymentTemplate struct {
-	ID          string            `json:"id"`
-	Provider    CloudProvider     `json:"provider"`
-	Service     KafkaService      `json:"service"`
-	Type        string            `json:"type"` // docker-compose, kubernetes, terraform, cloudformation, cli
-	Content     string            `json:"content"`
-	Files       map[string]string `json:"files,omitempty"`
-	Commands    []string          `json:"commands,omitempty"`
-	CreatedAt   time.Time         `json:"created_at"`
+	ID        string            `json:"id"`
+	Provider  CloudProvider     `json:"provider"`
+	Service   KafkaService      `json:"service"`
+	Type      string            `json:"type"` // docker-compose, kubernetes, terraform, cloudformation, cli
+	Content   string            `json:"content"`
+	Files     map[string]string `json:"files,omitempty"`
+	Commands  []string          `json:"commands,omitempty"`
+	CreatedAt time.Time         `json:"created_at"`
 }
 
 // Generator creates deployment templates.

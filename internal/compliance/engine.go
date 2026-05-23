@@ -11,6 +11,7 @@ import (
 // Regulation defines supported compliance frameworks.
 type Regulation string
 
+// GDPR and related values define constants for this package.
 const (
 	GDPR   Regulation = "GDPR"
 	HIPAA  Regulation = "HIPAA"
@@ -21,6 +22,7 @@ const (
 // PIIType categorizes personal data.
 type PIIType string
 
+// PIIEmail and related values define constants for this package.
 const (
 	PIIEmail       PIIType = "email"
 	PIIPhone       PIIType = "phone"
@@ -48,23 +50,23 @@ type Violation struct {
 
 // ScanResult captures the outcome of a compliance scan.
 type ScanResult struct {
-	ClusterName    string       `json:"cluster_name"`
-	Regulation     Regulation   `json:"regulation,omitempty"`
-	TopicsScanned  int          `json:"topics_scanned"`
-	Violations     []Violation  `json:"violations"`
-	PIIExposures   []PIIExposure `json:"pii_exposures"`
-	ComplianceScore int         `json:"compliance_score"` // 0-100
-	ScannedAt      string       `json:"scanned_at"`
+	ClusterName     string        `json:"cluster_name"`
+	Regulation      Regulation    `json:"regulation,omitempty"`
+	TopicsScanned   int           `json:"topics_scanned"`
+	Violations      []Violation   `json:"violations"`
+	PIIExposures    []PIIExposure `json:"pii_exposures"`
+	ComplianceScore int           `json:"compliance_score"` // 0-100
+	ScannedAt       string        `json:"scanned_at"`
 }
 
 // PIIExposure records PII found in a topic.
 type PIIExposure struct {
-	Topic       string    `json:"topic"`
-	PIIType     PIIType   `json:"pii_type"`
-	FieldPath   string    `json:"field_path,omitempty"`
-	SampleCount int       `json:"sample_count"`
-	IsMasked    bool      `json:"is_masked"`
-	DetectedAt  string    `json:"detected_at"`
+	Topic       string  `json:"topic"`
+	PIIType     PIIType `json:"pii_type"`
+	FieldPath   string  `json:"field_path,omitempty"`
+	SampleCount int     `json:"sample_count"`
+	IsMasked    bool    `json:"is_masked"`
+	DetectedAt  string  `json:"detected_at"`
 }
 
 // RetentionCompliance checks topic retention against regulations.
@@ -80,15 +82,15 @@ type RetentionCompliance struct {
 
 // ComplianceReport is a comprehensive report.
 type ComplianceReport struct {
-	ClusterName      string                `json:"cluster_name"`
-	Regulation       Regulation            `json:"regulation"`
-	OverallScore     int                   `json:"overall_score"`
-	Status           string                `json:"status"` // compliant, non_compliant, partially_compliant
-	Violations       []Violation           `json:"violations"`
-	PIIExposures     []PIIExposure         `json:"pii_exposures"`
-	RetentionChecks  []RetentionCompliance `json:"retention_checks"`
-	Recommendations  []string              `json:"recommendations"`
-	GeneratedAt      string                `json:"generated_at"`
+	ClusterName     string                `json:"cluster_name"`
+	Regulation      Regulation            `json:"regulation"`
+	OverallScore    int                   `json:"overall_score"`
+	Status          string                `json:"status"` // compliant, non_compliant, partially_compliant
+	Violations      []Violation           `json:"violations"`
+	PIIExposures    []PIIExposure         `json:"pii_exposures"`
+	RetentionChecks []RetentionCompliance `json:"retention_checks"`
+	Recommendations []string              `json:"recommendations"`
+	GeneratedAt     string                `json:"generated_at"`
 }
 
 // TopicData holds topic info for compliance scanning.
@@ -101,12 +103,12 @@ type TopicData struct {
 
 // RuleSet defines compliance rules for a regulation.
 type RuleSet struct {
-	Regulation      Regulation
-	MaxRetentionMs  int64
-	MinRetentionMs  int64
-	RequireMasking  bool
-	RequireEncrypt  bool
-	PIIDetectors    []PIIDetector
+	Regulation     Regulation
+	MaxRetentionMs int64
+	MinRetentionMs int64
+	RequireMasking bool
+	RequireEncrypt bool
+	PIIDetectors   []PIIDetector
 }
 
 // PIIDetector detects a specific type of PII.
@@ -236,11 +238,11 @@ func (e *Engine) scanWithRuleSet(rs *RuleSet, topics []TopicData, result *ScanRe
 			for _, detector := range rs.PIIDetectors {
 				if detector.Pattern.MatchString(sample) {
 					exposure := PIIExposure{
-						Topic:      topic.Name,
-						PIIType:    detector.Type,
+						Topic:       topic.Name,
+						PIIType:     detector.Type,
 						SampleCount: 1,
-						IsMasked:   topic.HasMasking,
-						DetectedAt: time.Now().UTC().Format(time.RFC3339),
+						IsMasked:    topic.HasMasking,
+						DetectedAt:  time.Now().UTC().Format(time.RFC3339),
 					}
 					result.PIIExposures = append(result.PIIExposures, exposure)
 

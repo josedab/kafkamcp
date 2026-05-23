@@ -13,6 +13,7 @@ import (
 // Role defines an agent's access role.
 type Role string
 
+// RoleViewer and related values define constants for this package.
 const (
 	RoleViewer   Role = "viewer"
 	RoleOperator Role = "operator"
@@ -25,17 +26,18 @@ const (
 // ToolCategory groups related tools.
 type ToolCategory string
 
+// CatDiscovery and related values define constants for this package.
 const (
-	CatDiscovery    ToolCategory = "discovery"
-	CatMonitoring   ToolCategory = "monitoring"
-	CatAdmin        ToolCategory = "admin"
+	CatDiscovery     ToolCategory = "discovery"
+	CatMonitoring    ToolCategory = "monitoring"
+	CatAdmin         ToolCategory = "admin"
 	CatStreaming     ToolCategory = "streaming"
-	CatSchema       ToolCategory = "schema"
-	CatAnalytics    ToolCategory = "analytics"
-	CatGovernance   ToolCategory = "governance"
+	CatSchema        ToolCategory = "schema"
+	CatAnalytics     ToolCategory = "analytics"
+	CatGovernance    ToolCategory = "governance"
 	CatOrchestration ToolCategory = "orchestration"
-	CatPlatform     ToolCategory = "platform"
-	CatChat         ToolCategory = "chat"
+	CatPlatform      ToolCategory = "platform"
+	CatChat          ToolCategory = "chat"
 )
 
 // ToolInfo describes a tool for capability advertisement.
@@ -49,11 +51,11 @@ type ToolInfo struct {
 
 // AgentProfile stores the agent's negotiated capabilities.
 type AgentProfile struct {
-	AgentID       string         `json:"agent_id"`
-	Role          Role           `json:"role"`
+	AgentID       string          `json:"agent_id"`
+	Role          Role            `json:"role"`
 	AllowedTools  map[string]bool `json:"allowed_tools"`
-	Context       []string       `json:"context"`
-	ExpandedTiers map[int]bool   `json:"expanded_tiers"`
+	Context       []string        `json:"context"`
+	ExpandedTiers map[int]bool    `json:"expanded_tiers"`
 }
 
 // NegotiationResult is the outcome of capability negotiation.

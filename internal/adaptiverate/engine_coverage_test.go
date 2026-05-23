@@ -33,7 +33,7 @@ func TestAllStatusDifferentStates(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
 	e.RecordRequest("agent-1")
-	e.AdjustQuota(QuotaRequest{AgentID: "agent-2", Action: "increase", Amount: 100})
+	_, _ = e.AdjustQuota(QuotaRequest{AgentID: "agent-2", Action: "increase", Amount: 100})
 
 	statuses := e.AllStatus()
 	if len(statuses) != 2 {
@@ -136,7 +136,7 @@ func TestAdjustQuotaDecreaseFloor(t *testing.T) {
 	e.RecordRequest("agent-1")
 
 	// Try to decrease more than allowed (floor = base/4 = 15)
-	e.AdjustQuota(QuotaRequest{AgentID: "agent-1", Action: "decrease", Amount: 999})
+	_, _ = e.AdjustQuota(QuotaRequest{AgentID: "agent-1", Action: "decrease", Amount: 999})
 	status := e.GetStatus("agent-1")
 	if status.DynamicQuota < 15 {
 		t.Errorf("expected floor of 15, got %d", status.DynamicQuota)
@@ -149,7 +149,7 @@ func TestAdjustQuotaIncreaseCeiling(t *testing.T) {
 	e.RecordRequest("agent-1")
 
 	// Try to increase past ceiling (5x base = 300)
-	e.AdjustQuota(QuotaRequest{AgentID: "agent-1", Action: "increase", Amount: 9999})
+	_, _ = e.AdjustQuota(QuotaRequest{AgentID: "agent-1", Action: "increase", Amount: 9999})
 	status := e.GetStatus("agent-1")
 	if status.DynamicQuota > 300 {
 		t.Errorf("expected ceiling of 300, got %d", status.DynamicQuota)
@@ -160,7 +160,7 @@ func TestAdjustQuotaReset(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
 	e.RecordRequest("agent-1")
-	e.AdjustQuota(QuotaRequest{AgentID: "agent-1", Action: "increase", Amount: 100})
+	_, _ = e.AdjustQuota(QuotaRequest{AgentID: "agent-1", Action: "increase", Amount: 100})
 
 	resp, _ := e.AdjustQuota(QuotaRequest{AgentID: "agent-1", Action: "reset"})
 	if resp.NewQuota != 60 {
@@ -188,7 +188,7 @@ func TestAdjustQuotaGrantCreditsCapped(t *testing.T) {
 	e.RecordRequest("agent-1")
 
 	// Grant massive credits - should be capped
-	e.AdjustQuota(QuotaRequest{AgentID: "agent-1", Action: "grant_credits", Amount: 9999})
+	_, _ = e.AdjustQuota(QuotaRequest{AgentID: "agent-1", Action: "grant_credits", Amount: 9999})
 	status := e.GetStatus("agent-1")
 	if status.BurstCredits > status.MaxCredits*2 {
 		t.Errorf("expected credits capped at 2x max, got %.0f", status.BurstCredits)

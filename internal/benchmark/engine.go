@@ -12,40 +12,40 @@ import (
 
 // BenchmarkConfig defines the parameters for a benchmark run.
 type BenchmarkConfig struct {
-	Topic           string `json:"topic"`
-	MessageCount    int    `json:"message_count"`
-	MessageSizeBytes int   `json:"message_size_bytes"`
-	Concurrency     int    `json:"concurrency"`
-	Type            string `json:"type"` // producer, consumer, both
+	Topic            string `json:"topic"`
+	MessageCount     int    `json:"message_count"`
+	MessageSizeBytes int    `json:"message_size_bytes"`
+	Concurrency      int    `json:"concurrency"`
+	Type             string `json:"type"` // producer, consumer, both
 }
 
 // BenchmarkResult contains the results of a benchmark run.
 type BenchmarkResult struct {
-	ID               string           `json:"id"`
-	Config           BenchmarkConfig  `json:"config"`
-	Status           string           `json:"status"`
-	StartedAt        time.Time        `json:"started_at"`
-	CompletedAt      *time.Time       `json:"completed_at,omitempty"`
-	DurationMs       float64          `json:"duration_ms"`
-	ProducerMetrics  *ThroughputMetrics `json:"producer_metrics,omitempty"`
-	ConsumerMetrics  *ThroughputMetrics `json:"consumer_metrics,omitempty"`
-	Summary          string           `json:"summary"`
+	ID              string             `json:"id"`
+	Config          BenchmarkConfig    `json:"config"`
+	Status          string             `json:"status"`
+	StartedAt       time.Time          `json:"started_at"`
+	CompletedAt     *time.Time         `json:"completed_at,omitempty"`
+	DurationMs      float64            `json:"duration_ms"`
+	ProducerMetrics *ThroughputMetrics `json:"producer_metrics,omitempty"`
+	ConsumerMetrics *ThroughputMetrics `json:"consumer_metrics,omitempty"`
+	Summary         string             `json:"summary"`
 }
 
 // ThroughputMetrics contains throughput and latency statistics.
 type ThroughputMetrics struct {
-	TotalMessages    int     `json:"total_messages"`
-	TotalBytes       int64   `json:"total_bytes"`
-	MessagesPerSec   float64 `json:"messages_per_sec"`
-	BytesPerSec      float64 `json:"bytes_per_sec"`
-	MBPerSec         float64 `json:"mb_per_sec"`
-	LatencyP50Ms     float64 `json:"latency_p50_ms"`
-	LatencyP95Ms     float64 `json:"latency_p95_ms"`
-	LatencyP99Ms     float64 `json:"latency_p99_ms"`
-	LatencyAvgMs     float64 `json:"latency_avg_ms"`
-	LatencyMinMs     float64 `json:"latency_min_ms"`
-	LatencyMaxMs     float64 `json:"latency_max_ms"`
-	ErrorCount       int     `json:"error_count"`
+	TotalMessages  int     `json:"total_messages"`
+	TotalBytes     int64   `json:"total_bytes"`
+	MessagesPerSec float64 `json:"messages_per_sec"`
+	BytesPerSec    float64 `json:"bytes_per_sec"`
+	MBPerSec       float64 `json:"mb_per_sec"`
+	LatencyP50Ms   float64 `json:"latency_p50_ms"`
+	LatencyP95Ms   float64 `json:"latency_p95_ms"`
+	LatencyP99Ms   float64 `json:"latency_p99_ms"`
+	LatencyAvgMs   float64 `json:"latency_avg_ms"`
+	LatencyMinMs   float64 `json:"latency_min_ms"`
+	LatencyMaxMs   float64 `json:"latency_max_ms"`
+	ErrorCount     int     `json:"error_count"`
 }
 
 // Engine manages benchmark execution and results.

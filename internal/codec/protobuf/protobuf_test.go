@@ -59,7 +59,7 @@ func TestRoundTrip_Simple(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Encode: %v", err)
 	}
-	// Single-message schema should use the optimised 0x00 prefix.
+	// Single-message schema should use the optimized 0x00 prefix.
 	if data[0] != 0x00 {
 		t.Errorf("expected 0x00 prefix, got 0x%02x", data[0])
 	}
@@ -164,7 +164,7 @@ func TestMessageIndexEncoding(t *testing.T) {
 	}{
 		{"nil-default", nil, []byte{0x00}},
 		{"zero-singleton", []int{0}, []byte{0x00}},
-		{"single-one", []int{1}, []byte{0x02, 0x02}},        // count=1 varint, idx=1 zigzag→2
+		{"single-one", []int{1}, []byte{0x02, 0x02}},         // count=1 varint, idx=1 zigzag→2
 		{"two-elems", []int{1, 0}, []byte{0x04, 0x02, 0x00}}, // count=2, idx=1, idx=0
 	}
 	for _, tc := range cases {

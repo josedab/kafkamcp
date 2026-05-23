@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"log/slog"
 	"sync"
-	"sync/atomic"
 	"time"
+
 	"github.com/kafkamcp/kafkamcp/internal/randid"
 )
 
 // ExperimentType defines the type of chaos experiment.
 type ExperimentType string
 
+// TypeBrokerOutage and related values define constants for this package.
 const (
 	TypeBrokerOutage     ExperimentType = "broker_outage"
 	TypeNetworkPartition ExperimentType = "network_partition"
@@ -26,6 +27,7 @@ const (
 // ExperimentStatus tracks the lifecycle of a chaos experiment.
 type ExperimentStatus string
 
+// StatusPending and related values define constants for this package.
 const (
 	StatusPending    ExperimentStatus = "pending"
 	StatusRunning    ExperimentStatus = "running"
@@ -58,41 +60,41 @@ func DefaultSafetyGuard() SafetyGuard {
 
 // Experiment represents a chaos experiment.
 type Experiment struct {
-	ID             string           `json:"id"`
-	Type           ExperimentType   `json:"type"`
-	Status         ExperimentStatus `json:"status"`
-	Description    string           `json:"description"`
-	TargetCluster  string           `json:"target_cluster"`
-	TargetTopics   []string         `json:"target_topics,omitempty"`
-	TargetGroups   []string         `json:"target_groups,omitempty"`
-	SafetyGuard    SafetyGuard      `json:"safety_guard"`
-	Parameters     map[string]any   `json:"parameters,omitempty"`
-	StartedAt      string           `json:"started_at,omitempty"`
-	CompletedAt    string           `json:"completed_at,omitempty"`
-	Duration       string           `json:"duration,omitempty"`
-	AffectedItems  []AffectedItem   `json:"affected_items,omitempty"`
-	HealthReport   *HealthReport    `json:"health_report,omitempty"`
-	Error          string           `json:"error,omitempty"`
-	CreatedAt      string           `json:"created_at"`
+	ID            string           `json:"id"`
+	Type          ExperimentType   `json:"type"`
+	Status        ExperimentStatus `json:"status"`
+	Description   string           `json:"description"`
+	TargetCluster string           `json:"target_cluster"`
+	TargetTopics  []string         `json:"target_topics,omitempty"`
+	TargetGroups  []string         `json:"target_groups,omitempty"`
+	SafetyGuard   SafetyGuard      `json:"safety_guard"`
+	Parameters    map[string]any   `json:"parameters,omitempty"`
+	StartedAt     string           `json:"started_at,omitempty"`
+	CompletedAt   string           `json:"completed_at,omitempty"`
+	Duration      string           `json:"duration,omitempty"`
+	AffectedItems []AffectedItem   `json:"affected_items,omitempty"`
+	HealthReport  *HealthReport    `json:"health_report,omitempty"`
+	Error         string           `json:"error,omitempty"`
+	CreatedAt     string           `json:"created_at"`
 }
 
 // AffectedItem records a resource affected by the experiment.
 type AffectedItem struct {
-	Type       string `json:"type"`
-	Name       string `json:"name"`
-	Impact     string `json:"impact"`
-	Recovered  bool   `json:"recovered"`
+	Type      string `json:"type"`
+	Name      string `json:"name"`
+	Impact    string `json:"impact"`
+	Recovered bool   `json:"recovered"`
 }
 
 // HealthReport is generated after chaos experiment completion.
 type HealthReport struct {
-	OverallStatus    string            `json:"overall_status"`
-	PreChaosMetrics  map[string]any    `json:"pre_chaos_metrics"`
-	PostChaosMetrics map[string]any    `json:"post_chaos_metrics"`
-	RecoveryTimeMs   int64             `json:"recovery_time_ms"`
-	Findings         []Finding         `json:"findings"`
-	Recommendations  []string          `json:"recommendations"`
-	GeneratedAt      string            `json:"generated_at"`
+	OverallStatus    string         `json:"overall_status"`
+	PreChaosMetrics  map[string]any `json:"pre_chaos_metrics"`
+	PostChaosMetrics map[string]any `json:"post_chaos_metrics"`
+	RecoveryTimeMs   int64          `json:"recovery_time_ms"`
+	Findings         []Finding      `json:"findings"`
+	Recommendations  []string       `json:"recommendations"`
+	GeneratedAt      string         `json:"generated_at"`
 }
 
 // Finding is a single observation from a chaos experiment.
@@ -123,7 +125,6 @@ type Engine struct {
 	gymnasium         *Gymnasium
 	logger            *slog.Logger
 	mu                sync.RWMutex
-	experimentCounter atomic.Uint64
 	stopCleanup       chan struct{}
 }
 

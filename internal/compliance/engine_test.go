@@ -220,10 +220,7 @@ func TestGenerateReport_PartiallyCompliant(t *testing.T) {
 		{Name: "t2", RetentionMs: 100000, SampleValues: []string{"no pii"}, HasMasking: true},
 	}
 	report := e.GenerateReport("cluster", GDPR, topics)
-	// With one critical violation (score 80), should be partially compliant
-	if report.Status != "partially_compliant" && report.Status != "compliant" {
-		// Accept either since exact score depends on implementation
-	}
+	_ = report
 }
 
 func TestGetViolations_NoFilter(t *testing.T) {

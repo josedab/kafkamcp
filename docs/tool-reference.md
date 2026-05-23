@@ -1,7 +1,7 @@
 # KafkaMCP Tool Reference
 
-> Auto-generated on 2026-05-21 from `internal/server/register_*.go`.
-> Do not edit manually. Run `go generate ./internal/server/` to regenerate.
+> Auto-generated on 2026-05-22 from `internal/server/register_*.go`.
+> Do not edit manually. Run `make generate` to regenerate.
 
 ## Summary
 

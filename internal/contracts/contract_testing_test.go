@@ -40,7 +40,7 @@ func TestContractTester_Compatibility_Fail(t *testing.T) {
 func TestContractTester_TestSuite(t *testing.T) {
 	t.Parallel()
 	engine := NewEngine()
-	engine.RegisterContract(Contract{
+	_ = engine.RegisterContract(Contract{
 		Name: "order-contract", Version: "1.0", Topic: "orders", Owner: "team-a",
 		Quality: []QualityRule{
 			{Field: "order_id", Rule: "not_null", Severity: "error"},
@@ -52,7 +52,7 @@ func TestContractTester_TestSuite(t *testing.T) {
 	suite := ct.CreateTestSuite("order-validation", "orders", []ContractTestCase{
 		{Name: "valid order", Input: map[string]any{"order_id": "123", "status": "pending"}, ExpectValid: true},
 		{Name: "missing order_id", Input: map[string]any{"status": "pending"}, ExpectValid: false, ExpectRules: []string{"not_null"}},
-		{Name: "invalid status", Input: map[string]any{"order_id": "123", "status": "cancelled"}, ExpectValid: false, ExpectRules: []string{"enum"}},
+		{Name: "invalid status", Input: map[string]any{"order_id": "123", "status": "canceled"}, ExpectValid: false, ExpectRules: []string{"enum"}},
 	})
 
 	result, err := ct.RunTestSuite(suite.ID, engine)

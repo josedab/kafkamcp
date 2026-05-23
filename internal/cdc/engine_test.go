@@ -93,7 +93,7 @@ func TestProcessEventWithTransform(t *testing.T) {
 	e := newTestEngine()
 
 	transform := &TransformSpec{
-		FieldMapping: map[string]string{"name": "user_name", "age": "user_age"},
+		FieldMapping:    map[string]string{"name": "user_name", "age": "user_age"},
 		IncludeMetadata: true,
 	}
 	sink := SinkConfig{Type: SinkPostgres, Table: "users"}
@@ -158,7 +158,7 @@ func TestGetRecentEvents(t *testing.T) {
 	b, _ := e.CreateBridge("test", "topic", "agent", sink, nil)
 
 	for i := 0; i < 5; i++ {
-		e.ProcessEvent(b.ID, "k", `{"i":1}`, 0, int64(i), "topic")
+		_, _ = e.ProcessEvent(b.ID, "k", `{"i":1}`, 0, int64(i), "topic")
 	}
 
 	events, err := e.GetRecentEvents(b.ID, 3)
@@ -176,7 +176,7 @@ func TestProcessEventBridgeNotActive(t *testing.T) {
 
 	sink := SinkConfig{Type: SinkPostgres}
 	b, _ := e.CreateBridge("test", "topic", "agent", sink, nil)
-	e.UpdateBridgeStatus(b.ID, "paused")
+	_ = e.UpdateBridgeStatus(b.ID, "paused")
 
 	_, err := e.ProcessEvent(b.ID, "k", `{}`, 0, 1, "topic")
 	if err == nil {

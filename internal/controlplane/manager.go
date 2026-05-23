@@ -14,6 +14,7 @@ import (
 // InstanceStatus represents the lifecycle state of a KafkaMCP instance.
 type InstanceStatus string
 
+// StatusProvisioning and related values define constants for this package.
 const (
 	StatusProvisioning InstanceStatus = "provisioning"
 	StatusRunning      InstanceStatus = "running"
@@ -83,22 +84,22 @@ type Member struct {
 
 // UsageRecord tracks billable usage.
 type UsageRecord struct {
-	OrgID       string    `json:"org_id"`
-	InstanceID  string    `json:"instance_id"`
-	Metric      string    `json:"metric"`
-	Value       float64   `json:"value"`
-	Timestamp   time.Time `json:"timestamp"`
+	OrgID      string    `json:"org_id"`
+	InstanceID string    `json:"instance_id"`
+	Metric     string    `json:"metric"`
+	Value      float64   `json:"value"`
+	Timestamp  time.Time `json:"timestamp"`
 }
 
 // UsageSummary aggregates usage for billing.
 type UsageSummary struct {
-	OrgID          string  `json:"org_id"`
-	Period         string  `json:"period"`
-	ToolCalls      int64   `json:"tool_calls"`
-	MessagesRead   int64   `json:"messages_read"`
-	MessagesWritten int64  `json:"messages_written"`
-	InstanceHours  float64 `json:"instance_hours"`
-	EstimatedCost  float64 `json:"estimated_cost_usd"`
+	OrgID           string  `json:"org_id"`
+	Period          string  `json:"period"`
+	ToolCalls       int64   `json:"tool_calls"`
+	MessagesRead    int64   `json:"messages_read"`
+	MessagesWritten int64   `json:"messages_written"`
+	InstanceHours   float64 `json:"instance_hours"`
+	EstimatedCost   float64 `json:"estimated_cost_usd"`
 }
 
 // Manager manages the multi-tenant control plane.
@@ -285,10 +286,15 @@ func (m *Manager) ProvisionInstance(orgID, name, tier, region string, cfg Instan
 		}
 	}()
 
-	return inst, nil
+	// Return a defensive snapshot so callers can read fields without racing
+	// with the asynchronous provisioning goroutine above.
+	snapshot := *inst
+	return &snapshot, nil
 }
 
-// GetInstance retrieves an instance.
+// GetInstance retrieves an instance. The returned pointer references a copy of
+// the instance state captured under the manager lock, so callers may safely
+// read its fields without coordinating with concurrent provisioning goroutines.
 func (m *Manager) GetInstance(instanceID string) (*Instance, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -297,10 +303,12 @@ func (m *Manager) GetInstance(instanceID string) (*Instance, error) {
 	if !ok {
 		return nil, fmt.Errorf("instance %q not found", instanceID)
 	}
-	return inst, nil
+	snapshot := *inst
+	return &snapshot, nil
 }
 
-// ListInstances returns instances for an organization.
+// ListInstances returns instances for an organization. Each returned pointer is
+// a defensive copy of the underlying instance.
 func (m *Manager) ListInstances(orgID string) []*Instance {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -308,7 +316,8 @@ func (m *Manager) ListInstances(orgID string) []*Instance {
 	var result []*Instance
 	for _, inst := range m.instances {
 		if orgID == "" || inst.OrgID == orgID {
-			result = append(result, inst)
+			snapshot := *inst
+			result = append(result, &snapshot)
 		}
 	}
 	return result

@@ -15,6 +15,7 @@ import (
 // Format identifies the serialization format of a message.
 type Format string
 
+// FormatAvro and related values define constants for this package.
 const (
 	FormatAvro     Format = "avro"
 	FormatProtobuf Format = "protobuf"
@@ -29,7 +30,7 @@ const (
 // name still compile.
 const confluentMagicByte byte = wire.Magic
 
-// Sentinel errors returned by the engine when it cannot fulfil a request
+// Sentinel errors returned by the engine when it cannot fulfill a request
 // because the supporting infrastructure (Schema Registry, real Avro/Protobuf
 // codec) is not wired in.
 var (
@@ -41,7 +42,7 @@ var (
 	// ErrNoAvroCodec is returned by Encode/Decode for FormatAvro when no real
 	// Avro codec is registered. The current engine only supports JSON; Avro
 	// encoding requires a real codec (e.g. linkedin/goavro). Set
-	// AllowJSONFallback for development-only JSON-in-Avro-wire-format behaviour.
+	// AllowJSONFallback for development-only JSON-in-Avro-wire-format behavior.
 	ErrNoAvroCodec = errors.New("codec: avro encoding not available — no avro codec registered")
 
 	// ErrNoProtobufCodec is the protobuf counterpart of ErrNoAvroCodec.

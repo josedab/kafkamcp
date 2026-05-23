@@ -15,7 +15,7 @@ import (
 func TestPersistence_RoundTrip(t *testing.T) {
 	t.Parallel()
 	be := backend.NewInMemory()
-	defer be.Close()
+	defer func() { _ = be.Close() }()
 
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 	ctx := context.Background()
@@ -55,7 +55,7 @@ func TestPersistence_RoundTrip(t *testing.T) {
 func TestPersistence_BoundedRetention(t *testing.T) {
 	t.Parallel()
 	be := backend.NewInMemory()
-	defer be.Close()
+	defer func() { _ = be.Close() }()
 
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 	ctx := context.Background()
@@ -81,7 +81,7 @@ func TestPersistence_BoundedRetention(t *testing.T) {
 	}
 }
 
-// TestPersistence_NilBackend keeps the legacy behaviour intact.
+// TestPersistence_NilBackend keeps the legacy behavior intact.
 func TestPersistence_NilBackend(t *testing.T) {
 	t.Parallel()
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))

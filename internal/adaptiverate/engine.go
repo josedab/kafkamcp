@@ -12,23 +12,23 @@ import (
 
 // AgentProfile tracks consumption patterns for an agent.
 type AgentProfile struct {
-	AgentID          string           `json:"agent_id"`
-	WindowSize       time.Duration    `json:"-"`
-	Samples          []Sample         `json:"-"`
-	CurrentRate      float64          `json:"current_rate_per_min"`
-	AvgRate          float64          `json:"avg_rate_per_min"`
-	PeakRate         float64          `json:"peak_rate_per_min"`
-	StdDev           float64          `json:"std_dev"`
-	BaseQuota        int              `json:"base_quota_per_min"`
-	DynamicQuota     int              `json:"dynamic_quota_per_min"`
-	Credits          float64          `json:"burst_credits"`
-	MaxCredits       float64          `json:"max_credits"`
-	CreditRefillRate float64          `json:"credit_refill_rate_per_sec"`
-	LastRequest      time.Time        `json:"last_request"`
-	TotalRequests    int64            `json:"total_requests"`
-	DeniedRequests   int64            `json:"denied_requests"`
-	BurstEvents      int              `json:"burst_events"`
-	Warnings         []string         `json:"warnings,omitempty"`
+	AgentID          string        `json:"agent_id"`
+	WindowSize       time.Duration `json:"-"`
+	Samples          []Sample      `json:"-"`
+	CurrentRate      float64       `json:"current_rate_per_min"`
+	AvgRate          float64       `json:"avg_rate_per_min"`
+	PeakRate         float64       `json:"peak_rate_per_min"`
+	StdDev           float64       `json:"std_dev"`
+	BaseQuota        int           `json:"base_quota_per_min"`
+	DynamicQuota     int           `json:"dynamic_quota_per_min"`
+	Credits          float64       `json:"burst_credits"`
+	MaxCredits       float64       `json:"max_credits"`
+	CreditRefillRate float64       `json:"credit_refill_rate_per_sec"`
+	LastRequest      time.Time     `json:"last_request"`
+	TotalRequests    int64         `json:"total_requests"`
+	DeniedRequests   int64         `json:"denied_requests"`
+	BurstEvents      int           `json:"burst_events"`
+	Warnings         []string      `json:"warnings,omitempty"`
 }
 
 // Sample represents a single rate measurement.
@@ -39,38 +39,38 @@ type Sample struct {
 
 // QuotaStatus describes the current quota state for an agent.
 type QuotaStatus struct {
-	AgentID         string  `json:"agent_id"`
-	BaseQuota       int     `json:"base_quota_per_min"`
-	DynamicQuota    int     `json:"dynamic_quota_per_min"`
-	CurrentRate     float64 `json:"current_rate_per_min"`
-	AvgRate         float64 `json:"avg_rate_per_min"`
-	PeakRate        float64 `json:"peak_rate_per_min"`
-	BurstCredits    float64 `json:"burst_credits_remaining"`
-	MaxCredits      float64 `json:"max_credits"`
-	Utilization     float64 `json:"utilization_pct"`
-	TotalRequests   int64   `json:"total_requests"`
-	DeniedRequests  int64   `json:"denied_requests"`
-	DenyRate        float64 `json:"deny_rate_pct"`
-	Warnings        []string `json:"warnings,omitempty"`
-	Recommendation  string  `json:"recommendation,omitempty"`
+	AgentID        string   `json:"agent_id"`
+	BaseQuota      int      `json:"base_quota_per_min"`
+	DynamicQuota   int      `json:"dynamic_quota_per_min"`
+	CurrentRate    float64  `json:"current_rate_per_min"`
+	AvgRate        float64  `json:"avg_rate_per_min"`
+	PeakRate       float64  `json:"peak_rate_per_min"`
+	BurstCredits   float64  `json:"burst_credits_remaining"`
+	MaxCredits     float64  `json:"max_credits"`
+	Utilization    float64  `json:"utilization_pct"`
+	TotalRequests  int64    `json:"total_requests"`
+	DeniedRequests int64    `json:"denied_requests"`
+	DenyRate       float64  `json:"deny_rate_pct"`
+	Warnings       []string `json:"warnings,omitempty"`
+	Recommendation string   `json:"recommendation,omitempty"`
 }
 
 // QuotaRequest represents a request to adjust an agent's quota.
 type QuotaRequest struct {
-	AgentID    string `json:"agent_id"`
-	Action     string `json:"action"` // increase, decrease, reset, grant_credits
-	Amount     int    `json:"amount,omitempty"`
-	Reason     string `json:"reason,omitempty"`
+	AgentID string `json:"agent_id"`
+	Action  string `json:"action"` // increase, decrease, reset, grant_credits
+	Amount  int    `json:"amount,omitempty"`
+	Reason  string `json:"reason,omitempty"`
 }
 
 // QuotaResponse is the result of a quota adjustment.
 type QuotaResponse struct {
-	AgentID      string `json:"agent_id"`
-	Action       string `json:"action"`
-	PreviousQuota int   `json:"previous_quota"`
-	NewQuota     int    `json:"new_quota"`
-	Status       string `json:"status"`
-	Message      string `json:"message"`
+	AgentID       string `json:"agent_id"`
+	Action        string `json:"action"`
+	PreviousQuota int    `json:"previous_quota"`
+	NewQuota      int    `json:"new_quota"`
+	Status        string `json:"status"`
+	Message       string `json:"message"`
 }
 
 // Engine manages adaptive rate limiting.

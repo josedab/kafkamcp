@@ -126,6 +126,20 @@
 /internal/engine/ @kafkamcp/maintainers
 /internal/engine/backend/ @kafkamcp/maintainers
 /internal/watch/ @kafkamcp/kafka
+/internal/autopilot/ @kafkamcp/maintainers
+/internal/encryption/ @kafkamcp/maintainers
+/internal/eventbus/ @kafkamcp/maintainers
+/internal/graphqlapi/ @kafkamcp/maintainers
+/internal/intentverify/ @kafkamcp/maintainers
+/internal/kafkaproxy/ @kafkamcp/kafka
+/internal/perfguard/ @kafkamcp/maintainers
+/internal/portal/ @kafkamcp/maintainers
+/internal/randid/ @kafkamcp/maintainers
+/internal/statemachine/ @kafkamcp/maintainers
+/internal/timetravel/ @kafkamcp/kafka
+/internal/toolcompose/ @kafkamcp/maintainers
+/internal/wasmruntime/ @kafkamcp/maintainers
+/internal/webhook/ @kafkamcp/maintainers
 /internal/ide/ @kafkamcp/sdk
 
 # ──────────────────────────────────────────────

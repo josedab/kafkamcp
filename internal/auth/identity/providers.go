@@ -9,7 +9,7 @@ import (
 // NoneProvider is the default identity provider used when no provider
 // is configured. It always returns [ErrNoCredentials]; the caller (the
 // auth middleware) then falls back to legacy `X-Agent-ID` header
-// behaviour.
+// behavior.
 type NoneProvider struct{}
 
 // NewNone returns a NoneProvider.
@@ -35,7 +35,7 @@ type StaticProvider struct {
 	tokens map[string]*AgentIdentity
 }
 
-// StaticToken describes a single shared-secret token recognised by the
+// StaticToken describes a single shared-secret token recognized by the
 // static provider.
 type StaticToken struct {
 	// Token is the bearer token value (must be non-empty and unique).

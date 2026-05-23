@@ -15,6 +15,7 @@ import (
 // Phase describes a stage in the autopilot migration pipeline.
 type Phase string
 
+// PhaseAssessment and related values define constants for this package.
 const (
 	PhaseAssessment Phase = "assessment"
 	PhasePlanning   Phase = "planning"
@@ -28,20 +29,20 @@ const (
 
 // ClusterAssessment captures the health and readiness of source and target clusters.
 type ClusterAssessment struct {
-	SourceCluster       string              `json:"source_cluster"`
-	TargetCluster       string              `json:"target_cluster"`
-	SourceTopicCount    int                 `json:"source_topic_count"`
-	TargetTopicCount    int                 `json:"target_topic_count"`
-	SourceGroupCount    int                 `json:"source_group_count"`
-	TopicsToMigrate     int                 `json:"topics_to_migrate"`
-	TopicsToUpdate      int                 `json:"topics_to_update"`
-	TopicsToSkip        int                 `json:"topics_to_skip"`
-	EstimatedDataSizeGB float64             `json:"estimated_data_size_gb"`
-	RiskLevel           string              `json:"risk_level"` // low, medium, high, critical
-	Risks               []Risk              `json:"risks,omitempty"`
-	Recommendations     []string            `json:"recommendations,omitempty"`
-	Ready               bool                `json:"ready"`
-	AssessedAt          string              `json:"assessed_at"`
+	SourceCluster       string   `json:"source_cluster"`
+	TargetCluster       string   `json:"target_cluster"`
+	SourceTopicCount    int      `json:"source_topic_count"`
+	TargetTopicCount    int      `json:"target_topic_count"`
+	SourceGroupCount    int      `json:"source_group_count"`
+	TopicsToMigrate     int      `json:"topics_to_migrate"`
+	TopicsToUpdate      int      `json:"topics_to_update"`
+	TopicsToSkip        int      `json:"topics_to_skip"`
+	EstimatedDataSizeGB float64  `json:"estimated_data_size_gb"`
+	RiskLevel           string   `json:"risk_level"` // low, medium, high, critical
+	Risks               []Risk   `json:"risks,omitempty"`
+	Recommendations     []string `json:"recommendations,omitempty"`
+	Ready               bool     `json:"ready"`
+	AssessedAt          string   `json:"assessed_at"`
 }
 
 // Risk describes a migration risk factor.
@@ -54,44 +55,44 @@ type Risk struct {
 
 // DryRunResult captures the outcome of simulating the migration on a digital twin.
 type DryRunResult struct {
-	SessionID      string                        `json:"session_id"`
-	PlanID         string                        `json:"plan_id"`
-	TwinID         string                        `json:"twin_id"`
-	SnapshotID     string                        `json:"snapshot_id"`
-	SimulationOps  int                           `json:"simulation_ops"`
-	AllSucceeded   bool                          `json:"all_succeeded"`
-	Results        []digitaltwin.SimulationResult `json:"results"`
-	Diff           *digitaltwin.DiffResult       `json:"diff,omitempty"`
-	Warnings       []string                      `json:"warnings,omitempty"`
-	DurationMs     int64                         `json:"duration_ms"`
-	CompletedAt    string                        `json:"completed_at"`
+	SessionID     string                         `json:"session_id"`
+	PlanID        string                         `json:"plan_id"`
+	TwinID        string                         `json:"twin_id"`
+	SnapshotID    string                         `json:"snapshot_id"`
+	SimulationOps int                            `json:"simulation_ops"`
+	AllSucceeded  bool                           `json:"all_succeeded"`
+	Results       []digitaltwin.SimulationResult `json:"results"`
+	Diff          *digitaltwin.DiffResult        `json:"diff,omitempty"`
+	Warnings      []string                       `json:"warnings,omitempty"`
+	DurationMs    int64                          `json:"duration_ms"`
+	CompletedAt   string                         `json:"completed_at"`
 }
 
 // AutopilotSession tracks the full lifecycle of an automated migration.
 type AutopilotSession struct {
-	ID              string             `json:"id"`
-	SourceCluster   string             `json:"source_cluster"`
-	TargetCluster   string             `json:"target_cluster"`
-	Phase           Phase              `json:"phase"`
-	Assessment      *ClusterAssessment `json:"assessment,omitempty"`
-	PlanID          string             `json:"plan_id,omitempty"`
-	DryRun          *DryRunResult      `json:"dry_run,omitempty"`
-	SandboxID       string             `json:"sandbox_id,omitempty"`
+	ID              string                     `json:"id"`
+	SourceCluster   string                     `json:"source_cluster"`
+	TargetCluster   string                     `json:"target_cluster"`
+	Phase           Phase                      `json:"phase"`
+	Assessment      *ClusterAssessment         `json:"assessment,omitempty"`
+	PlanID          string                     `json:"plan_id,omitempty"`
+	DryRun          *DryRunResult              `json:"dry_run,omitempty"`
+	SandboxID       string                     `json:"sandbox_id,omitempty"`
 	ExecutionResult *migration.MigrationResult `json:"execution_result,omitempty"`
-	RollbackAvail   bool               `json:"rollback_available"`
-	Errors          []string           `json:"errors,omitempty"`
-	CreatedAt       string             `json:"created_at"`
-	UpdatedAt       string             `json:"updated_at"`
+	RollbackAvail   bool                       `json:"rollback_available"`
+	Errors          []string                   `json:"errors,omitempty"`
+	CreatedAt       string                     `json:"created_at"`
+	UpdatedAt       string                     `json:"updated_at"`
 }
 
 // Engine orchestrates the full autopilot migration pipeline.
 type Engine struct {
-	mu              sync.RWMutex
-	sessions        map[string]*AutopilotSession
+	mu               sync.RWMutex
+	sessions         map[string]*AutopilotSession
 	migrationPlanner *migration.Planner
-	digitalTwin     *digitaltwin.Engine
-	sandboxEngine   *sandbox.Engine
-	logger          *slog.Logger
+	digitalTwin      *digitaltwin.Engine
+	sandboxEngine    *sandbox.Engine
+	logger           *slog.Logger
 }
 
 // NewEngine creates a new autopilot engine.

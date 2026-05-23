@@ -8,7 +8,7 @@
 // abstraction so deployments can verify identities against:
 //
 //   - **none** (default): no verification, fall back to legacy
-//     `X-Agent-ID` behaviour.
+//     `X-Agent-ID` behavior.
 //   - **static**: deterministic mapping from a shared-secret bearer token
 //     to a configured agent ID. Useful for self-hosted, single-tenant
 //     setups that want a tiny upgrade path from headers-only.
@@ -21,7 +21,7 @@
 // All providers return a fully populated [AgentIdentity] on success, or
 // [ErrNoCredentials] when the request did not carry verifiable
 // credentials. Callers (the auth middleware) decide whether to fall back
-// to legacy behaviour or reject the request.
+// to legacy behavior or reject the request.
 package identity
 
 import (

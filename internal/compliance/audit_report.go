@@ -12,6 +12,7 @@ import (
 // AuditReportFormat defines supported export formats.
 type AuditReportFormat string
 
+// FormatHTML and related values define constants for this package.
 const (
 	FormatHTML AuditReportFormat = "html"
 	FormatJSON AuditReportFormat = "json"
@@ -41,37 +42,37 @@ type AccessPattern struct {
 
 // LineageSummary captures data lineage for the report.
 type LineageSummary struct {
-	Topic       string   `json:"topic"`
-	Producers   []string `json:"producers"`
-	Consumers   []string `json:"consumers"`
-	Upstream    []string `json:"upstream_topics"`
-	Downstream  []string `json:"downstream_topics"`
+	Topic      string   `json:"topic"`
+	Producers  []string `json:"producers"`
+	Consumers  []string `json:"consumers"`
+	Upstream   []string `json:"upstream_topics"`
+	Downstream []string `json:"downstream_topics"`
 }
 
 // AuditReportInput holds all data needed to generate an audit report.
 type AuditReportInput struct {
-	ClusterName     string           `json:"cluster_name"`
-	Regulation      Regulation       `json:"regulation"`
-	Scan            *ScanResult      `json:"scan,omitempty"`
-	Report          *ComplianceReport `json:"report,omitempty"`
-	AuditEntries    []AuditEntry     `json:"audit_entries,omitempty"`
-	AccessPatterns  []AccessPattern  `json:"access_patterns,omitempty"`
-	LineageSummaries []LineageSummary `json:"lineage_summaries,omitempty"`
+	ClusterName      string            `json:"cluster_name"`
+	Regulation       Regulation        `json:"regulation"`
+	Scan             *ScanResult       `json:"scan,omitempty"`
+	Report           *ComplianceReport `json:"report,omitempty"`
+	AuditEntries     []AuditEntry      `json:"audit_entries,omitempty"`
+	AccessPatterns   []AccessPattern   `json:"access_patterns,omitempty"`
+	LineageSummaries []LineageSummary  `json:"lineage_summaries,omitempty"`
 }
 
 // AuditReport is the generated exportable compliance audit report.
 type AuditReport struct {
-	ID               string             `json:"id"`
-	Title            string             `json:"title"`
-	ClusterName      string             `json:"cluster_name"`
-	Regulation       Regulation         `json:"regulation"`
-	Format           AuditReportFormat  `json:"format"`
-	OverallScore     int                `json:"overall_score"`
-	Status           string             `json:"status"`
-	ExecutiveSummary string             `json:"executive_summary"`
-	Sections         []ReportSection    `json:"sections"`
-	GeneratedAt      string             `json:"generated_at"`
-	Content          string             `json:"content,omitempty"`
+	ID               string            `json:"id"`
+	Title            string            `json:"title"`
+	ClusterName      string            `json:"cluster_name"`
+	Regulation       Regulation        `json:"regulation"`
+	Format           AuditReportFormat `json:"format"`
+	OverallScore     int               `json:"overall_score"`
+	Status           string            `json:"status"`
+	ExecutiveSummary string            `json:"executive_summary"`
+	Sections         []ReportSection   `json:"sections"`
+	GeneratedAt      string            `json:"generated_at"`
+	Content          string            `json:"content,omitempty"`
 }
 
 // ReportSection is a section in the audit report.

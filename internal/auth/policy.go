@@ -8,19 +8,21 @@ import (
 // Action represents a permission action.
 type Action string
 
+// ActionRead and related values define constants for this package.
 const (
-	ActionRead    Action = "read"
-	ActionWrite   Action = "write"
-	ActionCreate  Action = "create"
-	ActionDelete  Action = "delete"
-	ActionAdmin   Action = "admin"
+	ActionRead     Action = "read"
+	ActionWrite    Action = "write"
+	ActionCreate   Action = "create"
+	ActionDelete   Action = "delete"
+	ActionAdmin    Action = "admin"
 	ActionDescribe Action = "describe"
-	ActionReset   Action = "reset"
+	ActionReset    Action = "reset"
 )
 
 // ResourceType identifies the type of resource being accessed.
 type ResourceType string
 
+// ResourceTopic and related values define constants for this package.
 const (
 	ResourceTopic         ResourceType = "topic"
 	ResourceConsumerGroup ResourceType = "consumer_group"

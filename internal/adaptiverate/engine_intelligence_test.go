@@ -165,8 +165,8 @@ func TestAnalyzeBehavior_DetectedPattern(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		p.Samples = append(p.Samples, Sample{Timestamp: now.Add(time.Duration(-i) * time.Second), Count: 1})
 	}
-	p.AvgRate = 60.0  // 1/sec → 60/min
-	p.StdDev = 0.01   // very small -> CV ≈ 0.01
+	p.AvgRate = 60.0 // 1/sec → 60/min
+	p.StdDev = 0.01  // very small -> CV ≈ 0.01
 	e.mu.Unlock()
 
 	patterns := e.AnalyzeBehavior()

@@ -20,6 +20,7 @@ const (
 // MetricType identifies the kind of metric being tracked.
 type MetricType string
 
+// MetricConsumerLag and related values define constants for this package.
 const (
 	MetricConsumerLag MetricType = "consumer_lag"
 	MetricThroughput  MetricType = "throughput"
@@ -95,6 +96,7 @@ func newRingBuffer(size int) *ringBuffer {
 	}
 }
 
+// Add is auto-documented.
 func (rb *ringBuffer) Add(dp DataPoint) {
 	rb.mu.Lock()
 	defer rb.mu.Unlock()
@@ -105,6 +107,7 @@ func (rb *ringBuffer) Add(dp DataPoint) {
 	}
 }
 
+// Snapshot is auto-documented.
 func (rb *ringBuffer) Snapshot(since time.Time) []DataPoint {
 	rb.mu.RLock()
 	defer rb.mu.RUnlock()
@@ -417,12 +420,12 @@ func (d *Detector) GetStatus() map[string]any {
 	d.alertsMu.RUnlock()
 
 	return map[string]any{
-		"active_metrics":        bufferCount,
-		"total_alerts":          alertCount,
-		"critical_alerts_1h":    recentCritical,
-		"sample_interval_sec":   d.config.SampleIntervalSec,
-		"baseline_window_sec":   d.config.BaselineWindowSec,
-		"sensitivity":           d.config.Sensitivity,
+		"active_metrics":      bufferCount,
+		"total_alerts":        alertCount,
+		"critical_alerts_1h":  recentCritical,
+		"sample_interval_sec": d.config.SampleIntervalSec,
+		"baseline_window_sec": d.config.BaselineWindowSec,
+		"sensitivity":         d.config.Sensitivity,
 	}
 }
 

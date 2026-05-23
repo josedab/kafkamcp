@@ -36,9 +36,9 @@ func TestSearch(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
 
-	e.Store("agent-1", "schema-orders", "avro schema for orders", "schema", []string{"avro", "orders"}, 0, nil)
-	e.Store("agent-1", "schema-users", "protobuf schema for users", "schema", []string{"proto", "users"}, 0, nil)
-	e.Store("agent-1", "query-history", "SELECT * FROM orders", "query_history", nil, 0, nil)
+	_, _ = e.Store("agent-1", "schema-orders", "avro schema for orders", "schema", []string{"avro", "orders"}, 0, nil)
+	_, _ = e.Store("agent-1", "schema-users", "protobuf schema for users", "schema", []string{"proto", "users"}, 0, nil)
+	_, _ = e.Store("agent-1", "query-history", "SELECT * FROM orders", "query_history", nil, 0, nil)
 
 	results := e.Search("agent-1", "orders schema", "", 10)
 	if len(results) == 0 {
@@ -51,7 +51,7 @@ func TestTTLExpiration(t *testing.T) {
 	e := NewEngine(testLogger())
 
 	// Store with 0 TTL (expired immediately won't work; use 1 and check)
-	e.Store("agent-1", "temp-key", "value", "", nil, 1, nil)
+	_, _ = e.Store("agent-1", "temp-key", "value", "", nil, 1, nil)
 
 	// Should be accessible immediately
 	_, err := e.Recall("agent-1", "temp-key")
@@ -64,7 +64,7 @@ func TestDelete(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
 
-	e.Store("agent-1", "del-key", "value", "", nil, 0, nil)
+	_, _ = e.Store("agent-1", "del-key", "value", "", nil, 0, nil)
 	err := e.Delete("agent-1", "del-key")
 	if err != nil {
 		t.Fatalf("Delete failed: %v", err)
@@ -80,8 +80,8 @@ func TestStats(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
 
-	e.Store("agent-1", "k1", "v1", "preference", nil, 0, nil)
-	e.Store("agent-1", "k2", "v2", "schema", nil, 0, nil)
+	_, _ = e.Store("agent-1", "k1", "v1", "preference", nil, 0, nil)
+	_, _ = e.Store("agent-1", "k2", "v2", "schema", nil, 0, nil)
 
 	stats := e.Stats("agent-1")
 	if stats.TotalEntries != 2 {
@@ -97,9 +97,9 @@ func TestStats(t *testing.T) {
 func TestListEntriesAll(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.Store("agent-1", "k1", "v1", "pref", nil, 0, nil)
-	e.Store("agent-1", "k2", "v2", "schema", nil, 0, nil)
-	e.Store("agent-1", "k3", "v3", "pref", nil, 0, nil)
+	_, _ = e.Store("agent-1", "k1", "v1", "pref", nil, 0, nil)
+	_, _ = e.Store("agent-1", "k2", "v2", "schema", nil, 0, nil)
+	_, _ = e.Store("agent-1", "k3", "v3", "pref", nil, 0, nil)
 
 	entries := e.ListEntries("agent-1", "")
 	if len(entries) != 3 {
@@ -110,9 +110,9 @@ func TestListEntriesAll(t *testing.T) {
 func TestListEntriesByCategory(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.Store("agent-1", "k1", "v1", "pref", nil, 0, nil)
-	e.Store("agent-1", "k2", "v2", "schema", nil, 0, nil)
-	e.Store("agent-1", "k3", "v3", "pref", nil, 0, nil)
+	_, _ = e.Store("agent-1", "k1", "v1", "pref", nil, 0, nil)
+	_, _ = e.Store("agent-1", "k2", "v2", "schema", nil, 0, nil)
+	_, _ = e.Store("agent-1", "k3", "v3", "pref", nil, 0, nil)
 
 	entries := e.ListEntries("agent-1", "pref")
 	if len(entries) != 2 {
@@ -123,7 +123,7 @@ func TestListEntriesByCategory(t *testing.T) {
 func TestListEntriesCategoryNoMatch(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.Store("agent-1", "k1", "v1", "pref", nil, 0, nil)
+	_, _ = e.Store("agent-1", "k1", "v1", "pref", nil, 0, nil)
 
 	entries := e.ListEntries("agent-1", "nonexistent")
 	if len(entries) != 0 {
@@ -143,7 +143,7 @@ func TestListEntriesNonexistentAgent(t *testing.T) {
 func TestListEntriesFiltersExpired(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.Store("agent-1", "k1", "v1", "pref", nil, 0, nil)
+	_, _ = e.Store("agent-1", "k1", "v1", "pref", nil, 0, nil)
 
 	// Store an entry with an already-expired TTL by manipulating ExpiresAt
 	e.mu.Lock()
@@ -162,8 +162,8 @@ func TestListEntriesFiltersExpired(t *testing.T) {
 func TestCleanExpiredNone(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.Store("agent-1", "k1", "v1", "", nil, 0, nil)
-	e.Store("agent-1", "k2", "v2", "", nil, 0, nil)
+	_, _ = e.Store("agent-1", "k1", "v1", "", nil, 0, nil)
+	_, _ = e.Store("agent-1", "k2", "v2", "", nil, 0, nil)
 
 	cleaned := e.CleanExpired()
 	if cleaned != 0 {
@@ -174,9 +174,9 @@ func TestCleanExpiredNone(t *testing.T) {
 func TestCleanExpiredMixed(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.Store("agent-1", "valid", "v1", "", nil, 0, nil)
-	e.Store("agent-1", "expired1", "v2", "", nil, 1, nil)
-	e.Store("agent-2", "expired2", "v3", "", nil, 1, nil)
+	_, _ = e.Store("agent-1", "valid", "v1", "", nil, 0, nil)
+	_, _ = e.Store("agent-1", "expired1", "v2", "", nil, 1, nil)
+	_, _ = e.Store("agent-2", "expired2", "v3", "", nil, 1, nil)
 
 	// Manually expire entries
 	e.mu.Lock()
@@ -200,7 +200,7 @@ func TestCleanExpiredMixed(t *testing.T) {
 func TestCleanExpiredTTLBoundary(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.Store("agent-1", "k1", "v1", "", nil, 3600, nil)
+	_, _ = e.Store("agent-1", "k1", "v1", "", nil, 3600, nil)
 
 	// Should not be cleaned - TTL hasn't expired
 	cleaned := e.CleanExpired()
@@ -232,8 +232,8 @@ func TestCleanExpiredEmptyStore(t *testing.T) {
 func TestStoreUpdateExisting(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.Store("agent-1", "k1", "v1", "pref", nil, 0, nil)
-	e.Store("agent-1", "k1", "v2", "schema", nil, 0, nil)
+	_, _ = e.Store("agent-1", "k1", "v1", "pref", nil, 0, nil)
+	_, _ = e.Store("agent-1", "k1", "v2", "schema", nil, 0, nil)
 
 	recalled, _ := e.Recall("agent-1", "k1")
 	if recalled.Value != "v2" {

@@ -67,14 +67,14 @@ type Violation struct {
 
 // ComplianceReport tracks aggregate compliance statistics for a topic.
 type ComplianceReport struct {
-	ContractName    string         `json:"contract_name"`
-	Topic           string         `json:"topic"`
-	TotalChecked    int            `json:"total_checked"`
-	PassedCount     int            `json:"passed_count"`
-	FailedCount     int            `json:"failed_count"`
-	ComplianceRate  float64        `json:"compliance_rate"`
+	ContractName     string         `json:"contract_name"`
+	Topic            string         `json:"topic"`
+	TotalChecked     int            `json:"total_checked"`
+	PassedCount      int            `json:"passed_count"`
+	FailedCount      int            `json:"failed_count"`
+	ComplianceRate   float64        `json:"compliance_rate"`
 	ViolationsByRule map[string]int `json:"violations_by_rule"`
-	Timestamp       string         `json:"timestamp"`
+	Timestamp        string         `json:"timestamp"`
 }
 
 // Engine manages data contracts and validates messages against them.
@@ -308,8 +308,8 @@ func (e *Engine) recordCompliance(topic, contractName string, result *Validation
 	report, ok := e.stats[topic]
 	if !ok {
 		report = &ComplianceReport{
-			ContractName:    contractName,
-			Topic:           topic,
+			ContractName:     contractName,
+			Topic:            topic,
 			ViolationsByRule: make(map[string]int),
 		}
 		e.stats[topic] = report

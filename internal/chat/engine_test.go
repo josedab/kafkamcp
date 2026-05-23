@@ -1,8 +1,8 @@
 package chat
 
 import (
-	"testing"
 	"log/slog"
+	"testing"
 	"time"
 )
 
@@ -108,8 +108,8 @@ func TestSessionContextAccumulates(t *testing.T) {
 	e := newTestEngine()
 	s := e.CreateSession("agent-1")
 
-	e.AddTurn(s.ID, "turn 1", Intent{Type: "topic_inspection"}, nil, "", map[string]any{"last_topic": "orders"})
-	e.AddTurn(s.ID, "turn 2", Intent{Type: "group_inspection"}, nil, "", map[string]any{"last_group": "processor"})
+	_, _ = e.AddTurn(s.ID, "turn 1", Intent{Type: "topic_inspection"}, nil, "", map[string]any{"last_topic": "orders"})
+	_, _ = e.AddTurn(s.ID, "turn 2", Intent{Type: "group_inspection"}, nil, "", map[string]any{"last_group": "processor"})
 
 	ctx, err := e.GetSessionContext(s.ID)
 	if err != nil {
@@ -287,7 +287,7 @@ func TestResolveReference_LastTopic(t *testing.T) {
 	t.Parallel()
 	e := newTestEngine()
 	s := e.CreateSession("agent-1")
-	e.AddTurn(s.ID, "describe orders", Intent{}, nil, "", map[string]any{"last_topic": "orders"})
+	_, _ = e.AddTurn(s.ID, "describe orders", Intent{}, nil, "", map[string]any{"last_topic": "orders"})
 
 	refs, err := e.ResolveReference(s.ID, "what is the lag on that topic?")
 	if err != nil {
@@ -302,7 +302,7 @@ func TestResolveReference_PreviousCluster(t *testing.T) {
 	t.Parallel()
 	e := newTestEngine()
 	s := e.CreateSession("agent-1")
-	e.AddTurn(s.ID, "check cluster", Intent{}, nil, "", map[string]any{"last_cluster": "prod-1"})
+	_, _ = e.AddTurn(s.ID, "check cluster", Intent{}, nil, "", map[string]any{"last_cluster": "prod-1"})
 
 	refs, err := e.ResolveReference(s.ID, "what about that cluster?")
 	if err != nil {
@@ -340,7 +340,7 @@ func TestClassifyIntent_WithSessionContext(t *testing.T) {
 	t.Parallel()
 	e := newTestEngine()
 	s := e.CreateSession("agent-1")
-	e.AddTurn(s.ID, "check orders", Intent{}, nil, "", map[string]any{"last_topic": "orders"})
+	_, _ = e.AddTurn(s.ID, "check orders", Intent{}, nil, "", map[string]any{"last_topic": "orders"})
 
 	intent := e.ClassifyIntent(s.ID, "what about that topic's lag?")
 	if intent.Type != "lag_diagnosis" {

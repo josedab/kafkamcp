@@ -147,7 +147,7 @@ func TestGetViolationSummary(t *testing.T) {
 	t.Run("with violations", func(t *testing.T) {
 		e := setupEnforcementEngine(t)
 		// Generate violations
-		e.ValidateMessage("test.topic", map[string]any{"status": "unknown"})  // id missing + bad enum
+		e.ValidateMessage("test.topic", map[string]any{"status": "unknown"})           // id missing + bad enum
 		e.ValidateMessage("test.topic", map[string]any{"id": "1", "status": "active"}) // valid
 
 		summary, err := e.GetViolationSummary("test.topic")

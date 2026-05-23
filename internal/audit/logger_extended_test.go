@@ -98,7 +98,7 @@ func TestLogToFile(t *testing.T) {
 	}
 
 	al.Log(Entry{AgentID: "test", Tool: "kafka_produce", Result: Result{Status: "success"}})
-	al.Close()
+	_ = al.Close()
 
 	data, err := os.ReadFile(tmpFile)
 	if err != nil {

@@ -21,12 +21,12 @@ type Coordinator struct {
 
 // DistributedLock represents a lock on a shared resource.
 type DistributedLock struct {
-	Resource  string    `json:"resource"`
-	Owner     string    `json:"owner"`
-	AcquiredAt time.Time `json:"acquired_at"`
-	ExpiresAt time.Time `json:"expires_at"`
-	TTLSec    int       `json:"ttl_seconds"`
-	Metadata  map[string]string `json:"metadata,omitempty"`
+	Resource   string            `json:"resource"`
+	Owner      string            `json:"owner"`
+	AcquiredAt time.Time         `json:"acquired_at"`
+	ExpiresAt  time.Time         `json:"expires_at"`
+	TTLSec     int               `json:"ttl_seconds"`
+	Metadata   map[string]string `json:"metadata,omitempty"`
 }
 
 // VectorClock tracks causal ordering across agents.
@@ -38,12 +38,12 @@ type VectorClock struct {
 
 // AgentState describes the current state of a connected agent.
 type AgentState struct {
-	AgentID     string            `json:"agent_id"`
-	Status      string            `json:"status"` // active, idle, busy, disconnected
-	Capabilities []string         `json:"capabilities,omitempty"`
-	Resources   []string          `json:"resources,omitempty"`
-	LastSeen    time.Time         `json:"last_seen"`
-	Metadata    map[string]string `json:"metadata,omitempty"`
+	AgentID      string            `json:"agent_id"`
+	Status       string            `json:"status"` // active, idle, busy, disconnected
+	Capabilities []string          `json:"capabilities,omitempty"`
+	Resources    []string          `json:"resources,omitempty"`
+	LastSeen     time.Time         `json:"last_seen"`
+	Metadata     map[string]string `json:"metadata,omitempty"`
 }
 
 // AgentMessage is a message between agents.
@@ -60,9 +60,9 @@ type AgentMessage struct {
 
 // LockResult is returned by lock operations.
 type LockResult struct {
-	Acquired bool              `json:"acquired"`
-	Lock     *DistributedLock  `json:"lock,omitempty"`
-	Error    string            `json:"error,omitempty"`
+	Acquired bool             `json:"acquired"`
+	Lock     *DistributedLock `json:"lock,omitempty"`
+	Error    string           `json:"error,omitempty"`
 }
 
 // NewCoordinator creates a new collaboration coordinator.
@@ -325,9 +325,9 @@ type TopicLease struct {
 
 // LeaseResult is returned by lease operations.
 type LeaseResult struct {
-	Acquired bool         `json:"acquired"`
-	Lease    *TopicLease  `json:"lease,omitempty"`
-	Error    string       `json:"error,omitempty"`
+	Acquired bool        `json:"acquired"`
+	Lease    *TopicLease `json:"lease,omitempty"`
+	Error    string      `json:"error,omitempty"`
 }
 
 // AcquireTopicLease acquires a lease on a topic for an agent.

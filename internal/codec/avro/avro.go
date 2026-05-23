@@ -8,7 +8,7 @@
 // # Design
 //
 // hamba/avro parses Avro schemas once and reuses the compiled schema
-// object across all serialise/deserialise calls. We cache parsed
+// object across all serialize/deserialise calls. We cache parsed
 // schemas by their raw text in [Codec] so producers that re-use the
 // same schema string don't pay the parse cost twice.
 //
@@ -61,7 +61,7 @@ func (c *Codec) parse(schemaStr string) (hamba.Schema, error) {
 
 	sch, err := hamba.Parse(schemaStr)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrSchemaParse, err)
+		return nil, fmt.Errorf("%w: %w", ErrSchemaParse, err)
 	}
 
 	c.mu.Lock()
@@ -74,7 +74,7 @@ func (c *Codec) parse(schemaStr string) (hamba.Schema, error) {
 	return sch, nil
 }
 
-// Encode serialises value into the canonical Avro binary form defined
+// Encode serializes value into the canonical Avro binary form defined
 // by schemaStr. value should already conform to the schema (record
 // fields named, unions wrapped in map[string]any{"type": value}, ...).
 //
@@ -125,7 +125,7 @@ func (c *Codec) DecodeInto(schemaStr string, data []byte, target any) error {
 }
 
 // ParseSchema validates that schemaStr is a syntactically valid Avro
-// schema without serialising anything. Useful for the
+// schema without serializing anything. Useful for the
 // kafka_check_schema_compatibility tool.
 func (c *Codec) ParseSchema(schemaStr string) error {
 	_, err := c.parse(schemaStr)

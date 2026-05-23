@@ -8,6 +8,7 @@ import (
 // EnforcementMode defines how contract violations are handled.
 type EnforcementMode string
 
+// ModeWarn and related values define constants for this package.
 const (
 	ModeWarn       EnforcementMode = "warn"
 	ModeReject     EnforcementMode = "reject"

@@ -323,7 +323,7 @@ func TestFindOutliersAllSameValues(t *testing.T) {
 	values := []float64{5, 5, 5, 5, 5}
 	points := makeDataPoints(values)
 	outliers := findOutliers(points, values)
-	if outliers != nil && len(outliers) > 0 {
+	if len(outliers) > 0 {
 		t.Errorf("expected no outliers for constant values, got %d", len(outliers))
 	}
 }

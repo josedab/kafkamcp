@@ -12,6 +12,7 @@ import (
 // OperationType represents the type of CDC operation.
 type OperationType string
 
+// OpInsert and related values define constants for this package.
 const (
 	OpInsert OperationType = "INSERT"
 	OpUpdate OperationType = "UPDATE"
@@ -21,56 +22,57 @@ const (
 // SinkType represents the target data store type.
 type SinkType string
 
+// SinkPostgres and related values define constants for this package.
 const (
-	SinkPostgres    SinkType = "postgres"
-	SinkMySQL       SinkType = "mysql"
-	SinkMongoDB     SinkType = "mongodb"
-	SinkElastic     SinkType = "elasticsearch"
-	SinkS3          SinkType = "s3"
-	SinkBigQuery    SinkType = "bigquery"
-	SinkSnowflake   SinkType = "snowflake"
-	SinkRedis       SinkType = "redis"
-	SinkCustomHTTP  SinkType = "http"
+	SinkPostgres   SinkType = "postgres"
+	SinkMySQL      SinkType = "mysql"
+	SinkMongoDB    SinkType = "mongodb"
+	SinkElastic    SinkType = "elasticsearch"
+	SinkS3         SinkType = "s3"
+	SinkBigQuery   SinkType = "bigquery"
+	SinkSnowflake  SinkType = "snowflake"
+	SinkRedis      SinkType = "redis"
+	SinkCustomHTTP SinkType = "http"
 )
 
 // Bridge defines a CDC bridge configuration.
 type Bridge struct {
-	ID          string         `json:"id"`
-	Name        string         `json:"name"`
-	Description string         `json:"description,omitempty"`
-	SourceTopic string         `json:"source_topic"`
-	SourceCluster string       `json:"source_cluster,omitempty"`
-	Sink        SinkConfig     `json:"sink"`
-	Transform   *TransformSpec `json:"transform,omitempty"`
-	Status      string         `json:"status"` // active, paused, stopped, error
-	CreatedBy   string         `json:"created_by"`
-	CreatedAt   time.Time      `json:"created_at"`
-	UpdatedAt   time.Time      `json:"updated_at"`
-	Stats       BridgeStats    `json:"stats"`
+	ID            string         `json:"id"`
+	Name          string         `json:"name"`
+	Description   string         `json:"description,omitempty"`
+	SourceTopic   string         `json:"source_topic"`
+	SourceCluster string         `json:"source_cluster,omitempty"`
+	Sink          SinkConfig     `json:"sink"`
+	Transform     *TransformSpec `json:"transform,omitempty"`
+	Status        string         `json:"status"` // active, paused, stopped, error
+	CreatedBy     string         `json:"created_by"`
+	CreatedAt     time.Time      `json:"created_at"`
+	UpdatedAt     time.Time      `json:"updated_at"`
+	Stats         BridgeStats    `json:"stats"`
 }
 
 // SinkConfig configures the target data store.
 type SinkConfig struct {
-	Type           SinkType          `json:"type"`
-	ConnectionURL  string            `json:"connection_url,omitempty"`
-	Table          string            `json:"table,omitempty"`
-	Database       string            `json:"database,omitempty"`
-	Collection     string            `json:"collection,omitempty"`
-	Index          string            `json:"index,omitempty"`
-	Bucket         string            `json:"bucket,omitempty"`
-	KeyField       string            `json:"key_field,omitempty"`
-	BatchSize      int               `json:"batch_size,omitempty"`
-	FlushInterval  string            `json:"flush_interval,omitempty"`
-	Properties     map[string]string `json:"properties,omitempty"`
+	Type          SinkType          `json:"type"`
+	ConnectionURL string            `json:"connection_url,omitempty"`
+	Table         string            `json:"table,omitempty"`
+	Database      string            `json:"database,omitempty"`
+	Collection    string            `json:"collection,omitempty"`
+	Index         string            `json:"index,omitempty"`
+	Bucket        string            `json:"bucket,omitempty"`
+	KeyField      string            `json:"key_field,omitempty"`
+	BatchSize     int               `json:"batch_size,omitempty"`
+	FlushInterval string            `json:"flush_interval,omitempty"`
+	Properties    map[string]string `json:"properties,omitempty"`
 }
 
 // TransformSpec defines how messages are transformed before writing to the sink.
 type TransformSpec struct {
-	Format       string            `json:"format,omitempty"`        // json, avro, protobuf
-	FieldMapping map[string]string `json:"field_mapping,omitempty"` // source_field -> sink_field
-	FilterExpr   string            `json:"filter_expr,omitempty"`   // simple filter expression
-	FlattenJSON  bool              `json:"flatten_json,omitempty"`
-	IncludeMetadata bool           `json:"include_metadata,omitempty"`
+	Format          string            `json:"format,omitempty"`        // json, avro, protobuf
+	FieldMapping    map[string]string `json:"field_mapping,omitempty"` // source_field -> sink_field
+	FilterExpr      string            `json:"filter_expr,omitempty"`   // simple filter expression
+	FlattenJSON     bool              `json:"flatten_json,omitempty"`
+	IncludeMetadata bool              `json:"include_metadata,omitempty"`
 }
 
 // BridgeStats tracks CDC bridge performance.
@@ -94,7 +96,7 @@ type CDCEvent struct {
 	Before    map[string]any    `json:"before,omitempty"`
 	After     map[string]any    `json:"after,omitempty"`
 	Source    CDCSource         `json:"source"`
-	Headers  map[string]string  `json:"headers,omitempty"`
+	Headers   map[string]string `json:"headers,omitempty"`
 }
 
 // CDCSource identifies where a CDC event originated.
@@ -338,7 +340,7 @@ func validateSinkConfig(sink SinkConfig) error {
 func applyTransform(spec *TransformSpec, data map[string]any) map[string]any {
 	result := make(map[string]any)
 
-	if spec.FieldMapping != nil && len(spec.FieldMapping) > 0 {
+	if len(spec.FieldMapping) > 0 {
 		for srcField, dstField := range spec.FieldMapping {
 			if val, ok := data[srcField]; ok {
 				result[dstField] = val

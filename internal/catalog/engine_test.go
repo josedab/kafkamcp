@@ -19,7 +19,7 @@ func TestIndexAndSearch(t *testing.T) {
 		t.Fatalf("Index failed: %v", err)
 	}
 
-	e.Index("users", "topic", "User profiles", "team-identity", []string{"identity", "users"}, nil, nil)
+	_, _ = e.Index("users", "topic", "User profiles", "team-identity", []string{"identity", "users"}, nil, nil)
 
 	results := e.Search(SearchOptions{Query: "orders"})
 	if len(results) == 0 {
@@ -31,8 +31,8 @@ func TestSearchByType(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
 
-	e.Index("orders", "topic", "", "", nil, nil, nil)
-	e.Index("order-schema", "schema", "", "", nil, nil, nil)
+	_, _ = e.Index("orders", "topic", "", "", nil, nil, nil)
+	_, _ = e.Index("order-schema", "schema", "", "", nil, nil, nil)
 
 	results := e.Search(SearchOptions{Type: "topic"})
 	if len(results) != 1 {
@@ -58,8 +58,8 @@ func TestStats(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
 
-	e.Index("topic1", "topic", "desc", "owner1", []string{"tag1"}, nil, nil)
-	e.Index("topic2", "topic", "", "", nil, nil, nil)
+	_, _ = e.Index("topic1", "topic", "desc", "owner1", []string{"tag1"}, nil, nil)
+	_, _ = e.Index("topic2", "topic", "", "", nil, nil, nil)
 
 	stats := e.Stats()
 	if stats.TotalEntries != 2 {

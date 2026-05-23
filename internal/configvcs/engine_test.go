@@ -25,7 +25,7 @@ func TestRecordAndHistory(t *testing.T) {
 	}
 
 	// Make second change
-	e.RecordChange("topic", "orders", "update", "agent-1", "Increase partitions",
+	_, _ = e.RecordChange("topic", "orders", "update", "agent-1", "Increase partitions",
 		map[string]any{"partitions": 6}, map[string]any{"partitions": 12}, nil)
 
 	history := e.History("topic", "orders", 10)
@@ -38,9 +38,9 @@ func TestCompare(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
 
-	e.RecordChange("topic", "orders", "create", "a1", "",
+	_, _ = e.RecordChange("topic", "orders", "create", "a1", "",
 		nil, map[string]any{"partitions": 6, "retention": "7d"}, nil)
-	e.RecordChange("topic", "orders", "update", "a1", "",
+	_, _ = e.RecordChange("topic", "orders", "update", "a1", "",
 		map[string]any{"partitions": 6, "retention": "7d"},
 		map[string]any{"partitions": 12, "retention": "30d"}, nil)
 
@@ -57,9 +57,9 @@ func TestRollback(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
 
-	e.RecordChange("topic", "orders", "create", "a1", "",
+	_, _ = e.RecordChange("topic", "orders", "create", "a1", "",
 		nil, map[string]any{"partitions": 6}, nil)
-	e.RecordChange("topic", "orders", "update", "a1", "",
+	_, _ = e.RecordChange("topic", "orders", "update", "a1", "",
 		map[string]any{"partitions": 6}, map[string]any{"partitions": 12}, nil)
 
 	result, err := e.Rollback("topic", "orders", 1, "a1", "revert partition change")
@@ -75,8 +75,8 @@ func TestAuditReport(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
 
-	e.RecordChange("topic", "orders", "create", "agent-1", "v1", nil, map[string]any{"p": 6}, nil)
-	e.RecordChange("topic", "orders", "update", "agent-2", "v2", map[string]any{"p": 6}, map[string]any{"p": 12}, nil)
+	_, _ = e.RecordChange("topic", "orders", "create", "agent-1", "v1", nil, map[string]any{"p": 6}, nil)
+	_, _ = e.RecordChange("topic", "orders", "update", "agent-2", "v2", map[string]any{"p": 6}, map[string]any{"p": 12}, nil)
 
 	report, err := e.AuditReport("topic", "orders", time.Time{})
 	if err != nil {

@@ -103,7 +103,7 @@ func TestDeleteEntryRemovedFromSearch(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
 	entry, _ := e.Index("orders", "topic", "", "", nil, nil, nil)
-	e.DeleteEntry(entry.ID)
+	_ = e.DeleteEntry(entry.ID)
 
 	results := e.Search(SearchOptions{Query: "orders"})
 	if len(results) != 0 {
@@ -234,8 +234,8 @@ func TestIndexInvalidType(t *testing.T) {
 func TestSearchByOwner(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.Index("t1", "topic", "", "team-a", nil, nil, nil)
-	e.Index("t2", "topic", "", "team-b", nil, nil, nil)
+	_, _ = e.Index("t1", "topic", "", "team-a", nil, nil, nil)
+	_, _ = e.Index("t2", "topic", "", "team-b", nil, nil, nil)
 
 	results := e.Search(SearchOptions{Owner: "team-a"})
 	if len(results) != 1 {
@@ -246,8 +246,8 @@ func TestSearchByOwner(t *testing.T) {
 func TestSearchByMinQuality(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.Index("full", "topic", "desc", "owner", []string{"tag"}, map[string]any{"k": "v"}, map[string]string{"m": "v"})
-	e.Index("bare", "topic", "", "", nil, nil, nil)
+	_, _ = e.Index("full", "topic", "desc", "owner", []string{"tag"}, map[string]any{"k": "v"}, map[string]string{"m": "v"})
+	_, _ = e.Index("bare", "topic", "", "", nil, nil, nil)
 
 	results := e.Search(SearchOptions{MinQuality: 50})
 	if len(results) != 1 {
@@ -258,8 +258,8 @@ func TestSearchByMinQuality(t *testing.T) {
 func TestSearchByTags(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
-	e.Index("t1", "topic", "", "", []string{"prod"}, nil, nil)
-	e.Index("t2", "topic", "", "", []string{"dev"}, nil, nil)
+	_, _ = e.Index("t1", "topic", "", "", []string{"prod"}, nil, nil)
+	_, _ = e.Index("t2", "topic", "", "", []string{"dev"}, nil, nil)
 
 	results := e.Search(SearchOptions{Tags: []string{"prod"}})
 	if len(results) != 1 {
@@ -271,7 +271,7 @@ func TestSearchLimit(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(testLogger())
 	for i := 0; i < 5; i++ {
-		e.Index("t"+string(rune('a'+i)), "topic", "", "", nil, nil, nil)
+		_, _ = e.Index("t"+string(rune('a'+i)), "topic", "", "", nil, nil, nil)
 	}
 
 	results := e.Search(SearchOptions{Limit: 2})

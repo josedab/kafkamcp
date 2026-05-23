@@ -54,27 +54,27 @@ type ScanResult struct {
 
 // Report is a detailed advisory report.
 type Report struct {
-	ClusterName       string           `json:"cluster_name"`
-	Summary           string           `json:"summary"`
-	OverallScore      int              `json:"overall_score"`
-	CategoryScores    map[string]int   `json:"category_scores"`
-	Recommendations   []Recommendation `json:"recommendations"`
-	AntiPatterns      []AntiPattern    `json:"anti_patterns"`
-	TopicCount        int              `json:"topic_count"`
-	PartitionCount    int              `json:"partition_count"`
-	GeneratedAt       string           `json:"generated_at"`
+	ClusterName     string           `json:"cluster_name"`
+	Summary         string           `json:"summary"`
+	OverallScore    int              `json:"overall_score"`
+	CategoryScores  map[string]int   `json:"category_scores"`
+	Recommendations []Recommendation `json:"recommendations"`
+	AntiPatterns    []AntiPattern    `json:"anti_patterns"`
+	TopicCount      int              `json:"topic_count"`
+	PartitionCount  int              `json:"partition_count"`
+	GeneratedAt     string           `json:"generated_at"`
 }
 
 // RuleConfig holds configurable thresholds for best-practice checks.
 type RuleConfig struct {
-	MinReplicationFactor    int   `json:"min_replication_factor"`
-	MaxPartitionsPerTopic   int   `json:"max_partitions_per_topic"`
-	MinPartitionsPerTopic   int   `json:"min_partitions_per_topic"`
-	MaxRetentionDays        int   `json:"max_retention_days"`
-	MinRetentionHours       int   `json:"min_retention_hours"`
-	OrphanedThresholdDays   int   `json:"orphaned_threshold_days"`
-	MaxTopicNameLength      int   `json:"max_topic_name_length"`
-	TopicNamingConvention   string `json:"topic_naming_convention"` // dot-separated, kebab-case, snake_case
+	MinReplicationFactor  int    `json:"min_replication_factor"`
+	MaxPartitionsPerTopic int    `json:"max_partitions_per_topic"`
+	MinPartitionsPerTopic int    `json:"min_partitions_per_topic"`
+	MaxRetentionDays      int    `json:"max_retention_days"`
+	MinRetentionHours     int    `json:"min_retention_hours"`
+	OrphanedThresholdDays int    `json:"orphaned_threshold_days"`
+	MaxTopicNameLength    int    `json:"max_topic_name_length"`
+	TopicNamingConvention string `json:"topic_naming_convention"` // dot-separated, kebab-case, snake_case
 }
 
 // DefaultRuleConfig returns reasonable defaults.
@@ -93,10 +93,10 @@ func DefaultRuleConfig() RuleConfig {
 
 // Engine is the topic advisor engine.
 type Engine struct {
-	config    RuleConfig
-	lastScan  *ScanResult
-	logger    *slog.Logger
-	mu        sync.RWMutex
+	config   RuleConfig
+	lastScan *ScanResult
+	logger   *slog.Logger
+	mu       sync.RWMutex
 }
 
 // NewEngine creates a new advisor engine.
@@ -120,9 +120,9 @@ func (e *Engine) Scan(clusterName string, topics []TopicMetrics) *ScanResult {
 	defer e.mu.Unlock()
 
 	result := &ScanResult{
-		ClusterName: clusterName,
+		ClusterName:   clusterName,
 		TopicsScanned: len(topics),
-		ScannedAt:   time.Now().UTC().Format(time.RFC3339),
+		ScannedAt:     time.Now().UTC().Format(time.RFC3339),
 	}
 
 	// Run best-practice checks
@@ -358,8 +358,8 @@ func (e *Engine) detectAntiPatterns(topics []TopicMetrics) []AntiPattern {
 
 func (e *Engine) calculateScore(result *ScanResult) int {
 	score := 100
-	for _, r := range result.Recommendations {
-		switch r.Severity {
+	for i := range result.Recommendations {
+		switch result.Recommendations[i].Severity {
 		case "critical":
 			score -= 10
 		case "warning":
@@ -382,11 +382,4 @@ func (e *Engine) calculateScore(result *ScanResult) int {
 		score = 0
 	}
 	return score
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
 }

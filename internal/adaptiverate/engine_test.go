@@ -57,7 +57,7 @@ func TestResetQuota(t *testing.T) {
 	e := NewEngine(testLogger())
 
 	e.RecordRequest("agent-1")
-	e.AdjustQuota(QuotaRequest{AgentID: "agent-1", Action: "increase", Amount: 100})
+	_, _ = e.AdjustQuota(QuotaRequest{AgentID: "agent-1", Action: "increase", Amount: 100})
 	resp, _ := e.AdjustQuota(QuotaRequest{AgentID: "agent-1", Action: "reset"})
 
 	if resp.NewQuota != 60 { // base quota

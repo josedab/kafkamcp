@@ -129,7 +129,7 @@ func TestStop_AlreadyStopped(t *testing.T) {
 	e := NewEngine(slog.Default())
 	guard := &SafetyGuard{MaxAffectedTopics: 5, MaxDuration: time.Minute, AutoRollbackEnabled: false}
 	exp, _ := e.Inject(TypeBrokerOutage, "c", nil, nil, nil, guard)
-	e.Stop(exp.ID)
+	_, _ = e.Stop(exp.ID)
 
 	_, err := e.Stop(exp.ID)
 	if err == nil {
@@ -150,8 +150,8 @@ func TestListExperiments_NoFilter(t *testing.T) {
 	t.Parallel()
 	e := NewEngine(slog.Default())
 	guard := &SafetyGuard{MaxAffectedTopics: 5, MaxDuration: time.Minute, AutoRollbackEnabled: false}
-	e.Inject(TypeBrokerOutage, "c", nil, nil, nil, guard)
-	e.Inject(TypeSlowConsumer, "c", nil, nil, nil, guard)
+	_, _ = e.Inject(TypeBrokerOutage, "c", nil, nil, nil, guard)
+	_, _ = e.Inject(TypeSlowConsumer, "c", nil, nil, nil, guard)
 
 	all := e.ListExperiments("")
 	if len(all) != 2 {
@@ -164,8 +164,8 @@ func TestListExperiments_StatusFilter(t *testing.T) {
 	e := NewEngine(slog.Default())
 	guard := &SafetyGuard{MaxAffectedTopics: 5, MaxDuration: time.Minute, AutoRollbackEnabled: false}
 	exp, _ := e.Inject(TypeBrokerOutage, "c", nil, nil, nil, guard)
-	e.Inject(TypeSlowConsumer, "c", nil, nil, nil, guard)
-	e.Stop(exp.ID)
+	_, _ = e.Inject(TypeSlowConsumer, "c", nil, nil, nil, guard)
+	_, _ = e.Stop(exp.ID)
 
 	running := e.ListExperiments("running")
 	if len(running) != 1 {

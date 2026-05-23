@@ -103,7 +103,7 @@ func TestEngineEncodeNilValue(t *testing.T) {
 
 func TestEngineEncodeAvro(t *testing.T) {
 	t.Parallel()
-	engine := NewEngine(nil)
+	engine := NewEngineWithFallback(nil)
 	msg, err := engine.Encode(map[string]string{"name": "test"}, 1, FormatAvro)
 	if err != nil {
 		t.Fatalf("Encode() error = %v", err)
@@ -122,7 +122,7 @@ func TestEngineEncodeAvro(t *testing.T) {
 
 func TestEngineDecodeConfluentWireFormat(t *testing.T) {
 	t.Parallel()
-	engine := NewEngine(nil)
+	engine := NewEngineWithFallback(nil)
 
 	// Encode first
 	encoded, err := engine.Encode(map[string]string{"name": "test"}, 42, FormatAvro)
@@ -191,7 +191,7 @@ func newMockProvider(entries map[int]Format) *mockProvider {
 
 func TestEncodeProtobuf_VarintPrefix(t *testing.T) {
 	t.Parallel()
-	engine := NewEngine(nil) // nil provider returns default "{}" schema
+	engine := NewEngineWithFallback(nil) // nil provider returns default "{}" schema
 	msg, err := engine.Encode(map[string]string{"key": "val"}, 1, FormatProtobuf)
 	if err != nil {
 		t.Fatalf("encodeProtobuf: %v", err)
@@ -221,7 +221,7 @@ func TestEncodeProtobuf_NilValue(t *testing.T) {
 func TestEncodeProtobuf_NoSchemaClient(t *testing.T) {
 	t.Parallel()
 	// nil provider returns default "{}" schema, so encoding should succeed
-	engine := NewEngine(nil)
+	engine := NewEngineWithFallback(nil)
 	_, err := engine.Encode(map[string]string{"k": "v"}, 1, FormatProtobuf)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -233,7 +233,7 @@ func TestEncodeProtobuf_NoSchemaClient(t *testing.T) {
 func TestDecodeProtobuf_VarintStripping(t *testing.T) {
 	t.Parallel()
 	provider := newMockProvider(map[int]Format{1: FormatProtobuf})
-	engine := NewEngine(provider)
+	engine := NewEngineWithFallback(provider)
 
 	// Build a Confluent wire format protobuf message: magic + 4-byte ID + varint prefix + JSON
 	jsonData := []byte(`{"key":"value"}`)
@@ -285,7 +285,7 @@ func TestDecodeProtobuf_InvalidJSONAfterPrefix(t *testing.T) {
 	wire[0] = confluentMagicByte
 	binary.BigEndian.PutUint32(wire[1:5], 1)
 	wire[5] = 0x00
-	copy(wire[6:], []byte("xyz"))
+	copy(wire[6:], "xyz")
 
 	_, err := engine.Decode(wire)
 	if err == nil {
@@ -311,7 +311,7 @@ func TestResolveFormat_WithProvider(t *testing.T) {
 
 func TestResolveFormat_DefaultsToAvroWithoutProvider(t *testing.T) {
 	t.Parallel()
-	engine := NewEngine(nil)
+	engine := NewEngineWithFallback(nil)
 	format, err := engine.resolveFormat(1)
 	if err != nil {
 		t.Fatalf("resolveFormat: %v", err)
@@ -330,8 +330,8 @@ func TestResolveFormat_CachesResult(t *testing.T) {
 	}
 	engine := NewEngine(provider)
 
-	engine.resolveFormat(1)
-	engine.resolveFormat(1) // should hit cache
+	_, _ = engine.resolveFormat(1)
+	_, _ = engine.resolveFormat(1) // should hit cache
 
 	if callCount != 1 {
 		t.Errorf("expected 1 provider call (cached), got %d", callCount)
@@ -378,7 +378,7 @@ func (p *errorProvider) GetLatestSchema(subject string) (int, string, Format, er
 func TestRoundTrip_EncodeDecodeProtobuf(t *testing.T) {
 	t.Parallel()
 	provider := newMockProvider(map[int]Format{10: FormatProtobuf})
-	engine := NewEngine(provider)
+	engine := NewEngineWithFallback(provider)
 
 	original := map[string]any{"name": "test", "count": float64(42)}
 	encoded, err := engine.Encode(original, 10, FormatProtobuf)
@@ -405,7 +405,7 @@ func TestRoundTrip_EncodeDecodeProtobuf(t *testing.T) {
 
 func TestRoundTrip_EncodeDecodeAvro(t *testing.T) {
 	t.Parallel()
-	engine := NewEngine(nil)
+	engine := NewEngineWithFallback(nil)
 
 	original := map[string]string{"key": "value"}
 	encoded, err := engine.Encode(original, 5, FormatAvro)

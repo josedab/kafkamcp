@@ -14,8 +14,8 @@ func TestIngestAndQuery(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		e.IngestSignal(Signal{
 			Source:    SourceKafka,
-			Metric:   "throughput",
-			Value:    float64(100 + i*10),
+			Metric:    "throughput",
+			Value:     float64(100 + i*10),
 			Timestamp: now.Add(time.Duration(-i) * time.Minute),
 		})
 	}
@@ -36,15 +36,15 @@ func TestCorrelate(t *testing.T) {
 		ts := now.Add(time.Duration(-i) * time.Minute)
 		e.IngestSignal(Signal{
 			Source:    SourceKafka,
-			Metric:   "throughput",
-			Value:    float64(1000 - i*50),
+			Metric:    "throughput",
+			Value:     float64(1000 - i*50),
 			Timestamp: ts,
-			Severity: "warning",
+			Severity:  "warning",
 		})
 		e.IngestSignal(Signal{
 			Source:    SourcePrometheus,
-			Metric:   "cpu_usage",
-			Value:    float64(20 + i*4),
+			Metric:    "cpu_usage",
+			Value:     float64(20 + i*4),
 			Timestamp: ts,
 		})
 	}
