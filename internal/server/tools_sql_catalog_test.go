@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mark3labs/mcp-go/mcp"
+
 	"github.com/kafkamcp/kafkamcp/internal/autopilot"
 	"github.com/kafkamcp/kafkamcp/internal/catalog"
 	"github.com/kafkamcp/kafkamcp/internal/digitaltwin"
@@ -18,7 +20,6 @@ import (
 	"github.com/kafkamcp/kafkamcp/internal/orchestration"
 	"github.com/kafkamcp/kafkamcp/internal/sandbox"
 	"github.com/kafkamcp/kafkamcp/internal/streamsql"
-	"github.com/mark3labs/mcp-go/mcp"
 )
 
 func timeNow() time.Time { return time.Now() }
@@ -138,7 +139,7 @@ func TestHandleSQLExecute_LimitClamping(t *testing.T) {
 	}
 	s := newTestServerWithEngines(t, mock)
 
-	s.handleSQLExecute(context.Background(), mcp.CallToolRequest{}, "test-agent", map[string]any{
+	_, _ = s.handleSQLExecute(context.Background(), mcp.CallToolRequest{}, "test-agent", map[string]any{
 		"sql":   "SELECT * FROM orders",
 		"limit": float64(99999),
 	}, timeNow())
@@ -430,7 +431,7 @@ func TestHandleCatalogTag_SetLineage(t *testing.T) {
 	}, timeNow())
 	text := resultText(t, result)
 	var entry map[string]any
-	json.Unmarshal([]byte(text), &entry)
+	_ = json.Unmarshal([]byte(text), &entry)
 	entryID, _ := entry["id"].(string)
 
 	// Set lineage
@@ -463,7 +464,7 @@ func TestHandleCatalogTag_DeleteEntry(t *testing.T) {
 	}, timeNow())
 	text := resultText(t, result)
 	var entry map[string]any
-	json.Unmarshal([]byte(text), &entry)
+	_ = json.Unmarshal([]byte(text), &entry)
 	entryID, _ := entry["id"].(string)
 
 	// Delete
@@ -542,10 +543,10 @@ func TestHandleCatalogStats_WithEntries(t *testing.T) {
 	s := newTestServerWithEngines(t, &kafka.MockKafkaManager{})
 
 	// Index some entries first
-	s.handleCatalogTag(context.Background(), mcp.CallToolRequest{}, "test-agent", map[string]any{
+	_, _ = s.handleCatalogTag(context.Background(), mcp.CallToolRequest{}, "test-agent", map[string]any{
 		"action": "index", "name": "topic1", "type": "topic",
 	}, timeNow())
-	s.handleCatalogTag(context.Background(), mcp.CallToolRequest{}, "test-agent", map[string]any{
+	_, _ = s.handleCatalogTag(context.Background(), mcp.CallToolRequest{}, "test-agent", map[string]any{
 		"action": "index", "name": "schema1", "type": "schema",
 	}, timeNow())
 

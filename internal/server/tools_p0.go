@@ -7,11 +7,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mark3labs/mcp-go/mcp"
+
 	"github.com/kafkamcp/kafkamcp/internal/auth"
 	"github.com/kafkamcp/kafkamcp/internal/kafka"
 	"github.com/kafkamcp/kafkamcp/internal/metrics"
 	"github.com/kafkamcp/kafkamcp/internal/schema"
-	"github.com/mark3labs/mcp-go/mcp"
 )
 
 // ===================== P0 TOOL HANDLERS =====================

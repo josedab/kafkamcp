@@ -123,7 +123,7 @@ func TestHandleOpenAPISpec_InfoFields(t *testing.T) {
 	text := resultText(t, result)
 
 	var spec map[string]any
-	json.Unmarshal([]byte(text), &spec)
+	_ = json.Unmarshal([]byte(text), &spec)
 
 	info := spec["info"].(map[string]any)
 	if info["title"] == nil || info["title"] == "" {
@@ -141,7 +141,7 @@ func TestHandleOpenAPISpec_ComponentsSecurityScheme(t *testing.T) {
 	text := resultText(t, result)
 
 	var spec map[string]any
-	json.Unmarshal([]byte(text), &spec)
+	_ = json.Unmarshal([]byte(text), &spec)
 
 	components := spec["components"].(map[string]any)
 	schemes := components["securitySchemes"].(map[string]any)

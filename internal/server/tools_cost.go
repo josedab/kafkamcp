@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/mark3labs/mcp-go/mcp"
+
 	"github.com/kafkamcp/kafkamcp/internal/auth"
 	"github.com/kafkamcp/kafkamcp/internal/cost"
 	"github.com/kafkamcp/kafkamcp/internal/kafka"
-	"github.com/mark3labs/mcp-go/mcp"
 )
 
 // ===================== COST ANALYSIS HANDLERS =====================
@@ -39,7 +40,7 @@ func (s *Server) handleCostAnalyze(ctx context.Context, request mcp.CallToolRequ
 
 		retentionMs := int64(604800000) // default 7 days
 		if ret, ok := detail.Configs["retention.ms"]; ok {
-			fmt.Sscanf(ret, "%d", &retentionMs)
+			_, _ = fmt.Sscanf(ret, "%d", &retentionMs)
 		}
 
 		input := cost.TopicCostInput{
@@ -134,7 +135,7 @@ func (s *Server) handleCostWhatIf(ctx context.Context, request mcp.CallToolReque
 
 		retentionMs := int64(604800000)
 		if ret, ok := detail.Configs["retention.ms"]; ok {
-			fmt.Sscanf(ret, "%d", &retentionMs)
+			_, _ = fmt.Sscanf(ret, "%d", &retentionMs)
 		}
 
 		current := cost.TopicCostInput{

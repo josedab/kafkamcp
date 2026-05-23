@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/kafkamcp/kafkamcp/internal/catalog"
 	"github.com/mark3labs/mcp-go/mcp"
+
+	"github.com/kafkamcp/kafkamcp/internal/auth"
+	"github.com/kafkamcp/kafkamcp/internal/catalog"
 )
 
 func (s *Server) handleSQLExecute(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
@@ -24,6 +26,15 @@ func (s *Server) handleSQLExecute(ctx context.Context, request mcp.CallToolReque
 	query, err := s.streamSQLEngine.Parse(sql, agentID)
 	if err != nil {
 		return s.toolError("SQL parse error", err), nil
+	}
+
+	// Now that we know the target topic, re-authorize the caller
+	// against the *specific* topic — the outer withToolAuth check
+	// authorized the catch-all `*` resource, which is too coarse
+	// for a tool that lets agents pick any topic at runtime.
+	if deny := s.checkAuth(agentID, "kafka_sql_execute", auth.ResourceTopic, query.SourceTopic, auth.ActionRead); deny != nil {
+		s.logAudit(ctx, agentID, "kafka_sql_execute", args, "", "denied", 0, fmt.Errorf("topic %q not authorized", query.SourceTopic), start)
+		return deny, nil
 	}
 
 	// Consume messages from the source topic

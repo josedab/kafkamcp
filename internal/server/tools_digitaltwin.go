@@ -4,9 +4,10 @@ import (
 	"context"
 	"time"
 
+	"github.com/mark3labs/mcp-go/mcp"
+
 	"github.com/kafkamcp/kafkamcp/internal/auth"
 	"github.com/kafkamcp/kafkamcp/internal/digitaltwin"
-	"github.com/mark3labs/mcp-go/mcp"
 )
 
 func (s *Server) handleTwinSnapshot(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -49,7 +50,7 @@ func (s *Server) handleTwinSnapshot(ctx context.Context, request mcp.CallToolReq
 		if err == nil {
 			for _, g := range groupList {
 				groups[g.GroupID] = digitaltwin.ConsumerGroupState{
-					GroupID:  g.GroupID,
+					GroupID: g.GroupID,
 					State:   g.State,
 					Members: g.MemberCount,
 				}
@@ -60,10 +61,10 @@ func (s *Server) handleTwinSnapshot(ctx context.Context, request mcp.CallToolReq
 
 		s.logAudit(ctx, agentID, "kafka_twin_snapshot", args, cluster, "success", len(topics), nil, start)
 		return marshalResult(map[string]any{
-			"snapshot":    snapshot,
-			"topics":     len(topics),
-			"groups":     len(groups),
-			"message":    "Snapshot captured. Use kafka_twin_simulate with action=create_twin to create a mutable copy.",
+			"snapshot": snapshot,
+			"topics":   len(topics),
+			"groups":   len(groups),
+			"message":  "Snapshot captured. Use kafka_twin_simulate with action=create_twin to create a mutable copy.",
 		})
 	})(ctx, request)
 }

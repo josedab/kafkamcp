@@ -4,8 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/kafkamcp/kafkamcp/internal/auth"
 	"github.com/mark3labs/mcp-go/mcp"
+
+	"github.com/kafkamcp/kafkamcp/internal/auth"
 )
 
 func (s *Server) handleReplicationStatusTool(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {

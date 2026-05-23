@@ -78,7 +78,7 @@ func TestHandlePlayground_CreatePartitionCap(t *testing.T) {
 	s := newTestServerWithMock(t, mock)
 
 	// Requesting 20 partitions should be capped at 12
-	s.handlePlayground(context.Background(), makeToolRequest(map[string]any{
+	_, _ = s.handlePlayground(context.Background(), makeToolRequest(map[string]any{
 		"action":     "create",
 		"name":       "test",
 		"partitions": float64(20),
@@ -149,7 +149,7 @@ func TestHandlePlayground_ProduceSampleCountCap(t *testing.T) {
 	}
 	s := newTestServerWithMock(t, mock)
 
-	s.handlePlayground(context.Background(), makeToolRequest(map[string]any{
+	_, _ = s.handlePlayground(context.Background(), makeToolRequest(map[string]any{
 		"action": "produce_sample",
 		"name":   "test",
 		"count":  float64(500),

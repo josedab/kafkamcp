@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/mark3labs/mcp-go/mcp"
+
 	"github.com/kafkamcp/kafkamcp/internal/auth"
 	"github.com/kafkamcp/kafkamcp/internal/kafkaproxy"
-	"github.com/mark3labs/mcp-go/mcp"
 )
 
 func (s *Server) handleKafkaProxy(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {

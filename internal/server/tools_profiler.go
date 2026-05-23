@@ -4,8 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/kafkamcp/kafkamcp/internal/auth"
 	"github.com/mark3labs/mcp-go/mcp"
+
+	"github.com/kafkamcp/kafkamcp/internal/auth"
 )
 
 func (s *Server) handleAgentProfile(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -66,12 +67,12 @@ func (s *Server) handleAgentOptimize(ctx context.Context, request mcp.CallToolRe
 		profile := s.agentProfiler.ProfileAgent(targetAgent, sinceHours)
 		s.logAudit(ctx, agentID, "kafka_agent_optimize", args, "", "success", len(profile.Optimizations), nil, start)
 		return marshalResult(map[string]any{
-			"agent_id":        targetAgent,
+			"agent_id":         targetAgent,
 			"efficiency_score": profile.EfficiencyScore,
-			"optimizations":   profile.Optimizations,
-			"redundant_calls": profile.RedundantCalls,
-			"total_calls":     profile.TotalCalls,
-			"error_rate":      profile.ErrorRate,
+			"optimizations":    profile.Optimizations,
+			"redundant_calls":  profile.RedundantCalls,
+			"total_calls":      profile.TotalCalls,
+			"error_rate":       profile.ErrorRate,
 		})
 	})(ctx, request)
 }
@@ -93,9 +94,9 @@ func (s *Server) handleAgentReport(ctx context.Context, request mcp.CallToolRequ
 			profile := s.agentProfiler.ProfileAgent(targetAgent, sinceHours)
 			s.logAudit(ctx, agentID, "kafka_agent_report", args, "", "success", 1, nil, start)
 			return marshalResult(map[string]any{
-				"agent_id":         targetAgent,
-				"profile":          profile,
-				"period_hours":     sinceHours,
+				"agent_id":     targetAgent,
+				"profile":      profile,
+				"period_hours": sinceHours,
 			})
 		}
 
@@ -115,10 +116,10 @@ func (s *Server) handleAgentReport(ctx context.Context, request mcp.CallToolRequ
 
 		s.logAudit(ctx, agentID, "kafka_agent_report", args, "", "success", len(profiles), nil, start)
 		return marshalResult(map[string]any{
-			"agents":        profiles,
-			"total_agents":  len(profiles),
-			"total_calls":   s.agentProfiler.GetCallCount(),
-			"period_hours":  sinceHours,
+			"agents":       profiles,
+			"total_agents": len(profiles),
+			"total_calls":  s.agentProfiler.GetCallCount(),
+			"period_hours": sinceHours,
 		})
 	})(ctx, request)
 }

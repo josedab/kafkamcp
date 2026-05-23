@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/mark3labs/mcp-go/mcp"
+
 	"github.com/kafkamcp/kafkamcp/internal/auth"
 	"github.com/kafkamcp/kafkamcp/internal/intentverify"
-	"github.com/mark3labs/mcp-go/mcp"
 )
 
 func (s *Server) handleIntentVerify(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {

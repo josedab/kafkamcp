@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/mark3labs/mcp-go/mcp"
+
 	"github.com/kafkamcp/kafkamcp/internal/auth"
 	"github.com/kafkamcp/kafkamcp/internal/gitops"
-	"github.com/mark3labs/mcp-go/mcp"
 )
 
 // handleGitOpsDiff computes diff between desired state and live cluster.

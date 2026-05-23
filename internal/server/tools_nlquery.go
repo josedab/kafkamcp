@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/mark3labs/mcp-go/mcp"
+
 	"github.com/kafkamcp/kafkamcp/internal/auth"
 	"github.com/kafkamcp/kafkamcp/internal/graph"
 	"github.com/kafkamcp/kafkamcp/internal/kafka"
 	"github.com/kafkamcp/kafkamcp/internal/nlquery"
-	"github.com/mark3labs/mcp-go/mcp"
 )
 
 // handleNLQuery processes natural language queries against Kafka topics.
@@ -376,9 +377,9 @@ func (s *Server) refreshKnowledgeGraph(ctx context.Context, cluster string) erro
 		}
 		groupInfos = append(groupInfos, graph.GroupInfo{
 			GroupID:     g.GroupID,
-			State:      g.State,
+			State:       g.State,
 			MemberCount: g.MemberCount,
-			Topics:     groupTopics,
+			Topics:      groupTopics,
 		})
 	}
 
@@ -396,9 +397,9 @@ func (s *Server) handlePlatformInfo(ctx context.Context, request mcp.CallToolReq
 		platforms := s.platformMgr.ListPlatforms(ctx)
 		s.logAudit(ctx, agentID, "kafka_platform_info", args, "", "success", len(platforms), nil, start)
 		return marshalResult(map[string]any{
-			"platforms":      platforms,
-			"total_count":    len(platforms),
-			"default_type":   "kafka",
+			"platforms":    platforms,
+			"total_count":  len(platforms),
+			"default_type": "kafka",
 		})
 	})(ctx, request)
 }

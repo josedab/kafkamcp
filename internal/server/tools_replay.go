@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/mark3labs/mcp-go/mcp"
+
 	"github.com/kafkamcp/kafkamcp/internal/auth"
 	"github.com/kafkamcp/kafkamcp/internal/replay"
-	"github.com/mark3labs/mcp-go/mcp"
 )
 
 func (s *Server) handleReplayCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {

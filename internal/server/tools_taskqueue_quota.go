@@ -4,8 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/kafkamcp/kafkamcp/internal/adaptiverate"
 	"github.com/mark3labs/mcp-go/mcp"
+
+	"github.com/kafkamcp/kafkamcp/internal/adaptiverate"
 )
 
 func (s *Server) handleTaskPublish(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {

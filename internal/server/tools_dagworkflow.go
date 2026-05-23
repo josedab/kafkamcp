@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/kafkamcp/kafkamcp/internal/dagworkflow"
 	"github.com/mark3labs/mcp-go/mcp"
+
+	"github.com/kafkamcp/kafkamcp/internal/dagworkflow"
 )
 
 func (s *Server) handleDAGWorkflowCreate(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
@@ -154,7 +155,7 @@ func (s *Server) handleDAGWorkflowStatus(ctx context.Context, request mcp.CallTo
 			return s.toolError("failed to cancel workflow run", err), nil
 		}
 		s.logAudit(ctx, agentID, "kafka_workflow_status", args, "", "success", 1, nil, start)
-		return marshalResult(map[string]string{"status": "cancelled"})
+		return marshalResult(map[string]string{"status": "canceled"})
 
 	case "complete_step":
 		runID, _ := args["run_id"].(string)

@@ -76,7 +76,7 @@ func TestHandleOrchestrationStatus_ListAll(t *testing.T) {
 	assertNotError(t, result)
 	text := resultText(t, result)
 	var resp map[string]any
-	json.Unmarshal([]byte(text), &resp)
+	_ = json.Unmarshal([]byte(text), &resp)
 	if _, ok := resp["orchestrations"]; !ok {
 		t.Error("expected 'orchestrations' in response")
 	}
@@ -91,7 +91,7 @@ func TestHandleOrchestrationStatus_GetByID(t *testing.T) {
 	createResult, _ := s.handleOrchestrationCreate(context.Background(), createReq)
 	text := resultText(t, createResult)
 	var createResp map[string]any
-	json.Unmarshal([]byte(text), &createResp)
+	_ = json.Unmarshal([]byte(text), &createResp)
 	orchMap, _ := createResp["orchestration"].(map[string]any)
 	orchID, _ := orchMap["id"].(string)
 
@@ -131,7 +131,7 @@ func TestHandleOrchestrationStatus_ReadySteps(t *testing.T) {
 	createResult, _ := s.handleOrchestrationCreate(context.Background(), createReq)
 	text := resultText(t, createResult)
 	var createResp map[string]any
-	json.Unmarshal([]byte(text), &createResp)
+	_ = json.Unmarshal([]byte(text), &createResp)
 	orchMap, _ := createResp["orchestration"].(map[string]any)
 	orchID, _ := orchMap["id"].(string)
 
@@ -155,7 +155,7 @@ func TestHandleOrchestrationStatus_GetContext(t *testing.T) {
 	createResult, _ := s.handleOrchestrationCreate(context.Background(), createReq)
 	text := resultText(t, createResult)
 	var createResp map[string]any
-	json.Unmarshal([]byte(text), &createResp)
+	_ = json.Unmarshal([]byte(text), &createResp)
 	orchMap, _ := createResp["orchestration"].(map[string]any)
 	orchID, _ := orchMap["id"].(string)
 
@@ -197,7 +197,7 @@ func TestHandleOrchestrationCompleteStep_Success(t *testing.T) {
 	createResult, _ := s.handleOrchestrationCreate(context.Background(), createReq)
 	text := resultText(t, createResult)
 	var createResp map[string]any
-	json.Unmarshal([]byte(text), &createResp)
+	_ = json.Unmarshal([]byte(text), &createResp)
 	orchMap, _ := createResp["orchestration"].(map[string]any)
 	orchID, _ := orchMap["id"].(string)
 
@@ -225,7 +225,7 @@ func TestHandleOrchestrationCompleteStep_MarkFailed(t *testing.T) {
 	createResult, _ := s.handleOrchestrationCreate(context.Background(), createReq)
 	text := resultText(t, createResult)
 	var createResp map[string]any
-	json.Unmarshal([]byte(text), &createResp)
+	_ = json.Unmarshal([]byte(text), &createResp)
 	orchMap, _ := createResp["orchestration"].(map[string]any)
 	orchID, _ := orchMap["id"].(string)
 
@@ -301,7 +301,7 @@ func TestHandleOrchestrationAgents_ListEmpty(t *testing.T) {
 	assertNotError(t, result)
 	text := resultText(t, result)
 	var resp map[string]any
-	json.Unmarshal([]byte(text), &resp)
+	_ = json.Unmarshal([]byte(text), &resp)
 	if _, ok := resp["agents"]; !ok {
 		t.Error("expected 'agents' in response")
 	}
@@ -337,7 +337,7 @@ func TestHandleOrchestrationAgents_Heartbeat(t *testing.T) {
 		"agent_id": "hb-agent",
 		"name":     "HB Agent",
 	})
-	s.handleOrchestrationAgents(context.Background(), regReq)
+	_, _ = s.handleOrchestrationAgents(context.Background(), regReq)
 
 	// Heartbeat
 	hbReq := makeToolRequest(map[string]any{

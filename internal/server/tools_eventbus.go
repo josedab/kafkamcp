@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/mark3labs/mcp-go/mcp"
+
 	"github.com/kafkamcp/kafkamcp/internal/auth"
 	"github.com/kafkamcp/kafkamcp/internal/eventbus"
-	"github.com/mark3labs/mcp-go/mcp"
 )
 
 func (s *Server) handleEventBus(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -65,7 +66,7 @@ func (s *Server) handleEventBus(ctx context.Context, request mcp.CallToolRequest
 
 		case "replay":
 			filter := buildEventFilter(request)
-			limit := int(request.GetInt("limit", 100))
+			limit := request.GetInt("limit", 100)
 			events := s.eventBus.Replay(filter, limit)
 			s.logAudit(ctx, agentID, "kafka_event_bus", args, "", "success", len(events), nil, start)
 			return marshalResult(map[string]any{

@@ -14,7 +14,7 @@ import (
 func TestHandleStreamList_Empty(t *testing.T) {
 	t.Parallel()
 	mock := &kafka.MockKafkaManager{
-		ListStreamsFn: func() []kafka.StreamSession {
+		ListStreamsFn: func() []kafka.StreamSessionSnapshot {
 			return nil
 		},
 	}
@@ -33,8 +33,8 @@ func TestHandleStreamList_Empty(t *testing.T) {
 func TestHandleStreamList_MultipleSessions(t *testing.T) {
 	t.Parallel()
 	mock := &kafka.MockKafkaManager{
-		ListStreamsFn: func() []kafka.StreamSession {
-			return []kafka.StreamSession{
+		ListStreamsFn: func() []kafka.StreamSessionSnapshot {
+			return []kafka.StreamSessionSnapshot{
 				{ID: "s1", Topic: "orders", Status: "running"},
 				{ID: "s2", Topic: "events", Status: "paused"},
 			}
@@ -57,8 +57,8 @@ func TestHandleStreamList_MultipleSessions(t *testing.T) {
 func TestHandleStreamPoll_Success(t *testing.T) {
 	t.Parallel()
 	mock := &kafka.MockKafkaManager{
-		GetStreamSessionFn: func(sessionID string) (*kafka.StreamSession, bool) {
-			return &kafka.StreamSession{ID: sessionID, AgentID: ""}, true
+		GetStreamSessionFn: func(sessionID string) (kafka.StreamSessionSnapshot, bool) {
+			return kafka.StreamSessionSnapshot{ID: sessionID, AgentID: ""}, true
 		},
 		PollStreamFn: func(sessionID string, timeoutMs int) (*kafka.StreamResult, error) {
 			return &kafka.StreamResult{
@@ -116,8 +116,8 @@ func TestHandleStreamPoll_MissingSessionID(t *testing.T) {
 func TestHandleStreamControl_Pause(t *testing.T) {
 	t.Parallel()
 	mock := &kafka.MockKafkaManager{
-		GetStreamSessionFn: func(sessionID string) (*kafka.StreamSession, bool) {
-			return &kafka.StreamSession{ID: sessionID, AgentID: ""}, true
+		GetStreamSessionFn: func(sessionID string) (kafka.StreamSessionSnapshot, bool) {
+			return kafka.StreamSessionSnapshot{ID: sessionID, AgentID: ""}, true
 		},
 		ControlStreamFn: func(sessionID, action string) (*kafka.StreamResult, error) {
 			return &kafka.StreamResult{SessionID: sessionID, Status: "paused"}, nil
@@ -136,8 +136,8 @@ func TestHandleStreamControl_Pause(t *testing.T) {
 func TestHandleStreamControl_Resume(t *testing.T) {
 	t.Parallel()
 	mock := &kafka.MockKafkaManager{
-		GetStreamSessionFn: func(sessionID string) (*kafka.StreamSession, bool) {
-			return &kafka.StreamSession{ID: sessionID, AgentID: ""}, true
+		GetStreamSessionFn: func(sessionID string) (kafka.StreamSessionSnapshot, bool) {
+			return kafka.StreamSessionSnapshot{ID: sessionID, AgentID: ""}, true
 		},
 		ControlStreamFn: func(sessionID, action string) (*kafka.StreamResult, error) {
 			return &kafka.StreamResult{SessionID: sessionID, Status: "running"}, nil
@@ -156,8 +156,8 @@ func TestHandleStreamControl_Resume(t *testing.T) {
 func TestHandleStreamControl_Stop(t *testing.T) {
 	t.Parallel()
 	mock := &kafka.MockKafkaManager{
-		GetStreamSessionFn: func(sessionID string) (*kafka.StreamSession, bool) {
-			return &kafka.StreamSession{ID: sessionID, AgentID: ""}, true
+		GetStreamSessionFn: func(sessionID string) (kafka.StreamSessionSnapshot, bool) {
+			return kafka.StreamSessionSnapshot{ID: sessionID, AgentID: ""}, true
 		},
 		ControlStreamFn: func(sessionID, action string) (*kafka.StreamResult, error) {
 			return &kafka.StreamResult{SessionID: sessionID, Status: "stopped"}, nil

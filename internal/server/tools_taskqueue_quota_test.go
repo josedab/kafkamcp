@@ -6,10 +6,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mark3labs/mcp-go/mcp"
+
 	"github.com/kafkamcp/kafkamcp/internal/adaptiverate"
 	"github.com/kafkamcp/kafkamcp/internal/kafka"
 	"github.com/kafkamcp/kafkamcp/internal/taskqueue"
-	"github.com/mark3labs/mcp-go/mcp"
 )
 
 func setupTaskQueueServer(t *testing.T) (*Server, context.Context, time.Time) {
@@ -129,7 +130,7 @@ func TestHandleTaskComplete_Valid(t *testing.T) {
 
 	// Publish and claim a task
 	publishArgs := map[string]any{"queue": "test-q", "type": "compute"}
-	s.handleTaskPublish(ctx, mcp.CallToolRequest{}, "agent-1", publishArgs, start)
+	_, _ = s.handleTaskPublish(ctx, mcp.CallToolRequest{}, "agent-1", publishArgs, start)
 	claimArgs := map[string]any{"queue": "test-q"}
 	claimResult, _ := s.handleTaskClaim(ctx, mcp.CallToolRequest{}, "agent-1", claimArgs, start)
 
