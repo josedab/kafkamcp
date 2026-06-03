@@ -73,6 +73,21 @@ func NewConnectClient(baseURL string, tlsOpts ...ConnectTLSOption) (*ConnectClie
 // ConnectTLSOption configures TLS for the Connect client.
 type ConnectTLSOption func(*nethttp.Transport) error
 
+// WithConnectMinVersion sets the minimum TLS version for the Connect API.
+func WithConnectMinVersion(version string) ConnectTLSOption {
+	return func(t *nethttp.Transport) error {
+		minVersion, err := tlsMinVersion(version)
+		if err != nil {
+			return err
+		}
+		if t.TLSClientConfig == nil {
+			t.TLSClientConfig = &tls.Config{}
+		}
+		t.TLSClientConfig.MinVersion = minVersion
+		return nil
+	}
+}
+
 // WithConnectCA adds a custom CA certificate for the Connect API.
 func WithConnectCA(caFile string) ConnectTLSOption {
 	return func(t *nethttp.Transport) error {
@@ -84,7 +99,7 @@ func WithConnectCA(caFile string) ConnectTLSOption {
 			return fmt.Errorf("reading Connect CA file %q: %w", caFile, err)
 		}
 		if t.TLSClientConfig == nil {
-			t.TLSClientConfig = &tls.Config{MinVersion: tls.VersionTLS13}
+			t.TLSClientConfig = &tls.Config{MinVersion: tls.VersionTLS12}
 		}
 		pool := t.TLSClientConfig.RootCAs
 		if pool == nil {
@@ -104,7 +119,7 @@ func WithConnectInsecureSkipVerify(skip bool) ConnectTLSOption {
 		}
 		slog.Warn("Kafka Connect TLS certificate verification disabled — connections are vulnerable to MITM attacks")
 		if t.TLSClientConfig == nil {
-			t.TLSClientConfig = &tls.Config{MinVersion: tls.VersionTLS13}
+			t.TLSClientConfig = &tls.Config{MinVersion: tls.VersionTLS12}
 		}
 		t.TLSClientConfig.InsecureSkipVerify = skip
 		return nil

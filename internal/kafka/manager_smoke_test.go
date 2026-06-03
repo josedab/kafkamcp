@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"testing"
 
-	"github.com/kafkamcp/kafkamcp/internal/config"
+	"github.com/josedab/kafkamcp/internal/config"
 )
 
 func TestNewManager_EmptyClusters(t *testing.T) {

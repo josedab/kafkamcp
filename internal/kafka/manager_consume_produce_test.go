@@ -205,12 +205,9 @@ func TestMock_Produce_AcksOptions(t *testing.T) {
 		},
 	}
 
-	_, _ = m.Produce(context.Background(), "prod", "orders", []ProduceMessage{{Key: "k", Value: "v"}}, ProduceOptions{Acks: "0", Serializer: "json"})
+	_, _ = m.Produce(context.Background(), "prod", "orders", []ProduceMessage{{Key: "k", Value: "v"}}, ProduceOptions{Acks: "0"})
 	if capturedOpts.Acks != "0" {
 		t.Errorf("expected acks='0', got %q", capturedOpts.Acks)
-	}
-	if capturedOpts.Serializer != "json" {
-		t.Errorf("expected serializer='json', got %q", capturedOpts.Serializer)
 	}
 }
 

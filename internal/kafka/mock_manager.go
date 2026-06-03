@@ -4,98 +4,78 @@ import (
 	"context"
 	"sync"
 
-	"github.com/kafkamcp/kafkamcp/internal/config"
+	"github.com/josedab/kafkamcp/internal/config"
 )
 
-// MockKafkaManager implements KafkaManager for testing.
-// It supports configurable return values per method and records all calls for assertion.
+// MockKafkaManager implements the supported KafkaManager surface for tests.
 type MockKafkaManager struct {
 	mu    sync.Mutex
 	Calls []MockCall
 
-	// Configurable return values
-	DefaultClusterNameFn      func() string
-	ClusterNamesFn            func() []string
-	GetClusterConfigFn        func(string) (*config.ClusterConfig, error)
-	PingFn                    func(context.Context) error
-	CloseFn                   func()
-	ListTopicsFn              func(ctx context.Context, cluster string, includeInternal bool) ([]TopicSummary, error)
-	DescribeTopicFn           func(ctx context.Context, cluster, topicName string) (*TopicDetail, error)
-	CreateTopicFn             func(ctx context.Context, cluster string, req CreateTopicRequest) error
-	AlterTopicFn              func(ctx context.Context, cluster string, req AlterTopicRequest) error
-	DeleteTopicFn             func(ctx context.Context, cluster, topicName string) error
-	ConsumeFn                 func(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]Message, error)
-	ProduceFn                 func(ctx context.Context, cluster, topic string, messages []ProduceMessage, opts ProduceOptions) ([]DeliveryResult, error)
-	SubscribeFn               func(ctx context.Context, cluster string, req SubscribeRequest) (*SubscribeResult, error)
-	SearchMessagesFn          func(ctx context.Context, cluster string, req SearchRequest) ([]SearchMessage, int, error)
-	ListConsumerGroupsFn      func(ctx context.Context, cluster string) ([]ConsumerGroupSummary, error)
-	DescribeConsumerGroupFn   func(ctx context.Context, cluster, groupID string) (*ConsumerGroupDetail, error)
-	ResetOffsetsFn            func(ctx context.Context, cluster string, req ResetOffsetsRequest) (*ResetOffsetsResult, error)
-	GetClusterMetadataFn      func(ctx context.Context, cluster string) (*ClusterMetadata, error)
-	AggregateFn               func(ctx context.Context, cluster string, req AggregateRequest) (*AggregateResult, error)
-	GetTopicGraphFn           func(ctx context.Context, cluster string) (*TopicGraph, error)
-	JoinTopicsFn              func(ctx context.Context, cluster string, req JoinRequest) (*JoinResult, error)
-	NaturalLanguageQueryFn    func(ctx context.Context, cluster, query string, topics []TopicSummary) (*NaturalLanguageQueryResult, error)
-	AnalyzeDLQFn              func(ctx context.Context, cluster, topic string, limit int) (*AnalyzeDLQResult, error)
-	StartStreamFn             func(ctx context.Context, cluster string, cfg StreamConfig) (*StreamResult, error)
-	PollStreamFn              func(sessionID string, timeoutMs int) (*StreamResult, error)
-	ControlStreamFn           func(sessionID, action string) (*StreamResult, error)
-	ListStreamsFn             func() []StreamSessionSnapshot
-	GetStreamSessionFn        func(string) (StreamSessionSnapshot, bool)
-	TimeTravelSnapshotFn      func(ctx context.Context, cluster, topic, timestamp string, maxKeys int) (*TimeTravelSnapshot, error)
-	TimeTravelDiffFn          func(ctx context.Context, cluster, topic, tsFrom, tsTo string, maxKeys int) (*TimeTravelDiffResult, error)
-	GetRecommendationsFn      func(ctx context.Context, cluster, topic string) (*RecommendationResult, error)
-	TraceMessageFn            func(ctx context.Context, cluster, correlationID, headerName string, topics []string, maxScan int) (*TraceResult, error)
-	ListACLsFn                func(ctx context.Context, cluster, principal, resourceType string, includeAnalysis bool) (*ACLResult, error)
-	CompareConfigsFn          func(ctx context.Context, sourceCluster, targetCluster, topic string) (*ConfigCompareResult, error)
-	AuditConfigsFn            func(ctx context.Context, cluster, topic string, template map[string]string) (*ConfigAuditResult, error)
-	PlaygroundCreateFn        func(ctx context.Context, cluster, agentID, name string, partitions int32) (*PlaygroundTopicResult, error)
-	PlaygroundProduceSampleFn func(ctx context.Context, cluster, agentID, name, pattern string, count int) (map[string]any, error)
-	PlaygroundListFn          func(ctx context.Context, cluster, agentID string) ([]TopicSummary, error)
-	PlaygroundCleanupFn       func(ctx context.Context, cluster, agentID string) (int, error)
+	DefaultClusterNameFn    func() string
+	ClusterNamesFn          func() []string
+	GetClusterConfigFn      func(string) (*config.ClusterConfig, error)
+	PingFn                  func(context.Context) error
+	CloseFn                 func()
+	ListTopicsFn            func(context.Context, string, bool) ([]TopicSummary, error)
+	DescribeTopicFn         func(context.Context, string, string) (*TopicDetail, error)
+	CreateTopicFn           func(context.Context, string, CreateTopicRequest) error
+	AlterTopicFn            func(context.Context, string, AlterTopicRequest) error
+	DeleteTopicFn           func(context.Context, string, string) error
+	ConsumeFn               func(context.Context, string, string, int32, string, int, int, string) ([]Message, error)
+	ProduceFn               func(context.Context, string, string, []ProduceMessage, ProduceOptions) ([]DeliveryResult, error)
+	SearchMessagesFn        func(context.Context, string, SearchRequest) ([]SearchMessage, int, error)
+	ListConsumerGroupsFn    func(context.Context, string) ([]ConsumerGroupSummary, error)
+	DescribeConsumerGroupFn func(context.Context, string, string) (*ConsumerGroupDetail, error)
+	ResetOffsetsFn          func(context.Context, string, ResetOffsetsRequest) (*ResetOffsetsResult, error)
+	GetClusterMetadataFn    func(context.Context, string) (*ClusterMetadata, error)
+	AnalyzeDLQFn            func(context.Context, string, string, int) (*AnalyzeDLQResult, error)
+	ListACLsFn              func(context.Context, string, string, string, bool) (*ACLResult, error)
+	CreateACLFn             func(context.Context, string, ACLEntry) error
+	DeleteACLFn             func(context.Context, string, ACLEntry) (int, error)
 }
 
-// MockCall records a single method invocation.
+// MockCall records one method invocation on MockKafkaManager.
 type MockCall struct {
 	Method string
 	Args   []any
 }
 
-// Verify MockKafkaManager implements KafkaManager at compile time.
 var _ KafkaManager = (*MockKafkaManager)(nil)
 
 func (m *MockKafkaManager) record(method string, args ...any) {
 	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.Calls = append(m.Calls, MockCall{Method: method, Args: args})
-	m.mu.Unlock()
 }
 
-// CallCount returns the number of times the given method was called.
+// CallCount returns the number of recorded calls for a method.
 func (m *MockKafkaManager) CallCount(method string) int {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	count := 0
-	for _, c := range m.Calls {
-		if c.Method == method {
+	for _, call := range m.Calls {
+		if call.Method == method {
 			count++
 		}
 	}
 	return count
 }
 
-// LastCall returns the last call record for the given method, or nil.
+// LastCall returns the most recent recorded call for a method.
 func (m *MockKafkaManager) LastCall(method string) *MockCall {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	for i := len(m.Calls) - 1; i >= 0; i-- {
 		if m.Calls[i].Method == method {
-			return &m.Calls[i]
+			call := m.Calls[i]
+			return &call
 		}
 	}
 	return nil
 }
 
-// DefaultClusterName is auto-documented.
+// DefaultClusterName returns the configured mock default cluster.
 func (m *MockKafkaManager) DefaultClusterName() string {
 	m.record("DefaultClusterName")
 	if m.DefaultClusterNameFn != nil {
@@ -104,7 +84,7 @@ func (m *MockKafkaManager) DefaultClusterName() string {
 	return "default"
 }
 
-// ClusterNames is auto-documented.
+// ClusterNames returns the configured mock cluster names.
 func (m *MockKafkaManager) ClusterNames() []string {
 	m.record("ClusterNames")
 	if m.ClusterNamesFn != nil {
@@ -113,16 +93,16 @@ func (m *MockKafkaManager) ClusterNames() []string {
 	return []string{"default"}
 }
 
-// GetClusterConfig is auto-documented.
-func (m *MockKafkaManager) GetClusterConfig(clusterName string) (*config.ClusterConfig, error) {
-	m.record("GetClusterConfig", clusterName)
+// GetClusterConfig returns the configured mock cluster.
+func (m *MockKafkaManager) GetClusterConfig(name string) (*config.ClusterConfig, error) {
+	m.record("GetClusterConfig", name)
 	if m.GetClusterConfigFn != nil {
-		return m.GetClusterConfigFn(clusterName)
+		return m.GetClusterConfigFn(name)
 	}
 	return &config.ClusterConfig{Name: "default", BootstrapServers: "localhost:9092"}, nil
 }
 
-// Ping is auto-documented.
+// Ping executes the configured mock connectivity check.
 func (m *MockKafkaManager) Ping(ctx context.Context) error {
 	m.record("Ping")
 	if m.PingFn != nil {
@@ -131,7 +111,7 @@ func (m *MockKafkaManager) Ping(ctx context.Context) error {
 	return nil
 }
 
-// Close is auto-documented.
+// Close records closure and invokes the configured close hook.
 func (m *MockKafkaManager) Close() {
 	m.record("Close")
 	if m.CloseFn != nil {
@@ -139,7 +119,7 @@ func (m *MockKafkaManager) Close() {
 	}
 }
 
-// ListTopics is auto-documented.
+// ListTopics executes the configured topic-listing mock.
 func (m *MockKafkaManager) ListTopics(ctx context.Context, cluster string, includeInternal bool) ([]TopicSummary, error) {
 	m.record("ListTopics", cluster, includeInternal)
 	if m.ListTopicsFn != nil {
@@ -148,16 +128,16 @@ func (m *MockKafkaManager) ListTopics(ctx context.Context, cluster string, inclu
 	return nil, nil
 }
 
-// DescribeTopic is auto-documented.
-func (m *MockKafkaManager) DescribeTopic(ctx context.Context, cluster, topicName string) (*TopicDetail, error) {
-	m.record("DescribeTopic", cluster, topicName)
+// DescribeTopic executes the configured topic-description mock.
+func (m *MockKafkaManager) DescribeTopic(ctx context.Context, cluster, topic string) (*TopicDetail, error) {
+	m.record("DescribeTopic", cluster, topic)
 	if m.DescribeTopicFn != nil {
-		return m.DescribeTopicFn(ctx, cluster, topicName)
+		return m.DescribeTopicFn(ctx, cluster, topic)
 	}
 	return nil, nil
 }
 
-// CreateTopic is auto-documented.
+// CreateTopic executes the configured topic-creation mock.
 func (m *MockKafkaManager) CreateTopic(ctx context.Context, cluster string, req CreateTopicRequest) error {
 	m.record("CreateTopic", cluster, req)
 	if m.CreateTopicFn != nil {
@@ -166,7 +146,7 @@ func (m *MockKafkaManager) CreateTopic(ctx context.Context, cluster string, req 
 	return nil
 }
 
-// AlterTopic is auto-documented.
+// AlterTopic executes the configured topic-alteration mock.
 func (m *MockKafkaManager) AlterTopic(ctx context.Context, cluster string, req AlterTopicRequest) error {
 	m.record("AlterTopic", cluster, req)
 	if m.AlterTopicFn != nil {
@@ -175,17 +155,17 @@ func (m *MockKafkaManager) AlterTopic(ctx context.Context, cluster string, req A
 	return nil
 }
 
-// DeleteTopic is auto-documented.
-func (m *MockKafkaManager) DeleteTopic(ctx context.Context, cluster, topicName string) error {
-	m.record("DeleteTopic", cluster, topicName)
+// DeleteTopic executes the configured topic-deletion mock.
+func (m *MockKafkaManager) DeleteTopic(ctx context.Context, cluster, topic string) error {
+	m.record("DeleteTopic", cluster, topic)
 	if m.DeleteTopicFn != nil {
-		return m.DeleteTopicFn(ctx, cluster, topicName)
+		return m.DeleteTopicFn(ctx, cluster, topic)
 	}
 	return nil
 }
 
-// Consume is auto-documented.
-func (m *MockKafkaManager) Consume(ctx context.Context, cluster, topic string, partition int32, offset string, limit int, timeoutMs int, deserializer string) ([]Message, error) {
+// Consume executes the configured message-consumption mock.
+func (m *MockKafkaManager) Consume(ctx context.Context, cluster, topic string, partition int32, offset string, limit, timeoutMs int, deserializer string) ([]Message, error) {
 	m.record("Consume", cluster, topic, partition, offset, limit, timeoutMs, deserializer)
 	if m.ConsumeFn != nil {
 		return m.ConsumeFn(ctx, cluster, topic, partition, offset, limit, timeoutMs, deserializer)
@@ -193,7 +173,7 @@ func (m *MockKafkaManager) Consume(ctx context.Context, cluster, topic string, p
 	return nil, nil
 }
 
-// Produce is auto-documented.
+// Produce executes the configured message-production mock.
 func (m *MockKafkaManager) Produce(ctx context.Context, cluster, topic string, messages []ProduceMessage, opts ProduceOptions) ([]DeliveryResult, error) {
 	m.record("Produce", cluster, topic, messages, opts)
 	if m.ProduceFn != nil {
@@ -202,16 +182,7 @@ func (m *MockKafkaManager) Produce(ctx context.Context, cluster, topic string, m
 	return nil, nil
 }
 
-// Subscribe is auto-documented.
-func (m *MockKafkaManager) Subscribe(ctx context.Context, cluster string, req SubscribeRequest) (*SubscribeResult, error) {
-	m.record("Subscribe", cluster, req)
-	if m.SubscribeFn != nil {
-		return m.SubscribeFn(ctx, cluster, req)
-	}
-	return nil, nil
-}
-
-// SearchMessages is auto-documented.
+// SearchMessages executes the configured message-search mock.
 func (m *MockKafkaManager) SearchMessages(ctx context.Context, cluster string, req SearchRequest) ([]SearchMessage, int, error) {
 	m.record("SearchMessages", cluster, req)
 	if m.SearchMessagesFn != nil {
@@ -220,7 +191,7 @@ func (m *MockKafkaManager) SearchMessages(ctx context.Context, cluster string, r
 	return nil, 0, nil
 }
 
-// ListConsumerGroups is auto-documented.
+// ListConsumerGroups executes the configured group-listing mock.
 func (m *MockKafkaManager) ListConsumerGroups(ctx context.Context, cluster string) ([]ConsumerGroupSummary, error) {
 	m.record("ListConsumerGroups", cluster)
 	if m.ListConsumerGroupsFn != nil {
@@ -229,16 +200,16 @@ func (m *MockKafkaManager) ListConsumerGroups(ctx context.Context, cluster strin
 	return nil, nil
 }
 
-// DescribeConsumerGroup is auto-documented.
-func (m *MockKafkaManager) DescribeConsumerGroup(ctx context.Context, cluster, groupID string) (*ConsumerGroupDetail, error) {
-	m.record("DescribeConsumerGroup", cluster, groupID)
+// DescribeConsumerGroup executes the configured group-description mock.
+func (m *MockKafkaManager) DescribeConsumerGroup(ctx context.Context, cluster, group string) (*ConsumerGroupDetail, error) {
+	m.record("DescribeConsumerGroup", cluster, group)
 	if m.DescribeConsumerGroupFn != nil {
-		return m.DescribeConsumerGroupFn(ctx, cluster, groupID)
+		return m.DescribeConsumerGroupFn(ctx, cluster, group)
 	}
 	return nil, nil
 }
 
-// ResetOffsets is auto-documented.
+// ResetOffsets executes the configured offset-reset mock.
 func (m *MockKafkaManager) ResetOffsets(ctx context.Context, cluster string, req ResetOffsetsRequest) (*ResetOffsetsResult, error) {
 	m.record("ResetOffsets", cluster, req)
 	if m.ResetOffsetsFn != nil {
@@ -247,7 +218,7 @@ func (m *MockKafkaManager) ResetOffsets(ctx context.Context, cluster string, req
 	return nil, nil
 }
 
-// GetClusterMetadata is auto-documented.
+// GetClusterMetadata executes the configured cluster-metadata mock.
 func (m *MockKafkaManager) GetClusterMetadata(ctx context.Context, cluster string) (*ClusterMetadata, error) {
 	m.record("GetClusterMetadata", cluster)
 	if m.GetClusterMetadataFn != nil {
@@ -256,43 +227,7 @@ func (m *MockKafkaManager) GetClusterMetadata(ctx context.Context, cluster strin
 	return nil, nil
 }
 
-// Aggregate is auto-documented.
-func (m *MockKafkaManager) Aggregate(ctx context.Context, cluster string, req AggregateRequest) (*AggregateResult, error) {
-	m.record("Aggregate", cluster, req)
-	if m.AggregateFn != nil {
-		return m.AggregateFn(ctx, cluster, req)
-	}
-	return nil, nil
-}
-
-// GetTopicGraph is auto-documented.
-func (m *MockKafkaManager) GetTopicGraph(ctx context.Context, cluster string) (*TopicGraph, error) {
-	m.record("GetTopicGraph", cluster)
-	if m.GetTopicGraphFn != nil {
-		return m.GetTopicGraphFn(ctx, cluster)
-	}
-	return nil, nil
-}
-
-// JoinTopics is auto-documented.
-func (m *MockKafkaManager) JoinTopics(ctx context.Context, cluster string, req JoinRequest) (*JoinResult, error) {
-	m.record("JoinTopics", cluster, req)
-	if m.JoinTopicsFn != nil {
-		return m.JoinTopicsFn(ctx, cluster, req)
-	}
-	return nil, nil
-}
-
-// NaturalLanguageQuery is auto-documented.
-func (m *MockKafkaManager) NaturalLanguageQuery(ctx context.Context, cluster, query string, topics []TopicSummary) (*NaturalLanguageQueryResult, error) {
-	m.record("NaturalLanguageQuery", cluster, query, topics)
-	if m.NaturalLanguageQueryFn != nil {
-		return m.NaturalLanguageQueryFn(ctx, cluster, query, topics)
-	}
-	return nil, nil
-}
-
-// AnalyzeDLQ is auto-documented.
+// AnalyzeDLQ executes the configured DLQ-analysis mock.
 func (m *MockKafkaManager) AnalyzeDLQ(ctx context.Context, cluster, topic string, limit int) (*AnalyzeDLQResult, error) {
 	m.record("AnalyzeDLQ", cluster, topic, limit)
 	if m.AnalyzeDLQFn != nil {
@@ -301,146 +236,29 @@ func (m *MockKafkaManager) AnalyzeDLQ(ctx context.Context, cluster, topic string
 	return nil, nil
 }
 
-// StartStream is auto-documented.
-func (m *MockKafkaManager) StartStream(ctx context.Context, cluster string, cfg StreamConfig) (*StreamResult, error) {
-	m.record("StartStream", cluster, cfg)
-	if m.StartStreamFn != nil {
-		return m.StartStreamFn(ctx, cluster, cfg)
+// ListACLs executes the configured ACL-listing mock.
+func (m *MockKafkaManager) ListACLs(ctx context.Context, cluster, principal, resourceType string, analysis bool) (*ACLResult, error) {
+	m.record("ListACLs", cluster, principal, resourceType, analysis)
+	if m.ListACLsFn != nil {
+		return m.ListACLsFn(ctx, cluster, principal, resourceType, analysis)
 	}
 	return nil, nil
 }
 
-// PollStream is auto-documented.
-func (m *MockKafkaManager) PollStream(sessionID string, timeoutMs int) (*StreamResult, error) {
-	m.record("PollStream", sessionID, timeoutMs)
-	if m.PollStreamFn != nil {
-		return m.PollStreamFn(sessionID, timeoutMs)
-	}
-	return nil, nil
-}
-
-// ControlStream is auto-documented.
-func (m *MockKafkaManager) ControlStream(sessionID, action string) (*StreamResult, error) {
-	m.record("ControlStream", sessionID, action)
-	if m.ControlStreamFn != nil {
-		return m.ControlStreamFn(sessionID, action)
-	}
-	return nil, nil
-}
-
-// ListStreams is auto-documented.
-func (m *MockKafkaManager) ListStreams() []StreamSessionSnapshot {
-	m.record("ListStreams")
-	if m.ListStreamsFn != nil {
-		return m.ListStreamsFn()
+// CreateACL executes the configured ACL-creation mock.
+func (m *MockKafkaManager) CreateACL(ctx context.Context, cluster string, rule ACLEntry) error {
+	m.record("CreateACL", cluster, rule)
+	if m.CreateACLFn != nil {
+		return m.CreateACLFn(ctx, cluster, rule)
 	}
 	return nil
 }
 
-// GetStreamSession is auto-documented.
-func (m *MockKafkaManager) GetStreamSession(sessionID string) (StreamSessionSnapshot, bool) {
-	m.record("GetStreamSession", sessionID)
-	if m.GetStreamSessionFn != nil {
-		return m.GetStreamSessionFn(sessionID)
-	}
-	return StreamSessionSnapshot{}, false
-}
-
-// TimeTravelSnapshot is auto-documented.
-func (m *MockKafkaManager) TimeTravelSnapshot(ctx context.Context, cluster, topic, timestamp string, maxKeys int) (*TimeTravelSnapshot, error) {
-	m.record("TimeTravelSnapshot", cluster, topic, timestamp, maxKeys)
-	if m.TimeTravelSnapshotFn != nil {
-		return m.TimeTravelSnapshotFn(ctx, cluster, topic, timestamp, maxKeys)
-	}
-	return nil, nil
-}
-
-// TimeTravelDiff is auto-documented.
-func (m *MockKafkaManager) TimeTravelDiff(ctx context.Context, cluster, topic, tsFrom, tsTo string, maxKeys int) (*TimeTravelDiffResult, error) {
-	m.record("TimeTravelDiff", cluster, topic, tsFrom, tsTo, maxKeys)
-	if m.TimeTravelDiffFn != nil {
-		return m.TimeTravelDiffFn(ctx, cluster, topic, tsFrom, tsTo, maxKeys)
-	}
-	return nil, nil
-}
-
-// GetRecommendations is auto-documented.
-func (m *MockKafkaManager) GetRecommendations(ctx context.Context, cluster, topic string) (*RecommendationResult, error) {
-	m.record("GetRecommendations", cluster, topic)
-	if m.GetRecommendationsFn != nil {
-		return m.GetRecommendationsFn(ctx, cluster, topic)
-	}
-	return nil, nil
-}
-
-// TraceMessage is auto-documented.
-func (m *MockKafkaManager) TraceMessage(ctx context.Context, cluster, correlationID, headerName string, topics []string, maxScan int) (*TraceResult, error) {
-	m.record("TraceMessage", cluster, correlationID, headerName, topics, maxScan)
-	if m.TraceMessageFn != nil {
-		return m.TraceMessageFn(ctx, cluster, correlationID, headerName, topics, maxScan)
-	}
-	return nil, nil
-}
-
-// ListACLs is auto-documented.
-func (m *MockKafkaManager) ListACLs(ctx context.Context, cluster, principal, resourceType string, includeAnalysis bool) (*ACLResult, error) {
-	m.record("ListACLs", cluster, principal, resourceType, includeAnalysis)
-	if m.ListACLsFn != nil {
-		return m.ListACLsFn(ctx, cluster, principal, resourceType, includeAnalysis)
-	}
-	return nil, nil
-}
-
-// CompareConfigs is auto-documented.
-func (m *MockKafkaManager) CompareConfigs(ctx context.Context, sourceCluster, targetCluster, topic string) (*ConfigCompareResult, error) {
-	m.record("CompareConfigs", sourceCluster, targetCluster, topic)
-	if m.CompareConfigsFn != nil {
-		return m.CompareConfigsFn(ctx, sourceCluster, targetCluster, topic)
-	}
-	return nil, nil
-}
-
-// AuditConfigs is auto-documented.
-func (m *MockKafkaManager) AuditConfigs(ctx context.Context, cluster, topic string, template map[string]string) (*ConfigAuditResult, error) {
-	m.record("AuditConfigs", cluster, topic, template)
-	if m.AuditConfigsFn != nil {
-		return m.AuditConfigsFn(ctx, cluster, topic, template)
-	}
-	return nil, nil
-}
-
-// PlaygroundCreate is auto-documented.
-func (m *MockKafkaManager) PlaygroundCreate(ctx context.Context, cluster, agentID, name string, partitions int32) (*PlaygroundTopicResult, error) {
-	m.record("PlaygroundCreate", cluster, agentID, name, partitions)
-	if m.PlaygroundCreateFn != nil {
-		return m.PlaygroundCreateFn(ctx, cluster, agentID, name, partitions)
-	}
-	return nil, nil
-}
-
-// PlaygroundProduceSample is auto-documented.
-func (m *MockKafkaManager) PlaygroundProduceSample(ctx context.Context, cluster, agentID, name, pattern string, count int) (map[string]any, error) {
-	m.record("PlaygroundProduceSample", cluster, agentID, name, pattern, count)
-	if m.PlaygroundProduceSampleFn != nil {
-		return m.PlaygroundProduceSampleFn(ctx, cluster, agentID, name, pattern, count)
-	}
-	return nil, nil
-}
-
-// PlaygroundList is auto-documented.
-func (m *MockKafkaManager) PlaygroundList(ctx context.Context, cluster, agentID string) ([]TopicSummary, error) {
-	m.record("PlaygroundList", cluster, agentID)
-	if m.PlaygroundListFn != nil {
-		return m.PlaygroundListFn(ctx, cluster, agentID)
-	}
-	return nil, nil
-}
-
-// PlaygroundCleanup is auto-documented.
-func (m *MockKafkaManager) PlaygroundCleanup(ctx context.Context, cluster, agentID string) (int, error) {
-	m.record("PlaygroundCleanup", cluster, agentID)
-	if m.PlaygroundCleanupFn != nil {
-		return m.PlaygroundCleanupFn(ctx, cluster, agentID)
+// DeleteACL executes the configured ACL-deletion mock.
+func (m *MockKafkaManager) DeleteACL(ctx context.Context, cluster string, rule ACLEntry) (int, error) {
+	m.record("DeleteACL", cluster, rule)
+	if m.DeleteACLFn != nil {
+		return m.DeleteACLFn(ctx, cluster, rule)
 	}
 	return 0, nil
 }

@@ -17,18 +17,17 @@ import (
 	"github.com/twmb/franz-go/pkg/sasl/plain"
 	"github.com/twmb/franz-go/pkg/sasl/scram"
 
-	"github.com/kafkamcp/kafkamcp/internal/config"
+	"github.com/josedab/kafkamcp/internal/config"
 )
 
 // Manager manages Kafka client connections for multiple clusters.
 type Manager struct {
-	mu        sync.RWMutex
-	clients   map[string]*kgo.Client
-	admins    map[string]*kadm.Client
-	configs   map[string]*config.ClusterConfig
-	logger    *slog.Logger
-	defClust  string
-	streamMgr *streamSessionManager
+	mu       sync.RWMutex
+	clients  map[string]*kgo.Client
+	admins   map[string]*kadm.Client
+	configs  map[string]*config.ClusterConfig
+	logger   *slog.Logger
+	defClust string
 }
 
 // connect-retry knobs: kept package-private so tests can override.
@@ -151,7 +150,11 @@ func (m *Manager) clientOpts(cl *config.ClusterConfig) ([]kgo.Opt, error) {
 
 	// TLS
 	if strings.Contains(strings.ToUpper(cl.SecurityProtocol), "SSL") {
-		tlsCfg := &tls.Config{MinVersion: tls.VersionTLS13}
+		minVersion, err := tlsMinVersion(cl.TLSMinVersion)
+		if err != nil {
+			return nil, err
+		}
+		tlsCfg := &tls.Config{MinVersion: minVersion}
 		if cl.SSLCALocation != "" {
 			caCert, err := os.ReadFile(cl.SSLCALocation)
 			if err != nil {

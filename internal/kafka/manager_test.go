@@ -10,7 +10,7 @@ import (
 	"github.com/twmb/franz-go/pkg/kadm"
 	"github.com/twmb/franz-go/pkg/kgo"
 
-	"github.com/kafkamcp/kafkamcp/internal/config"
+	"github.com/josedab/kafkamcp/internal/config"
 )
 
 // testManager builds a Manager with two clusters and no real broker connections.
@@ -22,9 +22,8 @@ func testManager() *Manager {
 			"prod":    {Name: "prod", BootstrapServers: "localhost:9092", Default: true},
 			"staging": {Name: "staging", BootstrapServers: "localhost:9093"},
 		},
-		logger:    slog.Default(),
-		defClust:  "prod",
-		streamMgr: newStreamSessionManager(),
+		logger:   slog.Default(),
+		defClust: "prod",
 	}
 }
 
@@ -118,24 +117,6 @@ func TestGetClusterConfig_NotFound(t *testing.T) {
 	_, err := m.GetClusterConfig("nonexistent")
 	if err == nil {
 		t.Fatal("expected error for nonexistent cluster")
-	}
-}
-
-// --------------- resolveCluster ---------------
-
-func TestResolveCluster_WithName(t *testing.T) {
-	t.Parallel()
-	m := testManager()
-	if got := m.resolveCluster("staging"); got != "staging" {
-		t.Errorf("resolveCluster(%q) = %q, want %q", "staging", got, "staging")
-	}
-}
-
-func TestResolveCluster_Empty(t *testing.T) {
-	t.Parallel()
-	m := testManager()
-	if got := m.resolveCluster(""); got != "prod" {
-		t.Errorf("resolveCluster(%q) = %q, want %q", "", got, "prod")
 	}
 }
 
@@ -246,7 +227,7 @@ func TestProduceMessage_OmitEmpty(t *testing.T) {
 
 func TestProduceOptions_JSON(t *testing.T) {
 	t.Parallel()
-	opts := ProduceOptions{Acks: "all", Serializer: "json", SchemaID: -1}
+	opts := ProduceOptions{Acks: "all"}
 	data, err := json.Marshal(opts)
 	if err != nil {
 		t.Fatalf("marshal: %v", err)
@@ -257,76 +238,6 @@ func TestProduceOptions_JSON(t *testing.T) {
 	}
 	if out.Acks != "all" {
 		t.Errorf("acks = %q, want %q", out.Acks, "all")
-	}
-	if out.SchemaID != -1 {
-		t.Errorf("schema_id = %d, want -1", out.SchemaID)
-	}
-}
-
-// --------------- SubscribeRequest defaults ---------------
-
-func TestSubscribeRequest_Defaults(t *testing.T) {
-	t.Parallel()
-	raw := `{"topic":"events"}`
-	var req SubscribeRequest
-	if err := json.Unmarshal([]byte(raw), &req); err != nil {
-		t.Fatalf("unmarshal: %v", err)
-	}
-	if req.Topic != "events" {
-		t.Errorf("topic = %q, want %q", req.Topic, "events")
-	}
-	if req.MaxMessages != 0 {
-		t.Errorf("max_messages zero-value = %d, want 0", req.MaxMessages)
-	}
-	if req.AutoCommit {
-		t.Error("auto_commit zero-value should be false")
-	}
-}
-
-func TestSubscribeRequest_FullRoundTrip(t *testing.T) {
-	t.Parallel()
-	req := SubscribeRequest{
-		Topic:        "orders",
-		GroupID:      "grp-1",
-		AutoCommit:   true,
-		MaxMessages:  500,
-		TimeoutMs:    5000,
-		Deserializer: "json",
-	}
-	data, err := json.Marshal(req)
-	if err != nil {
-		t.Fatalf("marshal: %v", err)
-	}
-	var out SubscribeRequest
-	if err := json.Unmarshal(data, &out); err != nil {
-		t.Fatalf("unmarshal: %v", err)
-	}
-	if out != req {
-		t.Errorf("round-trip mismatch: got %+v, want %+v", out, req)
-	}
-}
-
-// --------------- SubscribeResult ---------------
-
-func TestSubscribeResult_JSON(t *testing.T) {
-	t.Parallel()
-	res := SubscribeResult{
-		Messages:   []Message{{Partition: 0, Offset: 10, Timestamp: "2024-01-01T00:00:00.000Z", Key: "k", Value: "v"}},
-		Count:      1,
-		Topic:      "t",
-		GroupID:    "g",
-		AutoCommit: true,
-	}
-	data, err := json.Marshal(res)
-	if err != nil {
-		t.Fatalf("marshal: %v", err)
-	}
-	var out SubscribeResult
-	if err := json.Unmarshal(data, &out); err != nil {
-		t.Fatalf("unmarshal: %v", err)
-	}
-	if out.Count != 1 || out.GroupID != "g" || !out.AutoCommit {
-		t.Errorf("unexpected result: %+v", out)
 	}
 }
 
@@ -410,25 +321,6 @@ func TestPing_NoAdminClient(t *testing.T) {
 	err := m.Ping(t.Context())
 	if err == nil {
 		t.Fatal("expected error when no admin client")
-	}
-}
-
-func TestSubscribe_ClusterNotFound(t *testing.T) {
-	t.Parallel()
-	m := testManager()
-	_, err := m.Subscribe(t.Context(), "nonexistent", SubscribeRequest{Topic: "test"})
-	if err == nil {
-		t.Fatal("expected error for nonexistent cluster")
-	}
-}
-
-// --------------- resolveCluster ---------------
-
-func TestResolveCluster_DefaultFallback(t *testing.T) {
-	t.Parallel()
-	m := testManager()
-	if got := m.resolveCluster(""); got != "prod" {
-		t.Errorf("expected 'prod', got %q", got)
 	}
 }
 

@@ -12,9 +12,7 @@ import (
 // ProduceOptions configures acknowledgement semantics and serialization for
 // producing messages to Kafka.
 type ProduceOptions struct {
-	Acks       string `json:"acks"`       // "0", "1", "all"
-	Serializer string `json:"serializer"` // "auto", "json", "string"
-	SchemaID   int    `json:"schema_id"`  // -1 for none
+	Acks string `json:"acks"` // "0", "1", "all"
 }
 
 // Produce writes messages to a topic.

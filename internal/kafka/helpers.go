@@ -25,7 +25,7 @@ func decodeValue(data []byte, format string) any {
 			return result
 		}
 		return string(data)
-	default: // "auto", "avro", "protobuf" — try JSON, fallback to string
+	default: // "auto" — try JSON, fallback to string
 		var result any
 		if err := json.Unmarshal(data, &result); err == nil {
 			return result
