@@ -5,16 +5,13 @@ import (
 	"testing"
 )
 
-func TestSetAndGetDesiredState(t *testing.T) {
+func TestNormalizeRules(t *testing.T) {
 	t.Parallel()
-	e := NewEngine(slog.Default())
 	rules := []ACLRule{
 		{ResourceType: "topic", ResourceName: "orders", Operation: "read"},
 		{ResourceType: "topic", ResourceName: "orders", Operation: "write"},
 	}
-	e.SetDesiredState("User:app1", rules)
-
-	got := e.GetDesiredState("User:app1")
+	got := NormalizeRules("User:app1", rules)
 	if len(got) != 2 {
 		t.Errorf("expected 2 rules, got %d", len(got))
 	}
@@ -23,6 +20,9 @@ func TestSetAndGetDesiredState(t *testing.T) {
 	}
 	if got[0].Host != "*" {
 		t.Errorf("expected default host *, got %s", got[0].Host)
+	}
+	if got[0].PatternType != "literal" || got[0].Permission != "allow" {
+		t.Errorf("expected defaults literal/allow, got %s/%s", got[0].PatternType, got[0].Permission)
 	}
 }
 
@@ -33,6 +33,7 @@ func TestComputeDiff(t *testing.T) {
 		{Principal: "User:app1", Host: "*", ResourceType: "topic", ResourceName: "orders", PatternType: "literal", Operation: "read", Permission: "allow"},
 		{Principal: "User:app1", Host: "*", ResourceType: "topic", ResourceName: "orders", PatternType: "literal", Operation: "write", Permission: "allow"},
 	}
+
 	actual := []ACLRule{
 		{Principal: "User:app1", Host: "*", ResourceType: "topic", ResourceName: "orders", PatternType: "literal", Operation: "read", Permission: "allow"},
 		{Principal: "User:app1", Host: "*", ResourceType: "topic", ResourceName: "events", PatternType: "literal", Operation: "read", Permission: "allow"},
@@ -47,6 +48,43 @@ func TestComputeDiff(t *testing.T) {
 	}
 	if len(diff.InSync) != 1 {
 		t.Errorf("expected 1 in sync, got %d", len(diff.InSync))
+	}
+}
+
+func TestComputeDiffNormalizesBrokerCasing(t *testing.T) {
+	t.Parallel()
+	engine := NewEngine(slog.Default())
+	desired := []ACLRule{{
+		Principal: "User:app1", Host: "*", ResourceType: "topic",
+		ResourceName: "orders", PatternType: "literal",
+		Operation: "read", Permission: "allow",
+	}}
+	actual := []ACLRule{{
+		Principal: "User:app1", Host: "*", ResourceType: "TOPIC",
+		ResourceName: "orders", PatternType: "LITERAL",
+		Operation: "READ", Permission: "ALLOW",
+	}}
+	diff := engine.ComputeDiff(desired, actual)
+	if len(diff.InSync) != 1 || len(diff.ToAdd) != 0 || len(diff.ToRemove) != 0 {
+		t.Fatalf("unexpected normalized diff: %+v", diff)
+	}
+}
+
+func TestComputeDiffNormalizesClusterResourceName(t *testing.T) {
+	t.Parallel()
+	engine := NewEngine(slog.Default())
+	desired := []ACLRule{{
+		Principal: "User:admin", Host: "*", ResourceType: "cluster",
+		Operation: "describe", Permission: "allow",
+	}}
+	actual := []ACLRule{{
+		Principal: "User:admin", Host: "*", ResourceType: "CLUSTER",
+		ResourceName: "kafka-cluster", PatternType: "LITERAL",
+		Operation: "DESCRIBE", Permission: "ALLOW",
+	}}
+	diff := engine.ComputeDiff(desired, actual)
+	if len(diff.InSync) != 1 || len(diff.ToAdd) != 0 || len(diff.ToRemove) != 0 {
+		t.Fatalf("unexpected cluster diff: %+v", diff)
 	}
 }
 

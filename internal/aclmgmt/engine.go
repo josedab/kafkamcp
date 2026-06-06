@@ -3,8 +3,7 @@ package aclmgmt
 import (
 	"fmt"
 	"log/slog"
-	"sort"
-	"sync"
+	"strings"
 	"time"
 )
 
@@ -60,63 +59,58 @@ type DryRunResult struct {
 	Summary     string    `json:"summary"`
 }
 
-// Engine manages ACL operations with dry-run and diff capabilities.
+// Engine computes ACL diffs, dry-runs and audits. It is stateless: the desired
+// state is always supplied by the caller so ACL reconciliation is driven by
+// live broker data rather than in-memory server state.
 type Engine struct {
-	mu           sync.RWMutex
-	desiredState map[string][]ACLRule // principal -> desired rules
-	logger       *slog.Logger
+	logger *slog.Logger
 }
 
 // NewEngine creates a new ACL management engine.
 func NewEngine(logger *slog.Logger) *Engine {
-	return &Engine{
-		desiredState: make(map[string][]ACLRule),
-		logger:       logger,
-	}
+	return &Engine{logger: logger}
 }
 
-// SetDesiredState stores the desired ACL state for a principal.
-func (e *Engine) SetDesiredState(principal string, rules []ACLRule) {
-	e.mu.Lock()
-	defer e.mu.Unlock()
-
-	for i := range rules {
-		rules[i].Principal = principal
-		if rules[i].Host == "" {
-			rules[i].Host = "*"
+// NormalizeRules applies defaults (host *, pattern literal, permission allow)
+// and stamps the principal on each rule when principal is non-empty.
+func NormalizeRules(principal string, rules []ACLRule) []ACLRule {
+	out := make([]ACLRule, len(rules))
+	copy(out, rules)
+	for i := range out {
+		if principal != "" {
+			out[i].Principal = strings.TrimSpace(principal)
+		} else {
+			out[i].Principal = strings.TrimSpace(out[i].Principal)
 		}
-		if rules[i].PatternType == "" {
-			rules[i].PatternType = "literal"
+		if out[i].Host == "" {
+			out[i].Host = "*"
+		} else {
+			out[i].Host = strings.TrimSpace(out[i].Host)
 		}
-		if rules[i].Permission == "" {
-			rules[i].Permission = "allow"
+		out[i].ResourceType = normalizeResourceType(out[i].ResourceType)
+		out[i].ResourceName = strings.TrimSpace(out[i].ResourceName)
+		if out[i].ResourceType == "cluster" {
+			out[i].ResourceName = "kafka-cluster"
 		}
+		if out[i].PatternType == "" {
+			out[i].PatternType = "literal"
+		} else {
+			out[i].PatternType = strings.ToLower(strings.TrimSpace(out[i].PatternType))
+		}
+		if out[i].Permission == "" {
+			out[i].Permission = "allow"
+		} else {
+			out[i].Permission = strings.ToLower(strings.TrimSpace(out[i].Permission))
+		}
+		out[i].Operation = strings.ToLower(strings.TrimSpace(out[i].Operation))
 	}
-	e.desiredState[principal] = rules
-}
-
-// GetDesiredState returns the stored desired state for a principal.
-func (e *Engine) GetDesiredState(principal string) []ACLRule {
-	e.mu.RLock()
-	defer e.mu.RUnlock()
-	return e.desiredState[principal]
-}
-
-// ListDesiredPrincipals returns all principals with desired state.
-func (e *Engine) ListDesiredPrincipals() []string {
-	e.mu.RLock()
-	defer e.mu.RUnlock()
-
-	var principals []string
-	for p := range e.desiredState {
-		principals = append(principals, p)
-	}
-	sort.Strings(principals)
-	return principals
+	return out
 }
 
 // ComputeDiff compares desired ACL state against actual ACLs.
 func (e *Engine) ComputeDiff(desired []ACLRule, actual []ACLRule) *ACLDiffResult {
+	desired = NormalizeRules("", desired)
+	actual = NormalizeRules("", actual)
 	result := &ACLDiffResult{}
 
 	actualSet := make(map[string]ACLRule)
@@ -145,6 +139,23 @@ func (e *Engine) ComputeDiff(desired []ACLRule, actual []ACLRule) *ACLDiffResult
 
 	result.Summary = fmt.Sprintf("%d to add, %d to remove, %d in sync", len(result.ToAdd), len(result.ToRemove), len(result.InSync))
 	return result
+}
+
+func normalizeResourceType(value string) string {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case "topic", "topics":
+		return "topic"
+	case "group", "groups", "consumer_group", "consumer-group":
+		return "group"
+	case "cluster":
+		return "cluster"
+	case "transactional_id", "transactional-id", "transactionalid":
+		return "transactional_id"
+	case "delegation_token", "delegation-token", "delegationtoken":
+		return "delegation_token"
+	default:
+		return strings.ToLower(strings.TrimSpace(value))
+	}
 }
 
 // Audit analyzes ACL entries for security concerns.
