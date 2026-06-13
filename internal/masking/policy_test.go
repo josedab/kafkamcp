@@ -137,7 +137,7 @@ func TestMaskPartial(t *testing.T) {
 // --- HashValue tests ---
 
 func TestHashValue(t *testing.T) {
-	t.Parallel()
+	t.Setenv(DefaultKeyEnv, "0123456789abcdef0123456789abcdef")
 	h1 := HashValue("test")
 	if !strings.HasPrefix(h1, "tok_") {
 		t.Errorf("expected tok_ prefix, got %s", h1)
@@ -153,6 +153,13 @@ func TestHashValue(t *testing.T) {
 	h3 := HashValue("other")
 	if h1 == h3 {
 		t.Error("expected different hash for different input")
+	}
+}
+
+func TestHashValue_FailsClosed(t *testing.T) {
+	t.Setenv(DefaultKeyEnv, "")
+	if got := HashValue("test"); got != defaultReplacement {
+		t.Errorf("expected fail-closed redaction without key, got %q", got)
 	}
 }
 

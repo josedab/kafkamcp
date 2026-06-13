@@ -8,8 +8,9 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 
-	"github.com/kafkamcp/kafkamcp/internal/config"
+	"github.com/josedab/kafkamcp/internal/config"
 )
 
 // Built-in PII detection patterns.
@@ -44,15 +45,36 @@ type Engine struct {
 	enabled       bool
 	logger        *slog.Logger
 	policyManager *PolicyManager
+	tokenizer     *Tokenizer
+	// warnedNoKey ensures the "fail closed" warning is only logged once to avoid
+	// flooding logs on every masked value.
+	warnedNoKey atomic.Bool
 }
 
 // NewEngine creates a masking engine from configuration.
+//
+// The HMAC key for the "hash"/"tokenize" actions is read from the environment
+// variable named by cfg.KeyEnv (default KAFKAMCP_MASKING_KEY). If the variable
+// is unset the tokenizer is left unconfigured and those actions fail closed
+// (fully redact). If the variable is set but the key is too short, the tokenizer
+// is also left unconfigured and an error is logged so the misconfiguration is
+// visible rather than silently weakening protection.
 func NewEngine(cfg config.MaskingConfig, logger *slog.Logger) *Engine {
 	e := &Engine{
 		enabled:       cfg.Enabled,
 		logger:        logger,
 		policyManager: NewPolicyManager(),
 	}
+
+	tok, err := TokenizerFromEnv(cfg.KeyEnv)
+	if err != nil {
+		if logger != nil {
+			logger.Error("masking tokenization key rejected; hash/tokenize actions will fail closed",
+				"key_env", keyEnvName(cfg.KeyEnv), "error", err)
+		}
+		tok = &Tokenizer{} // unconfigured: fail closed
+	}
+	e.tokenizer = tok
 
 	for _, r := range cfg.Rules {
 		compiled := Rule{
@@ -115,29 +137,64 @@ func NewEngine(cfg config.MaskingConfig, logger *slog.Logger) *Engine {
 // MaskValue applies masking rules to a message value for a given agent.
 // Returns the masked value.
 func (e *Engine) MaskValue(agentID string, value any) any {
-	if !e.enabled || len(e.rules) == 0 {
+	masked, err := e.MaskValueChecked(agentID, value)
+	if err != nil {
 		return value
+	}
+	return masked
+}
+
+// MaskValueChecked applies masking rules to a message value for a given agent
+// and, unlike MaskValue, propagates errors so callers can fail closed. When a
+// value cannot be safely serialized for structured masking, it returns an error
+// instead of silently returning the original (unmasked) value. Nil values and a
+// disabled/empty engine pass through unchanged.
+func (e *Engine) MaskValueChecked(agentID string, value any) (any, error) {
+	if !e.enabled || len(e.rules) == 0 {
+		return value, nil
+	}
+	if value == nil {
+		return nil, nil
 	}
 
 	e.mu.RLock()
 	defer e.mu.RUnlock()
+	return e.maskAny(agentID, value, "")
+}
 
+func (e *Engine) maskAny(agentID string, value any, prefix string) (any, error) {
 	switch v := value.(type) {
 	case string:
-		return e.maskString(agentID, v)
+		return e.maskString(agentID, v), nil
 	case map[string]any:
-		return e.maskMap(agentID, v, "")
+		return e.maskMap(agentID, v, prefix), nil
+	case []any:
+		masked := make([]any, len(v))
+		for i, item := range v {
+			value, err := e.maskAny(agentID, item, prefix)
+			if err != nil {
+				return nil, err
+			}
+			masked[i] = value
+		}
+		return masked, nil
 	default:
-		// Try to re-parse as JSON
 		data, err := json.Marshal(v)
 		if err != nil {
-			return value
+			return nil, fmt.Errorf("masking: cannot serialize value for masking: %w", err)
 		}
-		var m map[string]any
-		if err := json.Unmarshal(data, &m); err != nil {
-			return e.maskString(agentID, string(data))
+		var decoded any
+		if err := json.Unmarshal(data, &decoded); err != nil {
+			return nil, fmt.Errorf("masking: cannot decode serialized value: %w", err)
 		}
-		return e.maskMap(agentID, m, "")
+		switch decoded.(type) {
+		case map[string]any, []any, string:
+			return e.maskAny(agentID, decoded, prefix)
+		default:
+			// Numeric and boolean scalars cannot match a field path or textual
+			// pattern, so preserve their original Go type.
+			return value, nil
+		}
 	}
 }
 
@@ -332,14 +389,22 @@ func (e *Engine) PolicyManager() *PolicyManager {
 }
 
 // ApplyAction applies a specific masking action to a value.
+//
+// The "hash" and "tokenize" actions use keyed HMAC-SHA-256 tokenization with
+// domain separation (the action name is the domain, so a value tokenized under
+// "hash" differs from the same value under "tokenize"). When no tokenization key
+// is configured these actions fail closed and fully redact the value rather than
+// emitting a weak, unkeyed token.
 func (e *Engine) ApplyAction(action, value, replacement string) string {
 	switch action {
-	case "hash":
-		return HashValue(value)
+	case "hash", "tokenize":
+		if tok, ok := e.tokenizer.Token(action, value); ok {
+			return tok
+		}
+		e.warnFailClosed(action)
+		return defaultReplacement
 	case "mask_partial":
 		return MaskPartial(value, 4)
-	case "tokenize":
-		return HashValue(value)
 	case "redact":
 		if replacement == "" {
 			return defaultReplacement
@@ -351,6 +416,33 @@ func (e *Engine) ApplyAction(action, value, replacement string) string {
 		}
 		return replacement
 	}
+}
+
+// TokenizationConfigured reports whether a valid HMAC key is available for the
+// hash/tokenize actions. It is used by validation/doctor tooling to warn when
+// masking rules would fail closed.
+func (e *Engine) TokenizationConfigured() bool {
+	return e.tokenizer.Configured()
+}
+
+// warnFailClosed logs a single warning the first time a hash/tokenize action
+// fails closed due to a missing key.
+func (e *Engine) warnFailClosed(action string) {
+	if e.logger == nil {
+		return
+	}
+	if e.warnedNoKey.CompareAndSwap(false, true) {
+		e.logger.Warn("masking action failing closed (fully redacting): no tokenization key configured",
+			"action", action, "key_env", DefaultKeyEnv)
+	}
+}
+
+// keyEnvName returns the effective environment variable name for logging.
+func keyEnvName(configured string) string {
+	if configured == "" {
+		return DefaultKeyEnv
+	}
+	return configured
 }
 
 // DetectPIIInValue scans a value and returns detected PII types.

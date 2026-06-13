@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"testing"
 
-	"github.com/kafkamcp/kafkamcp/internal/config"
+	"github.com/josedab/kafkamcp/internal/config"
 )
 
 func newTestMaskingEngine() *Engine {
@@ -178,7 +178,7 @@ func TestMaskPartial_MasksAllButLastN(t *testing.T) {
 }
 
 func TestHashValue_DeterministicOutput(t *testing.T) {
-	t.Parallel()
+	t.Setenv(DefaultKeyEnv, "0123456789abcdef0123456789abcdef")
 	h1 := HashValue("test-input")
 	h2 := HashValue("test-input")
 	if h1 != h2 {
@@ -187,7 +187,7 @@ func TestHashValue_DeterministicOutput(t *testing.T) {
 }
 
 func TestHashValue_TokPrefixOutput(t *testing.T) {
-	t.Parallel()
+	t.Setenv(DefaultKeyEnv, "0123456789abcdef0123456789abcdef")
 	h := HashValue("anything")
 	if len(h) < 4 || h[:4] != "tok_" {
 		t.Errorf("expected tok_ prefix, got %q", h)
@@ -195,7 +195,7 @@ func TestHashValue_TokPrefixOutput(t *testing.T) {
 }
 
 func TestHashValue_DifferentInputsDifferentHashes(t *testing.T) {
-	t.Parallel()
+	t.Setenv(DefaultKeyEnv, "0123456789abcdef0123456789abcdef")
 	h1 := HashValue("input-a")
 	h2 := HashValue("input-b")
 	if h1 == h2 {

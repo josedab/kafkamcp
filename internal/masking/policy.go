@@ -274,13 +274,20 @@ func MaskPartial(value string, visibleChars int) string {
 	return masked + value[len(value)-visibleChars:]
 }
 
-// HashValue returns a deterministic hash representation for tokenization.
+// HashValue is retained only as a thin compatibility shim over the keyed
+// tokenizer path. It intentionally has NO unkeyed fallback: without a configured
+// key it fails closed and returns the standard redaction marker. Prefer
+// Engine.ApplyAction("tokenize", ...) which carries domain separation.
+//
+// Deprecated: use a keyed Tokenizer via Engine.ApplyAction. This helper exists
+// for callers that only need best-effort redaction and cannot supply a key.
 func HashValue(value string) string {
-	// Simple FNV-like hash for demo; production would use SHA-256
-	h := uint64(14695981039346656037)
-	for _, c := range value {
-		h ^= uint64(c)
-		h *= 1099511628211
+	tok, err := TokenizerFromEnv("")
+	if err != nil {
+		return defaultReplacement
 	}
-	return fmt.Sprintf("tok_%x", h)
+	if t, ok := tok.Token("tokenize", value); ok {
+		return t
+	}
+	return defaultReplacement
 }

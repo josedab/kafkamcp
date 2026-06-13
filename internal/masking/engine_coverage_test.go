@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kafkamcp/kafkamcp/internal/config"
+	"github.com/josedab/kafkamcp/internal/config"
 )
 
 // Tests for ApplyAction, DetectPIIInValue, PolicyManager, and Luhn check.
@@ -31,7 +31,16 @@ func TestApplyAction_RedactCustom(t *testing.T) {
 
 func TestApplyAction_Hash(t *testing.T) {
 	t.Parallel()
+	// No key configured -> fail closed (fully redact) rather than emit a weak token.
 	e := &Engine{enabled: true}
+	if got := e.ApplyAction("hash", "test@example.com", ""); got != defaultReplacement {
+		t.Errorf("expected fail-closed redaction without key, got %q", got)
+	}
+}
+
+func TestApplyAction_Hash_Keyed(t *testing.T) {
+	t.Setenv(DefaultKeyEnv, "0123456789abcdef0123456789abcdef")
+	e := NewEngine(config.MaskingConfig{Enabled: true}, testLogger())
 	result := e.ApplyAction("hash", "test@example.com", "")
 	if !strings.HasPrefix(result, "tok_") {
 		t.Errorf("expected tok_ prefix, got %q", result)
@@ -40,6 +49,10 @@ func TestApplyAction_Hash(t *testing.T) {
 	result2 := e.ApplyAction("hash", "test@example.com", "")
 	if result != result2 {
 		t.Errorf("hash should be deterministic: %q != %q", result, result2)
+	}
+	// Domain separation: the same value under "tokenize" differs from "hash".
+	if tok := e.ApplyAction("tokenize", "test@example.com", ""); tok == result {
+		t.Error("expected domain separation between hash and tokenize actions")
 	}
 }
 
@@ -57,7 +70,16 @@ func TestApplyAction_MaskPartial(t *testing.T) {
 
 func TestApplyAction_Tokenize(t *testing.T) {
 	t.Parallel()
+	// No key configured -> fail closed.
 	e := &Engine{enabled: true}
+	if got := e.ApplyAction("tokenize", "value", ""); got != defaultReplacement {
+		t.Errorf("expected fail-closed redaction without key, got %q", got)
+	}
+}
+
+func TestApplyAction_Tokenize_Keyed(t *testing.T) {
+	t.Setenv(DefaultKeyEnv, "0123456789abcdef0123456789abcdef")
+	e := NewEngine(config.MaskingConfig{Enabled: true}, testLogger())
 	result := e.ApplyAction("tokenize", "value", "")
 	if !strings.HasPrefix(result, "tok_") {
 		t.Errorf("expected tok_ prefix for tokenize, got %q", result)
@@ -259,7 +281,7 @@ func TestMaskPartial_Values(t *testing.T) {
 }
 
 func TestHashValue_Deterministic(t *testing.T) {
-	t.Parallel()
+	t.Setenv(DefaultKeyEnv, "0123456789abcdef0123456789abcdef")
 	v1 := HashValue("test-value")
 	v2 := HashValue("test-value")
 	if v1 != v2 {
@@ -269,6 +291,13 @@ func TestHashValue_Deterministic(t *testing.T) {
 	v3 := HashValue("different-value")
 	if v1 == v3 {
 		t.Error("different inputs should produce different hashes")
+	}
+}
+
+func TestHashValue_FailsClosedWithoutKey(t *testing.T) {
+	t.Setenv(DefaultKeyEnv, "")
+	if got := HashValue("test-value"); got != defaultReplacement {
+		t.Errorf("expected fail-closed redaction without key, got %q", got)
 	}
 }
 

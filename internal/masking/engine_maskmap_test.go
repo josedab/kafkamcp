@@ -3,7 +3,7 @@ package masking
 import (
 	"testing"
 
-	"github.com/kafkamcp/kafkamcp/internal/config"
+	"github.com/josedab/kafkamcp/internal/config"
 )
 
 // ===================== maskMap: nested map masking =====================
