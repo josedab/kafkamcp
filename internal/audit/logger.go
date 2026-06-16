@@ -14,8 +14,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kafkamcp/kafkamcp/internal/engine"
-	"github.com/kafkamcp/kafkamcp/internal/engine/backend"
+	"github.com/josedab/kafkamcp/internal/engine"
+	"github.com/josedab/kafkamcp/internal/engine/backend"
 )
 
 // Entry represents a single audit log entry.

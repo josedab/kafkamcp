@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/kafkamcp/kafkamcp/internal/engine"
-	"github.com/kafkamcp/kafkamcp/internal/engine/backend"
+	"github.com/josedab/kafkamcp/internal/engine"
+	"github.com/josedab/kafkamcp/internal/engine/backend"
 )
 
 type sampleValue struct {
@@ -60,6 +60,40 @@ func TestStore_RoundTrip(t *testing.T) {
 	}
 	if store.Namespace() != "sample" {
 		t.Fatalf("Namespace()=%q, want sample", store.Namespace())
+	}
+}
+
+func TestStore_VersionedCompareAndSwap(t *testing.T) {
+	ctx := context.Background()
+	store := engine.NewStore[sampleValue](backend.NewInMemory(), "sample")
+
+	created, err := store.Create(ctx, "one", sampleValue{Name: "first", Counter: 1})
+	if err != nil || !created {
+		t.Fatalf("Create: created=%v err=%v", created, err)
+	}
+	if created, err = store.Create(ctx, "one", sampleValue{Name: "duplicate"}); err != nil || created {
+		t.Fatalf("duplicate Create: created=%v err=%v", created, err)
+	}
+
+	current, ok, err := store.GetVersioned(ctx, "one")
+	if err != nil || !ok {
+		t.Fatalf("GetVersioned: ok=%v err=%v", ok, err)
+	}
+	swapped, err := store.CompareAndSwap(ctx, "one", current.Raw, sampleValue{Name: "second", Counter: 2})
+	if err != nil || !swapped {
+		t.Fatalf("CompareAndSwap: swapped=%v err=%v", swapped, err)
+	}
+	if swapped, err = store.CompareAndSwap(ctx, "one", current.Raw, sampleValue{Name: "stale"}); err != nil || swapped {
+		t.Fatalf("stale CompareAndSwap: swapped=%v err=%v", swapped, err)
+	}
+
+	updated, ok, err := store.GetVersioned(ctx, "one")
+	if err != nil || !ok || updated.Value.Name != "second" {
+		t.Fatalf("updated value = %+v ok=%v err=%v", updated.Value, ok, err)
+	}
+	deleted, err := store.DeleteIfUnchanged(ctx, "one", updated.Raw)
+	if err != nil || !deleted {
+		t.Fatalf("DeleteIfUnchanged: deleted=%v err=%v", deleted, err)
 	}
 }
 

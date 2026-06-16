@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -17,6 +18,7 @@ func TestServerAddress(t *testing.T) {
 		{"custom_host", ServerConfig{Host: "127.0.0.1"}, "127.0.0.1:3100"},
 		{"custom_port", ServerConfig{Port: 8080}, "0.0.0.0:8080"},
 		{"both_set", ServerConfig{Host: "10.0.0.1", Port: 9090}, "10.0.0.1:9090"},
+		{"ipv6", ServerConfig{Host: "::1", Port: 9090}, "[::1]:9090"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -24,6 +26,30 @@ func TestServerAddress(t *testing.T) {
 			got := tt.cfg.Address()
 			if got != tt.want {
 				t.Errorf("Address() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestServerMetricsAddress(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name string
+		cfg  ServerConfig
+		want string
+	}{
+		{"defaults", ServerConfig{}, "127.0.0.1:3101"},
+		{"custom_server_port", ServerConfig{Port: 8080}, "127.0.0.1:8081"},
+		{"custom_host", ServerConfig{MetricsHost: "0.0.0.0"}, "0.0.0.0:3101"},
+		{"custom_port", ServerConfig{MetricsPort: 9400}, "127.0.0.1:9400"},
+		{"both_set", ServerConfig{MetricsHost: "10.0.0.1", MetricsPort: 9400}, "10.0.0.1:9400"},
+		{"ipv6", ServerConfig{MetricsHost: "::1", MetricsPort: 9400}, "[::1]:9400"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			if got := tt.cfg.MetricsAddress(); got != tt.want {
+				t.Errorf("MetricsAddress() = %q, want %q", got, tt.want)
 			}
 		})
 	}
@@ -175,6 +201,15 @@ func TestApplyDefaultsMaxMessageSize(t *testing.T) {
 	if cfg.Server.LogLevel != "info" {
 		t.Errorf("LogLevel = %q, want %q", cfg.Server.LogLevel, "info")
 	}
+	if cfg.Server.MetricsHost != "127.0.0.1" || cfg.Server.MetricsPort != 3101 {
+		t.Errorf("metrics address = %s, want 127.0.0.1:3101", cfg.Server.MetricsAddress())
+	}
+	if cfg.Clusters[0].SecurityProtocol != "PLAINTEXT" {
+		t.Errorf("SecurityProtocol = %q, want PLAINTEXT", cfg.Clusters[0].SecurityProtocol)
+	}
+	if cfg.Clusters[0].TLSMinVersion != "1.2" || cfg.Clusters[0].ConnectTLS.MinVersion != "1.2" {
+		t.Errorf("TLS defaults = broker %q connect %q, want 1.2", cfg.Clusters[0].TLSMinVersion, cfg.Clusters[0].ConnectTLS.MinVersion)
+	}
 	if cfg.Audit.MaxEntries != 10000 {
 		t.Errorf("Audit.MaxEntries = %d, want 10000", cfg.Audit.MaxEntries)
 	}
@@ -191,6 +226,9 @@ func TestValidateTransports(t *testing.T) {
 	for _, tr := range validTransports {
 		cfg := base
 		cfg.Server.Transport = tr
+		if tr == "sse" || tr == "streamable-http" {
+			cfg.Server.DangerouslyAllowUnauthenticatedNetwork = true
+		}
 		if err := cfg.validate(); err != nil {
 			t.Errorf("transport %q should be valid, got error: %v", tr, err)
 		}
@@ -237,6 +275,39 @@ func TestValidateSASLPartialCredentials(t *testing.T) {
 			cluster: ClusterConfig{Name: "t", BootstrapServers: "l:9092"},
 			wantErr: false,
 		},
+		{
+			name: "complete_sasl_config_ok",
+			cluster: ClusterConfig{
+				Name:             "t",
+				BootstrapServers: "l:9092",
+				SecurityProtocol: "SASL_SSL",
+				SASLMechanism:    "SCRAM-SHA-512",
+				SASLUsername:     "user",
+				SASLPassword:     "pass",
+			},
+			wantErr: false,
+		},
+		{
+			name: "sasl_protocol_requires_mechanism",
+			cluster: ClusterConfig{
+				Name:             "t",
+				BootstrapServers: "l:9092",
+				SecurityProtocol: "SASL_SSL",
+			},
+			wantErr: true,
+		},
+		{
+			name: "mechanism_requires_sasl_protocol",
+			cluster: ClusterConfig{
+				Name:             "t",
+				BootstrapServers: "l:9092",
+				SecurityProtocol: "SSL",
+				SASLMechanism:    "PLAIN",
+				SASLUsername:     "user",
+				SASLPassword:     "pass",
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -250,6 +321,53 @@ func TestValidateSASLPartialCredentials(t *testing.T) {
 				t.Fatalf("unexpected error: %v", err)
 			}
 		})
+	}
+}
+
+func TestValidateTLSVersions(t *testing.T) {
+	t.Parallel()
+	for _, version := range []string{"", "1.2", "1.3"} {
+		cfg := Config{Clusters: []ClusterConfig{{
+			Name:             "t",
+			BootstrapServers: "l:9092",
+			TLSMinVersion:    version,
+			ConnectTLS:       ConnectTLSConfig{MinVersion: version},
+		}}}
+		if err := cfg.validate(); err != nil {
+			t.Errorf("TLS version %q should be valid: %v", version, err)
+		}
+	}
+	for _, version := range []string{"1.0", "1.1", "latest"} {
+		cfg := Config{Clusters: []ClusterConfig{{
+			Name:             "t",
+			BootstrapServers: "l:9092",
+			TLSMinVersion:    version,
+		}}}
+		if err := cfg.validate(); err == nil {
+			t.Errorf("TLS version %q should be rejected", version)
+		}
+	}
+}
+
+func TestValidateMetricsPort(t *testing.T) {
+	t.Parallel()
+	base := Config{Clusters: []ClusterConfig{{Name: "t", BootstrapServers: "l:9092"}}}
+
+	cfg := base
+	cfg.Server.Port = 65535
+	if err := cfg.validate(); err == nil {
+		t.Fatal("server.port=65535 without explicit metrics_port should fail")
+	}
+
+	cfg = base
+	cfg.Server.Transport = "sse"
+	cfg.Server.DangerouslyAllowUnauthenticatedNetwork = true
+	cfg.Server.Host = "127.0.0.1"
+	cfg.Server.Port = 3100
+	cfg.Server.MetricsHost = "127.0.0.1"
+	cfg.Server.MetricsPort = 3100
+	if err := cfg.validate(); err == nil {
+		t.Fatal("same host and port for API and metrics should fail")
 	}
 }
 
@@ -343,6 +461,30 @@ clusters: []
 	_, err := Load(path)
 	if err == nil {
 		t.Fatal("expected validation error for empty clusters")
+	}
+}
+
+func TestLoadRejectsUnknownFields(t *testing.T) {
+	t.Parallel()
+	content := `
+server:
+  transport: stdio
+  dashboard:
+    api_key: removed
+clusters:
+  - name: local
+    bootstrap_servers: localhost:9092
+`
+	path := filepath.Join(t.TempDir(), "unknown.yaml")
+	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	_, err := Load(path)
+	if err == nil {
+		t.Fatal("unknown config field should be rejected")
+	}
+	if !strings.Contains(err.Error(), "field dashboard not found") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
 

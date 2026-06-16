@@ -224,10 +224,10 @@ func (io *InteractiveOnboarder) buildSteps(ctx SessionContext) []InteractiveStep
 		Guidance:    "Congratulations! Here's what you can do next.",
 		Status:      "pending",
 		Tips: []string{
-			"Try semantic search: kafka_semantic_search",
-			"Set up chaos training: kafka_chaos_gymnasium",
-			"Build workflows: kafka_dag_workflow",
-			"Monitor capacity: kafka_capacity_forecast",
+			"Bounded consume: kafka_consume",
+			"Search messages: kafka_search",
+			"Diagnose lag: kafka_diagnose_lag",
+			"Discover tools: kafka_discover_tools",
 		},
 	})
 
@@ -262,8 +262,8 @@ func (io *InteractiveOnboarder) AdvanceStep(sessionID, result string) (*StepAdva
 		session.CompletedAt = &now
 		advResult.Message = "🎉 Onboarding complete! You're all set to use KafkaMCP."
 		advResult.Suggestions = []string{
-			"Explore all available tools with kafka_list_tools",
-			"Try chaos training to learn failure modes",
+			"Discover all available tools with kafka_discover_tools",
+			"Analyze dead-letter queues with kafka_analyze_dlq",
 			"Set up monitoring dashboards",
 		}
 	} else {

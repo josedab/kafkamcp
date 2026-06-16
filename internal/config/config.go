@@ -1,10 +1,13 @@
 package config
 
 import (
+	"bytes"
 	"fmt"
 	"log/slog"
+	"net"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -12,27 +15,34 @@ import (
 
 // Config is the top-level KafkaMCP configuration.
 type Config struct {
-	Server       ServerConfig       `yaml:"server" json:"server"`
-	Clusters     []ClusterConfig    `yaml:"clusters" json:"clusters"`
-	Policies     PolicyConfig       `yaml:"policies" json:"policies"`
-	SchemaCache  CacheConfig        `yaml:"schema_cache" json:"schema_cache"`
-	Audit        AuditConfig        `yaml:"audit" json:"audit"`
-	Masking      MaskingConfig      `yaml:"masking,omitempty" json:"masking,omitempty"`
-	Telemetry    TelemetryConfig    `yaml:"telemetry,omitempty" json:"telemetry,omitempty"`
-	Experimental ExperimentalConfig `yaml:"experimental,omitempty" json:"experimental,omitempty"`
+	Server      ServerConfig    `yaml:"server" json:"server"`
+	Clusters    []ClusterConfig `yaml:"clusters" json:"clusters"`
+	Policies    PolicyConfig    `yaml:"policies" json:"policies"`
+	SchemaCache CacheConfig     `yaml:"schema_cache" json:"schema_cache"`
+	Audit       AuditConfig     `yaml:"audit" json:"audit"`
+	Masking     MaskingConfig   `yaml:"masking,omitempty" json:"masking,omitempty"`
+	Telemetry   TelemetryConfig `yaml:"telemetry,omitempty" json:"telemetry,omitempty"`
 }
 
 // ServerConfig holds network transport and TLS settings for the MCP server.
 type ServerConfig struct {
-	Transport      string            `yaml:"transport" json:"transport"`                         // Protocol: "stdio", "sse", or "streamable-http"
-	Host           string            `yaml:"host" json:"host"`                                   // Bind address (default "0.0.0.0")
-	Port           int               `yaml:"port" json:"port"`                                   // Listen port (default 3100)
-	LogLevel       string            `yaml:"log_level" json:"log_level"`                         // Log verbosity: "debug", "info", "warn", "error"
-	MaxMessageSize int               `yaml:"max_message_size" json:"max_message_size"`           // Max MCP message size in bytes (default 1 MB)
-	TLSCert        string            `yaml:"tls_cert,omitempty" json:"tls_cert,omitempty"`       // Path to TLS certificate file
-	TLSKey         string            `yaml:"tls_key,omitempty" json:"tls_key,omitempty"`         // Path to TLS private key file
-	ToolPacks      []string          `yaml:"tool_packs,omitempty" json:"tool_packs,omitempty"`   // Adaptive tool surface: any of essential, ops, analytics, governance, streaming, experimental, all. Default: ["essential"].
-	Persistence    PersistenceConfig `yaml:"persistence,omitempty" json:"persistence,omitempty"` // Where engine state (agent memory, materialized views, ...) is stored.
+	Transport      string            `yaml:"transport" json:"transport"`                           // Protocol: "stdio", "sse", or "streamable-http"
+	Host           string            `yaml:"host" json:"host"`                                     // Bind address (default "0.0.0.0")
+	Port           int               `yaml:"port" json:"port"`                                     // Listen port (default 3100)
+	MetricsHost    string            `yaml:"metrics_host,omitempty" json:"metrics_host,omitempty"` // Metrics/health bind address (default "127.0.0.1")
+	MetricsPort    int               `yaml:"metrics_port,omitempty" json:"metrics_port,omitempty"` // Metrics/health listen port (default server.port + 1)
+	LogLevel       string            `yaml:"log_level" json:"log_level"`                           // Log verbosity: "debug", "info", "warn", "error"
+	MaxMessageSize int               `yaml:"max_message_size" json:"max_message_size"`             // Max MCP message size in bytes (default 1 MB)
+	TLSCert        string            `yaml:"tls_cert,omitempty" json:"tls_cert,omitempty"`         // Path to TLS certificate file
+	TLSKey         string            `yaml:"tls_key,omitempty" json:"tls_key,omitempty"`           // Path to TLS private key file
+	ToolPacks      []string          `yaml:"tool_packs,omitempty" json:"tool_packs,omitempty"`     // Curated surface: core-read, ops-write, governance, experimental (deprecated aliases: essential, ops). Default: ["core-read"].
+	Persistence    PersistenceConfig `yaml:"persistence,omitempty" json:"persistence,omitempty"`   // Where engine state (agent memory, materialized views, ...) is stored.
+	// DangerouslyAllowUnauthenticatedNetwork disables the fail-closed guard that
+	// otherwise prevents network transports (sse, streamable-http) from starting
+	// without a cryptographic identity provider AND default-deny authorization.
+	// It exists ONLY for local development and MUST NOT be used in production.
+	// It can also be enabled via KAFKAMCP_UNSAFE_ALLOW_UNAUTHENTICATED_NETWORK=true.
+	DangerouslyAllowUnauthenticatedNetwork bool `yaml:"dangerously_allow_unauthenticated_network,omitempty" json:"dangerously_allow_unauthenticated_network,omitempty"`
 }
 
 // PersistenceConfig selects the storage backend used by KafkaMCP's
@@ -54,7 +64,26 @@ func (s ServerConfig) Address() string {
 	if port == 0 {
 		port = 3100
 	}
-	return fmt.Sprintf("%s:%d", host, port)
+	return net.JoinHostPort(host, strconv.Itoa(port))
+}
+
+// MetricsAddress returns the metrics/health listen address. It defaults to
+// loopback for direct binary deployments; container orchestrators must opt in
+// to a pod-reachable address such as 0.0.0.0.
+func (s ServerConfig) MetricsAddress() string {
+	host := s.MetricsHost
+	if host == "" {
+		host = "127.0.0.1"
+	}
+	port := s.MetricsPort
+	if port == 0 {
+		port = s.Port
+		if port == 0 {
+			port = 3100
+		}
+		port++
+	}
+	return net.JoinHostPort(host, strconv.Itoa(port))
 }
 
 // ClusterConfig describes a single Kafka cluster connection including broker
@@ -67,6 +96,7 @@ type ClusterConfig struct {
 	SASLUsername     string               `yaml:"sasl_username,omitempty" json:"-"`                           // SASL username (required when mechanism is set)
 	SASLPassword     string               `yaml:"sasl_password,omitempty" json:"-"`                           // SASL password (required when mechanism is set)
 	SSLCALocation    string               `yaml:"ssl_ca_location,omitempty" json:"ssl_ca_location,omitempty"` // Path to CA certificate bundle
+	TLSMinVersion    string               `yaml:"tls_min_version,omitempty" json:"tls_min_version,omitempty"` // Minimum broker TLS version: "1.2" (default) or "1.3"
 	SchemaRegistry   SchemaRegistryConfig `yaml:"schema_registry,omitempty" json:"schema_registry,omitempty"` // Optional Schema Registry connection
 	ConnectURL       string               `yaml:"connect_url,omitempty" json:"connect_url,omitempty"`         // Kafka Connect REST API base URL
 	ConnectTLS       ConnectTLSConfig     `yaml:"connect_tls,omitempty" json:"connect_tls,omitempty"`         // TLS settings for Kafka Connect
@@ -84,6 +114,7 @@ type SchemaRegistryConfig struct {
 type ConnectTLSConfig struct {
 	CAFile             string `yaml:"ca_file,omitempty" json:"ca_file,omitempty"`
 	InsecureSkipVerify bool   `yaml:"insecure_skip_verify,omitempty" json:"insecure_skip_verify,omitempty"`
+	MinVersion         string `yaml:"min_version,omitempty" json:"min_version,omitempty"` // Defaults to the cluster tls_min_version
 }
 
 // BasicAuth holds username/password credentials for HTTP basic authentication.
@@ -104,6 +135,58 @@ type PolicyConfig struct {
 	Agents                   []AgentPolicy  `yaml:"agents" json:"agents"`                                                                 // Per-agent permission definitions
 	GlobalRateLimitPerMinute int            `yaml:"global_rate_limit_per_minute,omitempty" json:"global_rate_limit_per_minute,omitempty"` // Shared cap across all agents (0 = unlimited)
 	Identity                 IdentityConfig `yaml:"identity,omitempty" json:"identity,omitempty"`                                         // Cryptographic identity verification for the X-Agent-ID claim.
+	Approval                 ApprovalConfig `yaml:"approval,omitempty" json:"approval,omitempty"`                                         // Short-lived approval grants gating write/destructive tools.
+}
+
+// ApprovalConfig controls the short-lived, single-use approval grants that gate
+// every mutating/destructive ("ops-write") tool. Read-only tools are never
+// affected. When Enabled is unset, enforcement defaults to the value of
+// DefaultDeny so production installs (default_deny=true) require approvals while
+// permissive local stdio stays frictionless.
+type ApprovalConfig struct {
+	// Enabled toggles enforcement. Unset -> follows Policies.DefaultDeny.
+	Enabled *bool `yaml:"enabled,omitempty" json:"enabled,omitempty"`
+	// TTLSeconds is the default grant lifetime. 0 -> 300s (5 minutes).
+	TTLSeconds int `yaml:"ttl_seconds,omitempty" json:"ttl_seconds,omitempty"`
+	// MaxTTLSeconds caps the grant lifetime. 0 or too large -> 3600s (1 hour).
+	MaxTTLSeconds int `yaml:"max_ttl_seconds,omitempty" json:"max_ttl_seconds,omitempty"`
+	// SingleUse consumes a grant on first use. Unset -> true.
+	SingleUse *bool `yaml:"single_use,omitempty" json:"single_use,omitempty"`
+	// AllowSelfApproval permits the requesting identity to approve its own
+	// grant. It defaults to false so production approval is a two-person action.
+	AllowSelfApproval bool `yaml:"allow_self_approval,omitempty" json:"allow_self_approval,omitempty"`
+	// SigningKeyEnv names the environment variable holding the HMAC key used to
+	// make approval decision records tamper-evident. The key itself is never
+	// serialized. Defaults to KAFKAMCP_APPROVAL_SIGNING_KEY.
+	SigningKeyEnv string `yaml:"signing_key_env,omitempty" json:"signing_key_env,omitempty"`
+	// PreviousSigningKeyEnvs lists old HMAC keys accepted while rotating the
+	// signing key. New records are always signed with SigningKeyEnv.
+	PreviousSigningKeyEnvs []string `yaml:"previous_signing_key_envs,omitempty" json:"previous_signing_key_envs,omitempty"`
+	// TerminalRetentionSeconds controls how long used, revoked, expired, and
+	// abandoned grants remain queryable. 0 -> 7 days.
+	TerminalRetentionSeconds int `yaml:"terminal_retention_seconds,omitempty" json:"terminal_retention_seconds,omitempty"`
+}
+
+// EnforcementEnabled reports whether approval enforcement is active given the
+// surrounding default-deny posture.
+func (a ApprovalConfig) EnforcementEnabled(defaultDeny bool) bool {
+	if a.Enabled != nil {
+		return *a.Enabled
+	}
+	return defaultDeny
+}
+
+// ApprovalSigningKeyEnv is the default environment variable containing the
+// HMAC-SHA-256 key for approval decision records.
+const ApprovalSigningKeyEnv = "KAFKAMCP_APPROVAL_SIGNING_KEY"
+
+// EffectiveSigningKeyEnv returns the configured approval decision signing-key
+// environment variable.
+func (a ApprovalConfig) EffectiveSigningKeyEnv() string {
+	if strings.TrimSpace(a.SigningKeyEnv) == "" {
+		return ApprovalSigningKeyEnv
+	}
+	return strings.TrimSpace(a.SigningKeyEnv)
 }
 
 // IdentityConfig configures how KafkaMCP verifies the claimed agent
@@ -154,6 +237,20 @@ func (c IdentityConfig) HeaderFallbackEnabled() bool {
 	}
 	switch c.Provider {
 	case "", "none":
+		return true
+	default:
+		return false
+	}
+}
+
+// IsCryptographic reports whether the identity provider verifies agent identity
+// with an authenticated credential (static shared-secret token, OIDC bearer
+// token, or mTLS client certificate) rather than trusting a plaintext
+// X-Agent-ID header. Network transports require this to be true unless the
+// unsafe development override is enabled.
+func (c IdentityConfig) IsCryptographic() bool {
+	switch strings.ToLower(strings.TrimSpace(c.Provider)) {
+	case "static", "oidc", "mtls":
 		return true
 	default:
 		return false
@@ -212,47 +309,6 @@ type MTLSIdentityConfig struct {
 	AllowCNFallback bool `yaml:"allow_cn_fallback,omitempty" json:"allow_cn_fallback,omitempty"`
 }
 
-// ExperimentalConfig gates subsystems whose current implementation is a stub
-// or a metadata-only simulation. They remain disabled by default so the
-// server never silently advertises behavior it cannot deliver.
-type ExperimentalConfig struct {
-	// Chaos enables the chaos-injection MCP tool. The current build does not
-	// actually disrupt Kafka traffic; experiments are recorded in-process
-	// only. Enabling this flag will log a loud warning at startup.
-	Chaos bool `yaml:"chaos,omitempty" json:"chaos,omitempty"`
-
-	// WASMRuntime enables the kafka_wasm_* tools. The current build does NOT
-	// execute WebAssembly modules — Execute returns a canned simulated
-	// response. Enabling this flag will log a loud warning at startup.
-	WASMRuntime bool `yaml:"wasm_runtime,omitempty" json:"wasm_runtime,omitempty"`
-
-	// KafkaProxy enables the kafka_proxy MCP tool. The current proxy does
-	// NOT forward Kafka traffic to a real broker; without an OnTranslated
-	// callback it returns hardcoded responses. Enabling this flag without
-	// wiring up an MCP translation callback will still produce stub
-	// responses; the flag exists to surface that intent in config.
-	KafkaProxy bool `yaml:"kafka_proxy,omitempty" json:"kafka_proxy,omitempty"`
-
-	// Migration enables the destructive paths of kafka_autopilot_execute /
-	// kafka_autopilot_rollback. The current build does NOT actually apply
-	// topic/group/schema changes to the target cluster — ExecutePlan only
-	// updates in-process status. Until a real executor is wired in, this
-	// tool stays gated. (Dry-run paths and the assessment/planning steps
-	// remain available without the flag.)
-	Migration bool `yaml:"migration,omitempty" json:"migration,omitempty"`
-
-	// ControlPlane enables the kafka_controlplane_* family. The current
-	// build's controlplane.Manager fabricates instance endpoints and
-	// org/billing data in memory — there is no real SaaS layer behind it.
-	ControlPlane bool `yaml:"control_plane,omitempty" json:"control_plane,omitempty"`
-
-	// Marketplace enables kafka_plugin_install, which today only flips an
-	// in-memory boolean on the marketplace catalog entry. It does NOT
-	// download, verify, or sandbox a real plugin artifact. Gated so agents
-	// are not misled into believing they have side-effects on the host.
-	Marketplace bool `yaml:"marketplace,omitempty" json:"marketplace,omitempty"`
-}
-
 // AgentPolicy specifies the permissions and rate limits for a single MCP agent.
 type AgentPolicy struct {
 	ID             string            `yaml:"id" json:"id"`
@@ -296,6 +352,11 @@ type AuditConfig struct {
 type MaskingConfig struct {
 	Enabled bool          `yaml:"enabled" json:"enabled"`
 	Rules   []MaskingRule `yaml:"rules" json:"rules"`
+	// KeyEnv names the environment variable that holds the HMAC-SHA-256 key used
+	// for the "hash" and "tokenize" masking actions. The secret itself is never
+	// stored in serialized config. When empty, KAFKAMCP_MASKING_KEY is consulted.
+	// If no key is present, hash/tokenize actions fail closed (fully redact).
+	KeyEnv string `yaml:"key_env,omitempty" json:"key_env,omitempty"`
 }
 
 // MaskingRule defines a single masking rule for a field pattern.
@@ -315,6 +376,13 @@ type TelemetryConfig struct {
 	Insecure    bool    `yaml:"insecure,omitempty" json:"insecure,omitempty"`         // Use HTTP instead of HTTPS
 	ServiceName string  `yaml:"service_name,omitempty" json:"service_name,omitempty"` // Service name for traces
 	SampleRate  float64 `yaml:"sample_rate,omitempty" json:"sample_rate,omitempty"`   // 0.0-1.0, default 1.0
+	// ActivationMetrics opts into extra, privacy-preserving local activation
+	// metrics (setup/validation success, active verified agents, tool-pack use,
+	// denied unsafe calls, approval outcomes, core workflow completions). These
+	// are exposed on the local Prometheus endpoint only — there is NO phone-home.
+	// Labels are deliberately low-cardinality and never include raw agent or
+	// resource identifiers. Default: off.
+	ActivationMetrics bool `yaml:"activation_metrics,omitempty" json:"activation_metrics,omitempty"`
 }
 
 var envVarPattern = regexp.MustCompile(`\$\{([^}]+)\}`)
@@ -374,7 +442,9 @@ func Load(path string) (*Config, error) {
 	}
 
 	var cfg Config
-	if err := yaml.Unmarshal(expanded, &cfg); err != nil {
+	decoder := yaml.NewDecoder(bytes.NewReader(expanded))
+	decoder.KnownFields(true)
+	if err := decoder.Decode(&cfg); err != nil {
 		return nil, fmt.Errorf("parsing config file: %w", err)
 	}
 
@@ -403,9 +473,31 @@ func (c *Config) validate() error {
 		if cluster.BootstrapServers == "" {
 			return fmt.Errorf("cluster[%d] (%s): bootstrap_servers is required", i, cluster.Name)
 		}
+		protocol := strings.ToUpper(strings.TrimSpace(cluster.SecurityProtocol))
+		if protocol == "" {
+			protocol = "PLAINTEXT"
+		}
+		switch protocol {
+		case "PLAINTEXT", "SSL", "SASL_SSL", "SASL_PLAINTEXT":
+		default:
+			return fmt.Errorf("cluster[%d] (%s): invalid security_protocol %q; must be one of: PLAINTEXT, SSL, SASL_SSL, SASL_PLAINTEXT", i, cluster.Name, cluster.SecurityProtocol)
+		}
+		saslMechanism := strings.ToUpper(strings.TrimSpace(cluster.SASLMechanism))
 		// SASL consistency: if SASL mechanism is set, username and password are required
-		if cluster.SASLMechanism != "" && (cluster.SASLUsername == "" || cluster.SASLPassword == "") {
+		if saslMechanism != "" && (cluster.SASLUsername == "" || cluster.SASLPassword == "") {
 			return fmt.Errorf("cluster[%d] (%s): sasl_username and sasl_password are required when sasl_mechanism is set", i, cluster.Name)
+		}
+		if strings.HasPrefix(protocol, "SASL_") && saslMechanism == "" {
+			return fmt.Errorf("cluster[%d] (%s): sasl_mechanism is required when security_protocol=%s", i, cluster.Name, protocol)
+		}
+		if saslMechanism != "" && !strings.HasPrefix(protocol, "SASL_") {
+			return fmt.Errorf("cluster[%d] (%s): security_protocol must be SASL_SSL or SASL_PLAINTEXT when sasl_mechanism is set", i, cluster.Name)
+		}
+		if err := validateTLSVersion(cluster.TLSMinVersion); err != nil {
+			return fmt.Errorf("cluster[%d] (%s): tls_min_version: %w", i, cluster.Name, err)
+		}
+		if err := validateTLSVersion(cluster.ConnectTLS.MinVersion); err != nil {
+			return fmt.Errorf("cluster[%d] (%s): connect_tls.min_version: %w", i, cluster.Name, err)
 		}
 		// InsecureSkipVerify requires explicit env gate
 		if cluster.ConnectTLS.InsecureSkipVerify && os.Getenv("KAFKAMCP_ALLOW_INSECURE") != "true" {
@@ -421,14 +513,72 @@ func (c *Config) validate() error {
 	if !validTransports[transport] {
 		return fmt.Errorf("invalid transport %q; must be one of: stdio, sse, streamable-http", transport)
 	}
+	serverPort := c.Server.Port
+	if serverPort == 0 {
+		serverPort = 3100
+	}
+	if serverPort < 1 || serverPort > 65535 {
+		return fmt.Errorf("server.port must be between 1 and 65535")
+	}
+	metricsPort := c.Server.MetricsPort
+	if metricsPort == 0 {
+		if serverPort == 65535 {
+			return fmt.Errorf("server.metrics_port is required when server.port is 65535")
+		}
+		metricsPort = serverPort + 1
+	}
+	if metricsPort < 1 || metricsPort > 65535 {
+		return fmt.Errorf("server.metrics_port must be between 1 and 65535")
+	}
+	if c.NetworkTransport() && metricsPort == serverPort &&
+		effectiveHost(c.Server.MetricsHost, "127.0.0.1") == effectiveHost(c.Server.Host, "0.0.0.0") {
+		return fmt.Errorf("server.metrics_port must differ from server.port when both listeners use the same host")
+	}
 
 	if len(c.Server.ToolPacks) > 0 {
 		for i, p := range c.Server.ToolPacks {
 			norm := strings.ToLower(strings.TrimSpace(p))
 			if !ValidToolPacks[norm] {
-				return fmt.Errorf("server.tool_packs[%d] %q is invalid; must be one of: essential, ops, analytics, governance, streaming, experimental, all", i, p)
+				return fmt.Errorf("server.tool_packs[%d] %q is invalid; must be one of: core-read, ops-write, governance, experimental (deprecated: essential, ops)", i, p)
 			}
 		}
+	}
+
+	guardedPacksEnabled := HasToolPack(c.Server.ToolPacks, PackOpsWrite) ||
+		HasToolPack(c.Server.ToolPacks, PackGovernance)
+	if guardedPacksEnabled {
+		if c.Policies.Approval.Enabled != nil && !*c.Policies.Approval.Enabled {
+			return fmt.Errorf("policies.approval.enabled cannot be false while a guarded tool pack is enabled")
+		}
+		if !c.NetworkTransport() {
+			return fmt.Errorf("ops-write and governance require sse or streamable-http so callers can use cryptographically verified identities; stdio is core-read only")
+		}
+		if err := c.TransportSecurityError(); err != nil {
+			return fmt.Errorf("guarded tool packs require a secure network posture: %w", err)
+		}
+		keyEnv := c.Policies.Approval.EffectiveSigningKeyEnv()
+		key := os.Getenv(keyEnv)
+		if len(key) < 32 {
+			return fmt.Errorf("%s must contain at least 32 bytes when ops-write or governance is enabled so approval decisions are tamper-evident", keyEnv)
+		}
+		for i, previousEnv := range c.Policies.Approval.PreviousSigningKeyEnvs {
+			previousEnv = strings.TrimSpace(previousEnv)
+			if previousEnv == "" {
+				return fmt.Errorf("policies.approval.previous_signing_key_envs[%d] must not be empty", i)
+			}
+			if len(os.Getenv(previousEnv)) < 32 {
+				return fmt.Errorf("%s must contain at least 32 bytes while configured as a previous approval signing key", previousEnv)
+			}
+		}
+	}
+	if c.Policies.Approval.TTLSeconds < 0 {
+		return fmt.Errorf("policies.approval.ttl_seconds must be non-negative")
+	}
+	if c.Policies.Approval.MaxTTLSeconds < 0 || c.Policies.Approval.MaxTTLSeconds > 3600 {
+		return fmt.Errorf("policies.approval.max_ttl_seconds must be between 0 and 3600")
+	}
+	if retention := c.Policies.Approval.TerminalRetentionSeconds; retention < 0 || retention > 2592000 {
+		return fmt.Errorf("policies.approval.terminal_retention_seconds must be between 0 and 2592000")
 	}
 
 	if backend := strings.ToLower(strings.TrimSpace(c.Server.Persistence.Backend)); backend != "" {
@@ -475,6 +625,9 @@ func (c *Config) validate() error {
 		return fmt.Errorf("invalid policies.identity.provider %q; must be one of: none, static, oidc, mtls", c.Policies.Identity.Provider)
 	}
 
+	if err := c.TransportSecurityError(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -488,13 +641,19 @@ func (c *Config) applyDefaults() {
 	if c.Server.Port == 0 {
 		c.Server.Port = 3100
 	}
+	if c.Server.MetricsHost == "" {
+		c.Server.MetricsHost = "127.0.0.1"
+	}
+	if c.Server.MetricsPort == 0 {
+		c.Server.MetricsPort = c.Server.Port + 1
+	}
 	if c.Server.MaxMessageSize == 0 {
 		c.Server.MaxMessageSize = 1048576 // 1MB default
 	}
 	if len(c.Server.ToolPacks) == 0 {
-		// Default to the essential pack: keeps the advertised tool surface
-		// under the ~40–60 ceiling where LLM tool-routing degrades.
-		c.Server.ToolPacks = []string{"essential"}
+		// Default to the curated read-only core (<=15 tools). Mutating and
+		// experimental surfaces must be opted into explicitly.
+		c.Server.ToolPacks = []string{DefaultToolPack}
 	}
 	if c.Server.Persistence.Backend == "" {
 		// Preserve the historical behavior: in-memory state, lost on
@@ -520,9 +679,36 @@ func (c *Config) applyDefaults() {
 			break
 		}
 	}
+	for i := range c.Clusters {
+		if c.Clusters[i].SecurityProtocol == "" {
+			c.Clusters[i].SecurityProtocol = "PLAINTEXT"
+		}
+		if c.Clusters[i].TLSMinVersion == "" {
+			c.Clusters[i].TLSMinVersion = "1.2"
+		}
+		if c.Clusters[i].ConnectTLS.MinVersion == "" {
+			c.Clusters[i].ConnectTLS.MinVersion = c.Clusters[i].TLSMinVersion
+		}
+	}
 	if !hasDefault && len(c.Clusters) > 0 {
 		c.Clusters[0].Default = true
 	}
+}
+
+func validateTLSVersion(version string) error {
+	switch strings.TrimSpace(version) {
+	case "", "1.2", "1.3":
+		return nil
+	default:
+		return fmt.Errorf("must be one of: 1.2, 1.3")
+	}
+}
+
+func effectiveHost(value, fallback string) string {
+	if strings.TrimSpace(value) == "" {
+		return fallback
+	}
+	return strings.TrimSpace(value)
 }
 
 // DefaultCluster returns the default cluster configuration.
@@ -536,6 +722,69 @@ func (c *Config) DefaultCluster() *ClusterConfig {
 		return &c.Clusters[0]
 	}
 	return nil
+}
+
+// UnsafeNetworkOverrideEnv is the environment variable that, when set to a
+// truthy value, disables the fail-closed network-transport security guard. It
+// mirrors ServerConfig.DangerouslyAllowUnauthenticatedNetwork and exists ONLY
+// for local development.
+const UnsafeNetworkOverrideEnv = "KAFKAMCP_UNSAFE_ALLOW_UNAUTHENTICATED_NETWORK"
+
+// NetworkTransport reports whether the configured transport exposes a network
+// listener (anything other than stdio).
+func (c *Config) NetworkTransport() bool {
+	t := strings.ToLower(strings.TrimSpace(c.Server.Transport))
+	return t != "" && t != "stdio"
+}
+
+// UnsafeNetworkOverrideEnabled reports whether the unsafe development override
+// that disables the network-transport security guard is active, via either the
+// config field or the KAFKAMCP_UNSAFE_ALLOW_UNAUTHENTICATED_NETWORK env var.
+func (c *Config) UnsafeNetworkOverrideEnabled() bool {
+	if c.Server.DangerouslyAllowUnauthenticatedNetwork {
+		return true
+	}
+	switch strings.ToLower(strings.TrimSpace(os.Getenv(UnsafeNetworkOverrideEnv))) {
+	case "1", "true", "yes", "on":
+		return true
+	default:
+		return false
+	}
+}
+
+// TransportSecurityError enforces the fail-closed posture for network
+// transports. It returns a non-nil error when a network transport (sse,
+// streamable-http) is configured without BOTH a cryptographic identity provider
+// and default-deny authorization, unless the unsafe development override is
+// enabled. stdio transports always return nil so local use stays frictionless.
+func (c *Config) TransportSecurityError() error {
+	if !c.NetworkTransport() {
+		return nil
+	}
+	if c.UnsafeNetworkOverrideEnabled() {
+		return nil
+	}
+	var missing []string
+	if !c.Policies.Identity.IsCryptographic() {
+		missing = append(missing, fmt.Sprintf(
+			"policies.identity.provider must be one of static, oidc, mtls (got %q)",
+			c.Policies.Identity.Provider))
+	}
+	if c.Policies.Identity.HeaderFallbackEnabled() {
+		missing = append(missing, "policies.identity.allow_header_fallback must be false")
+	}
+	if !c.Policies.DefaultDeny {
+		missing = append(missing, "policies.default_deny must be true")
+	}
+	if len(missing) == 0 {
+		return nil
+	}
+	return fmt.Errorf(
+		"refusing to start %q network transport without a secure posture: %s. "+
+			"Configure a cryptographic identity provider and default-deny authorization, "+
+			"or set server.dangerously_allow_unauthenticated_network: true "+
+			"(env %s=true) for LOCAL DEVELOPMENT ONLY",
+		c.Server.Transport, strings.Join(missing, "; "), UnsafeNetworkOverrideEnv)
 }
 
 // FindCluster returns the cluster configuration by name, or the default if name is empty.

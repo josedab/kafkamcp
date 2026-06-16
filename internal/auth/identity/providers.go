@@ -2,6 +2,8 @@ package identity
 
 import (
 	"context"
+	"crypto/sha256"
+	"crypto/subtle"
 	"net/http"
 	"time"
 )
@@ -28,11 +30,18 @@ func (*NoneProvider) Verify(_ context.Context, _ http.Header) (*AgentIdentity, e
 // intended for self-hosted, single-tenant deployments that need
 // something better than client-supplied X-Agent-ID headers without
 // running an OIDC provider.
+// Internally it stores only SHA-256 token fingerprints and scans every
+// configured fingerprint with constant-time comparison.
 //
-// The token-to-identity map is loaded once at construction; rotating
-// tokens requires restarting the server (or a future hot-reload story).
+// The token-to-identity entries are loaded once at construction; rotating
+// tokens requires restarting the server.
 type StaticProvider struct {
-	tokens map[string]*AgentIdentity
+	tokens []staticTokenEntry
+}
+
+type staticTokenEntry struct {
+	fingerprint [sha256.Size]byte
+	identity    AgentIdentity
 }
 
 // StaticToken describes a single shared-secret token recognized by the
@@ -52,7 +61,8 @@ type StaticToken struct {
 // NewStatic constructs a static provider. Duplicate tokens are rejected
 // at construction time.
 func NewStatic(tokens []StaticToken) (*StaticProvider, error) {
-	m := make(map[string]*AgentIdentity, len(tokens))
+	entries := make([]staticTokenEntry, 0, len(tokens))
+	seen := make(map[[sha256.Size]byte]struct{}, len(tokens))
 	for _, t := range tokens {
 		if t.Token == "" {
 			return nil, &ConfigError{Field: "token", Message: "static token must not be empty"}
@@ -60,17 +70,22 @@ func NewStatic(tokens []StaticToken) (*StaticProvider, error) {
 		if t.AgentID == "" {
 			return nil, &ConfigError{Field: "agent_id", Message: "static token agent_id must not be empty"}
 		}
-		if _, dup := m[t.Token]; dup {
+		fingerprint := sha256.Sum256([]byte(t.Token))
+		if _, dup := seen[fingerprint]; dup {
 			return nil, &ConfigError{Field: "token", Message: "duplicate static token"}
 		}
-		m[t.Token] = &AgentIdentity{
-			ID:      t.AgentID,
-			Method:  "static",
-			Subject: t.AgentID,
-			Groups:  append([]string(nil), t.Groups...),
-		}
+		seen[fingerprint] = struct{}{}
+		entries = append(entries, staticTokenEntry{
+			fingerprint: fingerprint,
+			identity: AgentIdentity{
+				ID:      t.AgentID,
+				Method:  "static",
+				Subject: t.AgentID,
+				Groups:  append([]string(nil), t.Groups...),
+			},
+		})
 	}
-	return &StaticProvider{tokens: m}, nil
+	return &StaticProvider{tokens: entries}, nil
 }
 
 // Name implements Provider.
@@ -82,12 +97,20 @@ func (p *StaticProvider) Verify(_ context.Context, h http.Header) (*AgentIdentit
 	if tok == "" {
 		return nil, ErrNoCredentials
 	}
-	ident, ok := p.tokens[tok]
-	if !ok {
+	candidate := sha256.Sum256([]byte(tok))
+	match := -1
+	for i := range p.tokens {
+		equal := subtle.ConstantTimeCompare(candidate[:], p.tokens[i].fingerprint[:])
+		if equal == 1 {
+			match = i
+		}
+	}
+	if match < 0 {
 		return nil, ErrInvalidToken
 	}
 	// Clone so callers cannot mutate our entry.
-	out := *ident
+	ident := p.tokens[match].identity
+	out := ident
 	out.VerifiedAt = time.Now()
 	if ident.Groups != nil {
 		out.Groups = append([]string(nil), ident.Groups...)

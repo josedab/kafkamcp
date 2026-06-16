@@ -2,6 +2,7 @@ package identity
 
 import (
 	"context"
+	"crypto/sha256"
 	"errors"
 	"net/http"
 	"testing"
@@ -28,6 +29,12 @@ func TestStaticProvider(t *testing.T) {
 	}
 	if p.Name() != "static" {
 		t.Fatalf("Name=%s", p.Name())
+	}
+	if len(p.tokens) != 2 {
+		t.Fatalf("stored token fingerprints = %d, want 2", len(p.tokens))
+	}
+	if p.tokens[0].fingerprint != sha256.Sum256([]byte("tok-alice")) {
+		t.Fatal("static provider did not store the expected token fingerprint")
 	}
 
 	// No header → ErrNoCredentials.

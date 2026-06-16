@@ -208,7 +208,7 @@ func (e *Engine) GenerateQuickstart(clusterFound bool, topicCount int) *Quicksta
 		Number:      1,
 		Title:       "Install KafkaMCP",
 		Description: "Install the KafkaMCP binary or Docker image",
-		Command:     "go install github.com/kafkamcp/kafkamcp/cmd/kafkamcp@latest",
+		Command:     "go install github.com/josedab/kafkamcp/cmd/kafkamcp@latest",
 		Status:      "complete",
 	})
 

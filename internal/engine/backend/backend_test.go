@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/kafkamcp/kafkamcp/internal/engine/backend"
+	"github.com/josedab/kafkamcp/internal/engine/backend"
 )
 
 type factory struct {
@@ -82,6 +82,43 @@ func TestBackend_SetGetDelete(t *testing.T) {
 	}
 }
 
+func TestBackend_CompareAndSwap(t *testing.T) {
+	ctx := context.Background()
+	for _, f := range backends(t) {
+		t.Run(f.name, func(t *testing.T) {
+			be := f.open(t)
+			defer func() { _ = be.Close() }()
+
+			swapped, err := be.CompareAndSwap(ctx, "ns", "key", nil, []byte("one"))
+			if err != nil || !swapped {
+				t.Fatalf("create CAS: swapped=%v err=%v", swapped, err)
+			}
+			if swapped, err = be.CompareAndSwap(ctx, "ns", "key", nil, []byte("duplicate")); err != nil || swapped {
+				t.Fatalf("duplicate create CAS: swapped=%v err=%v", swapped, err)
+			}
+			if swapped, err = be.CompareAndSwap(ctx, "ns", "key", []byte("wrong"), []byte("two")); err != nil || swapped {
+				t.Fatalf("wrong expected CAS: swapped=%v err=%v", swapped, err)
+			}
+			if swapped, err = be.CompareAndSwap(ctx, "ns", "key", []byte("one"), []byte("two")); err != nil || !swapped {
+				t.Fatalf("replace CAS: swapped=%v err=%v", swapped, err)
+			}
+			got, err := be.Get(ctx, "ns", "key")
+			if err != nil || string(got) != "two" {
+				t.Fatalf("Get after replace = %q err=%v", got, err)
+			}
+			if swapped, err = be.CompareAndSwap(ctx, "ns", "key", []byte("two"), nil); err != nil || !swapped {
+				t.Fatalf("delete CAS: swapped=%v err=%v", swapped, err)
+			}
+			if _, err := be.Get(ctx, "ns", "key"); !errors.Is(err, backend.ErrNotFound) {
+				t.Fatalf("Get after CAS delete: %v", err)
+			}
+			if _, err := be.CompareAndSwap(ctx, "ns", "key", nil, nil); !errors.Is(err, backend.ErrInvalidCAS) {
+				t.Fatalf("nil/nil CAS: %v", err)
+			}
+		})
+	}
+}
+
 func TestBackend_List(t *testing.T) {
 	ctx := context.Background()
 	for _, f := range backends(t) {
@@ -90,6 +127,7 @@ func TestBackend_List(t *testing.T) {
 			defer func() { _ = be.Close() }()
 
 			seed := map[string]string{
+				"Agent/alice/profile":   "upper",
 				"agent/alice/profile":   "a1",
 				"agent/alice/quota":     "a2",
 				"agent/bob/profile":     "b1",
@@ -148,13 +186,54 @@ func TestBackend_Closed(t *testing.T) {
 			if err := be.Set(ctx, "ns", "k", []byte("v")); !errors.Is(err, backend.ErrClosed) {
 				t.Fatalf("Set on closed: want ErrClosed, got %v", err)
 			}
+			if _, err := be.CompareAndSwap(ctx, "ns", "k", nil, []byte("v")); !errors.Is(err, backend.ErrClosed) {
+				t.Fatalf("CompareAndSwap on closed: want ErrClosed, got %v", err)
+			}
 			if err := be.Delete(ctx, "ns", "k"); !errors.Is(err, backend.ErrClosed) {
 				t.Fatalf("Delete on closed: want ErrClosed, got %v", err)
 			}
+
 			if _, err := be.List(ctx, "ns", ""); !errors.Is(err, backend.ErrClosed) {
 				t.Fatalf("List on closed: want ErrClosed, got %v", err)
 			}
 		})
+	}
+}
+
+func TestSQLite_CompareAndSwapAcrossConnections(t *testing.T) {
+	ctx := context.Background()
+	path := filepath.Join(t.TempDir(), "cas.db")
+	first, err := backend.OpenSQLite(backend.SQLiteOptions{Path: path})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = first.Close() }()
+	second, err := backend.OpenSQLite(backend.SQLiteOptions{Path: path})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = second.Close() }()
+
+	results := make(chan bool, 2)
+	errs := make(chan error, 2)
+	for _, be := range []backend.Backend{first, second} {
+		go func(be backend.Backend) {
+			swapped, err := be.CompareAndSwap(ctx, "ns", "key", nil, []byte("value"))
+			results <- swapped
+			errs <- err
+		}(be)
+	}
+	successes := 0
+	for range 2 {
+		if err := <-errs; err != nil {
+			t.Fatalf("CAS error: %v", err)
+		}
+		if <-results {
+			successes++
+		}
+	}
+	if successes != 1 {
+		t.Fatalf("successful creates = %d, want 1", successes)
 	}
 }
 

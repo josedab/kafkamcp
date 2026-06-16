@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kafkamcp/kafkamcp/internal/engine/backend"
+	"github.com/josedab/kafkamcp/internal/engine/backend"
 )
 
 func TestBucketAllow(t *testing.T) {

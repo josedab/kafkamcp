@@ -132,6 +132,45 @@ ON CONFLICT(namespace, key) DO UPDATE SET value = excluded.value
 	return nil
 }
 
+// CompareAndSwap implements Backend using one SQL statement per operation so
+// the condition remains atomic across separate processes sharing the database.
+func (b *SQLite) CompareAndSwap(ctx context.Context, namespace, key string, expected, replacement []byte) (bool, error) {
+	if expected == nil && replacement == nil {
+		return false, ErrInvalidCAS
+	}
+	if b.isClosed() {
+		return false, ErrClosed
+	}
+
+	var (
+		result sql.Result
+		err    error
+	)
+	switch {
+	case expected == nil:
+		result, err = b.db.ExecContext(ctx, `
+INSERT INTO kv (namespace, key, value) VALUES (?, ?, ?)
+ON CONFLICT(namespace, key) DO NOTHING
+`, namespace, key, replacement)
+	case replacement == nil:
+		result, err = b.db.ExecContext(ctx,
+			`DELETE FROM kv WHERE namespace = ? AND key = ? AND value = ?`,
+			namespace, key, expected)
+	default:
+		result, err = b.db.ExecContext(ctx,
+			`UPDATE kv SET value = ? WHERE namespace = ? AND key = ? AND value = ?`,
+			replacement, namespace, key, expected)
+	}
+	if err != nil {
+		return false, fmt.Errorf("kafkamcp/engine/backend: compare-and-swap %s/%s: %w", namespace, key, err)
+	}
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return false, fmt.Errorf("kafkamcp/engine/backend: compare-and-swap rows affected: %w", err)
+	}
+	return affected == 1, nil
+}
+
 // Delete implements Backend.
 func (b *SQLite) Delete(ctx context.Context, namespace, key string) error {
 	if b.isClosed() {
@@ -156,12 +195,9 @@ func (b *SQLite) List(ctx context.Context, namespace, prefix string) ([]Entry, e
 	if prefix == "" {
 		rows, err = b.db.QueryContext(ctx, `SELECT key, value FROM kv WHERE namespace = ?`, namespace)
 	} else {
-		// LIKE pattern needs '%' suffix; escape SQL LIKE wildcards in
-		// the supplied prefix so callers can pass arbitrary bytes.
-		esc := escapeLike(prefix)
 		rows, err = b.db.QueryContext(ctx,
-			`SELECT key, value FROM kv WHERE namespace = ? AND key LIKE ? ESCAPE '\'`,
-			namespace, esc+"%")
+			`SELECT key, value FROM kv WHERE namespace = ? AND substr(key, 1, length(?)) = ?`,
+			namespace, prefix, prefix)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("kafkamcp/engine/backend: list %s/%s: %w", namespace, prefix, err)
@@ -204,7 +240,3 @@ func (b *SQLite) isClosed() bool {
 
 // escapeLike escapes the SQLite LIKE wildcard characters ('%' and '_')
 // using '\' as the escape character (see the ESCAPE clause in List).
-func escapeLike(s string) string {
-	r := strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`)
-	return r.Replace(s)
-}

@@ -117,7 +117,7 @@ func TestConfigValidation(t *testing.T) {
 		{
 			name: "valid SASL config",
 			cfg: Config{
-				Clusters: []ClusterConfig{{Name: "test", BootstrapServers: "localhost:9092", SASLMechanism: "PLAIN", SASLUsername: "user", SASLPassword: "pass"}},
+				Clusters: []ClusterConfig{{Name: "test", BootstrapServers: "localhost:9092", SecurityProtocol: "SASL_SSL", SASLMechanism: "PLAIN", SASLUsername: "user", SASLPassword: "pass"}},
 			},
 			wantErr: false,
 		},

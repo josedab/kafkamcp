@@ -3,8 +3,8 @@ package auth
 import (
 	"testing"
 
-	"github.com/kafkamcp/kafkamcp/internal/config"
-	"github.com/kafkamcp/kafkamcp/internal/match"
+	"github.com/josedab/kafkamcp/internal/config"
+	"github.com/josedab/kafkamcp/internal/match"
 )
 
 func TestMatchPattern(t *testing.T) {
@@ -129,5 +129,28 @@ func TestNoPolicies(t *testing.T) {
 	pe := NewPolicyEngine(config.PolicyConfig{DefaultDeny: false})
 	if !pe.Authorize("anyone", ResourceTopic, "any.topic", ActionRead) {
 		t.Error("expected allow when no policies and default-deny=false")
+	}
+}
+
+func TestPolicyEngineEvaluateExplainsDecision(t *testing.T) {
+	t.Parallel()
+	engine := NewPolicyEngine(config.PolicyConfig{
+		DefaultDeny: true,
+		Agents: []config.AgentPolicy{{
+			ID:   "operator",
+			Role: "viewer",
+			Topics: []config.TopicPermission{{
+				Pattern:     "orders-*",
+				Permissions: []string{"read", "write"},
+			}},
+		}},
+	})
+	allowed := engine.Evaluate("operator", ResourceTopic, "orders-v1", ActionWrite)
+	if !allowed.Allowed || allowed.MatchedPattern != "orders-*" {
+		t.Fatalf("unexpected allowed decision: %+v", allowed)
+	}
+	denied := engine.Evaluate("operator", ResourceTopic, "payments", ActionWrite)
+	if denied.Allowed || denied.Reason == "" {
+		t.Fatalf("unexpected denied decision: %+v", denied)
 	}
 }

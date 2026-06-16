@@ -13,8 +13,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kafkamcp/kafkamcp/internal/engine"
-	"github.com/kafkamcp/kafkamcp/internal/engine/backend"
+	"github.com/josedab/kafkamcp/internal/engine"
+	"github.com/josedab/kafkamcp/internal/engine/backend"
 )
 
 // Limiter implements a per-agent token bucket rate limiter.

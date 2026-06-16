@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kafkamcp/kafkamcp/internal/randid"
+	"github.com/josedab/kafkamcp/internal/randid"
 )
 
 // PolicyEngine evaluates OPA Rego policies for authorization decisions.

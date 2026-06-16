@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"bytes"
 	"context"
 	"strings"
 	"sync"
@@ -57,6 +58,43 @@ func (b *InMemory) Set(_ context.Context, namespace, key string, value []byte) e
 	copy(v, value)
 	ns[key] = v
 	return nil
+}
+
+// CompareAndSwap implements Backend.
+func (b *InMemory) CompareAndSwap(_ context.Context, namespace, key string, expected, replacement []byte) (bool, error) {
+	if expected == nil && replacement == nil {
+		return false, ErrInvalidCAS
+	}
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if b.closed {
+		return false, ErrClosed
+	}
+
+	ns, namespaceExists := b.data[namespace]
+	current, keyExists := ns[key]
+	if expected == nil {
+		if keyExists {
+			return false, nil
+		}
+	} else if !keyExists || !bytes.Equal(current, expected) {
+		return false, nil
+	}
+
+	if replacement == nil {
+		delete(ns, key)
+		if namespaceExists && len(ns) == 0 {
+			delete(b.data, namespace)
+		}
+		return true, nil
+	}
+	if !namespaceExists {
+		ns = make(map[string][]byte)
+		b.data[namespace] = ns
+	}
+	value := append([]byte(nil), replacement...)
+	ns[key] = value
+	return true, nil
 }
 
 // Delete implements Backend.

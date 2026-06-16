@@ -3,7 +3,7 @@ package auth
 import (
 	"testing"
 
-	"github.com/kafkamcp/kafkamcp/internal/config"
+	"github.com/josedab/kafkamcp/internal/config"
 )
 
 func TestDefaultDeny(t *testing.T) {

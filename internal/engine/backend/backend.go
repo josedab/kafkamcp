@@ -45,6 +45,12 @@ type Backend interface {
 	// value.
 	Set(ctx context.Context, namespace, key string, value []byte) error
 
+	// CompareAndSwap atomically replaces the value at (namespace, key) when
+	// the currently stored bytes exactly match expected. A nil expected value
+	// means the key must be absent. A nil replacement deletes the matching
+	// key. It returns true only when the mutation was applied.
+	CompareAndSwap(ctx context.Context, namespace, key string, expected, replacement []byte) (bool, error)
+
 	// Delete removes (namespace, key). It is not an error to delete a
 	// key that does not exist.
 	Delete(ctx context.Context, namespace, key string) error
@@ -67,4 +73,8 @@ var (
 	// ErrClosed is returned by any operation invoked on a closed
 	// backend.
 	ErrClosed = errors.New("kafkamcp/engine/backend: backend closed")
+
+	// ErrInvalidCAS is returned for a compare-and-swap request that has no
+	// observable effect or cannot be represented by the backend.
+	ErrInvalidCAS = errors.New("kafkamcp/engine/backend: invalid compare-and-swap")
 )
