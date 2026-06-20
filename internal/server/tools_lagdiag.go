@@ -6,8 +6,8 @@ import (
 
 	"github.com/mark3labs/mcp-go/mcp"
 
-	"github.com/kafkamcp/kafkamcp/internal/auth"
-	"github.com/kafkamcp/kafkamcp/internal/lagdiag"
+	"github.com/josedab/kafkamcp/internal/auth"
+	"github.com/josedab/kafkamcp/internal/lagdiag"
 )
 
 func (s *Server) handleDiagnoseLag(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {

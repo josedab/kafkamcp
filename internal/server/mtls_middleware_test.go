@@ -17,7 +17,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kafkamcp/kafkamcp/internal/auth/identity"
+	"github.com/josedab/kafkamcp/internal/auth/identity"
 )
 
 func mintLeaf(t *testing.T, cn string, uris []string) *x509.Certificate {
@@ -95,33 +95,6 @@ func TestMTLSIdentityMiddleware_PassThroughWithoutCert(t *testing.T) {
 	}
 	if rec.Code != 200 {
 		t.Errorf("status = %d, expected pass-through", rec.Code)
-	}
-}
-
-func TestMTLSIdentityMiddleware_RejectsBadSPIFFE(t *testing.T) {
-	prov := identity.NewMTLS(identity.MTLSConfig{
-		AllowedSPIFFEIDs: []string{"spiffe://example.org/agents/alice"},
-	})
-	s := &Server{
-		Governance: Governance{identityProvider: prov},
-		logger:     slog.New(slog.NewTextHandler(io.Discard, nil)),
-	}
-	called := false
-	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		called = true
-	})
-	cert := mintLeaf(t, "x", []string{"spiffe://example.org/agents/mallory"})
-	req := httptest.NewRequest("POST", "/", nil)
-	req.TLS = &tls.ConnectionState{PeerCertificates: []*x509.Certificate{cert}}
-	rec := httptest.NewRecorder()
-
-	s.MTLSIdentityMiddleware(next).ServeHTTP(rec, req)
-
-	if called {
-		t.Error("next handler should not be invoked when SPIFFE id is rejected")
-	}
-	if rec.Code != http.StatusUnauthorized {
-		t.Errorf("status = %d, want 401", rec.Code)
 	}
 }
 

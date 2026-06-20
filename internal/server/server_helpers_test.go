@@ -1,15 +1,11 @@
 package server
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 	"testing"
 
 	"github.com/mark3labs/mcp-go/mcp"
-
-	"github.com/kafkamcp/kafkamcp/internal/kafka"
-	"github.com/kafkamcp/kafkamcp/internal/nlquery"
 )
 
 func TestClampInt64(t *testing.T) {
@@ -243,168 +239,6 @@ func TestExtractAgentIDFromResourceVariants(t *testing.T) {
 			got := extractAgentIDFromResource(req)
 			if got != tt.want {
 				t.Errorf("extractAgentIDFromResource() = %q, want %q", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestContainsStr(t *testing.T) {
-	t.Parallel()
-	tests := []struct {
-		s, substr string
-		want      bool
-	}{
-		{"hello world", "world", true},
-		{"hello world", "xyz", false},
-		{"hello", "", true},
-		{"", "", true},
-		{"", "a", false},
-		{"abc", "abc", true},
-	}
-	for _, tt := range tests {
-		got := containsStr(tt.s, tt.substr)
-		if got != tt.want {
-			t.Errorf("containsStr(%q, %q) = %v, want %v", tt.s, tt.substr, got, tt.want)
-		}
-	}
-}
-
-func TestSearchString(t *testing.T) {
-	t.Parallel()
-	tests := []struct {
-		s, substr string
-		want      bool
-	}{
-		{"hello world", "world", true},
-		{"hello world", "xyz", false},
-		{"abc", "abc", true},
-		{"abcdef", "bcd", true},
-	}
-	for _, tt := range tests {
-		got := searchString(tt.s, tt.substr)
-		if got != tt.want {
-			t.Errorf("searchString(%q, %q) = %v, want %v", tt.s, tt.substr, got, tt.want)
-		}
-	}
-}
-
-func TestExtractFieldValue(t *testing.T) {
-	t.Parallel()
-	tests := []struct {
-		name  string
-		value any
-		field string
-		want  any
-	}{
-		{"empty field", "raw-value", "", "raw-value"},
-		{"map field", map[string]any{"name": "test"}, "name", "test"},
-		{"missing field", map[string]any{"a": 1}, "b", nil},
-		{"non-map value", "string", "field", nil},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := extractFieldValue(tt.value, tt.field)
-			if fmt.Sprintf("%v", got) != fmt.Sprintf("%v", tt.want) {
-				t.Errorf("extractFieldValue = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestEstimateThroughput(t *testing.T) {
-	t.Parallel()
-	tests := []struct {
-		name   string
-		detail *kafka.TopicDetail
-		want   float64
-	}{
-		{
-			"no partitions",
-			&kafka.TopicDetail{},
-			1,
-		},
-		{
-			"with data",
-			&kafka.TopicDetail{
-				Partitions: []kafka.PartitionDetail{
-					{EarliestOffset: 0, LatestOffset: 3600},
-				},
-			},
-			1,
-		},
-		{
-			"multiple partitions",
-			&kafka.TopicDetail{
-				Partitions: []kafka.PartitionDetail{
-					{EarliestOffset: 0, LatestOffset: 7200},
-					{EarliestOffset: 0, LatestOffset: 7200},
-				},
-			},
-			4,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := estimateThroughput(tt.detail)
-			if got != tt.want {
-				t.Errorf("estimateThroughput() = %f, want %f", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestIntFromAny(t *testing.T) {
-	t.Parallel()
-	tests := []struct {
-		name string
-		v    any
-		want int
-	}{
-		{"float64", float64(42), 42},
-		{"int", int(10), 10},
-		{"int64", int64(100), 100},
-		{"string fallback", "not a number", 5},
-		{"nil fallback", nil, 5},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := intFromAny(tt.v, 5)
-			if got != tt.want {
-				t.Errorf("intFromAny(%v) = %d, want %d", tt.v, got, tt.want)
-			}
-		})
-	}
-}
-
-func TestMatchesFilters(t *testing.T) {
-	t.Parallel()
-	msg := kafka.Message{
-		Value: map[string]any{
-			"status": "error",
-			"level":  "critical",
-		},
-	}
-
-	tests := []struct {
-		name    string
-		filters []nlquery.Filter
-		want    bool
-	}{
-		{"no filters", nil, true},
-		{"eq match", []nlquery.Filter{{Field: "status", Operator: "eq", Value: "error"}}, true},
-		{"eq no match", []nlquery.Filter{{Field: "status", Operator: "eq", Value: "success"}}, false},
-		{"neq match", []nlquery.Filter{{Field: "status", Operator: "neq", Value: "success"}}, true},
-		{"neq no match", []nlquery.Filter{{Field: "status", Operator: "neq", Value: "error"}}, false},
-		{"contains match", []nlquery.Filter{{Field: "status", Operator: "contains", Value: "err"}}, true},
-		{"contains no match", []nlquery.Filter{{Field: "status", Operator: "contains", Value: "xyz"}}, false},
-		{"missing field", []nlquery.Filter{{Field: "nonexistent", Operator: "eq", Value: "val"}}, false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := matchesFilters(msg, tt.filters)
-			if got != tt.want {
-				t.Errorf("matchesFilters() = %v, want %v", got, tt.want)
 			}
 		})
 	}

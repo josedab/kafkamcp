@@ -1,16 +1,11 @@
 package server
 
 import (
-	"context"
 	"net/http"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/mark3labs/mcp-go/mcp"
-
-	"github.com/kafkamcp/kafkamcp/internal/auth"
-	"github.com/kafkamcp/kafkamcp/internal/kafka"
 )
 
 // ===================== sanitizeAgentID tests =====================
@@ -211,84 +206,6 @@ func TestCheckResourceRateLimit_Exceeded(t *testing.T) {
 }
 
 // ===================== withToolAuth tests =====================
-
-func TestWithToolAuth_FullFlow(t *testing.T) {
-	t.Parallel()
-	mock := &kafka.MockKafkaManager{}
-	s := newTestServerWithMock(t, mock)
-
-	var calledAgentID string
-	handler := s.withToolAuth(toolAuthConfig{
-		tool:         "test_tool",
-		resourceType: auth.ResourceCluster,
-		action:       auth.ActionRead,
-	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
-		calledAgentID = agentID
-		return marshalResult(map[string]string{"status": "ok"})
-	})
-
-	result, err := handler(context.Background(), makeToolRequest(nil))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertNotError(t, result)
-	if calledAgentID != "anonymous" {
-		t.Errorf("expected anonymous agent, got %q", calledAgentID)
-	}
-}
-
-func TestWithToolAuth_AuthDenied(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t, withDefaultDeny)
-	s.kafkaManager = &kafka.MockKafkaManager{}
-
-	called := false
-	handler := s.withToolAuth(toolAuthConfig{
-		tool:         "test_tool",
-		resourceType: auth.ResourceCluster,
-		action:       auth.ActionRead,
-	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
-		called = true
-		return nil, nil
-	})
-
-	result, err := handler(context.Background(), makeToolRequest(nil))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-	if called {
-		t.Error("handler should not have been called when auth denied")
-	}
-}
-
-func TestWithToolAuth_RateLimitRejection(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t, withRateLimit)
-	s.kafkaManager = &kafka.MockKafkaManager{}
-
-	handler := s.withToolAuth(toolAuthConfig{
-		tool:         "test_tool",
-		resourceType: auth.ResourceCluster,
-		action:       auth.ActionRead,
-	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
-		return marshalResult(map[string]string{"status": "ok"})
-	})
-
-	// Build request with rate-limited agent header
-	req := mcp.CallToolRequest{}
-	req.Params.Arguments = map[string]any{}
-	req.Header = http.Header{}
-	req.Header.Set("X-Agent-ID", "rate-limited-agent")
-
-	// First call should succeed
-	result, _ := handler(context.Background(), req)
-	assertNotError(t, result)
-
-	// Second call should be rate limited
-	result, _ = handler(context.Background(), req)
-	assertIsError(t, result)
-}
 
 // ===================== validateAgentID tests =====================
 

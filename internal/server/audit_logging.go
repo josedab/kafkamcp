@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kafkamcp/kafkamcp/internal/audit"
-	"github.com/kafkamcp/kafkamcp/internal/metrics"
+	"github.com/josedab/kafkamcp/internal/audit"
+	"github.com/josedab/kafkamcp/internal/metrics"
 )
 
 // logAudit records a tool call in the audit log and increments Prometheus metrics.
@@ -40,11 +40,6 @@ func (s *Server) logAudit(ctx context.Context, agentID, tool string, params map[
 	safeAgent := metrics.SanitizeAgentLabel(agentID)
 	s.metrics.ToolCallsTotal.WithLabelValues(tool, safeAgent, entry.Cluster, status).Inc()
 	s.metrics.ToolLatencySeconds.WithLabelValues(tool, safeAgent, entry.Cluster).Observe(latency.Seconds())
-
-	// Record for agent profiling
-	if s.agentProfiler != nil {
-		s.agentProfiler.RecordCall(tool, agentID, nil, latency.Milliseconds(), status)
-	}
 }
 
 // categorizeError maps raw errors to safe category strings to prevent

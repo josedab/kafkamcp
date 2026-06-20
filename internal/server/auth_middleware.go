@@ -9,9 +9,9 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 	otelTrace "go.opentelemetry.io/otel/trace"
 
-	"github.com/kafkamcp/kafkamcp/internal/auth"
-	"github.com/kafkamcp/kafkamcp/internal/auth/identity"
-	"github.com/kafkamcp/kafkamcp/internal/metrics"
+	"github.com/josedab/kafkamcp/internal/auth"
+	"github.com/josedab/kafkamcp/internal/auth/identity"
+	"github.com/josedab/kafkamcp/internal/metrics"
 )
 
 // withIdentity returns a derived context carrying the verified
@@ -203,6 +203,9 @@ func (s *Server) withToolAuth(cfg toolAuthConfig, handler toolHandler) func(ctx 
 		agentID, ident := s.resolveAgentIdentity(ctx, request.Header)
 		if ident != nil {
 			ctx = withIdentity(ctx, ident)
+			if s.activation != nil {
+				s.activation.ObserveVerifiedAgent(agentID)
+			}
 		}
 		args := request.GetArguments()
 
@@ -231,7 +234,29 @@ func (s *Server) withToolAuth(cfg toolAuthConfig, handler toolHandler) func(ctx 
 			return deny, nil
 		}
 
+		receipt, replay, err := s.beginIdempotentMutation(ctx, cfg.tool, agentID, args)
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
+		if replay != nil {
+			return replay, nil
+		}
+
+		// Common approval enforcement for write/destructive tools. Read-only
+		// tools and disabled enforcement short-circuit inside enforceApproval.
+		if deny := s.enforceApproval(ctx, cfg.tool, agentID, request, args); deny != nil {
+			s.abortIdempotentMutation(ctx, receipt)
+			return deny, nil
+		}
+
 		result, err := handler(ctx, request, agentID, args, start)
+		if err != nil || (result != nil && result.IsError) {
+			s.abortIdempotentMutation(ctx, receipt)
+			return result, err
+		}
+		if err := s.completeIdempotentMutation(ctx, receipt, result); err != nil {
+			return mcp.NewToolResultError("operation completed but its idempotency receipt could not be persisted; inspect the target state before retrying"), nil
+		}
 		return result, err
 	}
 }

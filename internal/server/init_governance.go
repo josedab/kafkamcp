@@ -5,19 +5,13 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/kafkamcp/kafkamcp/internal/agentprofile"
-	"github.com/kafkamcp/kafkamcp/internal/audit"
-	"github.com/kafkamcp/kafkamcp/internal/auth"
-	"github.com/kafkamcp/kafkamcp/internal/auth/identity"
-	"github.com/kafkamcp/kafkamcp/internal/compliance"
-	"github.com/kafkamcp/kafkamcp/internal/config"
-	"github.com/kafkamcp/kafkamcp/internal/contracts"
-	enginebackend "github.com/kafkamcp/kafkamcp/internal/engine/backend"
-	"github.com/kafkamcp/kafkamcp/internal/masking"
-	"github.com/kafkamcp/kafkamcp/internal/persona"
-	"github.com/kafkamcp/kafkamcp/internal/ratelimit"
-	"github.com/kafkamcp/kafkamcp/internal/retention"
-	"github.com/kafkamcp/kafkamcp/internal/tenant"
+	"github.com/josedab/kafkamcp/internal/audit"
+	"github.com/josedab/kafkamcp/internal/auth"
+	"github.com/josedab/kafkamcp/internal/auth/identity"
+	"github.com/josedab/kafkamcp/internal/config"
+	enginebackend "github.com/josedab/kafkamcp/internal/engine/backend"
+	"github.com/josedab/kafkamcp/internal/masking"
+	"github.com/josedab/kafkamcp/internal/ratelimit"
 )
 
 // Governance groups policy, audit, security, and compliance subsystems.
@@ -26,15 +20,7 @@ type Governance struct {
 	identityProvider identity.Provider
 	auditLogger      *audit.Logger
 	rateLimiter      *ratelimit.Limiter
-	maskingEngine    *masking.Engine           // PII redaction engine
-	contractEngine   *contracts.Engine         // schema-aware data contracts
-	contractTester   *contracts.ContractTester // producer/consumer contract testing
-	personaEngine    *persona.Engine           // declarative agent personas
-	tenantManager    *tenant.Manager           // multi-tenant management
-	usageTracker     *tenant.UsageTracker      // usage analytics tracking
-	complianceEngine *compliance.Engine        // compliance & regulatory reporting
-	threatDetector   *agentprofile.Detector    // agent behavioral threat detection
-	retentionEngine  *retention.Engine         // intelligent retention policy
+	maskingEngine    *masking.Engine // PII redaction engine
 }
 
 // newGovernance initializes all governance subsystems. be is the
@@ -69,14 +55,6 @@ func newGovernance(cfg *config.Config, logger *slog.Logger, be enginebackend.Bac
 		auditLogger:      auditLogger,
 		rateLimiter:      rl,
 		maskingEngine:    masking.NewEngine(cfg.Masking, logger),
-		contractEngine:   contracts.NewEngine(),
-		contractTester:   contracts.NewContractTester(),
-		personaEngine:    persona.NewEngine(),
-		tenantManager:    tenant.NewManager(),
-		usageTracker:     tenant.NewUsageTracker(),
-		complianceEngine: compliance.NewEngine(logger),
-		threatDetector:   agentprofile.NewDetector(agentprofile.DefaultDetectorConfig(), logger),
-		retentionEngine:  retention.NewEngine(logger),
 	}, nil
 }
 

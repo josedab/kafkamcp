@@ -8,9 +8,8 @@ import (
 
 	"github.com/mark3labs/mcp-go/mcp"
 
-	"github.com/kafkamcp/kafkamcp/internal/auth"
-	"github.com/kafkamcp/kafkamcp/internal/kafka"
-	"github.com/kafkamcp/kafkamcp/internal/metrics"
+	"github.com/josedab/kafkamcp/internal/auth"
+	"github.com/josedab/kafkamcp/internal/kafka"
 )
 
 // ===================== P1 TOOL HANDLERS =====================
@@ -220,6 +219,11 @@ func (s *Server) handleSearch(ctx context.Context, request mcp.CallToolRequest) 
 			return s.toolError("Failed to search", err), nil
 		}
 
+		if err := s.maskMessages(agentID, matched); err != nil {
+			s.logAudit(ctx, agentID, "kafka_search", args, cluster, "error", 0, err, start)
+			return s.toolError("Failed to apply data masking", err), nil
+		}
+
 		s.logAudit(ctx, agentID, "kafka_search", args, cluster, "success", len(matched), nil, start)
 		return marshalResult(map[string]any{
 			"messages":      matched,
@@ -332,67 +336,12 @@ func (s *Server) handleAnalyzeDLQ(ctx context.Context, request mcp.CallToolReque
 			return s.toolError("Failed to analyze DLQ", err), nil
 		}
 
+		if err := s.maskMessages(agentID, result.Samples); err != nil {
+			s.logAudit(ctx, agentID, "kafka_analyze_dlq", args, cluster, "error", 0, err, start)
+			return s.toolError("Failed to apply data masking", err), nil
+		}
+
 		s.logAudit(ctx, agentID, "kafka_analyze_dlq", args, cluster, "success", result.TotalMessages, nil, start)
-		return marshalResult(result)
-	})(ctx, request)
-}
-
-// handleSubscribe creates a consumer group subscription and reads messages with optional auto-commit.
-func (s *Server) handleSubscribe(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return s.withToolAuth(toolAuthConfig{
-		tool: "kafka_subscribe", resourceType: auth.ResourceTopic, action: auth.ActionRead,
-		resourceName: func(r mcp.CallToolRequest) string { return r.GetString("topic", "") },
-	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
-		topic := request.GetString("topic", "")
-		cluster := request.GetString("cluster", "")
-
-		if topic == "" {
-			return mcp.NewToolResultError("topic is required"), nil
-		}
-		if deny := validateStringLength("topic", topic); deny != nil {
-			return deny, nil
-		}
-
-		groupID := request.GetString("group_id", "")
-		if deny := validateStringLength("group_id", groupID); deny != nil {
-			return deny, nil
-		}
-		if deny := validateKafkaIdentifier("group_id", groupID); deny != nil {
-			return deny, nil
-		}
-
-		maxMessages := request.GetInt("max_messages", 100)
-		if maxMessages > MaxConsumeLimit {
-			maxMessages = MaxConsumeLimit
-		}
-		timeoutMs := request.GetInt("timeout_ms", 10000)
-		if timeoutMs > MaxConsumeTimeout {
-			timeoutMs = MaxConsumeTimeout
-		}
-
-		deserializer := request.GetString("deserializer", "auto")
-		if deny := validateStringLength("deserializer", deserializer); deny != nil {
-			return deny, nil
-		}
-		if deny := validateEnum("deserializer", deserializer, validSerdes); deny != nil {
-			return deny, nil
-		}
-
-		result, err := s.kafkaManager.Subscribe(ctx, cluster, kafka.SubscribeRequest{
-			Topic:        topic,
-			GroupID:      groupID,
-			AutoCommit:   request.GetBool("auto_commit", true),
-			MaxMessages:  maxMessages,
-			TimeoutMs:    timeoutMs,
-			Deserializer: deserializer,
-		})
-		if err != nil {
-			s.logAudit(ctx, agentID, "kafka_subscribe", args, cluster, "error", 0, err, start)
-			return s.toolError("Failed to subscribe", err), nil
-		}
-
-		s.metrics.MessagesConsumed.WithLabelValues(metrics.SanitizeTopicLabel(topic), metrics.SanitizeAgentLabel(agentID), s.resolveClusterName(cluster)).Add(float64(result.Count))
-		s.logAudit(ctx, agentID, "kafka_subscribe", args, cluster, "success", result.Count, nil, start)
 		return marshalResult(result)
 	})(ctx, request)
 }

@@ -8,8 +8,8 @@ import (
 
 	"github.com/mark3labs/mcp-go/mcp"
 
-	"github.com/kafkamcp/kafkamcp/internal/auth"
-	"github.com/kafkamcp/kafkamcp/internal/kafka"
+	"github.com/josedab/kafkamcp/internal/auth"
+	"github.com/josedab/kafkamcp/internal/kafka"
 )
 
 // ===================== RESOURCE HANDLERS =====================
@@ -192,32 +192,6 @@ func (s *Server) handleAuditLogResource(ctx context.Context, request mcp.ReadRes
 }
 
 // handleTopicGraphResource returns a dependency graph of topics based on connector and consumer group relationships.
-func (s *Server) handleTopicGraphResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	start := time.Now()
-	agentID := extractAgentIDFromResource(request)
-	if err := s.validateResourceAgentID(agentID); err != nil {
-		s.logAudit(ctx, agentID, "resource:kafka://topic_graph", nil, "", "error", 0, err, start)
-		return nil, err
-	}
-	if err := s.checkResourceRateLimit(agentID, "resource:kafka://topic_graph"); err != nil {
-		s.logAudit(ctx, agentID, "resource:kafka://topic_graph", nil, "", "error", 0, err, start)
-		return nil, err
-	}
-	if s.config.Policies.DefaultDeny && !s.policyEngine.Authorize(agentID, auth.ResourceCluster, "", auth.ActionRead) {
-		err := fmt.Errorf("unauthorized: insufficient permission for this operation")
-		s.logAudit(ctx, agentID, "resource:kafka://topic_graph", nil, "", "error", 0, err, start)
-		return nil, err
-	}
-	graph, err := s.kafkaManager.GetTopicGraph(ctx, "")
-	if err != nil {
-		err = fmt.Errorf("building topic graph: %w", err)
-		s.logAudit(ctx, agentID, "resource:kafka://topic_graph", nil, "", "error", 0, err, start)
-		return nil, err
-	}
-	s.logAudit(ctx, agentID, "resource:kafka://topic_graph", nil, "", "success", len(graph.Nodes), nil, start)
-	return marshalResourceJSON("kafka://topic_graph", graph)
-}
-
 // handleTopicResource returns detailed metadata for a single topic identified by its URI.
 func (s *Server) handleTopicResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	start := time.Now()

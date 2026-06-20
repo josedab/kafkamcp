@@ -60,18 +60,13 @@ func TestHandlers_StringValidation_Broad(t *testing.T) {
 			assertIsError(t, r)
 			return err
 		}},
-		{"subscribe", map[string]any{"cluster": long}, func(c context.Context, a map[string]any) error {
-			r, err := s.handleSubscribe(c, makeToolRequest(a))
-			assertIsError(t, r)
-			return err
-		}},
 		{"consume", map[string]any{"topic": long}, func(c context.Context, a map[string]any) error {
 			r, err := s.handleConsume(c, makeToolRequest(a))
 			assertIsError(t, r)
 			return err
 		}},
-		{"list_acls", map[string]any{"cluster": long}, func(c context.Context, a map[string]any) error {
-			r, err := s.handleListACLs(c, makeToolRequest(a))
+		{"acl_manage", map[string]any{"cluster": long}, func(c context.Context, a map[string]any) error {
+			r, err := s.handleACLManage(c, makeToolRequest(map[string]any{"action": "list", "cluster": long}))
 			assertIsError(t, r)
 			return err
 		}},

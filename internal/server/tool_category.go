@@ -15,3 +15,13 @@ func withCategory(category string) mcp.ToolOption {
 		t.Meta.AdditionalFields["category"] = category
 	}
 }
+
+func toolCategoryOf(t *mcp.Tool) string {
+	if t == nil || t.Meta == nil || t.Meta.AdditionalFields == nil {
+		return ""
+	}
+	if value, ok := t.Meta.AdditionalFields["category"].(string); ok {
+		return value
+	}
+	return ""
+}

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kafkamcp/kafkamcp/internal/config"
+	"github.com/josedab/kafkamcp/internal/config"
 )
 
 // ===================== handleProduce =====================
@@ -460,241 +460,17 @@ func TestHandleCheckSchemaCompatibility_DefaultDeny_Anonymous(t *testing.T) {
 
 // ===================== handleAggregate =====================
 
-func TestHandleAggregate_MissingTopic(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleAggregate(ctx, makeToolRequest(nil))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleAggregate_TopicTooLong(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleAggregate(ctx, makeToolRequest(map[string]any{
-		"topic": strings.Repeat("a", maxInputLength+1),
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleAggregate_DefaultDeny_Anonymous(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t, withDefaultDeny)
-	ctx := context.Background()
-	result, err := s.handleAggregate(ctx, makeToolRequest(map[string]any{
-		"topic": "test-topic",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
 // ===================== handleDescribeConnector =====================
-
-func TestHandleDescribeConnector_MissingName(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleDescribeConnector(ctx, makeToolRequest(nil))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleDescribeConnector_NameTooLong(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleDescribeConnector(ctx, makeToolRequest(map[string]any{
-		"name": strings.Repeat("c", maxInputLength+1),
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleDescribeConnector_DefaultDeny_Anonymous(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t, withDefaultDeny)
-	ctx := context.Background()
-	result, err := s.handleDescribeConnector(ctx, makeToolRequest(map[string]any{
-		"name": "my-connector",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
 
 // ===================== handleListConnectors =====================
 
-func TestHandleListConnectors_DefaultDeny_Anonymous(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t, withDefaultDeny)
-	ctx := context.Background()
-	result, err := s.handleListConnectors(ctx, makeToolRequest(nil))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
 // ===================== handleRecommend =====================
-
-func TestHandleRecommend_DefaultDeny_Anonymous(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t, withDefaultDeny)
-	ctx := context.Background()
-	result, err := s.handleRecommend(ctx, makeToolRequest(nil))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
 
 // ===================== handleListACLs =====================
 
-func TestHandleListACLs_DefaultDeny_Anonymous(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t, withDefaultDeny)
-	ctx := context.Background()
-	result, err := s.handleListACLs(ctx, makeToolRequest(nil))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
 // ===================== handleTraceMessage =====================
 
-func TestHandleTraceMessage_MissingCorrelationID(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleTraceMessage(ctx, makeToolRequest(nil))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleTraceMessage_CorrelationIDTooLong(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleTraceMessage(ctx, makeToolRequest(map[string]any{
-		"correlation_id": strings.Repeat("c", maxInputLength+1),
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleTraceMessage_DefaultDeny_Anonymous(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t, withDefaultDeny)
-	ctx := context.Background()
-	result, err := s.handleTraceMessage(ctx, makeToolRequest(map[string]any{
-		"correlation_id": "abc-123",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
 // ===================== handleStream =====================
-
-func TestHandleStream_UnknownAction(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleStream(ctx, makeToolRequest(map[string]any{
-		"action": "invalid",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleStream_StartMissingTopic(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleStream(ctx, makeToolRequest(map[string]any{
-		"action": "start",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleStream_StartTopicTooLong(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleStream(ctx, makeToolRequest(map[string]any{
-		"action": "start",
-		"topic":  strings.Repeat("t", maxInputLength+1),
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleStream_StartDefaultDeny_Anonymous(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t, withDefaultDeny)
-	ctx := context.Background()
-	result, err := s.handleStream(ctx, makeToolRequest(map[string]any{
-		"action": "start",
-		"topic":  "test-topic",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleStream_PollMissingSessionID(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleStream(ctx, makeToolRequest(map[string]any{
-		"action": "poll",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleStream_ControlMissingSessionID(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleStream(ctx, makeToolRequest(map[string]any{
-		"action": "pause",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
 
 // ===================== connectTLSOpts =====================
 
@@ -775,204 +551,13 @@ func TestHandleDeleteConnector_DefaultDeny(t *testing.T) {
 
 // ===================== handleConnectorHealth =====================
 
-func TestHandleConnectorHealth_MissingName(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleConnectorHealth(ctx, makeToolRequest(nil))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleConnectorHealth_NameTooLong(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleConnectorHealth(ctx, makeToolRequest(map[string]any{
-		"name": strings.Repeat("h", maxInputLength+1),
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleConnectorHealth_DefaultDeny(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t, withDefaultDeny)
-	ctx := context.Background()
-	result, err := s.handleConnectorHealth(ctx, makeToolRequest(map[string]any{
-		"name": "my-connector",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
 // ===================== handleSchemaDiff =====================
-
-func TestHandleSchemaDiff_MissingSubject(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleSchemaDiff(ctx, makeToolRequest(nil))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleSchemaDiff_SubjectTooLong(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleSchemaDiff(ctx, makeToolRequest(map[string]any{
-		"subject": strings.Repeat("s", maxInputLength+1),
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleSchemaDiff_DefaultDeny(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t, withDefaultDeny)
-	ctx := context.Background()
-	result, err := s.handleSchemaDiff(ctx, makeToolRequest(map[string]any{
-		"subject": "test-subject",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
 
 // ===================== handleWatch =====================
 
-func TestHandleWatch_UnknownAction(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleWatch(ctx, makeToolRequest(map[string]any{
-		"action": "invalid",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleWatch_SubscribeMissingPattern(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleWatch(ctx, makeToolRequest(map[string]any{
-		"action": "subscribe",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleWatch_SubscribePatternTooLong(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleWatch(ctx, makeToolRequest(map[string]any{
-		"action":        "subscribe",
-		"topic_pattern": strings.Repeat("w", maxInputLength+1),
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleWatch_SubscribeDefaultDeny(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t, withDefaultDeny)
-	ctx := context.Background()
-	result, err := s.handleWatch(ctx, makeToolRequest(map[string]any{
-		"action":        "subscribe",
-		"topic_pattern": "test-*",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleWatch_UnsubscribeMissingID(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleWatch(ctx, makeToolRequest(map[string]any{
-		"action": "unsubscribe",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
 // ===================== handleNLQuery =====================
 
-func TestHandleNLQuery_MissingQuery(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleNLQuery(ctx, makeToolRequest(nil))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleNLQuery_QueryTooLong(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleNLQuery(ctx, makeToolRequest(map[string]any{
-		"query": strings.Repeat("q", maxInputLength+1),
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleNLQuery_DefaultDeny(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t, withDefaultDeny)
-	ctx := context.Background()
-	result, err := s.handleNLQuery(ctx, makeToolRequest(map[string]any{
-		"query": "show all topics",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
 // ===================== handleGroupHealth =====================
-
-func TestHandleGroupHealth_DefaultDeny(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t, withDefaultDeny)
-	ctx := context.Background()
-	result, err := s.handleGroupHealth(ctx, makeToolRequest(map[string]any{
-		"group_id": "my-group",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
 
 // ===================== handleDiagnoseLag =====================
 
@@ -991,149 +576,21 @@ func TestHandleDiagnoseLag_DefaultDeny(t *testing.T) {
 
 // ===================== handleCostWhatIf =====================
 
-func TestHandleCostWhatIf_MissingTopic(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleCostWhatIf(ctx, makeToolRequest(nil))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleCostWhatIf_DefaultDeny(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t, withDefaultDeny)
-	ctx := context.Background()
-	result, err := s.handleCostWhatIf(ctx, makeToolRequest(map[string]any{
-		"topic": "test-topic",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
 // ===================== handleIngestAnomaly =====================
-
-func TestHandleIngestAnomaly_MissingFields(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleIngestAnomaly(ctx, makeToolRequest(nil))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleIngestAnomaly_DefaultDeny(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t, withDefaultDeny)
-	ctx := context.Background()
-	result, err := s.handleIngestAnomaly(ctx, makeToolRequest(map[string]any{
-		"metric": "throughput",
-		"source": "topic-a",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
 
 // ===================== handleRemediateDLQ =====================
 
-func TestHandleRemediateDLQ_MissingTopic(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleRemediateDLQ(ctx, makeToolRequest(nil))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
 // ===================== handlePlatformInfo =====================
-
-func TestHandlePlatformInfo_DefaultDeny_Anon(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t, withDefaultDeny)
-	ctx := context.Background()
-	result, err := s.handlePlatformInfo(ctx, makeToolRequest(nil))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
 
 // ===================== handleCostWaste =====================
 
-func TestHandleCostWaste_DefaultDeny(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t, withDefaultDeny)
-	ctx := context.Background()
-	result, err := s.handleCostWaste(ctx, makeToolRequest(nil))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
 // ===================== handleGitOpsDiff =====================
-
-func TestHandleGitOpsDiff_DefaultDeny(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t, withDefaultDeny)
-	ctx := context.Background()
-	result, err := s.handleGitOpsDiff(ctx, makeToolRequest(nil))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
 
 // ===================== handleKnowledgeGraphQuery =====================
 
-func TestHandleKnowledgeGraphQuery_DefaultDeny(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t, withDefaultDeny)
-	ctx := context.Background()
-	result, err := s.handleKnowledgeGraphQuery(ctx, makeToolRequest(nil))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
 // ===================== handleCostAnalyze =====================
 
-func TestHandleCostAnalyze_DefaultDeny(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t, withDefaultDeny)
-	ctx := context.Background()
-	result, err := s.handleCostAnalyze(ctx, makeToolRequest(nil))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
 // ===================== handleSubscribe =====================
-
-func TestHandleSubscribe_DefaultDeny(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t, withDefaultDeny)
-	ctx := context.Background()
-	result, err := s.handleSubscribe(ctx, makeToolRequest(map[string]any{
-		"topic": "test-topic",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
 
 // ===================== handleDescribeTopic =====================
 
@@ -1288,282 +745,30 @@ func TestHandleRestartConnector_DefaultDeny(t *testing.T) {
 
 // ===================== handleTimeTravel =====================
 
-func TestHandleTimeTravel_MissingTopic(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleTimeTravel(ctx, makeToolRequest(nil))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleTimeTravel_DefaultDeny(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t, withDefaultDeny)
-	ctx := context.Background()
-	result, err := s.handleTimeTravel(ctx, makeToolRequest(map[string]any{
-		"topic": "test-topic",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
 // ===================== handleConfigDrift =====================
-
-func TestHandleConfigDrift_DefaultDeny(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t, withDefaultDeny)
-	ctx := context.Background()
-	result, err := s.handleConfigDrift(ctx, makeToolRequest(nil))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
 
 // ===================== handlePlayground =====================
 
-func TestHandlePlayground_DefaultDeny(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t, withDefaultDeny)
-	ctx := context.Background()
-	result, err := s.handlePlayground(ctx, makeToolRequest(map[string]any{
-		"action": "create",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
 // ===================== handleForecast =====================
-
-func TestHandleForecast_DefaultDeny(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t, withDefaultDeny)
-	ctx := context.Background()
-	result, err := s.handleForecast(ctx, makeToolRequest(map[string]any{
-		"topic": "test-topic",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
 
 // ===================== handleSubscribe =====================
 
-func TestHandleSubscribe_TopicTooLong(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleSubscribe(ctx, makeToolRequest(map[string]any{
-		"topic": strings.Repeat("s", maxInputLength+1),
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
 // ===================== handleRemediateDLQ =====================
-
-func TestHandleRemediateDLQ_TopicTooLong(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleRemediateDLQ(ctx, makeToolRequest(map[string]any{
-		"topic": strings.Repeat("r", maxInputLength+1),
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleRemediateDLQ_DefaultDeny(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t, withDefaultDeny)
-	ctx := context.Background()
-	result, err := s.handleRemediateDLQ(ctx, makeToolRequest(map[string]any{
-		"topic": "dlq-topic",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
 
 // ===================== handleConfigDrift compare missing clusters =====================
 
-func TestHandleConfigDrift_CompareMissingClusters(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleConfigDrift(ctx, makeToolRequest(map[string]any{
-		"action": "compare",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleConfigDrift_UnknownAction(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleConfigDrift(ctx, makeToolRequest(map[string]any{
-		"action": "invalid",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
 // ===================== handlePlayground unknown action =====================
 
-func TestHandlePlayground_UnknownAction(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handlePlayground(ctx, makeToolRequest(map[string]any{
-		"action": "invalid",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
 // ===================== handleCostAnalyze missing topic =====================
-
-func TestHandleCostAnalyze_MissingTopic(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleCostAnalyze(ctx, makeToolRequest(nil))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
 
 // ===================== handleMigrationPlan =====================
 // handleMigrationPlan doesn't have checkAuth so default deny doesn't help.
 
 // ===================== handleJoin =====================
 
-func TestHandleJoin_MissingTopics(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleJoin(ctx, makeToolRequest(nil))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleJoin_LeftTopicTooLong(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleJoin(ctx, makeToolRequest(map[string]any{
-		"left_topic":  strings.Repeat("l", maxInputLength+1),
-		"right_topic": "right",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleJoin_DefaultDeny(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t, withDefaultDeny)
-	ctx := context.Background()
-	result, err := s.handleJoin(ctx, makeToolRequest(map[string]any{
-		"left_topic":  "left",
-		"right_topic": "right",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
 // ===================== handleNaturalLanguageQuery =====================
 
-func TestHandleNaturalLanguageQuery_MissingQuery(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleNaturalLanguageQuery(ctx, makeToolRequest(nil))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleNaturalLanguageQuery_DefaultDeny(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t, withDefaultDeny)
-	ctx := context.Background()
-	result, err := s.handleNaturalLanguageQuery(ctx, makeToolRequest(map[string]any{
-		"query": "show all topics",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
 // ===================== handleSuggestSchemaEvolution =====================
-
-func TestHandleSuggestSchemaEvolution_MissingFields(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleSuggestSchemaEvolution(ctx, makeToolRequest(nil))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleSuggestSchemaEvolution_SubjectTooLong(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleSuggestSchemaEvolution(ctx, makeToolRequest(map[string]any{
-		"subject": strings.Repeat("s", maxInputLength+1),
-		"change":  "add field",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleSuggestSchemaEvolution_DefaultDeny(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t, withDefaultDeny)
-	ctx := context.Background()
-	result, err := s.handleSuggestSchemaEvolution(ctx, makeToolRequest(map[string]any{
-		"subject": "test-subject",
-		"change":  "add field",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
 
 // ===================== handleConsume =====================
 
@@ -1615,21 +820,6 @@ func TestHandleCreateTopic_NameTooLong(t *testing.T) {
 // handleStream rate limit exhaustion test removed - first request passes through and hits kafkaManager
 
 // ===================== handleStream start with groupId too long =====================
-
-func TestHandleStream_StartGroupIDTooLong(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	result, err := s.handleStream(ctx, makeToolRequest(map[string]any{
-		"action":   "start",
-		"topic":    "test",
-		"group_id": strings.Repeat("g", maxInputLength+1),
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
 
 // ===================== handleConsume offset too long =====================
 

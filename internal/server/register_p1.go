@@ -61,17 +61,4 @@ func (s *Server) registerP1Tools() {
 		mcp.WithNumber("limit", mcp.Description("Max messages to analyze. Default: 100")),
 		mcp.WithString("cluster", mcp.Description("Cluster name.")),
 	), s.handleAnalyzeDLQ)
-
-	// FR-11: Streaming Subscription
-	s.addTool(mcp.NewTool("kafka_subscribe",
-		withCategory("streaming"),
-		mcp.WithDescription("Subscribe to a Kafka topic using consumer group semantics. Polls for new messages for the specified duration and returns them as a batch. Supports auto-commit for offset management."),
-		mcp.WithString("topic", mcp.Required(), mcp.Description("Topic name to subscribe to")),
-		mcp.WithString("group_id", mcp.Description("Consumer group ID. If omitted, an ephemeral group is created.")),
-		mcp.WithBoolean("auto_commit", mcp.Description("Automatically commit offsets after consuming. Default: true")),
-		mcp.WithNumber("max_messages", mcp.Description("Maximum messages to return per poll (1-1000). Default: 100")),
-		mcp.WithNumber("timeout_ms", mcp.Description("How long to poll for messages in ms (max 30000). Default: 10000")),
-		mcp.WithString("deserializer", mcp.Description("Deserialization format: auto, json, string, bytes. Default: auto")),
-		mcp.WithString("cluster", mcp.Description("Cluster name.")),
-	), s.handleSubscribe)
 }

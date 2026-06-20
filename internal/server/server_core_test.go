@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/kafkamcp/kafkamcp/internal/config"
-	"github.com/kafkamcp/kafkamcp/internal/kafka"
-	"github.com/kafkamcp/kafkamcp/internal/schema"
+	"github.com/josedab/kafkamcp/internal/config"
+	"github.com/josedab/kafkamcp/internal/kafka"
+	"github.com/josedab/kafkamcp/internal/schema"
 )
 
 func TestResolveClusterName(t *testing.T) {

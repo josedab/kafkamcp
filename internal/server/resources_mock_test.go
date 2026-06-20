@@ -7,9 +7,24 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kafkamcp/kafkamcp/internal/config"
-	"github.com/kafkamcp/kafkamcp/internal/kafka"
+	"github.com/josedab/kafkamcp/internal/config"
+	"github.com/josedab/kafkamcp/internal/kafka"
+
+	"github.com/mark3labs/mcp-go/mcp"
 )
+
+// resourceText extracts the text payload from the first resource content entry.
+func resourceText(t *testing.T, contents []mcp.ResourceContents) string {
+	t.Helper()
+	if len(contents) == 0 {
+		t.Fatal("expected non-empty resource contents")
+	}
+	tc, ok := contents[0].(mcp.TextResourceContents)
+	if !ok {
+		t.Fatalf("expected TextResourceContents, got %T", contents[0])
+	}
+	return tc.Text
+}
 
 // ===================== handleClusterMetadata =====================
 
@@ -281,71 +296,6 @@ func TestHandleGroupCatalog_Error(t *testing.T) {
 }
 
 // ===================== handleTopicGraphResource =====================
-
-func TestHandleTopicGraphResource_WithEdges(t *testing.T) {
-	t.Parallel()
-	mock := &kafka.MockKafkaManager{
-		GetTopicGraphFn: func(ctx context.Context, cluster string) (*kafka.TopicGraph, error) {
-			return &kafka.TopicGraph{
-				Nodes: []kafka.TopicGraphNode{
-					{ID: "orders", Type: "topic", Name: "orders"},
-					{ID: "payments", Type: "topic", Name: "payments"},
-					{ID: "order-processor", Type: "consumer_group", Name: "order-processor"},
-				},
-				Edges: []kafka.TopicGraphEdge{
-					{Source: "orders", Target: "order-processor", Type: "consumes"},
-					{Source: "order-processor", Target: "payments", Type: "produces"},
-				},
-			}, nil
-		},
-	}
-	s := newTestServerWithMock(t, mock)
-
-	contents, err := s.handleTopicGraphResource(context.Background(), makeResourceRequest("kafka://topic_graph"))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	text := resourceText(t, contents)
-	if !strings.Contains(text, "orders") || !strings.Contains(text, "payments") {
-		t.Error("expected topic names in graph result")
-	}
-}
-
-func TestHandleTopicGraphResource_EmptyGraph(t *testing.T) {
-	t.Parallel()
-	mock := &kafka.MockKafkaManager{
-		GetTopicGraphFn: func(ctx context.Context, cluster string) (*kafka.TopicGraph, error) {
-			return &kafka.TopicGraph{
-				Nodes: nil,
-				Edges: nil,
-			}, nil
-		},
-	}
-	s := newTestServerWithMock(t, mock)
-
-	contents, err := s.handleTopicGraphResource(context.Background(), makeResourceRequest("kafka://topic_graph"))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if len(contents) == 0 {
-		t.Error("expected non-empty contents even for empty graph")
-	}
-}
-
-func TestHandleTopicGraphResource_Error(t *testing.T) {
-	t.Parallel()
-	mock := &kafka.MockKafkaManager{
-		GetTopicGraphFn: func(ctx context.Context, cluster string) (*kafka.TopicGraph, error) {
-			return nil, fmt.Errorf("failed to build graph")
-		},
-	}
-	s := newTestServerWithMock(t, mock)
-
-	_, err := s.handleTopicGraphResource(context.Background(), makeResourceRequest("kafka://topic_graph"))
-	if err == nil {
-		t.Fatal("expected error")
-	}
-}
 
 // ===================== handleSchemaResource =====================
 

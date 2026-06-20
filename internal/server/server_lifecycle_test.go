@@ -8,8 +8,8 @@ import (
 
 	"github.com/mark3labs/mcp-go/mcp"
 
-	"github.com/kafkamcp/kafkamcp/internal/config"
-	"github.com/kafkamcp/kafkamcp/internal/kafka"
+	"github.com/josedab/kafkamcp/internal/config"
+	"github.com/josedab/kafkamcp/internal/kafka"
 )
 
 // ===================== HealthCheck =====================
@@ -65,17 +65,6 @@ func TestClose_AllManagersClosed(t *testing.T) {
 	}
 	if mock.CallCount("Close") != 1 {
 		t.Error("expected Close called once")
-	}
-}
-
-func TestClose_NilWatchManager(t *testing.T) {
-	t.Parallel()
-	mock := &kafka.MockKafkaManager{}
-	s := newTestServerWithMock(t, mock)
-	s.watchManager = nil
-	err := s.Close()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
 	}
 }
 

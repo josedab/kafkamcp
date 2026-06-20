@@ -76,8 +76,8 @@ func validateStringLength(name, value string) *mcp.CallToolResult {
 
 // Valid values for serializer/deserializer and acks parameters.
 var (
-	validSerdes = map[string]bool{"auto": true, "json": true, "avro": true, "protobuf": true, "string": true, "bytes": true}
-	validAcks   = map[string]bool{"all": true, "0": true, "1": true, "-1": true}
+	validDeserializers = map[string]bool{"auto": true, "json": true, "string": true, "bytes": true}
+	validAcks          = map[string]bool{"all": true, "0": true, "1": true, "-1": true}
 )
 
 // validateKafkaIdentifier checks that a Kafka topic name or consumer group ID

@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kafkamcp/kafkamcp/internal/config"
-	"github.com/kafkamcp/kafkamcp/internal/kafka"
+	"github.com/josedab/kafkamcp/internal/config"
+	"github.com/josedab/kafkamcp/internal/kafka"
 )
 
 func TestValidateConnectorConfig_NormalPassthrough(t *testing.T) {
@@ -273,35 +273,6 @@ func TestHandleRestartConnector_ConnectNotAvailable_Connect(t *testing.T) {
 	req := makeToolRequest(map[string]any{"name": "my-connector"})
 
 	result, err := s.handleRestartConnector(context.Background(), req)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleConnectorHealth_MissingName_Connect(t *testing.T) {
-	t.Parallel()
-	s := newTestServerWithMock(t, &kafka.MockKafkaManager{})
-	req := makeToolRequest(map[string]any{})
-
-	result, err := s.handleConnectorHealth(context.Background(), req)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertIsError(t, result)
-}
-
-func TestHandleConnectorHealth_ConnectNotAvailable_Connect(t *testing.T) {
-	t.Parallel()
-	mock := &kafka.MockKafkaManager{
-		GetClusterConfigFn: func(name string) (*config.ClusterConfig, error) {
-			return &config.ClusterConfig{Name: "default"}, nil
-		},
-	}
-	s := newTestServerWithMock(t, mock)
-	req := makeToolRequest(map[string]any{"name": "my-connector"})
-
-	result, err := s.handleConnectorHealth(context.Background(), req)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

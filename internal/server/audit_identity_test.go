@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kafkamcp/kafkamcp/internal/audit"
-	"github.com/kafkamcp/kafkamcp/internal/auth/identity"
-	"github.com/kafkamcp/kafkamcp/internal/config"
-	"github.com/kafkamcp/kafkamcp/internal/metrics"
+	"github.com/josedab/kafkamcp/internal/audit"
+	"github.com/josedab/kafkamcp/internal/auth/identity"
+	"github.com/josedab/kafkamcp/internal/config"
+	"github.com/josedab/kafkamcp/internal/metrics"
 )
 
 // TestLogAudit_EnrichesIdentityFromContext verifies that the identity

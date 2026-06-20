@@ -6,17 +6,20 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"os"
 	"sync"
 	"time"
 
-	"github.com/kafkamcp/kafkamcp/internal/config"
-	"github.com/kafkamcp/kafkamcp/internal/engine"
-	enginebackend "github.com/kafkamcp/kafkamcp/internal/engine/backend"
-	"github.com/kafkamcp/kafkamcp/internal/kafka"
-	"github.com/kafkamcp/kafkamcp/internal/match"
-	"github.com/kafkamcp/kafkamcp/internal/metrics"
-	"github.com/kafkamcp/kafkamcp/internal/schema"
-	"github.com/kafkamcp/kafkamcp/internal/telemetry"
+	"github.com/josedab/kafkamcp/internal/approval"
+	"github.com/josedab/kafkamcp/internal/config"
+	"github.com/josedab/kafkamcp/internal/engine"
+	enginebackend "github.com/josedab/kafkamcp/internal/engine/backend"
+	"github.com/josedab/kafkamcp/internal/idempotency"
+	"github.com/josedab/kafkamcp/internal/kafka"
+	"github.com/josedab/kafkamcp/internal/match"
+	"github.com/josedab/kafkamcp/internal/metrics"
+	"github.com/josedab/kafkamcp/internal/schema"
+	"github.com/josedab/kafkamcp/internal/telemetry"
 
 	"github.com/mark3labs/mcp-go/server"
 )
@@ -24,35 +27,57 @@ import (
 // Server is the KafkaMCP MCP server.
 type Server struct {
 	// Core fields
-	config         *config.Config
-	kafkaManager   kafka.KafkaManager
-	schemaClients  map[string]*schema.Client // per-cluster schema clients
-	connectMu      sync.RWMutex
-	connectClients map[string]*kafka.ConnectClient // cached per-cluster Connect clients
-	metrics        *metrics.Metrics
-	logger         *slog.Logger
-	mcpServer      *server.MCPServer
-	expensiveOps   chan struct{} // semaphore for expensive operations (aggregate, join, search)
+	config            *config.Config
+	kafkaManager      kafka.KafkaManager
+	operationProvider kafka.OperationProvider
+	schemaClients     map[string]*schema.Client // per-cluster schema clients
+	connectMu         sync.RWMutex
+	connectClients    map[string]*kafka.ConnectClient // cached per-cluster Connect clients
+	metrics           *metrics.Metrics
+	logger            *slog.Logger
+	mcpServer         *server.MCPServer
+	expensiveOps      chan struct{} // semaphore for bounded message searches
 
 	// Tool surface management
 	toolPackFilter   *ToolPackFilter
-	registeredTools  map[string]string // name -> tier, populated as tools are registered
-	skippedToolCount int               // count of tools filtered out by the active pack
+	registeredTools  map[string]string   // name -> tier, populated as tools are registered
+	skippedToolCount int                 // count of tools filtered out by the active pack
+	seenToolNames    map[string]struct{} // every name ever passed to addTool (pre-filter)
+	duplicateTools   []string            // tool names registered more than once (a bug)
 
 	// Persistence: shared backend for engines that need durable state.
 	// May be nil only in tests; New() always sets it.
 	engineBackend enginebackend.Backend
 
+	// Approval enforcement: short-lived grants gating write/destructive tools.
+	// approvalManager may be nil in tests (no enforcement); New() always sets it.
+	approvalManager    *approval.Manager
+	approvalEnforced   bool
+	idempotencyManager *idempotency.Manager
+
+	// activation holds opt-in, privacy-preserving local activation metrics.
+	activation *metrics.ActivationMetrics
+
 	// Composite subsystems (embedded for direct field access)
 	Analytics
 	Governance
-	Streaming
 	Platform
 }
 
 // New creates a new KafkaMCP server. Functional options override default
 // subsystem instances (e.g., WithMetrics, WithAuditLogger).
 func New(cfg *config.Config, kafkaManager kafka.KafkaManager, logger *slog.Logger, version string, opts ...Option) (*Server, error) {
+	guardedPacksEnabled := config.HasToolPack(cfg.Server.ToolPacks, config.PackOpsWrite) ||
+		config.HasToolPack(cfg.Server.ToolPacks, config.PackGovernance)
+	if guardedPacksEnabled {
+		if !cfg.NetworkTransport() {
+			return nil, fmt.Errorf("ops-write and governance require sse or streamable-http with a verified identity; stdio is core-read only")
+		}
+		if err := cfg.TransportSecurityError(); err != nil {
+			return nil, fmt.Errorf("guarded tool-pack security posture: %w", err)
+		}
+	}
+
 	// Per-cluster schema registry clients
 	schemaClients := make(map[string]*schema.Client)
 	for _, cl := range cfg.Clusters {
@@ -79,31 +104,68 @@ func New(cfg *config.Config, kafkaManager kafka.KafkaManager, logger *slog.Logge
 		return nil, fmt.Errorf("opening engine persistence backend: %w", err)
 	}
 
+	approvalManager, err := approval.NewManager(context.Background(), engineBackend, approval.Config{
+		DefaultTTL:             time.Duration(cfg.Policies.Approval.TTLSeconds) * time.Second,
+		MaxTTL:                 time.Duration(cfg.Policies.Approval.MaxTTLSeconds) * time.Second,
+		SingleUse:              cfg.Policies.Approval.SingleUse == nil || *cfg.Policies.Approval.SingleUse,
+		AllowSelfApproval:      cfg.Policies.Approval.AllowSelfApproval,
+		DecisionSigningKey:     []byte(os.Getenv(cfg.Policies.Approval.EffectiveSigningKeyEnv())),
+		RequireSignedDecisions: guardedPacksEnabled,
+		VerificationKeys:       approvalVerificationKeys(cfg),
+		TerminalRetention:      time.Duration(cfg.Policies.Approval.TerminalRetentionSeconds) * time.Second,
+	})
+	if err != nil {
+		_ = engineBackend.Close()
+		return nil, fmt.Errorf("creating approval manager: %w", err)
+	}
+
 	gov, err := newGovernance(cfg, logger, engineBackend)
 	if err != nil {
+		_ = engineBackend.Close()
 		return nil, fmt.Errorf("creating governance subsystem: %w", err)
 	}
 
 	s := &Server{
-		config:          cfg,
-		kafkaManager:    kafkaManager,
-		schemaClients:   schemaClients,
-		connectClients:  make(map[string]*kafka.ConnectClient),
-		metrics:         metrics.New(),
-		logger:          logger,
-		expensiveOps:    make(chan struct{}, 5),
-		toolPackFilter:  NewToolPackFilter(cfg.Server.ToolPacks),
-		registeredTools: make(map[string]string),
-		engineBackend:   engineBackend,
-		Analytics:       newAnalytics(logger),
-		Governance:      gov,
-		Streaming:       newStreaming(logger),
-		Platform:        newPlatform(logger, engineBackend),
+		config:            cfg,
+		kafkaManager:      kafkaManager,
+		operationProvider: kafka.NewNativeOperationProvider(kafkaManager),
+		schemaClients:     schemaClients,
+		connectClients:    make(map[string]*kafka.ConnectClient),
+		metrics:           metrics.New(),
+		logger:            logger,
+		expensiveOps:      make(chan struct{}, 5),
+		toolPackFilter:    NewToolPackFilter(cfg.Server.ToolPacks),
+		registeredTools:   make(map[string]string),
+		engineBackend:     engineBackend,
+		approvalManager:   approvalManager,
+		approvalEnforced:  guardedPacksEnabled || cfg.Policies.Approval.EnforcementEnabled(cfg.Policies.DefaultDeny),
+		Analytics:         newAnalytics(logger),
+		Governance:        gov,
+		Platform:          newPlatform(logger, engineBackend),
 	}
+
+	// Approval enforcement for write/destructive tools. The manager persists via
+	// the shared engine backend (sqlite or in-memory). Enforcement follows the
+	// default-deny posture unless explicitly configured.
+	if s.approvalManager != nil {
+		s.approvalManager.SetAudit(s.approvalAuditHook())
+	}
+	s.idempotencyManager = idempotency.NewManager(engineBackend, 24*time.Hour)
 
 	// Apply functional options, overriding defaults
 	for _, opt := range opts {
 		opt(s)
+	}
+
+	// Opt-in activation metrics (local only; no phone-home). Constructed after
+	// options so a custom metrics registry is honored.
+	if s.metrics != nil {
+		s.activation = metrics.NewActivationMetrics(s.metrics.Registry, cfg.Telemetry.ActivationMetrics)
+		if s.toolPackFilter != nil {
+			for _, p := range s.toolPackFilter.Packs() {
+				s.activation.RecordToolPack(p)
+			}
+		}
 	}
 
 	mcpServer := server.NewMCPServer(
@@ -116,6 +178,12 @@ func New(cfg *config.Config, kafkaManager kafka.KafkaManager, logger *slog.Logge
 	s.mcpServer = mcpServer
 	s.registerTools()
 	s.registerResources()
+
+	// Fail closed on duplicate tool registration (a code bug): each MCP tool
+	// name must be registered exactly once.
+	if err := s.DuplicateToolError(); err != nil {
+		return nil, err
+	}
 
 	if s.toolPackFilter != nil {
 		if s.toolPackFilter.AllAllowed() {
@@ -130,6 +198,14 @@ func New(cfg *config.Config, kafkaManager kafka.KafkaManager, logger *slog.Logge
 	}
 
 	return s, nil
+}
+
+func approvalVerificationKeys(cfg *config.Config) [][]byte {
+	keys := make([][]byte, 0, len(cfg.Policies.Approval.PreviousSigningKeyEnvs))
+	for _, envName := range cfg.Policies.Approval.PreviousSigningKeyEnvs {
+		keys = append(keys, []byte(os.Getenv(envName)))
+	}
+	return keys
 }
 
 // MCPServer returns the underlying MCP server.
@@ -172,18 +248,12 @@ func (s *Server) SetOTelProvider(p *telemetry.Provider) {
 	s.otelProvider = p
 }
 
-// Close shuts down the server and all subsystems. All shutdown errors are
-// joined together so the caller (or supervisor) sees every failure rather
-// than only the last one.
+// Close shuts down server-owned subsystems before closing Kafka last. The app
+// has already drained HTTP and metrics traffic before calling this method.
+// All shutdown errors are joined so the supervisor sees every failure.
 func (s *Server) Close() error {
 	var errs []error
-	s.kafkaManager.Close()
-	if s.watchManager != nil {
-		s.watchManager.Close()
-	}
-	if s.anomalyDetector != nil {
-		s.anomalyDetector.Stop()
-	}
+	// 1. Telemetry provider.
 	if s.otelProvider != nil {
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		if err := s.otelProvider.Shutdown(shutdownCtx); err != nil {
@@ -192,15 +262,13 @@ func (s *Server) Close() error {
 		}
 		cancel()
 	}
-	if s.pluginRegistry != nil {
-		s.pluginRegistry.Close()
+	// 2. Audit logger.
+	if s.auditLogger != nil {
+		if err := s.auditLogger.Close(); err != nil {
+			errs = append(errs, fmt.Errorf("audit logger: %w", err))
+		}
 	}
-	if s.chaosEngine != nil {
-		s.chaosEngine.Close()
-	}
-	if err := s.auditLogger.Close(); err != nil {
-		errs = append(errs, fmt.Errorf("audit logger: %w", err))
-	}
+	// 3. Identity provider.
 	if s.identityProvider != nil {
 		if closer, ok := s.identityProvider.(io.Closer); ok {
 			if err := closer.Close(); err != nil {
@@ -208,10 +276,15 @@ func (s *Server) Close() error {
 			}
 		}
 	}
+	// 4. Shared persistence backend after all persistence-aware subsystems.
 	if s.engineBackend != nil {
 		if err := s.engineBackend.Close(); err != nil {
 			errs = append(errs, fmt.Errorf("engine backend: %w", err))
 		}
+	}
+	// 5. Kafka manager last so any subsystem shutdown can still finish broker I/O.
+	if s.kafkaManager != nil {
+		s.kafkaManager.Close()
 	}
 	return errors.Join(errs...)
 }
@@ -320,13 +393,6 @@ func clampInt64(v, min, max int64) int64 {
 	return v
 }
 
-// Tool and resource handler implementations are in:
-// - tools_p0.go           (P0 handlers: list topics, describe, consume, produce, schemas, consumer groups)
-// - tools_p1.go           (P1 handlers: create/alter/delete topic, search, reset offsets, DLQ, subscribe)
-// - tools_p2.go           (P2 handlers: aggregate, schema evolution, connectors, join, NL query)
-// - tools_p3.go           (P3 handlers: watch, DLQ remediation, schema diff, streaming, agent registry)
-// - tools_advanced.go     (Advanced handlers: connector CRUD, time travel, recommend, trace, ACLs, config drift, playground)
-// - tools_features.go     (Feature handlers: anomalies, NL query, cost analysis, workflows, GitOps, knowledge graph, contracts)
-// - tools_streaming.go    (Streaming consumer session management)
-// - tools_new_features.go (New features: lag diagnosis, migration, lineage, group health, personas, forecasting)
-// - resources.go          (Resource handlers: cluster, topics, schemas, groups, audit, graph)
+// Supported handlers live in tools_p0.go, tools_p1.go, tools_connect.go,
+// tools_lagdiag.go, tools_aclmgmt.go, tools_capability.go, the approval/policy
+// registration files, and resources.go.

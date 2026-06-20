@@ -9,7 +9,7 @@ import (
 
 	"github.com/mark3labs/mcp-go/mcp"
 
-	"github.com/kafkamcp/kafkamcp/internal/kafka"
+	"github.com/josedab/kafkamcp/internal/kafka"
 )
 
 // newTestServerWithMock constructs a Server with a MockKafkaManager.
@@ -358,32 +358,6 @@ func TestHandleDescribeConsumerGroup_Success(t *testing.T) {
 }
 
 // ===================== handleSubscribe with mock =====================
-
-func TestHandleSubscribe_Success(t *testing.T) {
-	t.Parallel()
-	mock := &kafka.MockKafkaManager{
-		SubscribeFn: func(ctx context.Context, cluster string, req kafka.SubscribeRequest) (*kafka.SubscribeResult, error) {
-			return &kafka.SubscribeResult{
-				Messages:   []kafka.Message{{Partition: 0, Offset: 10, Key: "k", Value: "v"}},
-				Count:      1,
-				Topic:      req.Topic,
-				GroupID:    "test-group",
-				AutoCommit: req.AutoCommit,
-			}, nil
-		},
-	}
-	s := newTestServerWithMock(t, mock)
-	ctx := context.Background()
-
-	result, err := s.handleSubscribe(ctx, makeToolRequest(map[string]any{
-		"topic":    "events",
-		"group_id": "test-group",
-	}))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	assertNotError(t, result)
-}
 
 // ===================== handleAnalyzeDLQ with mock =====================
 

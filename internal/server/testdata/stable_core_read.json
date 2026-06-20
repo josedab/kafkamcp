@@ -1,0 +1,33 @@
+{
+  "description": "Machine-checkable compatibility snapshot of the STABLE read-only core (core-read pack). Removing or renaming any tool here is a breaking change and MUST be a deliberate, documented, semver-major change. TestStableCoreReadSnapshot enforces this in CI.",
+  "pack": "core-read",
+  "stability": "stable",
+  "tools": [
+    "kafka_analyze_dlq",
+    "kafka_check_schema_compatibility",
+    "kafka_consume",
+    "kafka_describe_consumer_group",
+    "kafka_describe_topic",
+    "kafka_diagnose_lag",
+    "kafka_discover_clusters",
+    "kafka_discover_tools",
+    "kafka_get_schema",
+    "kafka_health",
+    "kafka_list_consumer_groups",
+    "kafka_list_schemas",
+    "kafka_list_topics",
+    "kafka_metrics",
+    "kafka_search"
+  ],
+  "resources": [
+    "kafka://audit/log",
+    "kafka://cluster/metadata",
+    "kafka://clusters",
+    "kafka://groups",
+    "kafka://groups/{id}",
+    "kafka://schemas",
+    "kafka://schemas/{subject}",
+    "kafka://topics",
+    "kafka://topics/{name}"
+  ]
+}

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kafkamcp/kafkamcp/internal/kafka"
+	"github.com/josedab/kafkamcp/internal/kafka"
 )
 
 // ===================== handleCheckSchemaCompatibility =====================
@@ -77,14 +77,6 @@ func TestHandleCheckSchemaCompatibility_SchemaExceedsMaxSize(t *testing.T) {
 	if !strings.Contains(resultText(t, result), "exceeds maximum size") {
 		t.Error("expected schema size error")
 	}
-}
-
-func TestHandleCheckSchemaCompatibility_NoSchemaRegistry(t *testing.T) {
-	t.Parallel()
-	// NOTE: This test documents a known nil-pointer issue in handleCheckSchemaCompatibility
-	// when no schema registry is configured. getSchemaClient("") returns nil but
-	// the handler calls .CheckCompatibility() on it without a nil check.
-	t.Skip("skipping: known nil-pointer when no schema registry configured (tools_p1.go:297)")
 }
 
 func TestHandleCheckSchemaCompatibility_AuthDenied(t *testing.T) {

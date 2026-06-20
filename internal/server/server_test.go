@@ -8,8 +8,7 @@ import (
 
 	"github.com/mark3labs/mcp-go/mcp"
 
-	"github.com/kafkamcp/kafkamcp/internal/chaos"
-	"github.com/kafkamcp/kafkamcp/internal/kafka"
+	"github.com/josedab/kafkamcp/internal/kafka"
 )
 
 func TestMatchTopicFilter(t *testing.T) {
@@ -115,17 +114,6 @@ func TestServerCloseStopsSubsystems(t *testing.T) {
 		CloseFn: func() { closeCalled = true },
 	}
 
-	// Initialize a chaos engine with an active experiment to verify
-	// that Close() cancels its goroutines.
-	s.chaosEngine = chaos.NewEngine(s.logger)
-	_, err := s.chaosEngine.Inject(
-		chaos.TypeSlowConsumer, "test-cluster",
-		[]string{"test-topic"}, nil, nil, nil,
-	)
-	if err != nil {
-		t.Fatalf("failed to inject chaos experiment: %v", err)
-	}
-
 	goroutinesBefore := runtime.NumGoroutine()
 
 	if err := s.Close(); err != nil {
@@ -140,14 +128,7 @@ func TestServerCloseStopsSubsystems(t *testing.T) {
 	time.Sleep(50 * time.Millisecond)
 	goroutinesAfter := runtime.NumGoroutine()
 
-	// The chaos experiment goroutine should have been cleaned up.
 	if goroutinesAfter > goroutinesBefore {
 		t.Errorf("possible goroutine leak: before=%d after=%d", goroutinesBefore, goroutinesAfter)
-	}
-
-	// Verify chaos engine state was cleared.
-	exps := s.chaosEngine.ListExperiments("")
-	if len(exps) != 0 {
-		t.Errorf("expected 0 experiments after Close(), got %d", len(exps))
 	}
 }

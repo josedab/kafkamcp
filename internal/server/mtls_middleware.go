@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/kafkamcp/kafkamcp/internal/auth/identity"
+	"github.com/josedab/kafkamcp/internal/auth/identity"
 )
 
 // MTLSIdentityMiddleware returns an http.Handler that verifies the

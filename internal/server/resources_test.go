@@ -35,19 +35,6 @@ func TestHandleAuditLogResource_NoDeny(t *testing.T) {
 // ===================== handleReplicationStatus =====================
 // replicationMon is nil in test server so handler returns early.
 
-func TestHandleReplicationStatus_NilMonitor(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	ctx := context.Background()
-	contents, err := s.handleReplicationStatus(ctx, makeResourceRequest("kafka://replication/status"))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if len(contents) == 0 {
-		t.Error("expected non-empty contents")
-	}
-}
-
 // ===================== handleTopicResource =====================
 // URI validation errors are returned before logAudit is called.
 
@@ -117,14 +104,6 @@ func TestHandleGroupResource_GroupIDTooLong(t *testing.T) {
 }
 
 // ===================== WatchManager / MaskingEngine accessors =====================
-
-func TestWatchManager_ReturnsNonNil(t *testing.T) {
-	t.Parallel()
-	s := newTestServer(t)
-	if s.WatchManager() == nil {
-		t.Error("expected non-nil WatchManager")
-	}
-}
 
 func TestMaskingEngine_ReturnsNonNil(t *testing.T) {
 	t.Parallel()

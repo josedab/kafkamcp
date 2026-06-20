@@ -25,7 +25,7 @@ func (s *Server) registerP0Tools() {
 		mcp.WithNumber("partition", mcp.Description("Specific partition (-1 for all). Default: all")),
 		mcp.WithString("offset", mcp.Description("Start position: 'earliest', 'latest', numeric offset, or ISO 8601 timestamp. Default: 'latest'")),
 		mcp.WithNumber("limit", mcp.Description("Maximum messages to return (1-1000). Default: 10")),
-		mcp.WithString("deserializer", mcp.Description("Deserialization format: auto, avro, protobuf, json, string, bytes. Default: auto")),
+		mcp.WithString("deserializer", mcp.Description("Deserialization format: auto, json, string, bytes. Auto tries JSON and falls back to string.")),
 		mcp.WithNumber("timeout_ms", mcp.Description("Maximum wait time in ms. Default: 5000")),
 		mcp.WithString("cluster", mcp.Description("Cluster name.")),
 	), s.handleConsume)
@@ -35,8 +35,6 @@ func (s *Server) registerP0Tools() {
 		mcp.WithDescription("Publish one or more messages to a Kafka topic. Returns delivery confirmation with partition, offset, and timestamp."),
 		mcp.WithString("topic", mcp.Required(), mcp.Description("Topic name")),
 		mcp.WithObject("messages", mcp.Required(), mcp.Description("Array of messages: [{key, value, headers, partition}]. Max 100.")),
-		mcp.WithString("serializer", mcp.Description("Serialization format: auto, avro, protobuf, json, string. Default: auto")),
-		mcp.WithNumber("schema_id", mcp.Description("Explicit Schema Registry schema ID for serialization")),
 		mcp.WithString("acks", mcp.Description("Acknowledgment level: 0, 1, all. Default: all")),
 		mcp.WithString("cluster", mcp.Description("Cluster name.")),
 	), s.handleProduce)

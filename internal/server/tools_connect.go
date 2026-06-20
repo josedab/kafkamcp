@@ -8,8 +8,22 @@ import (
 
 	"github.com/mark3labs/mcp-go/mcp"
 
-	"github.com/kafkamcp/kafkamcp/internal/auth"
+	"github.com/josedab/kafkamcp/internal/auth"
+	"github.com/josedab/kafkamcp/internal/config"
+	"github.com/josedab/kafkamcp/internal/kafka"
 )
+
+// connectTLSOpts builds the Kafka Connect TLS options for a cluster config.
+func connectTLSOpts(cfg *config.ClusterConfig) []kafka.ConnectTLSOption {
+	var opts []kafka.ConnectTLSOption
+	if cfg.ConnectTLS.CAFile != "" {
+		opts = append(opts, kafka.WithConnectCA(cfg.ConnectTLS.CAFile))
+	}
+	if cfg.ConnectTLS.InsecureSkipVerify {
+		opts = append(opts, kafka.WithConnectInsecureSkipVerify(true))
+	}
+	return opts
+}
 
 // ===================== KAFKA CONNECT MANAGEMENT HANDLERS =====================
 
@@ -203,49 +217,6 @@ func (s *Server) handleRestartConnector(ctx context.Context, request mcp.CallToo
 	})(ctx, request)
 }
 
-// handleConnectorHealth computes health score for a connector.
-func (s *Server) handleConnectorHealth(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return s.withToolAuth(toolAuthConfig{
-		tool: "kafka_connector_health", resourceType: auth.ResourceCluster, action: auth.ActionRead,
-	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
-		name := request.GetString("name", "")
-		cluster := request.GetString("cluster", "")
-
-		if name == "" {
-			return mcp.NewToolResultError("name is required"), nil
-		}
-		if deny := validateStringLength("name", name); deny != nil {
-			return deny, nil
-		}
-		if deny := validateStringLength("cluster", cluster); deny != nil {
-			return deny, nil
-		}
-
-		clCfg, err := s.kafkaManager.GetClusterConfig(cluster)
-		if err != nil {
-			return s.toolError("Cluster error", err), nil
-		}
-
-		client, err := s.getConnectClient(clCfg)
-		if err != nil || client == nil {
-			if err != nil {
-				s.logger.Warn("Kafka Connect client error", "error", err)
-			}
-			return mcp.NewToolResultError("Kafka Connect is not available"), nil
-		}
-
-		health, err := client.ConnectorHealth(ctx, name)
-		if err != nil {
-			s.logAudit(ctx, agentID, "kafka_connector_health", args, cluster, "error", 0, err, start)
-			return s.toolError("Failed to get health", err), nil
-		}
-
-		s.logAudit(ctx, agentID, "kafka_connector_health", args, cluster, "success", 0, nil, start)
-		return marshalResult(health)
-	})(ctx, request)
-}
-
-// extractStringMapArg extracts a map[string]string argument from a request.
 func extractStringMapArg(request mcp.CallToolRequest, key string) map[string]string {
 	rawArgs := request.GetRawArguments()
 	m, ok := rawArgs.(map[string]any)

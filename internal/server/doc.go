@@ -7,28 +7,17 @@
 // # Server Configuration
 //
 // The server is constructed with [New] and configured via functional [Option]
-// values (see options.go). Options inject subsystems such as audit logging,
-// rate limiting, metrics, watch subscriptions, masking, telemetry, and more.
+// values. Options inject supported dependencies such as audit logging, rate
+// limiting, metrics, masking, approvals, persistence, and telemetry.
 //
-// # Tool handlers are organized by priority tier:
-//   - P0 (tools_p0.go): core read operations — list topics, describe topic,
-//     consume, produce, schemas, consumer groups.
-//   - P1 (tools_p1.go): administrative and search operations — create/alter/delete
-//     topic, search messages, reset offsets, schema compatibility, DLQ analysis,
-//     subscribe.
-//   - P2 (tools_p2.go): advanced analytics and connectors — aggregate, join,
-//     natural-language query, schema evolution, Kafka Connect integration.
-//   - P3 (tools_p3.go): event-driven operations — watch subscriptions, DLQ
-//     remediation, schema diffs.
-//   - Advanced (tools_advanced.go): connector management, time travel, recommendations,
-//     message tracing, ACLs, config drift, playground.
-//   - Feature (tools_features.go): anomaly detection, cost analysis, workflows,
-//     GitOps, knowledge graph, contracts, lag diagnosis, migration, lineage,
-//     personas, forecasting.
-//   - Streaming (tools_streaming.go): real-time streaming sessions and multi-agent
-//     collaboration.
+// # Supported Surface
 //
-// Resource handlers (resources.go) expose read-only MCP resources such as
-// cluster metadata, topic catalogs, schema catalogs, consumer group lists,
-// audit logs, and a topic dependency graph.
+// Tool handlers implement the 29-tool supported surface across the core-read,
+// ops-write, and governance packs. They cover bounded Kafka reads, guarded
+// topic/group/connector/ACL mutations, schema operations, lag and DLQ
+// diagnosis, health and discovery, approvals, and policy evaluation.
+//
+// Resource handlers expose nine stable, read-only resources for cluster
+// metadata, configured clusters, topics, schemas, consumer groups, and the
+// redacted audit tail.
 package server

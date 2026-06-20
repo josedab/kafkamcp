@@ -8,31 +8,18 @@ import (
 
 	"github.com/mark3labs/mcp-go/mcp"
 
-	"github.com/kafkamcp/kafkamcp/internal/anomaly"
-	"github.com/kafkamcp/kafkamcp/internal/audit"
-	"github.com/kafkamcp/kafkamcp/internal/auth"
-	"github.com/kafkamcp/kafkamcp/internal/config"
-	"github.com/kafkamcp/kafkamcp/internal/contracts"
-	"github.com/kafkamcp/kafkamcp/internal/cost"
-	"github.com/kafkamcp/kafkamcp/internal/dlq"
-	"github.com/kafkamcp/kafkamcp/internal/forecast"
-	"github.com/kafkamcp/kafkamcp/internal/gitops"
-	"github.com/kafkamcp/kafkamcp/internal/graph"
-	"github.com/kafkamcp/kafkamcp/internal/kafka"
-	"github.com/kafkamcp/kafkamcp/internal/lagdiag"
-	"github.com/kafkamcp/kafkamcp/internal/lineage"
-	"github.com/kafkamcp/kafkamcp/internal/masking"
-	"github.com/kafkamcp/kafkamcp/internal/metrics"
-	"github.com/kafkamcp/kafkamcp/internal/migration"
-	"github.com/kafkamcp/kafkamcp/internal/nlquery"
-	"github.com/kafkamcp/kafkamcp/internal/persona"
-	"github.com/kafkamcp/kafkamcp/internal/platform"
-	"github.com/kafkamcp/kafkamcp/internal/plugin"
-	"github.com/kafkamcp/kafkamcp/internal/ratelimit"
-	"github.com/kafkamcp/kafkamcp/internal/schema"
-	"github.com/kafkamcp/kafkamcp/internal/selfheal"
-	"github.com/kafkamcp/kafkamcp/internal/watch"
-	"github.com/kafkamcp/kafkamcp/internal/workflow"
+	"github.com/josedab/kafkamcp/internal/aclmgmt"
+	"github.com/josedab/kafkamcp/internal/audit"
+	"github.com/josedab/kafkamcp/internal/auth"
+	"github.com/josedab/kafkamcp/internal/config"
+	"github.com/josedab/kafkamcp/internal/kafka"
+	"github.com/josedab/kafkamcp/internal/lagdiag"
+	"github.com/josedab/kafkamcp/internal/masking"
+	"github.com/josedab/kafkamcp/internal/metrics"
+	"github.com/josedab/kafkamcp/internal/onboarding"
+	"github.com/josedab/kafkamcp/internal/opa"
+	"github.com/josedab/kafkamcp/internal/ratelimit"
+	"github.com/josedab/kafkamcp/internal/schema"
 )
 
 func makeToolRequest(args map[string]any) mcp.CallToolRequest {
@@ -87,34 +74,18 @@ func newTestServer(t *testing.T, opts ...func(*config.Config)) *Server {
 		logger:         logger,
 		expensiveOps:   make(chan struct{}, 5),
 		Analytics: Analytics{
-			anomalyDetector: anomaly.NewDetector(anomaly.DefaultConfig(), logger),
-			nlQueryEngine:   nlquery.NewEngine(logger),
-			costAnalyzer:    cost.NewAnalyzer(logger),
-			forecaster:      forecast.NewForecaster(30),
-			knowledgeGraph:  graph.NewKnowledgeGraph(logger),
-			lagAnalyzer:     lagdiag.NewAnalyzer(),
+			lagAnalyzer: lagdiag.NewAnalyzer(),
 		},
 		Governance: Governance{
-			policyEngine:   auth.NewPolicyEngine(cfg.Policies),
-			auditLogger:    auditLogger,
-			rateLimiter:    rl,
-			maskingEngine:  masking.NewEngine(cfg.Masking, logger),
-			contractEngine: contracts.NewEngine(),
-			personaEngine:  persona.NewEngine(),
-		},
-		Streaming: Streaming{
-			watchManager:   watch.NewManager(logger),
-			dlqRemediator:  dlq.NewRemediator(logger),
-			selfHealMon:    selfheal.NewMonitor(),
-			lineageTracker: lineage.NewTracker(),
+			policyEngine:  auth.NewPolicyEngine(cfg.Policies),
+			auditLogger:   auditLogger,
+			rateLimiter:   rl,
+			maskingEngine: masking.NewEngine(cfg.Masking, logger),
 		},
 		Platform: Platform{
-			pluginRegistry:   plugin.NewRegistry(logger),
-			agentRegistry:    kafka.NewAgentRegistry(),
-			platformMgr:      platform.NewManager(logger),
-			gitopsManager:    gitops.NewManager(logger),
-			migrationPlanner: migration.NewPlanner(),
-			workflowEngine:   workflow.NewEngine(logger),
+			onboardingEngine: onboarding.NewEngine(logger),
+			opaPolicyEngine:  opa.NewPolicyEngine(logger),
+			aclMgmtEngine:    aclmgmt.NewEngine(logger),
 		},
 	}
 }

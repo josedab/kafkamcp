@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kafkamcp/kafkamcp/internal/kafka"
-	"github.com/kafkamcp/kafkamcp/internal/schema"
+	"github.com/josedab/kafkamcp/internal/kafka"
+	"github.com/josedab/kafkamcp/internal/schema"
 )
 
 func TestMCPServer_ReturnsNonNil(t *testing.T) {

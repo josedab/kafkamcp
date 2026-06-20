@@ -2,6 +2,18 @@ package server
 
 import "github.com/mark3labs/mcp-go/mcp"
 
+var stableResourceURIs = []string{
+	"kafka://audit/log",
+	"kafka://cluster/metadata",
+	"kafka://clusters",
+	"kafka://groups",
+	"kafka://groups/{id}",
+	"kafka://schemas",
+	"kafka://schemas/{subject}",
+	"kafka://topics",
+	"kafka://topics/{name}",
+}
+
 func (s *Server) registerResources() {
 	s.mcpServer.AddResource(mcp.NewResource("kafka://cluster/metadata", "Cluster Metadata",
 		mcp.WithResourceDescription("Kafka cluster information: brokers, controller, topic/partition counts"),
@@ -33,11 +45,6 @@ func (s *Server) registerResources() {
 		mcp.WithMIMEType("application/json"),
 	), s.handleAuditLogResource)
 
-	s.mcpServer.AddResource(mcp.NewResource("kafka://topic_graph", "Topic Topology Graph",
-		mcp.WithResourceDescription("Producer -> topic -> consumer group relationship graph"),
-		mcp.WithMIMEType("application/json"),
-	), s.handleTopicGraphResource)
-
 	// Resource templates for individual items
 	s.mcpServer.AddResourceTemplate(mcp.NewResourceTemplate("kafka://topics/{name}", "Topic Detail",
 		mcp.WithTemplateDescription("Full config, partition map, associated schemas for a topic"),
@@ -54,44 +61,4 @@ func (s *Server) registerResources() {
 		mcp.WithTemplateMIMEType("application/json"),
 	), s.handleGroupResource)
 
-	s.mcpServer.AddResource(mcp.NewResource("kafka://replication/status", "Replication Status",
-		mcp.WithResourceDescription("Cross-cluster replication status with lag per topic-partition"),
-		mcp.WithMIMEType("application/json"),
-	), s.handleReplicationStatus)
-
-	s.mcpServer.AddResource(mcp.NewResource("kafka://plugins", "Plugin Registry",
-		mcp.WithResourceDescription("Registered plugins and extensions"),
-		mcp.WithMIMEType("application/json"),
-	), s.handlePluginRegistry)
-
-	s.mcpServer.AddResource(mcp.NewResource("kafka://watch/subscriptions", "Watch Subscriptions",
-		mcp.WithResourceDescription("Active watch subscriptions for event-driven workflows"),
-		mcp.WithMIMEType("application/json"),
-	), s.handleWatchSubscriptionsResource)
-
-	// New Feature Resources
-	s.mcpServer.AddResource(mcp.NewResource("kafka://anomalies", "Anomaly Alerts",
-		mcp.WithResourceDescription("AI-detected anomalies in consumer lag, throughput, and error rates (last 24h)"),
-		mcp.WithMIMEType("application/json"),
-	), s.handleAnomalyResource)
-
-	s.mcpServer.AddResource(mcp.NewResource("kafka://workflows", "Workflow Templates",
-		mcp.WithResourceDescription("Pre-built workflow templates for common Kafka operations"),
-		mcp.WithMIMEType("application/json"),
-	), s.handleWorkflowsResource)
-
-	s.mcpServer.AddResource(mcp.NewResource("kafka://knowledge_graph", "Knowledge Graph",
-		mcp.WithResourceDescription("Topic relationships, schema dependencies, and consumer group topology graph"),
-		mcp.WithMIMEType("application/json"),
-	), s.handleKnowledgeGraphResource)
-
-	s.mcpServer.AddResource(mcp.NewResource("kafka://flow_graph", "Message Flow Graph",
-		mcp.WithResourceDescription("Real-time message flow visualization with throughput and latency data"),
-		mcp.WithMIMEType("application/json"),
-	), s.handleFlowGraphResource)
-
-	s.mcpServer.AddResource(mcp.NewResource("kafka://platforms", "Platform Info",
-		mcp.WithResourceDescription("Configured Kafka-compatible platforms and their capabilities"),
-		mcp.WithMIMEType("application/json"),
-	), s.handlePlatformResource)
 }

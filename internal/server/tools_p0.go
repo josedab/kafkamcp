@@ -9,10 +9,10 @@ import (
 
 	"github.com/mark3labs/mcp-go/mcp"
 
-	"github.com/kafkamcp/kafkamcp/internal/auth"
-	"github.com/kafkamcp/kafkamcp/internal/kafka"
-	"github.com/kafkamcp/kafkamcp/internal/metrics"
-	"github.com/kafkamcp/kafkamcp/internal/schema"
+	"github.com/josedab/kafkamcp/internal/auth"
+	"github.com/josedab/kafkamcp/internal/kafka"
+	"github.com/josedab/kafkamcp/internal/metrics"
+	"github.com/josedab/kafkamcp/internal/schema"
 )
 
 // ===================== P0 TOOL HANDLERS =====================
@@ -130,13 +130,18 @@ func (s *Server) handleConsume(ctx context.Context, request mcp.CallToolRequest)
 		if deny := validateStringLength("deserializer", deserializer); deny != nil {
 			return deny, nil
 		}
-		if deny := validateEnum("deserializer", deserializer, validSerdes); deny != nil {
+		if deny := validateEnum("deserializer", deserializer, validDeserializers); deny != nil {
 			return deny, nil
 		}
 		messages, err := s.kafkaManager.Consume(ctx, cluster, topic, partition, offset, limit, timeoutMs, deserializer)
 		if err != nil {
 			s.logAudit(ctx, agentID, "kafka_consume", args, cluster, "error", 0, err, start)
 			return s.toolError("Failed to consume", err), nil
+		}
+
+		if err := s.maskMessages(agentID, messages); err != nil {
+			s.logAudit(ctx, agentID, "kafka_consume", args, cluster, "error", 0, err, start)
+			return s.toolError("Failed to apply data masking", err), nil
 		}
 
 		s.metrics.MessagesConsumed.WithLabelValues(metrics.SanitizeTopicLabel(topic), metrics.SanitizeAgentLabel(agentID), s.resolveClusterName(cluster)).Add(float64(len(messages)))
@@ -204,13 +209,6 @@ func (s *Server) handleProduce(ctx context.Context, request mcp.CallToolRequest)
 			}
 		}
 
-		serializer := request.GetString("serializer", "auto")
-		if deny := validateStringLength("serializer", serializer); deny != nil {
-			return deny, nil
-		}
-		if deny := validateEnum("serializer", serializer, validSerdes); deny != nil {
-			return deny, nil
-		}
 		acks := request.GetString("acks", "all")
 		if deny := validateStringLength("acks", acks); deny != nil {
 			return deny, nil
@@ -218,10 +216,8 @@ func (s *Server) handleProduce(ctx context.Context, request mcp.CallToolRequest)
 		if deny := validateEnum("acks", acks, validAcks); deny != nil {
 			return deny, nil
 		}
-		schemaID := request.GetInt("schema_id", -1)
-
 		deliveries, err := s.kafkaManager.Produce(ctx, cluster, topic, messages, kafka.ProduceOptions{
-			Acks: acks, Serializer: serializer, SchemaID: schemaID,
+			Acks: acks,
 		})
 		if err != nil {
 			s.logAudit(ctx, agentID, "kafka_produce", args, cluster, "error", 0, err, start)
@@ -230,7 +226,7 @@ func (s *Server) handleProduce(ctx context.Context, request mcp.CallToolRequest)
 
 		s.metrics.MessagesProduced.WithLabelValues(metrics.SanitizeTopicLabel(topic), metrics.SanitizeAgentLabel(agentID), s.resolveClusterName(cluster)).Add(float64(len(deliveries)))
 		s.logAudit(ctx, agentID, "kafka_produce", args, cluster, "success", len(deliveries), nil, start)
-		return marshalResult(map[string]any{"deliveries": deliveries, "count": len(deliveries), "topic": topic, "serialization": serializer, "acks": acks})
+		return marshalResult(map[string]any{"deliveries": deliveries, "count": len(deliveries), "topic": topic, "serialization": "json-or-string", "acks": acks})
 	})(ctx, request)
 }
 
