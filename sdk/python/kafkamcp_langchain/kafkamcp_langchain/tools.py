@@ -1,6 +1,8 @@
 """Pre-built LangChain tool wrappers for KafkaMCP operations."""
 
-from typing import Any, Optional, Type
+import inspect
+import json
+from typing import Any, Type
 
 from langchain_core.tools import BaseTool
 from pydantic import BaseModel, Field
@@ -19,6 +21,7 @@ class ProduceInput(BaseModel):
     """Input for producing Kafka messages."""
     topic: str = Field(description="Kafka topic name")
     messages: list[dict[str, Any]] = Field(description="Messages to produce: [{key, value, headers}]")
+    approval_token: str = Field(description="Short-lived approval token for this exact request")
     cluster: str = Field(default="", description="Cluster name for multi-cluster setups")
 
 
@@ -47,6 +50,8 @@ class DescribeTopicInput(BaseModel):
 class CreateTopicInput(BaseModel):
     """Input for creating a Kafka topic."""
     name: str = Field(description="Topic name")
+    approval_token: str = Field(description="Short-lived approval token for this exact request")
+    idempotency_key: str = Field(default="", description="Optional retry key (8-128 characters)")
     partitions: int = Field(default=1, description="Number of partitions")
     replication_factor: int = Field(default=1, description="Replication factor")
     configs: dict[str, str] = Field(default_factory=dict, description="Topic configurations")
@@ -57,12 +62,15 @@ class AlterTopicInput(BaseModel):
     """Input for altering a Kafka topic."""
     name: str = Field(description="Topic name")
     configs: dict[str, str] = Field(description="Configs to change")
+    approval_token: str = Field(description="Short-lived approval token for this exact request")
     cluster: str = Field(default="", description="Cluster name for multi-cluster setups")
 
 
 class DeleteTopicInput(BaseModel):
     """Input for deleting a Kafka topic."""
     name: str = Field(description="Topic name to delete")
+    approval_token: str = Field(description="Short-lived approval token for this exact request")
+    idempotency_key: str = Field(default="", description="Optional retry key (8-128 characters)")
     cluster: str = Field(default="", description="Cluster name for multi-cluster setups")
 
 
@@ -82,18 +90,10 @@ class ResetOffsetsInput(BaseModel):
     """Input for resetting consumer group offsets."""
     group_id: str = Field(description="Consumer group ID")
     topic: str = Field(description="Topic name")
-    to: str = Field(default="latest", description="Reset to: earliest, latest, or ISO 8601 timestamp")
+    approval_token: str = Field(description="Short-lived approval token for this exact request")
+    strategy: str = Field(default="latest", description="Reset strategy: earliest, latest, or timestamp")
+    value: str = Field(default="", description="ISO 8601 timestamp when strategy=timestamp")
     cluster: str = Field(default="", description="Cluster name for multi-cluster setups")
-
-
-class WatchInput(BaseModel):
-    """Input for watching Kafka topics."""
-    action: str = Field(default="subscribe", description="Action: subscribe, unsubscribe, list")
-    topic_pattern: str = Field(default="", description="Topic pattern for subscribe")
-    key_filter: str = Field(default="", description="Key filter expression")
-    value_filter: str = Field(default="", description="Value filter expression")
-    webhook_url: str = Field(default="", description="Webhook URL for notifications")
-    subscription_id: str = Field(default="", description="Subscription ID for unsubscribe")
 
 
 class SchemaInput(BaseModel):
@@ -102,35 +102,10 @@ class SchemaInput(BaseModel):
     version: str = Field(default="latest", description="Version: latest or number")
 
 
-class SchemaDiffInput(BaseModel):
-    """Input for diffing schemas."""
-    subject: str = Field(description="Schema subject name")
-    version_from: int = Field(description="Source version")
-    version_to: int = Field(description="Target version")
-
-
 class DLQAnalyzeInput(BaseModel):
     """Input for DLQ analysis."""
     topic: str = Field(description="DLQ topic name")
-    action: str = Field(default="analyze", description="Action: analyze, retry, route, suggest")
-    target_topic: str = Field(default="", description="Target topic for route action")
     limit: int = Field(default=100, description="Max messages to process")
-    cluster: str = Field(default="", description="Cluster name for multi-cluster setups")
-
-
-class AggregateInput(BaseModel):
-    """Input for aggregating messages."""
-    topic: str = Field(description="Topic name")
-    operation: str = Field(default="count", description="Aggregation: count, sum, avg, min, max")
-    field: str = Field(default="", description="JSON field to aggregate on")
-    group_by: str = Field(default="", description="JSON field to group by")
-    limit: int = Field(default=1000, description="Max messages to scan")
-    cluster: str = Field(default="", description="Cluster name for multi-cluster setups")
-
-
-class NLQueryInput(BaseModel):
-    """Input for natural language query."""
-    query: str = Field(description="Natural language query about Kafka")
     cluster: str = Field(default="", description="Cluster name for multi-cluster setups")
 
 
@@ -143,7 +118,73 @@ def _build_args(model: BaseModel) -> dict[str, Any]:
     return args
 
 
-class KafkaConsumeTool(BaseTool):
+def _format_tool_result(result: Any) -> Any:
+    """Convert MCP content results to agent-readable text."""
+    content = getattr(result, "content", None)
+    if content is None:
+        return result
+
+    texts = [item.text for item in content if isinstance(getattr(item, "text", None), str)]
+    if texts:
+        return "\n".join(texts)
+
+    structured = getattr(result, "structuredContent", None)
+    if structured is not None:
+        return json.dumps(structured, separators=(",", ":"), default=str)
+
+    if hasattr(result, "model_dump"):
+        return json.dumps(result.model_dump(mode="json", by_alias=True), separators=(",", ":"), default=str)
+    return str(result)
+
+
+def _call_sync(mcp_client: Any, name: str, args: dict[str, Any]) -> Any:
+    if mcp_client is None:
+        raise RuntimeError("MCP client not configured")
+
+    result = mcp_client.call_tool(name, args)
+    if inspect.isawaitable(result):
+        if inspect.iscoroutine(result):
+            result.close()
+        raise RuntimeError(
+            "the configured MCP client is asynchronous; invoke this LangChain tool with ainvoke"
+        )
+    return _format_tool_result(result)
+
+
+async def _call_async(mcp_client: Any, name: str, args: dict[str, Any]) -> Any:
+    if mcp_client is None:
+        raise RuntimeError("MCP client not configured")
+
+    result = mcp_client.call_tool(name, args)
+    if inspect.isawaitable(result):
+        result = await result
+    return _format_tool_result(result)
+
+
+class _KafkaMCPTool(BaseTool):
+    mcp_client: Any = Field(default=None, exclude=True)
+
+    async def _arun(self, *args: Any, **kwargs: Any) -> Any:
+        if self.args_schema is None:
+            raise RuntimeError(f"{self.name} does not define an argument schema")
+
+        values = dict(kwargs)
+        field_names = list(self.args_schema.model_fields)
+        if len(args) > len(field_names):
+            raise TypeError(f"{self.name} received too many positional arguments")
+        for field_name, value in zip(field_names, args):
+            if field_name in values:
+                raise TypeError(f"{self.name} received multiple values for {field_name}")
+            values[field_name] = value
+
+        return await _call_async(
+            self.mcp_client,
+            self.name,
+            _build_args(self.args_schema(**values)),
+        )
+
+
+class KafkaConsumeTool(_KafkaMCPTool):
     """Tool for consuming messages from a Kafka topic via KafkaMCP."""
     name: str = "kafka_consume"
     description: str = "Read messages from a Kafka topic. Returns message key, value, headers, and metadata."
@@ -151,47 +192,27 @@ class KafkaConsumeTool(BaseTool):
     mcp_client: Any = None
 
     def _run(self, topic: str, limit: int = 10, offset: str = "latest", timeout_ms: int = 5000, cluster: str = "") -> str:
-        if self.mcp_client is None:
-            return "Error: MCP client not configured"
         args = {"topic": topic, "limit": limit, "offset": offset, "timeout_ms": timeout_ms}
         if cluster:
             args["cluster"] = cluster
-        return self.mcp_client.call_tool("kafka_consume", args)
-
-    async def _arun(self, topic: str, limit: int = 10, offset: str = "latest", timeout_ms: int = 5000, cluster: str = "") -> str:
-        if self.mcp_client is None:
-            return "Error: MCP client not configured"
-        args = {"topic": topic, "limit": limit, "offset": offset, "timeout_ms": timeout_ms}
-        if cluster:
-            args["cluster"] = cluster
-        return await self.mcp_client.call_tool("kafka_consume", args)
+        return _call_sync(self.mcp_client, "kafka_consume", args)
 
 
-class KafkaProduceTool(BaseTool):
+class KafkaProduceTool(_KafkaMCPTool):
     """Tool for producing messages to a Kafka topic via KafkaMCP."""
     name: str = "kafka_produce"
     description: str = "Publish messages to a Kafka topic. Returns delivery confirmation."
     args_schema: Type[BaseModel] = ProduceInput
     mcp_client: Any = None
 
-    def _run(self, topic: str, messages: list[dict[str, Any]], cluster: str = "") -> str:
-        if self.mcp_client is None:
-            return "Error: MCP client not configured"
-        args = {"topic": topic, "messages": messages}
+    def _run(self, topic: str, messages: list[dict[str, Any]], approval_token: str, cluster: str = "") -> str:
+        args = {"topic": topic, "messages": messages, "approval_token": approval_token}
         if cluster:
             args["cluster"] = cluster
-        return self.mcp_client.call_tool("kafka_produce", args)
-
-    async def _arun(self, topic: str, messages: list[dict[str, Any]], cluster: str = "") -> str:
-        if self.mcp_client is None:
-            return "Error: MCP client not configured"
-        args = {"topic": topic, "messages": messages}
-        if cluster:
-            args["cluster"] = cluster
-        return await self.mcp_client.call_tool("kafka_produce", args)
+        return _call_sync(self.mcp_client, "kafka_produce", args)
 
 
-class KafkaListTopicsTool(BaseTool):
+class KafkaListTopicsTool(_KafkaMCPTool):
     """Tool for listing Kafka topics via KafkaMCP."""
     name: str = "kafka_list_topics"
     description: str = "List all Kafka topics with metadata including partition count and message count."
@@ -199,15 +220,13 @@ class KafkaListTopicsTool(BaseTool):
     mcp_client: Any = None
 
     def _run(self, filter: str = "", include_internal: bool = False, cluster: str = "") -> str:
-        if self.mcp_client is None:
-            return "Error: MCP client not configured"
         args = {"filter": filter, "include_internal": include_internal}
         if cluster:
             args["cluster"] = cluster
-        return self.mcp_client.call_tool("kafka_list_topics", args)
+        return _call_sync(self.mcp_client, "kafka_list_topics", args)
 
 
-class KafkaSearchTool(BaseTool):
+class KafkaSearchTool(_KafkaMCPTool):
     """Tool for searching messages in a Kafka topic via KafkaMCP."""
     name: str = "kafka_search"
     description: str = "Search messages in a Kafka topic by key, value content, or headers."
@@ -215,15 +234,13 @@ class KafkaSearchTool(BaseTool):
     mcp_client: Any = None
 
     def _run(self, topic: str, value_contains: str = "", key_filter: str = "", limit: int = 10, cluster: str = "") -> str:
-        if self.mcp_client is None:
-            return "Error: MCP client not configured"
         args = {"topic": topic, "value_contains": value_contains, "key_filter": key_filter, "limit": limit}
         if cluster:
             args["cluster"] = cluster
-        return self.mcp_client.call_tool("kafka_search", args)
+        return _call_sync(self.mcp_client, "kafka_search", args)
 
 
-class KafkaDescribeTopicTool(BaseTool):
+class KafkaDescribeTopicTool(_KafkaMCPTool):
     """Tool for getting detailed topic metadata via KafkaMCP."""
     name: str = "kafka_describe_topic"
     description: str = "Get detailed metadata for a Kafka topic including partitions, replicas, ISR, and configuration."
@@ -231,65 +248,68 @@ class KafkaDescribeTopicTool(BaseTool):
     mcp_client: Any = None
 
     def _run(self, topic: str, cluster: str = "") -> str:
-        if self.mcp_client is None:
-            return "Error: MCP client not configured"
         args = {"topic": topic}
         if cluster:
             args["cluster"] = cluster
-        return self.mcp_client.call_tool("kafka_describe_topic", args)
+        return _call_sync(self.mcp_client, "kafka_describe_topic", args)
 
 
-class KafkaCreateTopicTool(BaseTool):
+class KafkaCreateTopicTool(_KafkaMCPTool):
     """Tool for creating a Kafka topic via KafkaMCP."""
     name: str = "kafka_create_topic"
     description: str = "Create a new Kafka topic with specified partitions and replication factor."
     args_schema: Type[BaseModel] = CreateTopicInput
     mcp_client: Any = None
 
-    def _run(self, name: str, partitions: int = 1, replication_factor: int = 1, configs: dict = None, cluster: str = "") -> str:
-        if self.mcp_client is None:
-            return "Error: MCP client not configured"
-        args = {"name": name, "partitions": partitions, "replication_factor": replication_factor}
+    def _run(self, name: str, approval_token: str, idempotency_key: str = "",
+             partitions: int = 1, replication_factor: int = 1,
+             configs: dict = None, cluster: str = "") -> str:
+        args = {
+            "name": name,
+            "partitions": partitions,
+            "replication_factor": replication_factor,
+            "approval_token": approval_token,
+        }
+        if idempotency_key:
+            args["idempotency_key"] = idempotency_key
         if configs:
             args["configs"] = configs
         if cluster:
             args["cluster"] = cluster
-        return self.mcp_client.call_tool("kafka_create_topic", args)
+        return _call_sync(self.mcp_client, "kafka_create_topic", args)
 
 
-class KafkaAlterTopicTool(BaseTool):
+class KafkaAlterTopicTool(_KafkaMCPTool):
     """Tool for modifying Kafka topic configuration via KafkaMCP."""
     name: str = "kafka_alter_topic"
     description: str = "Modify configuration of an existing Kafka topic."
     args_schema: Type[BaseModel] = AlterTopicInput
     mcp_client: Any = None
 
-    def _run(self, name: str, configs: dict[str, str] = None, cluster: str = "") -> str:
-        if self.mcp_client is None:
-            return "Error: MCP client not configured"
-        args = {"name": name, "configs": configs or {}}
+    def _run(self, name: str, approval_token: str, configs: dict[str, str] = None, cluster: str = "") -> str:
+        args = {"name": name, "configs": configs or {}, "approval_token": approval_token}
         if cluster:
             args["cluster"] = cluster
-        return self.mcp_client.call_tool("kafka_alter_topic", args)
+        return _call_sync(self.mcp_client, "kafka_alter_topic", args)
 
 
-class KafkaDeleteTopicTool(BaseTool):
+class KafkaDeleteTopicTool(_KafkaMCPTool):
     """Tool for deleting a Kafka topic via KafkaMCP."""
     name: str = "kafka_delete_topic"
     description: str = "Delete a Kafka topic. This is destructive."
     args_schema: Type[BaseModel] = DeleteTopicInput
     mcp_client: Any = None
 
-    def _run(self, name: str, cluster: str = "") -> str:
-        if self.mcp_client is None:
-            return "Error: MCP client not configured"
-        args = {"name": name}
+    def _run(self, name: str, approval_token: str, idempotency_key: str = "", cluster: str = "") -> str:
+        args = {"name": name, "approval_token": approval_token}
+        if idempotency_key:
+            args["idempotency_key"] = idempotency_key
         if cluster:
             args["cluster"] = cluster
-        return self.mcp_client.call_tool("kafka_delete_topic", args)
+        return _call_sync(self.mcp_client, "kafka_delete_topic", args)
 
 
-class KafkaDescribeGroupTool(BaseTool):
+class KafkaDescribeGroupTool(_KafkaMCPTool):
     """Tool for describing a consumer group via KafkaMCP."""
     name: str = "kafka_describe_consumer_group"
     description: str = "Get state, members, assignments, and per-partition lag of a consumer group."
@@ -297,15 +317,13 @@ class KafkaDescribeGroupTool(BaseTool):
     mcp_client: Any = None
 
     def _run(self, group_id: str, cluster: str = "") -> str:
-        if self.mcp_client is None:
-            return "Error: MCP client not configured"
         args = {"group_id": group_id}
         if cluster:
             args["cluster"] = cluster
-        return self.mcp_client.call_tool("kafka_describe_consumer_group", args)
+        return _call_sync(self.mcp_client, "kafka_describe_consumer_group", args)
 
 
-class KafkaListGroupsTool(BaseTool):
+class KafkaListGroupsTool(_KafkaMCPTool):
     """Tool for listing consumer groups via KafkaMCP."""
     name: str = "kafka_list_consumer_groups"
     description: str = "List all consumer groups with state and lag summary."
@@ -313,58 +331,37 @@ class KafkaListGroupsTool(BaseTool):
     mcp_client: Any = None
 
     def _run(self, state_filter: str = "", cluster: str = "") -> str:
-        if self.mcp_client is None:
-            return "Error: MCP client not configured"
         args = {}
         if state_filter:
             args["state_filter"] = state_filter
         if cluster:
             args["cluster"] = cluster
-        return self.mcp_client.call_tool("kafka_list_consumer_groups", args)
+        return _call_sync(self.mcp_client, "kafka_list_consumer_groups", args)
 
 
-class KafkaResetOffsetsTool(BaseTool):
+class KafkaResetOffsetsTool(_KafkaMCPTool):
     """Tool for resetting consumer group offsets via KafkaMCP."""
     name: str = "kafka_reset_offsets"
     description: str = "Reset consumer group offsets to earliest, latest, or a specific timestamp."
     args_schema: Type[BaseModel] = ResetOffsetsInput
     mcp_client: Any = None
 
-    def _run(self, group_id: str, topic: str, to: str = "latest", cluster: str = "") -> str:
-        if self.mcp_client is None:
-            return "Error: MCP client not configured"
-        args = {"group_id": group_id, "topic": topic, "to": to}
+    def _run(self, group_id: str, topic: str, approval_token: str,
+             strategy: str = "latest", value: str = "", cluster: str = "") -> str:
+        args = {
+            "group_id": group_id,
+            "topic": topic,
+            "strategy": strategy,
+            "approval_token": approval_token,
+        }
+        if value:
+            args["value"] = value
         if cluster:
             args["cluster"] = cluster
-        return self.mcp_client.call_tool("kafka_reset_offsets", args)
+        return _call_sync(self.mcp_client, "kafka_reset_offsets", args)
 
 
-class KafkaWatchTool(BaseTool):
-    """Tool for registering event-driven watches on Kafka topics."""
-    name: str = "kafka_watch"
-    description: str = "Subscribe to topic patterns for real-time notifications when matching messages arrive."
-    args_schema: Type[BaseModel] = WatchInput
-    mcp_client: Any = None
-
-    def _run(self, action: str = "subscribe", topic_pattern: str = "", key_filter: str = "",
-             value_filter: str = "", webhook_url: str = "", subscription_id: str = "") -> str:
-        if self.mcp_client is None:
-            return "Error: MCP client not configured"
-        args = {"action": action}
-        if topic_pattern:
-            args["topic_pattern"] = topic_pattern
-        if key_filter:
-            args["key_filter"] = key_filter
-        if value_filter:
-            args["value_filter"] = value_filter
-        if webhook_url:
-            args["webhook_url"] = webhook_url
-        if subscription_id:
-            args["subscription_id"] = subscription_id
-        return self.mcp_client.call_tool("kafka_watch", args)
-
-
-class KafkaGetSchemaTool(BaseTool):
+class KafkaGetSchemaTool(_KafkaMCPTool):
     """Tool for getting a schema from Schema Registry via KafkaMCP."""
     name: str = "kafka_get_schema"
     description: str = "Get the full schema definition for a Schema Registry subject."
@@ -372,81 +369,26 @@ class KafkaGetSchemaTool(BaseTool):
     mcp_client: Any = None
 
     def _run(self, subject: str, version: str = "latest") -> str:
-        if self.mcp_client is None:
-            return "Error: MCP client not configured"
-        return self.mcp_client.call_tool("kafka_get_schema", {"subject": subject, "version": version})
+        return _call_sync(
+            self.mcp_client,
+            "kafka_get_schema",
+            {"subject": subject, "version": version},
+        )
 
 
-class KafkaSchemaDiffTool(BaseTool):
-    """Tool for diffing schema versions via KafkaMCP."""
-    name: str = "kafka_schema_diff"
-    description: str = "Compare two schema versions and show field-level changes."
-    args_schema: Type[BaseModel] = SchemaDiffInput
-    mcp_client: Any = None
-
-    def _run(self, subject: str, version_from: int = 1, version_to: int = 2) -> str:
-        if self.mcp_client is None:
-            return "Error: MCP client not configured"
-        return self.mcp_client.call_tool("kafka_schema_diff", {
-            "subject": subject, "version_from": version_from, "version_to": version_to
-        })
-
-
-class KafkaDLQRemediateTool(BaseTool):
-    """Tool for DLQ analysis and remediation via KafkaMCP."""
-    name: str = "kafka_remediate_dlq"
-    description: str = "Analyze and remediate dead letter queue messages with retry, route, or fix suggestions."
+class KafkaAnalyzeDLQTool(_KafkaMCPTool):
+    """Tool for read-only DLQ analysis via KafkaMCP."""
+    name: str = "kafka_analyze_dlq"
+    description: str = "Analyze dead letter queue failures and return categories, counts, and samples."
     args_schema: Type[BaseModel] = DLQAnalyzeInput
     mcp_client: Any = None
 
-    def _run(self, topic: str, action: str = "analyze", target_topic: str = "", limit: int = 100, cluster: str = "") -> str:
-        if self.mcp_client is None:
-            return "Error: MCP client not configured"
-        args = {"topic": topic, "action": action, "limit": limit}
-        if target_topic:
-            args["target_topic"] = target_topic
+    def _run(self, topic: str, limit: int = 100, cluster: str = "") -> str:
+        args = {"topic": topic, "limit": limit}
         if cluster:
             args["cluster"] = cluster
-        return self.mcp_client.call_tool("kafka_remediate_dlq", args)
+        return _call_sync(self.mcp_client, "kafka_analyze_dlq", args)
 
-
-class KafkaAggregateTool(BaseTool):
-    """Tool for aggregating Kafka messages via KafkaMCP."""
-    name: str = "kafka_aggregate"
-    description: str = "Aggregate messages from a topic with count, sum, avg, min, max operations."
-    args_schema: Type[BaseModel] = AggregateInput
-    mcp_client: Any = None
-
-    def _run(self, topic: str, operation: str = "count", field: str = "", group_by: str = "", limit: int = 1000, cluster: str = "") -> str:
-        if self.mcp_client is None:
-            return "Error: MCP client not configured"
-        args = {"topic": topic, "operation": operation, "limit": limit}
-        if field:
-            args["field"] = field
-        if group_by:
-            args["group_by"] = group_by
-        if cluster:
-            args["cluster"] = cluster
-        return self.mcp_client.call_tool("kafka_aggregate", args)
-
-
-class KafkaNLQueryTool(BaseTool):
-    """Tool for natural language queries about Kafka via KafkaMCP."""
-    name: str = "kafka_natural_language_query"
-    description: str = "Ask questions about Kafka in natural language."
-    args_schema: Type[BaseModel] = NLQueryInput
-    mcp_client: Any = None
-
-    def _run(self, query: str, cluster: str = "") -> str:
-        if self.mcp_client is None:
-            return "Error: MCP client not configured"
-        args = {"query": query}
-        if cluster:
-            args["cluster"] = cluster
-        return self.mcp_client.call_tool("kafka_natural_language_query", args)
-
-
-# --- Toolkit factory functions ---
 
 def KafkaConsumeToolkit(mcp_client: Any) -> list[BaseTool]:
     """Create consume-focused tools."""
@@ -462,10 +404,16 @@ def KafkaProduceToolkit(mcp_client: Any) -> list[BaseTool]:
 
 
 def KafkaTopicToolkit(mcp_client: Any) -> list[BaseTool]:
-    """Create topic management tools."""
+    """Create read-only topic tools."""
     return [
         KafkaListTopicsTool(mcp_client=mcp_client),
         KafkaDescribeTopicTool(mcp_client=mcp_client),
+    ]
+
+
+def KafkaTopicMutationToolkit(mcp_client: Any) -> list[BaseTool]:
+    """Create approval-gated topic mutation tools."""
+    return [
         KafkaCreateTopicTool(mcp_client=mcp_client),
         KafkaAlterTopicTool(mcp_client=mcp_client),
         KafkaDeleteTopicTool(mcp_client=mcp_client),
@@ -473,49 +421,46 @@ def KafkaTopicToolkit(mcp_client: Any) -> list[BaseTool]:
 
 
 def KafkaSchemaToolkit(mcp_client: Any) -> list[BaseTool]:
-    """Create schema registry tools."""
-    return [
-        KafkaGetSchemaTool(mcp_client=mcp_client),
-        KafkaSchemaDiffTool(mcp_client=mcp_client),
-    ]
+    """Create supported schema registry tools."""
+    return [KafkaGetSchemaTool(mcp_client=mcp_client)]
 
 
 def KafkaConsumerGroupToolkit(mcp_client: Any) -> list[BaseTool]:
-    """Create consumer group management tools."""
+    """Create read-only consumer group tools."""
     return [
         KafkaDescribeGroupTool(mcp_client=mcp_client),
         KafkaListGroupsTool(mcp_client=mcp_client),
-        KafkaResetOffsetsTool(mcp_client=mcp_client),
     ]
 
 
+def KafkaConsumerGroupMutationToolkit(mcp_client: Any) -> list[BaseTool]:
+    """Create approval-gated consumer group tools."""
+    return [KafkaResetOffsetsTool(mcp_client=mcp_client)]
+
+
 def KafkaOperationsToolkit(mcp_client: Any) -> list[BaseTool]:
-    """Create operational tools for DLQ and aggregation."""
+    """Create supported read-only operational tools."""
+    return [KafkaAnalyzeDLQTool(mcp_client=mcp_client)]
+
+
+def KafkaGuardedToolkit(mcp_client: Any) -> list[BaseTool]:
+    """Create all approval-gated mutation wrappers."""
     return [
-        KafkaDLQRemediateTool(mcp_client=mcp_client),
-        KafkaAggregateTool(mcp_client=mcp_client),
-        KafkaNLQueryTool(mcp_client=mcp_client),
+        KafkaProduceTool(mcp_client=mcp_client),
+        *KafkaTopicMutationToolkit(mcp_client),
+        *KafkaConsumerGroupMutationToolkit(mcp_client),
     ]
 
 
 def KafkaMCPToolkit(mcp_client: Any) -> list[BaseTool]:
-    """Create the full KafkaMCP toolkit with all available tools."""
+    """Create the safe, read-only default KafkaMCP toolkit."""
     return [
         KafkaConsumeTool(mcp_client=mcp_client),
-        KafkaProduceTool(mcp_client=mcp_client),
         KafkaListTopicsTool(mcp_client=mcp_client),
         KafkaDescribeTopicTool(mcp_client=mcp_client),
-        KafkaCreateTopicTool(mcp_client=mcp_client),
-        KafkaAlterTopicTool(mcp_client=mcp_client),
-        KafkaDeleteTopicTool(mcp_client=mcp_client),
         KafkaSearchTool(mcp_client=mcp_client),
         KafkaDescribeGroupTool(mcp_client=mcp_client),
         KafkaListGroupsTool(mcp_client=mcp_client),
-        KafkaResetOffsetsTool(mcp_client=mcp_client),
-        KafkaWatchTool(mcp_client=mcp_client),
         KafkaGetSchemaTool(mcp_client=mcp_client),
-        KafkaSchemaDiffTool(mcp_client=mcp_client),
-        KafkaDLQRemediateTool(mcp_client=mcp_client),
-        KafkaAggregateTool(mcp_client=mcp_client),
-        KafkaNLQueryTool(mcp_client=mcp_client),
+        KafkaAnalyzeDLQTool(mcp_client=mcp_client),
     ]

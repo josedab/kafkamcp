@@ -4,9 +4,12 @@ from kafkamcp_langchain.tools import (
     KafkaConsumeToolkit,
     KafkaProduceToolkit,
     KafkaTopicToolkit,
+    KafkaTopicMutationToolkit,
     KafkaSchemaToolkit,
     KafkaConsumerGroupToolkit,
+    KafkaConsumerGroupMutationToolkit,
     KafkaOperationsToolkit,
+    KafkaGuardedToolkit,
     KafkaMCPToolkit,
 )
 
@@ -15,8 +18,11 @@ __all__ = [
     "KafkaConsumeToolkit",
     "KafkaProduceToolkit",
     "KafkaTopicToolkit",
+    "KafkaTopicMutationToolkit",
     "KafkaSchemaToolkit",
     "KafkaConsumerGroupToolkit",
+    "KafkaConsumerGroupMutationToolkit",
     "KafkaOperationsToolkit",
+    "KafkaGuardedToolkit",
     "KafkaMCPToolkit",
 ]

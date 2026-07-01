@@ -15,16 +15,6 @@ export interface Transport {
 }
 
 /**
- * Configuration options for creating a {@link KafkaMCPClient}.
- */
-export interface ClientOptions {
-  /** Agent identifier sent with each request for audit and access control. Defaults to `"sdk-ts-agent"`. */
-  agentId?: string;
-  /** Request timeout in milliseconds. Defaults to `30000`. */
-  timeout?: number;
-}
-
-/**
  * Summary information for a Kafka topic.
  */
 export interface TopicSummary {
@@ -70,6 +60,28 @@ export interface DeliveryResult {
   status: string;
 }
 
+export interface MutationOptions {
+  /** Short-lived token issued by kafka_approval for the exact mutation. */
+  approvalToken: string;
+  /** Optional retry key for mutations whose server schema supports it. */
+  idempotencyKey?: string;
+  /** Optional configured Kafka cluster name. */
+  cluster?: string;
+}
+
+function mutationControls(options: MutationOptions, idempotent: boolean): Record<string, string> {
+  if (!options.approvalToken.trim()) {
+    throw new Error("approvalToken is required for guarded mutations");
+  }
+  return {
+    approval_token: options.approvalToken,
+    ...(idempotent && options.idempotencyKey
+      ? { idempotency_key: options.idempotencyKey }
+      : {}),
+    ...(options.cluster ? { cluster: options.cluster } : {}),
+  };
+}
+
 /**
  * Summary information for a consumer group.
  */
@@ -94,6 +106,15 @@ export interface SchemaSubject {
   version: number;
   /** Schema type (e.g., `"AVRO"`, `"PROTOBUF"`, `"JSON"`). */
   schema_type: string;
+  /** Subject compatibility level when reported by Schema Registry. */
+  compatibility_level?: string;
+}
+
+interface SchemaSubjectResponse {
+  subject_name: string;
+  latest_version: number;
+  schema_type: string;
+  compatibility_level?: string;
 }
 
 /**
@@ -105,25 +126,20 @@ export interface SchemaSubject {
  *
  * @example
  * ```typescript
- * const client = new KafkaMCPClient(transport, { agentId: "my-agent" });
+ * const client = new KafkaMCPClient(transport);
  * const topics = await client.listTopics("orders.*");
  * await client.close();
  * ```
  */
 export class KafkaMCPClient {
   private transport: Transport;
-  private agentId: string;
-  private timeout: number;
 
   /**
    * Create a new KafkaMCP client.
    * @param transport - MCP transport implementation (stdio, SSE, or HTTP).
-   * @param options - Optional client configuration.
    */
-  constructor(transport: Transport, options: ClientOptions = {}) {
+  constructor(transport: Transport) {
     this.transport = transport;
-    this.agentId = options.agentId ?? "sdk-ts-agent";
-    this.timeout = options.timeout ?? 30000;
   }
 
   // --- Topic Operations ---
@@ -149,22 +165,27 @@ export class KafkaMCPClient {
    * @param configs - Optional topic-level configuration overrides.
    */
   async createTopic(
-    topic: string,
+    name: string,
     partitions: number,
     replicationFactor: number,
-    configs?: Record<string, string>
+    configs: Record<string, string> | undefined,
+    options: MutationOptions
   ): Promise<void> {
     await this.transport.callTool("kafka_create_topic", {
-      topic,
+      name,
       partitions,
       replication_factor: replicationFactor,
       ...(configs ? { configs } : {}),
+      ...mutationControls(options, true),
     });
   }
 
   /** Delete a Kafka topic. This is irreversible. */
-  async deleteTopic(topic: string): Promise<void> {
-    await this.transport.callTool("kafka_delete_topic", { topic });
+  async deleteTopic(name: string, options: MutationOptions): Promise<void> {
+    await this.transport.callTool("kafka_delete_topic", {
+      name,
+      ...mutationControls(options, true),
+    });
   }
 
   // --- Message Operations ---
@@ -184,8 +205,8 @@ export class KafkaMCPClient {
       topic,
       limit,
       offset,
-    })) as Message[];
-    return result;
+    })) as { messages: Message[] };
+    return result.messages;
   }
 
   /**
@@ -196,13 +217,15 @@ export class KafkaMCPClient {
    */
   async produce(
     topic: string,
-    messages: Array<{ key?: string; value: unknown; headers?: Record<string, string> }>
+    messages: Array<{ key?: string; value: unknown; headers?: Record<string, string> }>,
+    options: MutationOptions
   ): Promise<DeliveryResult[]> {
     const result = (await this.transport.callTool("kafka_produce", {
       topic,
       messages,
-    })) as { results: DeliveryResult[] };
-    return result.results;
+      ...mutationControls(options, false),
+    })) as { deliveries: DeliveryResult[] };
+    return result.deliveries;
   }
 
   /**
@@ -220,8 +243,8 @@ export class KafkaMCPClient {
       topic,
       value_contains: valueContains,
       limit,
-    })) as { matches: Message[] };
-    return result.matches;
+    })) as { messages: Message[] };
+    return result.messages;
   }
 
   // --- Consumer Group Operations ---
@@ -253,60 +276,39 @@ export class KafkaMCPClient {
   async resetOffsets(
     groupId: string,
     topic: string,
-    strategy: string
+    strategy: "earliest" | "latest" | "timestamp",
+    options: MutationOptions,
+    value?: string
   ): Promise<void> {
     await this.transport.callTool("kafka_reset_offsets", {
       group_id: groupId,
       topic,
       strategy,
+      ...(value ? { value } : {}),
+      ...mutationControls(options, false),
     });
   }
 
   // --- Schema Registry ---
 
   /** List all Schema Registry subjects. */
-  async listSchemas(): Promise<string[]> {
+  async listSchemas(): Promise<SchemaSubject[]> {
     const result = (await this.transport.callTool("kafka_list_schemas", {})) as {
-      subjects: string[];
+      subjects: SchemaSubjectResponse[];
     };
-    return result.subjects;
+    return result.subjects.map((subject) => ({
+      subject: subject.subject_name,
+      version: subject.latest_version,
+      schema_type: subject.schema_type,
+      ...(subject.compatibility_level
+        ? { compatibility_level: subject.compatibility_level }
+        : {}),
+    }));
   }
 
   /** Get schema definition and metadata for a subject. */
-  async describeSchema(subject: string): Promise<unknown> {
-    return this.transport.callTool("kafka_describe_schema", { subject });
-  }
-
-  // --- AI & Analytics ---
-
-  /** Execute a natural language query against Kafka data. */
-  async naturalLanguageQuery(query: string): Promise<unknown> {
-    return this.transport.callTool("kafka_nl_query", { query });
-  }
-
-  /**
-   * Get detected anomalies in Kafka metrics.
-   * @param severity - Filter by severity level (e.g., `"critical"`, `"warning"`).
-   * @param limit - Maximum number of anomalies to return.
-   */
-  async getAnomalies(
-    severity?: string,
-    limit?: number
-  ): Promise<unknown> {
-    const args: Record<string, unknown> = {};
-    if (severity) args.severity = severity;
-    if (limit) args.limit = limit;
-    return this.transport.callTool("kafka_anomalies", args);
-  }
-
-  /** Run an advisor scan to detect anti-patterns and generate recommendations. */
-  async advisorScan(cluster?: string): Promise<unknown> {
-    return this.transport.callTool("kafka_advisor_scan", cluster ? { cluster } : {});
-  }
-
-  /** Generate a comprehensive advisor report with prioritized findings. */
-  async advisorReport(cluster?: string): Promise<unknown> {
-    return this.transport.callTool("kafka_advisor_report", cluster ? { cluster } : {});
+  async getSchema(subject: string): Promise<unknown> {
+    return this.transport.callTool("kafka_get_schema", { subject });
   }
 
   /** Diagnose consumer group lag and identify root causes. */

@@ -1,19 +1,28 @@
 {
-  "name": "@kafkamcp/sdk",
+  "name": "@josedab/kafkamcp-sdk",
   "version": "0.1.0",
+  "private": true,
   "description": "TypeScript SDK for KafkaMCP - Kafka Model Context Protocol server",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "jest",
-    "lint": "eslint src/",
+    "test": "npm run build && node --test test/*.test.js",
+    "lint": "tsc --noEmit",
     "prepublishOnly": "npm run build"
   },
   "keywords": ["kafka", "mcp", "ai", "agent", "sdk"],
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/josedab/kafkamcp.git",
+    "directory": "sdk/typescript"
+  },
   "engines": {
     "node": ">=18.0.0"
   },
-  "files": ["dist/", "README.md", "LICENSE"]
+  "files": ["dist/", "README.md", "LICENSE"],
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
 }

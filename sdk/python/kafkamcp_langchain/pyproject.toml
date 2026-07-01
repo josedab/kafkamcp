@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "LangChain integration for KafkaMCP — use Kafka as AI agent tools"
 readme = "README.md"
 license = {text = "Apache-2.0"}
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "langchain-core>=0.2.0",
     "mcp>=1.0.0",
@@ -23,8 +23,8 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/kafkamcp/kafkamcp"
-Repository = "https://github.com/kafkamcp/kafkamcp/tree/main/sdk/python/kafkamcp_langchain"
+Homepage = "https://github.com/josedab/kafkamcp"
+Repository = "https://github.com/josedab/kafkamcp/tree/main/sdk/python/kafkamcp_langchain"
 
 [tool.setuptools.packages.find]
 include = ["kafkamcp_langchain*"]

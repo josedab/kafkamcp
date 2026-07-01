@@ -8,6 +8,6 @@
 //
 // Basic usage:
 //
-//	client := kafkamcpsdk.New(transport, kafkamcpsdk.WithAgentID("my-agent"))
+//	client := kafkamcpsdk.New(transport, kafkamcpsdk.WithTimeout(30*time.Second))
 //	topics, err := client.ListTopics(ctx, "orders.*")
 package kafkamcpsdk

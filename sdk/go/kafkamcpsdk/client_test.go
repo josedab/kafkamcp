@@ -42,9 +42,6 @@ func TestNew(t *testing.T) {
 	if c == nil {
 		t.Fatal("expected non-nil client")
 	}
-	if c.agentID != "sdk-agent" {
-		t.Errorf("expected default agent ID 'sdk-agent', got %q", c.agentID)
-	}
 	if c.timeout != 30*time.Second {
 		t.Errorf("expected default timeout 30s, got %v", c.timeout)
 	}
@@ -53,10 +50,7 @@ func TestNew(t *testing.T) {
 func TestNewWithOptions(t *testing.T) {
 	t.Parallel()
 	tr := &mockTransport{}
-	c := New(tr, WithAgentID("my-agent"), WithTimeout(10*time.Second))
-	if c.agentID != "my-agent" {
-		t.Errorf("expected agent ID 'my-agent', got %q", c.agentID)
-	}
+	c := New(tr, WithTimeout(10*time.Second))
 	if c.timeout != 10*time.Second {
 		t.Errorf("expected timeout 10s, got %v", c.timeout)
 	}
@@ -128,8 +122,10 @@ func TestConsume(t *testing.T) {
 			if args["topic"] != "orders" {
 				t.Errorf("expected topic 'orders', got %v", args["topic"])
 			}
-			return json.Marshal([]Message{
-				{Partition: 0, Offset: 100, Timestamp: "2025-01-01T00:00:00Z", Key: "key1", Value: map[string]any{"id": 1}},
+			return json.Marshal(map[string]any{
+				"messages": []Message{
+					{Partition: 0, Offset: 100, Timestamp: "2025-01-01T00:00:00Z", Key: "key1", Value: map[string]any{"id": 1}},
+				},
 			})
 		},
 	}
@@ -153,7 +149,7 @@ func TestConsumeDefaults(t *testing.T) {
 			if args["offset"] != "latest" {
 				t.Errorf("expected default offset 'latest', got %v", args["offset"])
 			}
-			return json.Marshal([]Message{})
+			return json.Marshal(map[string]any{"messages": []Message{}})
 		},
 	}
 	c := New(tr)
@@ -181,8 +177,11 @@ func TestProduce(t *testing.T) {
 			if name != "kafka_produce" {
 				t.Errorf("expected tool 'kafka_produce', got %q", name)
 			}
+			if args["approval_token"] != "approval-token" {
+				t.Errorf("missing approval token: %v", args)
+			}
 			return json.Marshal(map[string]any{
-				"results": []DeliveryResult{
+				"deliveries": []DeliveryResult{
 					{Partition: 0, Offset: 42, Timestamp: "2025-01-01T00:00:00Z", Status: "success"},
 				},
 			})
@@ -191,7 +190,7 @@ func TestProduce(t *testing.T) {
 	c := New(tr)
 	results, err := c.Produce(context.Background(), "orders", []map[string]any{
 		{"key": "k1", "value": map[string]any{"id": 1}},
-	})
+	}, MutationOptions{ApprovalToken: "approval-token"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -211,9 +210,26 @@ func TestProduceError(t *testing.T) {
 		},
 	}
 	c := New(tr)
-	_, err := c.Produce(context.Background(), "test", nil)
+	_, err := c.Produce(context.Background(), "test", nil, MutationOptions{ApprovalToken: "approval-token"})
 	if err == nil {
 		t.Error("expected error")
+	}
+}
+
+func TestGuardedMutationRequiresApproval(t *testing.T) {
+	t.Parallel()
+	called := false
+	client := New(&mockTransport{
+		callToolFn: func(context.Context, string, map[string]any) (json.RawMessage, error) {
+			called = true
+			return nil, nil
+		},
+	})
+	if _, err := client.Produce(context.Background(), "orders", nil, MutationOptions{}); err == nil {
+		t.Fatal("expected missing approval error")
+	}
+	if called {
+		t.Fatal("transport must not be called without approval")
 	}
 }
 
@@ -222,7 +238,7 @@ func TestSearch(t *testing.T) {
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
 			return json.Marshal(map[string]any{
-				"matches": []Message{
+				"messages": []Message{
 					{Partition: 0, Offset: 50, Key: "k1"},
 				},
 			})
@@ -247,39 +263,6 @@ func TestSearchError(t *testing.T) {
 	}
 	c := New(tr)
 	_, err := c.Search(context.Background(), "test", "", 10)
-	if err == nil {
-		t.Error("expected error")
-	}
-}
-
-func TestWatch(t *testing.T) {
-	t.Parallel()
-	tr := &mockTransport{
-		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
-			return json.Marshal(map[string]any{
-				"subscription_id": "sub-123",
-			})
-		},
-	}
-	c := New(tr)
-	subID, err := c.Watch(context.Background(), "orders.*", "", "https://hooks.example.com/kafka")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if subID != "sub-123" {
-		t.Errorf("expected sub ID 'sub-123', got %q", subID)
-	}
-}
-
-func TestWatchError(t *testing.T) {
-	t.Parallel()
-	tr := &mockTransport{
-		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
-			return nil, errors.New("failed")
-		},
-	}
-	c := New(tr)
-	_, err := c.Watch(context.Background(), "test", "", "")
 	if err == nil {
 		t.Error("expected error")
 	}
@@ -469,8 +452,8 @@ func TestCreateTopic(t *testing.T) {
 			if name != "kafka_create_topic" {
 				t.Errorf("expected kafka_create_topic, got %q", name)
 			}
-			if args["topic"] != "new-topic" {
-				t.Errorf("expected topic new-topic, got %v", args["topic"])
+			if args["name"] != "new-topic" {
+				t.Errorf("expected name new-topic, got %v", args["name"])
 			}
 			if args["partitions"].(float64) != 3 {
 				t.Errorf("expected 3 partitions, got %v", args["partitions"])
@@ -479,7 +462,9 @@ func TestCreateTopic(t *testing.T) {
 		},
 	}
 	c := New(tr)
-	err := c.CreateTopic(context.Background(), "new-topic", 3, 2, nil)
+	err := c.CreateTopic(context.Background(), "new-topic", 3, 2, nil, MutationOptions{
+		ApprovalToken: "approval-token", IdempotencyKey: "request-123",
+	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -496,7 +481,7 @@ func TestCreateTopicWithConfigs(t *testing.T) {
 		},
 	}
 	c := New(tr)
-	err := c.CreateTopic(context.Background(), "t", 1, 1, map[string]string{"retention.ms": "86400000"})
+	err := c.CreateTopic(context.Background(), "t", 1, 1, map[string]string{"retention.ms": "86400000"}, MutationOptions{ApprovalToken: "approval-token"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -510,7 +495,7 @@ func TestCreateTopicError(t *testing.T) {
 		},
 	}
 	c := New(tr)
-	err := c.CreateTopic(context.Background(), "t", 1, 1, nil)
+	err := c.CreateTopic(context.Background(), "t", 1, 1, nil, MutationOptions{ApprovalToken: "approval-token"})
 	if err == nil {
 		t.Error("expected error")
 	}
@@ -527,7 +512,7 @@ func TestDeleteTopic(t *testing.T) {
 		},
 	}
 	c := New(tr)
-	err := c.DeleteTopic(context.Background(), "old-topic")
+	err := c.DeleteTopic(context.Background(), "old-topic", MutationOptions{ApprovalToken: "approval-token"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -541,7 +526,7 @@ func TestDeleteTopicError(t *testing.T) {
 		},
 	}
 	c := New(tr)
-	err := c.DeleteTopic(context.Background(), "protected")
+	err := c.DeleteTopic(context.Background(), "protected", MutationOptions{ApprovalToken: "approval-token"})
 	if err == nil {
 		t.Error("expected error")
 	}
@@ -557,7 +542,19 @@ func TestListSchemas(t *testing.T) {
 				t.Errorf("expected kafka_list_schemas, got %q", name)
 			}
 			return json.Marshal(map[string]any{
-				"subjects": []string{"orders-value", "payments-value"},
+				"subjects": []map[string]any{
+					{
+						"subject_name":        "orders-value",
+						"latest_version":      1,
+						"schema_type":         "AVRO",
+						"compatibility_level": "BACKWARD",
+					},
+					{
+						"subject_name":   "payments-value",
+						"latest_version": 2,
+						"schema_type":    "PROTOBUF",
+					},
+				},
 			})
 		},
 	}
@@ -568,6 +565,12 @@ func TestListSchemas(t *testing.T) {
 	}
 	if len(subjects) != 2 {
 		t.Errorf("expected 2 subjects, got %d", len(subjects))
+	}
+	if subjects[0].Subject != "orders-value" || subjects[0].Version != 1 {
+		t.Errorf("unexpected first subject: %+v", subjects[0])
+	}
+	if subjects[0].CompatibilityLevel != "BACKWARD" {
+		t.Errorf("expected BACKWARD compatibility, got %q", subjects[0].CompatibilityLevel)
 	}
 }
 
@@ -603,14 +606,17 @@ func TestGetSchema(t *testing.T) {
 	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
-			if name != "kafka_describe_schema" {
-				t.Errorf("expected kafka_describe_schema, got %q", name)
+			if name != "kafka_get_schema" {
+				t.Errorf("expected kafka_get_schema, got %q", name)
 			}
-			return json.Marshal(SchemaInfo{
-				Subject:    "orders-value",
-				Version:    1,
-				SchemaType: "AVRO",
-				Schema:     `{"type":"record"}`,
+			return json.Marshal(map[string]any{
+				"subject":       "orders-value",
+				"version":       1,
+				"schema_id":     42,
+				"schema_type":   "AVRO",
+				"schema":        map[string]any{"type": "record", "name": "Order"},
+				"field_summary": "Order { id: string }",
+				"references":    []any{},
 			})
 		},
 	}
@@ -621,6 +627,10 @@ func TestGetSchema(t *testing.T) {
 	}
 	if info.Subject != "orders-value" {
 		t.Errorf("expected orders-value, got %s", info.Subject)
+	}
+	schemaObject, ok := info.Schema.(map[string]any)
+	if !ok || schemaObject["name"] != "Order" {
+		t.Errorf("expected parsed schema object, got %#v", info.Schema)
 	}
 }
 
@@ -668,7 +678,10 @@ func TestResetOffsets(t *testing.T) {
 		},
 	}
 	c := New(tr)
-	err := c.ResetOffsets(context.Background(), "my-group", "orders", "earliest")
+	err := c.ResetOffsets(context.Background(), "my-group", "orders", "earliest", ResetOffsetsOptions{
+		MutationOptions: MutationOptions{ApprovalToken: "approval-token"},
+		DryRun:          true,
+	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -682,43 +695,48 @@ func TestResetOffsetsError(t *testing.T) {
 		},
 	}
 	c := New(tr)
-	err := c.ResetOffsets(context.Background(), "g", "t", "earliest")
+	err := c.ResetOffsets(context.Background(), "g", "t", "earliest", ResetOffsetsOptions{
+		MutationOptions: MutationOptions{ApprovalToken: "approval-token"},
+	})
 	if err == nil {
 		t.Error("expected error")
 	}
 }
 
-func TestNaturalLanguageQuery(t *testing.T) {
+func TestResetOffsetsTimestamp(t *testing.T) {
 	t.Parallel()
 	tr := &mockTransport{
 		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
-			if name != "kafka_nl_query" {
-				t.Errorf("expected kafka_nl_query, got %q", name)
+			if args["value"] != "2026-07-27T00:00:00Z" {
+				t.Errorf("expected timestamp value, got %v", args["value"])
 			}
-			return json.Marshal(map[string]any{"answer": "There are 3 topics"})
+			if args["dry_run"] != true {
+				t.Errorf("expected dry_run true, got %v", args["dry_run"])
+			}
+			return json.Marshal(map[string]any{})
 		},
 	}
 	c := New(tr)
-	result, err := c.NaturalLanguageQuery(context.Background(), "how many topics?")
+
+	err := c.ResetOffsets(context.Background(), "my-group", "orders", "timestamp", ResetOffsetsOptions{
+		MutationOptions: MutationOptions{ApprovalToken: "approval-token"},
+		Value:           "2026-07-27T00:00:00Z",
+		DryRun:          true,
+	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if result == nil {
-		t.Fatal("expected non-nil result")
-	}
 }
 
-func TestNaturalLanguageQueryError(t *testing.T) {
+func TestResetOffsetsTimestampRequiresValue(t *testing.T) {
 	t.Parallel()
-	tr := &mockTransport{
-		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
-			return nil, errors.New("failed")
-		},
-	}
-	c := New(tr)
-	_, err := c.NaturalLanguageQuery(context.Background(), "query")
+	c := New(&mockTransport{})
+
+	err := c.ResetOffsets(context.Background(), "my-group", "orders", "timestamp", ResetOffsetsOptions{
+		MutationOptions: MutationOptions{ApprovalToken: "approval-token"},
+	})
 	if err == nil {
-		t.Error("expected error")
+		t.Fatal("expected timestamp validation error")
 	}
 }
 
@@ -751,108 +769,6 @@ func TestDiagnoseLagError(t *testing.T) {
 	}
 	c := New(tr)
 	_, err := c.DiagnoseLag(context.Background(), "g")
-	if err == nil {
-		t.Error("expected error")
-	}
-}
-
-func TestGetAnomalies(t *testing.T) {
-	t.Parallel()
-	tr := &mockTransport{
-		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
-			if name != "kafka_anomalies" {
-				t.Errorf("expected kafka_anomalies, got %q", name)
-			}
-			if args["severity"] != "critical" {
-				t.Errorf("expected severity critical, got %v", args["severity"])
-			}
-			return json.Marshal(map[string]any{"anomalies": []any{}})
-		},
-	}
-	c := New(tr)
-	result, err := c.GetAnomalies(context.Background(), "critical", 10)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if result == nil {
-		t.Fatal("expected non-nil result")
-	}
-}
-
-func TestGetAnomaliesNoFilters(t *testing.T) {
-	t.Parallel()
-	tr := &mockTransport{
-		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
-			if _, ok := args["severity"]; ok {
-				t.Error("severity should not be set when empty")
-			}
-			if _, ok := args["limit"]; ok {
-				t.Error("limit should not be set when 0")
-			}
-			return json.Marshal(map[string]any{})
-		},
-	}
-	c := New(tr)
-	_, _ = c.GetAnomalies(context.Background(), "", 0)
-}
-
-func TestGetAnomaliesError(t *testing.T) {
-	t.Parallel()
-	tr := &mockTransport{
-		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
-			return nil, errors.New("failed")
-		},
-	}
-	c := New(tr)
-	_, err := c.GetAnomalies(context.Background(), "", 0)
-	if err == nil {
-		t.Error("expected error")
-	}
-}
-
-func TestAdvisorScan(t *testing.T) {
-	t.Parallel()
-	tr := &mockTransport{
-		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
-			if name != "kafka_advisor_scan" {
-				t.Errorf("expected kafka_advisor_scan, got %q", name)
-			}
-			return json.Marshal(map[string]any{"recommendations": []any{}})
-		},
-	}
-	c := New(tr)
-	result, err := c.AdvisorScan(context.Background(), "prod")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if result == nil {
-		t.Fatal("expected non-nil result")
-	}
-}
-
-func TestAdvisorScanNoCluster(t *testing.T) {
-	t.Parallel()
-	tr := &mockTransport{
-		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
-			if _, ok := args["cluster"]; ok {
-				t.Error("cluster should not be set when empty")
-			}
-			return json.Marshal(map[string]any{})
-		},
-	}
-	c := New(tr)
-	_, _ = c.AdvisorScan(context.Background(), "")
-}
-
-func TestAdvisorScanError(t *testing.T) {
-	t.Parallel()
-	tr := &mockTransport{
-		callToolFn: func(ctx context.Context, name string, args map[string]any) (json.RawMessage, error) {
-			return nil, errors.New("failed")
-		},
-	}
-	c := New(tr)
-	_, err := c.AdvisorScan(context.Background(), "")
 	if err == nil {
 		t.Error("expected error")
 	}

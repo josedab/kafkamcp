@@ -1,12 +1,15 @@
 # kafkamcp-langchain
 
-LangChain integration for [KafkaMCP](https://github.com/kafkamcp/kafkamcp) — use Kafka as AI agent tools.
+LangChain integration for [KafkaMCP](https://github.com/josedab/kafkamcp) — use Kafka as AI agent tools.
 
 ## Installation
 
 ```bash
-pip install kafkamcp-langchain
+pip install "git+https://github.com/josedab/kafkamcp.git#subdirectory=sdk/python/kafkamcp_langchain"
 ```
+
+The package is source-distributed from this repository and is not yet
+published to PyPI.
 
 ## Quick Start
 
@@ -31,19 +34,25 @@ async with stdio_client(server_params) as (read, write):
         # Create LangChain tools from KafkaMCP
         tools = KafkaMCPToolkit(mcp_client=session)
 
-        # Use with any LangChain agent
+        # MCP's ClientSession is asynchronous, so use async agent invocation.
         llm = ChatOpenAI(model="gpt-4")
         agent = initialize_agent(tools, llm, agent=AgentType.OPENAI_FUNCTIONS)
-        result = agent.run("List all topics and show me the latest 5 messages from the orders topic")
+        result = await agent.ainvoke({
+            "input": "List all topics and show me the latest 5 messages from the orders topic"
+        })
 ```
 
 ## Available Toolkits
 
-- `KafkaMCPToolkit(client)` — All tools
+- `KafkaMCPToolkit(client)` — Safe read-only wrapper set (8 tools)
 - `KafkaConsumeToolkit(client)` — Consume + Search
 - `KafkaProduceToolkit(client)` — Produce
 - `KafkaTopicToolkit(client)` — Topic management
 - `KafkaSchemaToolkit(client)` — Schema Registry
+
+Pass an asynchronous MCP `ClientSession` to LangChain's `ainvoke`/`arun`
+paths. Synchronous invocation is supported only when the supplied client has a
+synchronous `call_tool` method.
 
 ## License
 

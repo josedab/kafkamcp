@@ -1,6 +1,6 @@
-# @kafkamcp/sdk
+# @josedab/kafkamcp-sdk
 
-TypeScript SDK for [KafkaMCP](https://github.com/kafkamcp/kafkamcp) — type-safe async/await access to Kafka through the Model Context Protocol.
+TypeScript SDK for [KafkaMCP](https://github.com/josedab/kafkamcp) — type-safe async/await access to Kafka through the Model Context Protocol.
 
 ## Prerequisites
 
@@ -9,22 +9,23 @@ TypeScript SDK for [KafkaMCP](https://github.com/kafkamcp/kafkamcp) — type-saf
 
 ## Installation
 
+This SDK is currently a private workspace package and is not published to npm.
+
 ```bash
-npm install @kafkamcp/sdk
+git clone https://github.com/josedab/kafkamcp.git
+cd kafkamcp/sdk/typescript
+npm install
 ```
 
 ## Quick Start
 
 ```typescript
-import { KafkaMCPClient, Transport } from "@kafkamcp/sdk";
+import { KafkaMCPClient, Transport } from "@josedab/kafkamcp-sdk";
 
 // Provide a Transport implementation that connects to your KafkaMCP server
 const transport: Transport = /* your transport (stdio, SSE, etc.) */;
 
-const client = new KafkaMCPClient(transport, {
-  agentId: "my-agent",
-  timeout: 30000,
-});
+const client = new KafkaMCPClient(transport);
 
 // List topics
 const topics = await client.listTopics();
@@ -46,15 +47,15 @@ await client.close();
 |---|---|
 | `listTopics(filter?)` | List topics, optionally filtered by name pattern |
 | `describeTopic(topic)` | Get detailed topic metadata |
-| `createTopic(topic, partitions, replicationFactor, configs?)` | Create a new topic |
-| `deleteTopic(topic)` | Delete a topic |
+| `createTopic(name, partitions, replicationFactor, configs, mutationOptions)` | Create a new topic |
+| `deleteTopic(name, mutationOptions)` | Delete a topic |
 
 ### Message Operations
 
 | Method | Description |
 |---|---|
 | `consume(topic, limit?, offset?)` | Consume messages from a topic |
-| `produce(topic, messages)` | Produce messages to a topic |
+| `produce(topic, messages, mutationOptions)` | Produce messages to a topic |
 | `search(topic, valueContains, limit?)` | Search messages by value content |
 
 ### Consumer Group Operations
@@ -63,23 +64,19 @@ await client.close();
 |---|---|
 | `listConsumerGroups(cluster?)` | List consumer groups |
 | `describeConsumerGroup(groupId)` | Describe a consumer group |
-| `resetOffsets(groupId, topic, strategy)` | Reset consumer group offsets |
+| `resetOffsets(groupId, topic, strategy, mutationOptions, value?)` | Reset consumer group offsets |
 
 ### Schema Registry
 
 | Method | Description |
 |---|---|
 | `listSchemas()` | List all schema subjects |
-| `describeSchema(subject)` | Get schema details for a subject |
+| `getSchema(subject)` | Get schema details for a subject |
 
 ### AI & Analytics
 
 | Method | Description |
 |---|---|
-| `naturalLanguageQuery(query)` | Query Kafka using natural language |
-| `getAnomalies(severity?, limit?)` | Detect anomalies in the cluster |
-| `advisorScan(cluster?)` | Run a cluster health scan |
-| `advisorReport(cluster?)` | Generate a cluster health report |
 | `diagnoseLag(groupId)` | Diagnose consumer lag root causes |
 
 ## Transport Interface
@@ -93,6 +90,10 @@ interface Transport {
   close(): Promise<void>;
 }
 ```
+
+The transport owns identity credentials and request cancellation. Guarded
+mutations require `MutationOptions.approvalToken`; retry-safe topic mutations
+may also set `idempotencyKey`.
 
 ## Development
 

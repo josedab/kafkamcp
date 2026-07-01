@@ -10,7 +10,6 @@ import (
 // Client is a KafkaMCP SDK client.
 type Client struct {
 	transport Transport
-	agentID   string
 	timeout   time.Duration
 }
 
@@ -24,11 +23,6 @@ type Transport interface {
 // Option configures the client.
 type Option func(*Client)
 
-// WithAgentID sets the agent identity for authorization.
-func WithAgentID(id string) Option {
-	return func(c *Client) { c.agentID = id }
-}
-
 // WithTimeout sets the default request timeout.
 func WithTimeout(d time.Duration) Option {
 	return func(c *Client) { c.timeout = d }
@@ -38,7 +32,6 @@ func WithTimeout(d time.Duration) Option {
 func New(transport Transport, opts ...Option) *Client {
 	c := &Client{
 		transport: transport,
-		agentID:   "sdk-agent",
 		timeout:   30 * time.Second,
 	}
 	for _, opt := range opts {
@@ -71,6 +64,35 @@ type DeliveryResult struct {
 	Offset    int64  `json:"offset"`
 	Timestamp string `json:"timestamp"`
 	Status    string `json:"status"`
+}
+
+// MutationOptions contains the approval and routing controls required by
+// guarded write tools. Identity credentials belong to the Transport.
+type MutationOptions struct {
+	ApprovalToken  string
+	IdempotencyKey string
+	Cluster        string
+}
+
+// ResetOffsetsOptions contains mutation controls and reset-specific inputs.
+type ResetOffsetsOptions struct {
+	MutationOptions
+	Value  string
+	DryRun bool
+}
+
+func mutationArgs(opts MutationOptions, idempotent bool) (map[string]any, error) {
+	if opts.ApprovalToken == "" {
+		return nil, fmt.Errorf("approval token is required for guarded mutations")
+	}
+	args := map[string]any{"approval_token": opts.ApprovalToken}
+	if opts.Cluster != "" {
+		args["cluster"] = opts.Cluster
+	}
+	if idempotent && opts.IdempotencyKey != "" {
+		args["idempotency_key"] = opts.IdempotencyKey
+	}
+	return args, nil
 }
 
 // ListTopics returns all topics matching the optional filter.
@@ -113,32 +135,38 @@ func (c *Client) Consume(ctx context.Context, topic string, limit int, offset st
 		return nil, fmt.Errorf("consuming messages: %w", err)
 	}
 
-	var msgs []Message
-	if err := json.Unmarshal(result, &msgs); err != nil {
+	var resp struct {
+		Messages []Message `json:"messages"`
+	}
+	if err := json.Unmarshal(result, &resp); err != nil {
 		return nil, fmt.Errorf("parsing consume response: %w", err)
 	}
-	return msgs, nil
+	return resp.Messages, nil
 }
 
 // Produce sends messages to a topic.
-func (c *Client) Produce(ctx context.Context, topic string, messages []map[string]any) ([]DeliveryResult, error) {
+func (c *Client) Produce(ctx context.Context, topic string, messages []map[string]any, opts MutationOptions) ([]DeliveryResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, c.timeout)
 	defer cancel()
 
-	result, err := c.transport.CallTool(ctx, "kafka_produce", map[string]any{
-		"topic": topic, "messages": messages,
-	})
+	args, err := mutationArgs(opts, false)
+	if err != nil {
+		return nil, err
+	}
+	args["topic"] = topic
+	args["messages"] = messages
+	result, err := c.transport.CallTool(ctx, "kafka_produce", args)
 	if err != nil {
 		return nil, fmt.Errorf("producing messages: %w", err)
 	}
 
 	var resp struct {
-		Results []DeliveryResult `json:"results"`
+		Deliveries []DeliveryResult `json:"deliveries"`
 	}
 	if err := json.Unmarshal(result, &resp); err != nil {
 		return nil, fmt.Errorf("parsing produce response: %w", err)
 	}
-	return resp.Results, nil
+	return resp.Deliveries, nil
 }
 
 // Search searches messages in a topic.
@@ -154,34 +182,12 @@ func (c *Client) Search(ctx context.Context, topic, valueContains string, limit 
 	}
 
 	var resp struct {
-		Matches []Message `json:"matches"`
+		Messages []Message `json:"messages"`
 	}
 	if err := json.Unmarshal(result, &resp); err != nil {
 		return nil, fmt.Errorf("parsing search response: %w", err)
 	}
-	return resp.Matches, nil
-}
-
-// Watch registers a subscription for event-driven notifications.
-func (c *Client) Watch(ctx context.Context, topicPattern, keyFilter, webhookURL string) (string, error) {
-	ctx, cancel := context.WithTimeout(ctx, c.timeout)
-	defer cancel()
-
-	result, err := c.transport.CallTool(ctx, "kafka_watch", map[string]any{
-		"action": "subscribe", "topic_pattern": topicPattern,
-		"key_filter": keyFilter, "webhook_url": webhookURL,
-	})
-	if err != nil {
-		return "", fmt.Errorf("creating watch: %w", err)
-	}
-
-	var resp struct {
-		SubscriptionID string `json:"subscription_id"`
-	}
-	if err := json.Unmarshal(result, &resp); err != nil {
-		return "", fmt.Errorf("parsing watch response: %w", err)
-	}
-	return resp.SubscriptionID, nil
+	return resp.Messages, nil
 }
 
 // Close closes the client connection.
@@ -254,20 +260,22 @@ func (c *Client) DescribeTopic(ctx context.Context, topic string) (json.RawMessa
 }
 
 // CreateTopic creates a new Kafka topic.
-func (c *Client) CreateTopic(ctx context.Context, topic string, partitions int, replicationFactor int, configs map[string]string) error {
+func (c *Client) CreateTopic(ctx context.Context, topic string, partitions int, replicationFactor int, configs map[string]string, opts MutationOptions) error {
 	ctx, cancel := context.WithTimeout(ctx, c.timeout)
 	defer cancel()
 
-	args := map[string]any{
-		"topic":              topic,
-		"partitions":         float64(partitions),
-		"replication_factor": float64(replicationFactor),
+	args, err := mutationArgs(opts, true)
+	if err != nil {
+		return err
 	}
+	args["name"] = topic
+	args["partitions"] = float64(partitions)
+	args["replication_factor"] = float64(replicationFactor)
 	if len(configs) > 0 {
 		args["configs"] = configs
 	}
 
-	_, err := c.transport.CallTool(ctx, "kafka_create_topic", args)
+	_, err = c.transport.CallTool(ctx, "kafka_create_topic", args)
 	if err != nil {
 		return fmt.Errorf("creating topic: %w", err)
 	}
@@ -275,13 +283,16 @@ func (c *Client) CreateTopic(ctx context.Context, topic string, partitions int, 
 }
 
 // DeleteTopic deletes a Kafka topic.
-func (c *Client) DeleteTopic(ctx context.Context, topic string) error {
+func (c *Client) DeleteTopic(ctx context.Context, topic string, opts MutationOptions) error {
 	ctx, cancel := context.WithTimeout(ctx, c.timeout)
 	defer cancel()
 
-	_, err := c.transport.CallTool(ctx, "kafka_delete_topic", map[string]any{
-		"topic": topic,
-	})
+	args, err := mutationArgs(opts, true)
+	if err != nil {
+		return err
+	}
+	args["name"] = topic
+	_, err = c.transport.CallTool(ctx, "kafka_delete_topic", args)
 	if err != nil {
 		return fmt.Errorf("deleting topic: %w", err)
 	}
@@ -290,16 +301,28 @@ func (c *Client) DeleteTopic(ctx context.Context, topic string) error {
 
 // --- Schema Registry ---
 
-// SchemaInfo contains schema registry information.
+// SchemaSubject contains summarized Schema Registry subject information.
+type SchemaSubject struct {
+	Subject            string `json:"subject_name"`
+	Version            int    `json:"latest_version"`
+	SchemaType         string `json:"schema_type"`
+	CompatibilityLevel string `json:"compatibility_level,omitempty"`
+}
+
+// SchemaInfo contains a full schema definition.
 type SchemaInfo struct {
-	Subject    string `json:"subject"`
-	Version    int    `json:"version"`
-	SchemaType string `json:"schema_type"`
-	Schema     string `json:"schema"`
+	Subject            string `json:"subject"`
+	Version            int    `json:"version"`
+	SchemaID           int    `json:"schema_id"`
+	SchemaType         string `json:"schema_type"`
+	CompatibilityLevel string `json:"compatibility_level,omitempty"`
+	Schema             any    `json:"schema"`
+	FieldSummary       string `json:"field_summary"`
+	References         []any  `json:"references"`
 }
 
 // ListSchemas returns all schema subjects.
-func (c *Client) ListSchemas(ctx context.Context) ([]string, error) {
+func (c *Client) ListSchemas(ctx context.Context) ([]SchemaSubject, error) {
 	ctx, cancel := context.WithTimeout(ctx, c.timeout)
 	defer cancel()
 
@@ -309,7 +332,7 @@ func (c *Client) ListSchemas(ctx context.Context) ([]string, error) {
 	}
 
 	var resp struct {
-		Subjects []string `json:"subjects"`
+		Subjects []SchemaSubject `json:"subjects"`
 	}
 	if err := json.Unmarshal(result, &resp); err != nil {
 		return nil, fmt.Errorf("parsing schemas response: %w", err)
@@ -322,7 +345,7 @@ func (c *Client) GetSchema(ctx context.Context, subject string) (*SchemaInfo, er
 	ctx, cancel := context.WithTimeout(ctx, c.timeout)
 	defer cancel()
 
-	result, err := c.transport.CallTool(ctx, "kafka_describe_schema", map[string]any{
+	result, err := c.transport.CallTool(ctx, "kafka_get_schema", map[string]any{
 		"subject": subject,
 	})
 	if err != nil {
@@ -339,33 +362,32 @@ func (c *Client) GetSchema(ctx context.Context, subject string) (*SchemaInfo, er
 // --- Admin Operations ---
 
 // ResetOffsets resets consumer group offsets.
-func (c *Client) ResetOffsets(ctx context.Context, groupID, topic, strategy string) error {
+func (c *Client) ResetOffsets(ctx context.Context, groupID, topic, strategy string, opts ResetOffsetsOptions) error {
 	ctx, cancel := context.WithTimeout(ctx, c.timeout)
 	defer cancel()
 
-	_, err := c.transport.CallTool(ctx, "kafka_reset_offsets", map[string]any{
-		"group_id": groupID,
-		"topic":    topic,
-		"strategy": strategy,
-	})
+	if strategy == "timestamp" && opts.Value == "" {
+		return fmt.Errorf("timestamp value is required for timestamp offset resets")
+	}
+
+	args, err := mutationArgs(opts.MutationOptions, false)
+	if err != nil {
+		return err
+	}
+	args["group_id"] = groupID
+	args["topic"] = topic
+	args["strategy"] = strategy
+	if opts.Value != "" {
+		args["value"] = opts.Value
+	}
+	if opts.DryRun {
+		args["dry_run"] = true
+	}
+	_, err = c.transport.CallTool(ctx, "kafka_reset_offsets", args)
 	if err != nil {
 		return fmt.Errorf("resetting offsets: %w", err)
 	}
 	return nil
-}
-
-// NaturalLanguageQuery executes a natural language query.
-func (c *Client) NaturalLanguageQuery(ctx context.Context, query string) (json.RawMessage, error) {
-	ctx, cancel := context.WithTimeout(ctx, c.timeout)
-	defer cancel()
-
-	result, err := c.transport.CallTool(ctx, "kafka_nl_query", map[string]any{
-		"query": query,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("NL query: %w", err)
-	}
-	return result, nil
 }
 
 // DiagnoseLag runs lag diagnosis for a consumer group.
@@ -378,43 +400,6 @@ func (c *Client) DiagnoseLag(ctx context.Context, groupID string) (json.RawMessa
 	})
 	if err != nil {
 		return nil, fmt.Errorf("diagnosing lag: %w", err)
-	}
-	return result, nil
-}
-
-// GetAnomalies returns detected anomalies.
-func (c *Client) GetAnomalies(ctx context.Context, severity string, limit int) (json.RawMessage, error) {
-	ctx, cancel := context.WithTimeout(ctx, c.timeout)
-	defer cancel()
-
-	args := map[string]any{}
-	if severity != "" {
-		args["severity"] = severity
-	}
-	if limit > 0 {
-		args["limit"] = float64(limit)
-	}
-
-	result, err := c.transport.CallTool(ctx, "kafka_anomalies", args)
-	if err != nil {
-		return nil, fmt.Errorf("getting anomalies: %w", err)
-	}
-	return result, nil
-}
-
-// AdvisorScan runs a topic advisory scan.
-func (c *Client) AdvisorScan(ctx context.Context, cluster string) (json.RawMessage, error) {
-	ctx, cancel := context.WithTimeout(ctx, c.timeout)
-	defer cancel()
-
-	args := map[string]any{}
-	if cluster != "" {
-		args["cluster"] = cluster
-	}
-
-	result, err := c.transport.CallTool(ctx, "kafka_advisor_scan", args)
-	if err != nil {
-		return nil, fmt.Errorf("advisor scan: %w", err)
 	}
 	return result, nil
 }

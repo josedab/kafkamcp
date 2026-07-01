@@ -48,24 +48,22 @@ Add KafkaMCP to your Cursor MCP configuration (`.cursor/mcp.json`):
 
 ## Usage
 
-Once connected, Cursor can use all KafkaMCP tools natively:
+Once connected, Cursor can use the enabled KafkaMCP tools natively:
 
 - "List all Kafka topics"
 - "Show me failed orders in the last hour"
-- "Analyze the cost of the user-events topic"
-- "Run the DLQ investigation workflow on error-topic"
-- "What depends on the orders topic?"
+- "Diagnose lag for the payments consumer group"
+- "Analyze error-topic as a DLQ"
+- "Check whether this schema change is compatible"
 
 ## Available Tools
 
-All 30+ KafkaMCP tools are available including:
-- Topic management (list, describe, create, alter, delete)
-- Message operations (consume, produce, search, aggregate)
-- Schema Registry (list, get, diff, compatibility check)
-- Anomaly detection (`kafka_anomalies`)
-- Natural language queries (`kafka_nl_query`)
-- Cost analysis (`kafka_cost_analyze`, `kafka_cost_waste`, `kafka_cost_whatif`)
-- Workflow templates (`kafka_workflows`)
-- Knowledge graph (`kafka_knowledge_graph`)
-- GitOps (`kafka_gitops_diff`)
-- Platform info (`kafka_platform_info`)
+Cursor discovers the configured subset of the 29-tool supported surface:
+
+- `core-read`: 15 read-only topic, message, schema, group, lag, DLQ, health,
+  metrics, and discovery tools
+- `ops-write`: guarded Kafka/topic/connector/ACL mutations
+- `governance`: approvals, policy evaluation/simulation, and ACL reconciliation
+
+See the generated [tool reference](../../docs/tool-reference.md) for exact
+parameters and pack membership.

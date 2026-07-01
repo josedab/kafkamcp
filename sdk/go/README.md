@@ -1,11 +1,11 @@
 # KafkaMCP Go SDK
 
-Go client SDK for [KafkaMCP](https://github.com/kafkamcp/kafkamcp) — interact with Kafka through MCP from Go applications and AI agents.
+Go client SDK for [KafkaMCP](https://github.com/josedab/kafkamcp) — interact with Kafka through MCP from Go applications and AI agents.
 
 ## Installation
 
 ```bash
-go get github.com/kafkamcp/kafkamcp/sdk/go/kafkamcpsdk
+go get github.com/josedab/kafkamcp/sdk/go/kafkamcpsdk
 ```
 
 ## Quick Start
@@ -17,8 +17,9 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
-	"github.com/kafkamcp/kafkamcp/sdk/go/kafkamcpsdk"
+	"github.com/josedab/kafkamcp/sdk/go/kafkamcpsdk"
 )
 
 func main() {
@@ -27,10 +28,7 @@ func main() {
 	defer transport.Close()
 
 	// Create the SDK client
-	client := kafkamcpsdk.New(transport,
-		kafkamcpsdk.WithAgentID("my-agent"),
-		kafkamcpsdk.WithTimeout(10*time.Second),
-	)
+	client := kafkamcpsdk.New(transport, kafkamcpsdk.WithTimeout(10*time.Second))
 	defer client.Close()
 
 	ctx := context.Background()
@@ -56,7 +54,7 @@ func main() {
 	// Produce messages
 	results, err := client.Produce(ctx, "test-events", []map[string]any{
 		{"key": "order-1", "value": `{"status": "shipped"}`},
-	})
+	}, kafkamcpsdk.MutationOptions{ApprovalToken: approvalToken})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -74,8 +72,10 @@ func New(transport Transport, opts ...Option) *Client
 ```
 
 **Options:**
-- `WithAgentID(id string)` — Set the agent identity for authorization (default: `"sdk-agent"`)
 - `WithTimeout(d time.Duration)` — Set the default request timeout (default: `30s`)
+
+Authentication belongs to the transport (static token, OIDC, mTLS, or stdio).
+Guarded write methods require `MutationOptions` with an approval token.
 
 ### Transport Interface
 
@@ -97,9 +97,8 @@ Implement this interface to connect to a KafkaMCP server via stdio, SSE, or HTTP
 |--------|-------------|
 | `ListTopics(ctx, filter)` | List topics matching an optional glob filter |
 | `Consume(ctx, topic, limit, offset)` | Read messages from a topic |
-| `Produce(ctx, topic, messages)` | Publish messages to a topic |
+| `Produce(ctx, topic, messages, mutationOptions)` | Publish messages to a topic |
 | `Search(ctx, topic, valueContains, limit)` | Search messages by content |
-| `Watch(ctx, topicPattern, keyFilter, webhookURL)` | Register event-driven watch subscription |
 | `Close()` | Close the client connection |
 
 #### Consumer Groups
@@ -114,8 +113,8 @@ Implement this interface to connect to a KafkaMCP server via stdio, SSE, or HTTP
 | Method | Description |
 |--------|-------------|
 | `DescribeTopic(ctx, topic)` | Get detailed information about a topic |
-| `CreateTopic(ctx, topic, partitions, replicationFactor, configs)` | Create a new Kafka topic |
-| `DeleteTopic(ctx, topic)` | Delete a Kafka topic |
+| `CreateTopic(ctx, topic, partitions, replicationFactor, configs, mutationOptions)` | Create a new Kafka topic |
+| `DeleteTopic(ctx, topic, mutationOptions)` | Delete a Kafka topic |
 
 #### Schema Registry
 
@@ -128,11 +127,8 @@ Implement this interface to connect to a KafkaMCP server via stdio, SSE, or HTTP
 
 | Method | Description |
 |--------|-------------|
-| `ResetOffsets(ctx, groupID, topic, strategy)` | Reset consumer group offsets (earliest, latest, timestamp) |
-| `NaturalLanguageQuery(ctx, query)` | Execute a natural language query against Kafka |
+| `ResetOffsets(ctx, groupID, topic, strategy, mutationOptions)` | Reset consumer group offsets (earliest, latest, timestamp) |
 | `DiagnoseLag(ctx, groupID)` | Diagnose consumer lag for a group |
-| `GetAnomalies(ctx, severity, limit)` | Get detected anomalies, optionally filtered by severity |
-| `AdvisorScan(ctx, cluster)` | Run a cluster health advisory scan |
 
 ### Types
 
@@ -144,9 +140,9 @@ Implement this interface to connect to a KafkaMCP server via stdio, SSE, or HTTP
 
 ## Links
 
-- [Main Project](https://github.com/kafkamcp/kafkamcp)
-- [Documentation](https://kafkamcp.dev)
-- [API Docs (GoDoc)](https://pkg.go.dev/github.com/kafkamcp/kafkamcp/sdk/go/kafkamcpsdk)
+- [Main Project](https://github.com/josedab/kafkamcp)
+- [Documentation](https://josedab.github.io/kafkamcp/)
+- [API Docs (GoDoc)](https://pkg.go.dev/github.com/josedab/kafkamcp/sdk/go/kafkamcpsdk)
 
 ## License
 
