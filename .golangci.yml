@@ -1,47 +1,61 @@
+version: "2"
 run:
-  timeout: 5m
   modules-download-mode: readonly
-
 linters:
   enable:
-    - errcheck
-    - govet
-    - ineffassign
-    - staticcheck
-    - unused
-    - gosimple
-    - gofmt
-    - goimports
-    - misspell
-    - unconvert
     - gocritic
+    - misspell
     - revive
-
-linters-settings:
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - performance
-    disabled-checks:
-      - hugeParam
-      - rangeValCopy
-      - commentedOutCode
-      - ifElseChain
-      - appendCombine
-      - sprintfQuotedString
-  misspell:
-    locale: US
-  goimports:
-    local-prefixes: github.com/kafkamcp/kafkamcp
-  revive:
-    rules:
-      - name: exported
-        arguments:
-          - checkPrivateReceivers
-          - disableStutteringCheck
-        severity: warning
-
+    - unconvert
+  settings:
+    gocritic:
+      disabled-checks:
+        - hugeParam
+        - rangeValCopy
+        - commentedOutCode
+        - ifElseChain
+        - appendCombine
+        - sprintfQuotedString
+      enabled-tags:
+        - diagnostic
+        - performance
+    misspell:
+      locale: US
+    staticcheck:
+      # Preserve parity with the previous golangci-lint v1 default staticcheck
+      # scope: the "quickfix" (QF*) and "stylecheck" (ST*) groups were not run
+      # by the v1 default and are stylistic-only, so they are disabled here.
+      checks:
+        - all
+        - -QF*
+        - -ST*
+    revive:
+      rules:
+        - name: exported
+          arguments:
+            - checkPrivateReceivers
+            - disableStutteringCheck
+          severity: warning
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
 issues:
-  exclude-use-default: false
   max-issues-per-linter: 50
   max-same-issues: 5
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/josedab/kafkamcp
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

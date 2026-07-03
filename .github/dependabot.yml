@@ -35,12 +35,3 @@ updates:
     labels:
       - "dependencies"
       - "website"
-
-  # npm — VS Code extension
-  - package-ecosystem: "npm"
-    directory: "/sdk/vscode"
-    schedule:
-      interval: "weekly"
-    labels:
-      - "dependencies"
-      - "vscode"

@@ -3,7 +3,7 @@
     <module name="kafkamcp" />
     <working_directory value="$PROJECT_DIR$" />
     <kind value="DIRECTORY" />
-    <package value="github.com/kafkamcp/kafkamcp" />
+    <package value="github.com/josedab/kafkamcp" />
     <directory value="$PROJECT_DIR$" />
     <filePath value="$PROJECT_DIR$" />
     <framework value="gotest" />

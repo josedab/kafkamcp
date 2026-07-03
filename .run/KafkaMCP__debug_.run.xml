@@ -4,7 +4,7 @@
     <working_directory value="$PROJECT_DIR$" />
     <parameters value="--config kafkamcp.yaml --debug" />
     <kind value="PACKAGE" />
-    <package value="github.com/kafkamcp/kafkamcp/cmd/kafkamcp" />
+    <package value="github.com/josedab/kafkamcp/cmd/kafkamcp" />
     <directory value="$PROJECT_DIR$" />
     <filePath value="$PROJECT_DIR$/cmd/kafkamcp/main.go" />
     <method v="2" />

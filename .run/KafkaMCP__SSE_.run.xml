@@ -4,10 +4,11 @@
     <working_directory value="$PROJECT_DIR$" />
     <envs>
       <env name="KAFKAMCP_TRANSPORT" value="sse" />
+      <env name="KAFKAMCP_UNSAFE_ALLOW_UNAUTHENTICATED_NETWORK" value="true" />
     </envs>
     <parameters value="--config kafkamcp.yaml" />
     <kind value="PACKAGE" />
-    <package value="github.com/kafkamcp/kafkamcp/cmd/kafkamcp" />
+    <package value="github.com/josedab/kafkamcp/cmd/kafkamcp" />
     <directory value="$PROJECT_DIR$" />
     <filePath value="$PROJECT_DIR$/cmd/kafkamcp/main.go" />
     <method v="2" />

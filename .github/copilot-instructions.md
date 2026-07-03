@@ -17,7 +17,7 @@ All workflows are driven by the `Makefile` (`make help` lists everything). Assum
 | Single package | `make test-pkg PKG=./internal/kafka` |
 | Integration tests (need Kafka on `localhost:9092`) | `make test-integration-setup && make integration-test` |
 | Lint (golangci-lint, version pinned in Makefile — currently `v1.62.0`) | `make lint` |
-| Format (gofmt + goimports, local prefix `github.com/kafkamcp/kafkamcp`) | `make fmt` |
+| Format (gofmt + goimports, local prefix `github.com/josedab/kafkamcp`) | `make fmt` |
 | Regenerate tool reference docs (`docs/tool-reference.md`) | `make generate` |
 | Coverage gate (CI fails below 70%) | `make test-coverage-check MIN_COVERAGE=70` |
 | Hot-reload dev server (uses `air`) | `make dev` / `make dev-sse` / `make dev-http` |
@@ -39,27 +39,34 @@ Read these five files (in order) to grasp the request lifecycle before changing 
 4. `internal/server/register_tools.go` — orchestrator that calls every `registerXxxTools()`.
 5. `internal/kafka/manager.go` — sole Kafka client abstraction; all broker I/O goes through it.
 
-### Package tiers (`internal/`)
+### Runtime packages (`internal/`)
 
-There are ~105 packages organized into three tiers (higher tiers may depend on lower, never the reverse):
+The production tree is intentionally small. Core/runtime packages are:
+`app`, `config`, `server`, `kafka`, `schema`, `auth`, `approval`, `audit`,
+`idempotency`, `engine`, `masking`, `ratelimit`, `metrics`, and `telemetry`.
+Supported domain packages are `lagdiag`, `onboarding`, `opa`, and `aclmgmt`;
+`doctor`, `readiness`, and `tooleval` provide validation tooling.
 
-- **Core** (`config`, `kafka`, `schema`, `server`) — always required.
-- **Infrastructure** (`audit`, `auth`, `cloud`, `masking`, `match`, `metrics`, `platform`, `ratelimit`, `telemetry`, `tenant`, `urlutil`) — cross-cutting concerns.
-- **Feature** (everything else, ~90 packages) — self-contained optional modules; **must not depend on each other**, only on Core/Infrastructure.
-
-The `Server` struct embeds four composite subsystem groups initialised in `internal/server/init_{analytics,governance,streaming,platform}.go`: **Analytics**, **Governance**, **Streaming**, **Platform**. New feature engines are attached to one of these four groups, not to `Server` directly.
+The `Server` embeds three small groups: **Governance** (policy/identity/audit/
+rate-limit/masking), **Analytics** (lag diagnosis), and **Platform**
+(discovery/OPA/ACL/OTel). Do not add or initialize a subsystem until a
+registered, fully implemented tool needs it.
 
 ### Adding a new tool (three-file pattern)
 
 Run `make new-tool NAME=mytool` — it scaffolds the canonical layout. You then manually wire the result:
 
-1. `internal/<name>/engine.go` — pure domain logic, no MCP dependency, exposes an `Engine` struct.
+1. `internal/<name>/engine.go` — real domain/provider logic, no MCP dependency.
 2. `internal/server/tools_<name>.go` — handler methods on `*Server` (one per tool, named `handleXxx`).
 3. `internal/server/register_<name>.go` — `register<Name>Tools()` that calls `s.mcpServer.AddTool(mcp.NewTool(...), s.handleXxx)`.
-4. Add the engine field to the appropriate subsystem group (`Analytics`/`Governance`/`Streaming`/`Platform`) and initialise it in the matching `init_*.go`.
+4. Add an engine field only if the registered tool needs persistent runtime state; initialise it in the appropriate existing group.
 5. Add `s.register<Name>Tools()` to `registerTools()` in `internal/server/register_tools.go`.
 6. Run `make generate` so `docs/tool-reference.md` is updated (CI enforces this), and update the tool count in `website/docs/api-reference/tools.md` to match (CI also enforces this).
 7. Add the new `/internal/<name>/` path to `.github/CODEOWNERS` (`make check-codeowners` enforces this).
+
+There is no experimental pack. Do not register placeholder, simulated,
+metadata-only, or canned-success handlers. A new tool needs real behavior,
+unit tests, and a real Kafka/provider integration contract before pack entry.
 
 ### Handler conventions
 
@@ -71,11 +78,13 @@ All tool handlers go through `s.withToolAuth(toolAuthConfig{tool, resourceType, 
 - Return `s.toolError("message", err)` for user-facing failures and `marshalResult(value)` for successful JSON payloads.
 - Pass `ctx` through to all I/O so cancellations propagate.
 
-See `internal/server/tools_acl.go` for the canonical short example.
+See `internal/server/tools_p0.go` and `internal/server/tools_aclmgmt.go`.
 
 ### Resources
 
-Resources (read-only discovery surfaces) are registered in `resources.go` / `resources_features.go`. Static resources have fixed URIs (e.g. `kafka://cluster/topics`); templated resources use URI templates with `{placeholder}` segments resolved at read time.
+Resources are registered in `register_resources.go` and implemented in
+`resources.go`. Six static resources and three templates form the complete
+supported resource surface.
 
 ### Shutdown order
 
@@ -83,7 +92,7 @@ Resources (read-only discovery surfaces) are registered in `resources.go` / `res
 
 ## Conventions
 
-- **Module path:** `github.com/kafkamcp/kafkamcp`. `goimports` is configured with `local-prefixes` to this module — keep import groups: stdlib, third-party, local.
+- **Module path:** `github.com/josedab/kafkamcp`. `goimports` is configured with `local-prefixes` to this module — keep import groups: stdlib, third-party, local.
 - **Errors:** wrap with `fmt.Errorf("doing thing: %w", err)`; messages lowercase and no trailing punctuation. Distinguish user errors (return `mcp.NewToolResultError` / `s.toolError`) from system errors (return as `error`).
 - **Logging:** `*slog.Logger` is plumbed everywhere; do not introduce `log` or `fmt.Println`.
 - **Deprecating a tool:** prefix its registered description with `[DEPRECATED]`, log a warning in the handler, keep it for at least one minor version, and note it in `CHANGELOG.md`.
@@ -98,4 +107,4 @@ Server config is a single YAML file (default `kafkamcp.yaml`, schema in `docs/ka
 
 ## SDKs
 
-Client SDKs live under `sdk/`: `go/`, `python/kafkamcp_langchain/`, `python/kafkamcp_crewai/`, `typescript/`, `vscode/` (npm), `intellij/` (Kotlin), `cursor/` (JSON config). Use `make sdk-setup` once, then `make sdk-test` to run them all. SDK tests are not part of `make validate`; run them when touching anything under `sdk/`.
+Client SDKs live under `sdk/`: `go/`, `python/kafkamcp_langchain/`, `python/kafkamcp_crewai/`, `typescript/`, `cursor/` (JSON config). Use `make sdk-setup` once, then `make sdk-test` to run them all. SDK tests are not part of `make validate`; run them when touching anything under `sdk/`.

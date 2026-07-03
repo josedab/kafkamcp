@@ -1,9 +1,10 @@
+version: 2
+
 project_name: kafkamcp
 
 before:
   hooks:
-    - go mod tidy
-    - go generate ./...
+    - go mod download
 
 builds:
   - id: kafkamcp
@@ -20,17 +21,44 @@ builds:
       - arm64
     ldflags:
       - -s -w -X main.version={{.Version}}
+    flags:
+      - -trimpath
+    mod_timestamp: "{{ .CommitTimestamp }}"
 
 archives:
   - id: default
-    format: tar.gz
+    formats: [tar.gz]
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [zip]
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
 
 checksum:
   name_template: "checksums.txt"
+  algorithm: sha256
+
+# Software Bill of Materials for each archive (requires syft on PATH). Attached
+# to the GitHub release alongside the artifacts.
+sboms:
+  - id: archive
+    artifacts: archive
+
+# Keyless (Sigstore/Fulcio) signing of the checksums file and SBOMs. No
+# long-lived signing keys are required; the GitHub OIDC token is used to obtain
+# a short-lived certificate. Verify with:
+#   cosign verify-blob --bundle checksums.txt.sigstore.json \
+#     --certificate-identity-regexp '^https://github\.com/josedab/kafkamcp/\.github/workflows/release\.yml@.*$' \
+#     --certificate-oidc-issuer https://token.actions.githubusercontent.com checksums.txt
+signs:
+  - cmd: cosign
+    signature: "${artifact}.sigstore.json"
+    args:
+      - "sign-blob"
+      - "--bundle=${signature}"
+      - "${artifact}"
+      - "--yes"
+    artifacts: checksum
+    output: true
 
 snapshot:
   version_template: "{{ incpatch .Version }}-next"
@@ -43,29 +71,27 @@ changelog:
       - "^test:"
       - "^ci:"
 
-dockers:
-  - image_templates:
-      - "ghcr.io/kafkamcp/kafkamcp:{{ .Version }}-amd64"
-    use: buildx
-    build_flag_templates:
-      - "--platform=linux/amd64"
-    dockerfile: Dockerfile
-    goarch: amd64
+dockers_v2:
+  - images:
+      - "ghcr.io/josedab/kafkamcp"
+    tags:
+      - "{{ .Version }}"
+    dockerfile: Dockerfile.goreleaser
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    labels:
+      org.opencontainers.image.source: "{{ .GitURL }}"
+      org.opencontainers.image.revision: "{{ .FullCommit }}"
+      org.opencontainers.image.version: "{{ .Version }}"
+      org.opencontainers.image.licenses: "Apache-2.0"
+      org.opencontainers.image.description: "Secure, vendor-neutral MCP gateway for Apache Kafka"
 
-  - image_templates:
-      - "ghcr.io/kafkamcp/kafkamcp:{{ .Version }}-arm64"
-    use: buildx
-    build_flag_templates:
-      - "--platform=linux/arm64"
-    dockerfile: Dockerfile
-    goarch: arm64
-
-docker_manifests:
-  - name_template: "ghcr.io/kafkamcp/kafkamcp:{{ .Version }}"
-    image_templates:
-      - "ghcr.io/kafkamcp/kafkamcp:{{ .Version }}-amd64"
-      - "ghcr.io/kafkamcp/kafkamcp:{{ .Version }}-arm64"
-  - name_template: "ghcr.io/kafkamcp/kafkamcp:latest"
-    image_templates:
-      - "ghcr.io/kafkamcp/kafkamcp:{{ .Version }}-amd64"
-      - "ghcr.io/kafkamcp/kafkamcp:{{ .Version }}-arm64"
+docker_signs:
+  - cmd: cosign
+    artifacts: all
+    output: true
+    args:
+      - "sign"
+      - "${artifact}"
+      - "--yes"

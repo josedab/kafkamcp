@@ -1,17 +1,20 @@
-.PHONY: build test test-parallel lint lint-fix lint-all lint-changed fmt fmt-check fmt-imports docker clean clean-all validate validate-ci help run run-local dev dev-sse dev-http coverage test-coverage-map test-coverage-report setup-hooks docker-dev docker-dev-down setup test-one setup-vscode setup-goland integration-test test-integration-setup check doctor sdk-test quickstart benchmark docker-compose-full vet sdk-setup deps changelog test-coverage-check test-short test-race-short test-all new-tool check-deps install docs docs-serve test-func security ci deps-outdated pre-push profile generate test-pkg test-verbose check-gen check-codeowners
+.PHONY: build test test-parallel lint lint-fix lint-all lint-changed fmt fmt-check fmt-imports docker clean clean-all validate validate-ci help run run-local dev dev-sse dev-http coverage test-coverage-map test-coverage-report setup-hooks docker-dev docker-dev-down setup test-one setup-vscode setup-goland integration-test test-integration-setup check doctor sdk-test quickstart benchmark docker-compose-full vet sdk-setup deps changelog test-coverage-check test-short test-race-short test-all new-tool check-deps install docs docs-serve test-func security security-static helm-check ci deps-outdated pre-push profile generate test-pkg test-verbose check-gen check-codeowners readiness readiness-json incident-demo-build incident-demo-up incident-demo-up-redpanda incident-demo-setup incident-demo-verify incident-demo-cleanup incident-demo-down incident-demo-down-redpanda
 
 # Build variables
 BINARY    := kafkamcp
 CMD       := ./cmd/kafkamcp
+PYTHON    ?= python3
 BUILD_DIR := bin
 VERSION   := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 LDFLAGS   := -s -w -X main.version=$(VERSION)
 
 # Tool versions
-GOLANGCI_LINT_VERSION := v1.62.0
+GOLANGCI_LINT_VERSION := v2.12.2
+GOVULNCHECK_VERSION   := v1.6.0
+GORELEASER_VERSION    := v2.17.0
 
 # Docker variables
-DOCKER_IMAGE := kafkamcp/kafkamcp
+DOCKER_IMAGE := ghcr.io/josedab/kafkamcp
 DOCKER_TAG   := latest
 
 # Docker Compose variables
@@ -40,11 +43,11 @@ dev: ## Run with auto-reload (requires air: go install github.com/air-verse/air@
 
 dev-sse: ## Run with SSE transport and auto-reload
 	@command -v air >/dev/null 2>&1 || { echo "Installing air..."; go install github.com/air-verse/air@latest; }
-	@set -a && [ -f .env ] && . ./.env && set +a; KAFKAMCP_TRANSPORT=sse air
+	@set -a && [ -f .env ] && . ./.env && set +a; KAFKAMCP_TRANSPORT=sse KAFKAMCP_UNSAFE_ALLOW_UNAUTHENTICATED_NETWORK=true air
 
 dev-http: ## Run with streamable-http transport and auto-reload
 	@command -v air >/dev/null 2>&1 || { echo "Installing air..."; go install github.com/air-verse/air@latest; }
-	@set -a && [ -f .env ] && . ./.env && set +a; KAFKAMCP_TRANSPORT=streamable-http air
+	@set -a && [ -f .env ] && . ./.env && set +a; KAFKAMCP_TRANSPORT=streamable-http KAFKAMCP_UNSAFE_ALLOW_UNAUTHENTICATED_NETWORK=true air
 
 test: ## Run unit tests with race detection
 	go test -race -coverprofile=coverage.out ./...
@@ -64,10 +67,10 @@ test-integration-setup: ## Check Kafka connectivity and start docker-dev if need
 		echo "NOT REACHABLE"; \
 		echo ""; \
 		if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then \
-			echo "Starting local Kafka with 'make docker-dev'..."; \
-			$(MAKE) docker-dev; \
+			echo "Starting local Kafka dependencies..."; \
+			docker compose -f $(COMPOSE_FILE) up -d kafka schema-registry; \
 			echo "Waiting for Kafka to become reachable..."; \
-			for i in 1 2 3 4 5 6 7 8 9 10; do \
+			for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do \
 				if (echo > /dev/tcp/localhost/9092) 2>/dev/null; then \
 					echo "Kafka is up after $${i}s."; \
 					break; \
@@ -75,7 +78,7 @@ test-integration-setup: ## Check Kafka connectivity and start docker-dev if need
 				sleep 3; \
 			done; \
 			if ! (echo > /dev/tcp/localhost/9092) 2>/dev/null; then \
-				echo "ERROR: Kafka did not become reachable within 30s."; \
+				echo "ERROR: Kafka did not become reachable within 60s."; \
 				echo "Check 'docker compose -f $(COMPOSE_FILE) logs' for details."; \
 				exit 1; \
 			fi; \
@@ -99,7 +102,7 @@ coverage: test ## Generate and open HTML coverage report
 
 MIN_COVERAGE ?= 70
 
-test-coverage-check: test ## Fail if total test coverage is below MIN_COVERAGE (default: 70%)
+test-coverage-check: test ## Fail if total repository coverage is below MIN_COVERAGE (default: 70%)
 	@total=$$(go tool cover -func=coverage.out | tail -1 | awk '{print $$NF}' | tr -d '%'); \
 	echo "Total coverage: $${total}%"; \
 	if [ $$(echo "$${total} < $(MIN_COVERAGE)" | bc -l) -eq 1 ]; then \
@@ -150,16 +153,16 @@ test-race-short: ## Run tests with -race and -short for fast-but-safe iteration
 test-all: test sdk-test ## Run all tests (Go unit tests + SDK tests)
 
 lint: ## Run golangci-lint
-	@command -v golangci-lint >/dev/null 2>&1 || { echo "Installing golangci-lint..."; go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION); }
-	golangci-lint run ./...
+	@command -v golangci-lint >/dev/null 2>&1 || { echo "Installing golangci-lint..."; go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION); }
+	golangci-lint run --allow-parallel-runners ./...
 
 lint-fix: ## Run golangci-lint with auto-fix
-	@command -v golangci-lint >/dev/null 2>&1 || { echo "Installing golangci-lint..."; go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION); }
-	golangci-lint run --fix ./...
+	@command -v golangci-lint >/dev/null 2>&1 || { echo "Installing golangci-lint..."; go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION); }
+	golangci-lint run --allow-parallel-runners --fix ./...
 
 lint-changed: ## Run golangci-lint only on files changed since HEAD~1
-	@command -v golangci-lint >/dev/null 2>&1 || { echo "Installing golangci-lint..."; go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION); }
-	golangci-lint run --new-from-rev=HEAD~1 ./...
+	@command -v golangci-lint >/dev/null 2>&1 || { echo "Installing golangci-lint..."; go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION); }
+	golangci-lint run --allow-parallel-runners --new-from-rev=HEAD~1 ./...
 
 lint-all: vet lint ## Run all static analysis (vet + golangci-lint)
 
@@ -217,11 +220,12 @@ setup-hooks: ## Install git pre-commit hook (uses version-controlled .githooks/)
 	git config core.hooksPath .githooks
 	@echo "Pre-commit hook installed (using .githooks/ directory)."
 
-setup: setup-hooks setup-vscode ## Install all dev dependencies (golangci-lint, air, goimports)
+setup: setup-hooks setup-vscode ## Install all dev dependencies (lint, reload, imports, release checks)
 	@echo "Installing dev dependencies..."
-	@command -v golangci-lint >/dev/null 2>&1 || { echo "  Installing golangci-lint..."; go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION); }
+	@command -v golangci-lint >/dev/null 2>&1 || { echo "  Installing golangci-lint..."; go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION); }
 	@command -v air >/dev/null 2>&1 || { echo "  Installing air..."; go install github.com/air-verse/air@latest; }
 	@command -v goimports >/dev/null 2>&1 || { echo "  Installing goimports..."; go install golang.org/x/tools/cmd/goimports@latest; }
+	@command -v goreleaser >/dev/null 2>&1 || { echo "  Installing GoReleaser..."; mkdir -p "$$HOME/.local/bin"; GOBIN="$$HOME/.local/bin" go install github.com/goreleaser/goreleaser/v2@$(GORELEASER_VERSION); }
 	@echo "All dev dependencies installed."
 
 validate: fmt-check vet lint test build ## Run all checks (fmt-check, vet, lint, test, build)
@@ -284,17 +288,28 @@ doctor: ## Check development environment prerequisites
 		if [ "$$installed_ver" = "$(GOLANGCI_LINT_VERSION)" ]; then \
 			echo "OK $$installed_ver"; \
 		else \
-			echo "WARNING: $$installed_ver installed, expected $(GOLANGCI_LINT_VERSION) (run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION))"; \
+			echo "WARNING: $$installed_ver installed, expected $(GOLANGCI_LINT_VERSION) (run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION))"; \
 		fi; \
 	else \
 		echo "NOT FOUND (run: make setup)"; \
 	fi
 	@printf "air:             "; command -v air >/dev/null 2>&1 && echo "OK" || echo "NOT FOUND (optional, run: make setup)"
 	@printf "goimports:       "; command -v goimports >/dev/null 2>&1 && echo "OK" || echo "NOT FOUND (optional, run: make setup)"
+	@printf "GoReleaser:      "; \
+	if command -v goreleaser >/dev/null 2>&1; then \
+		installed_ver=$$(goreleaser --version 2>&1 | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1); \
+		if [ "$$installed_ver" = "$(GORELEASER_VERSION)" ]; then \
+			echo "OK $$installed_ver"; \
+		else \
+			echo "WARNING: $$installed_ver installed, expected $(GORELEASER_VERSION) (run: GOBIN=$$HOME/.local/bin go install github.com/goreleaser/goreleaser/v2@$(GORELEASER_VERSION))"; \
+		fi; \
+	else \
+		echo "NOT FOUND (run: make setup; ensure $$HOME/.local/bin is on PATH)"; \
+	fi
 	@printf "Docker:          "; command -v docker >/dev/null 2>&1 && (docker info >/dev/null 2>&1 && echo "OK (running)" || echo "INSTALLED but not running") || echo "NOT FOUND (needed for integration tests)"
 	@printf "Kafka (localhost:9092): "; (echo > /dev/tcp/localhost/9092) 2>/dev/null && echo "REACHABLE" || echo "NOT REACHABLE (run: make docker-dev)"
 	@printf "Pre-commit hook: "; git config core.hooksPath 2>/dev/null | grep -q .githooks && echo "INSTALLED (.githooks/)" || echo "NOT INSTALLED (run: make setup)"
-	@printf "Python 3.8+:     "; command -v python3 >/dev/null 2>&1 && echo "OK ($$(python3 --version 2>&1))" || echo "NOT FOUND (needed for SDK tests: make sdk-test)"
+	@printf "Python 3.10+:    "; command -v $(PYTHON) >/dev/null 2>&1 && $(PYTHON) -c 'import sys; raise SystemExit(sys.version_info < (3, 10))' && echo "OK ($$($(PYTHON) --version 2>&1))" || echo "NOT FOUND/TOO OLD (needed for SDK tests: make sdk-test)"
 	@printf "Node.js 18+:     "; command -v node >/dev/null 2>&1 && echo "OK ($$(node --version 2>&1))" || echo "NOT FOUND (needed for SDK setup: make sdk-setup)"
 	@echo ""
 	@echo "=== KafkaMCP module deps (required for new subsystems) ==="
@@ -312,6 +327,77 @@ quickstart: ## One-command setup: install deps, start Kafka, build, and run
 
 benchmark: ## Run Go benchmarks with memory stats
 	go test -bench=. -benchmem -run=^$$ ./...
+
+.PHONY: tool-eval
+tool-eval: ## Run the deterministic AI tool-routing evaluation harness
+	go test -v ./internal/tooleval/...
+
+.PHONY: readiness
+readiness: ## Run the objective v1 readiness reporter (human output; exits nonzero if mandatory gates fail)
+	go run ./cmd/readiness/ -dir .
+
+.PHONY: readiness-json
+readiness-json: ## Run the objective v1 readiness reporter with JSON output
+	go run ./cmd/readiness/ -dir . -json
+
+# ---------------------------------------------------------------------------
+# Incident-Demo targets
+# ---------------------------------------------------------------------------
+INCIDENT_DEMO_COMPOSE := examples/incident-demo/docker-compose.yaml
+INCIDENT_DEMO_BROKERS ?= localhost:9092
+INCIDENT_DEMO_PREFIX  ?= incident-demo.
+INCIDENT_DEMO_BINARY  := $(BUILD_DIR)/incident-demo
+
+$(INCIDENT_DEMO_BINARY): cmd/incident-demo/*.go
+	go build -o $(INCIDENT_DEMO_BINARY) ./cmd/incident-demo/
+
+.PHONY: incident-demo-build
+incident-demo-build: ## Build the incident-demo binary
+	go build -o $(INCIDENT_DEMO_BINARY) ./cmd/incident-demo/
+
+.PHONY: incident-demo-up
+incident-demo-up: ## Start the incident-demo Kafka environment (Apache Kafka + Schema Registry)
+	docker compose -f $(INCIDENT_DEMO_COMPOSE) --profile kafka up -d
+	@echo "Waiting for Kafka to become ready..."
+	@for i in 1 2 3 4 5 6 7 8 9 10; do \
+		if (echo > /dev/tcp/localhost/9092) 2>/dev/null; then \
+			echo "Kafka is ready (attempt $$i)."; break; \
+		fi; \
+		echo "Waiting... ($$i/10)"; sleep 5; \
+	done; \
+	if ! (echo > /dev/tcp/localhost/9092) 2>/dev/null; then echo "ERROR: Kafka did not become ready."; exit 1; fi
+
+.PHONY: incident-demo-up-redpanda
+incident-demo-up-redpanda: ## Start the incident-demo environment with Redpanda (compatibility profile)
+	docker compose -f $(INCIDENT_DEMO_COMPOSE) --profile redpanda up -d
+	@echo "Waiting for Redpanda to become ready..."
+	@for i in 1 2 3 4 5 6 7 8 9 10; do \
+		if (echo > /dev/tcp/localhost/9092) 2>/dev/null; then \
+			echo "Redpanda is ready (attempt $$i)."; break; \
+		fi; \
+		echo "Waiting... ($$i/10)"; sleep 5; \
+	done; \
+	if ! (echo > /dev/tcp/localhost/9092) 2>/dev/null; then echo "ERROR: Redpanda did not become ready."; exit 1; fi
+
+.PHONY: incident-demo-setup
+incident-demo-setup: incident-demo-build ## Create demo topics and populate with scenario data
+	$(INCIDENT_DEMO_BINARY) -brokers $(INCIDENT_DEMO_BROKERS) -prefix $(INCIDENT_DEMO_PREFIX) setup
+
+.PHONY: incident-demo-verify
+incident-demo-verify: incident-demo-build ## Verify demo topics and message counts
+	$(INCIDENT_DEMO_BINARY) -brokers $(INCIDENT_DEMO_BROKERS) -prefix $(INCIDENT_DEMO_PREFIX) verify
+
+.PHONY: incident-demo-cleanup
+incident-demo-cleanup: incident-demo-build ## Delete demo topics (safe: only deletes incident-demo.* prefix)
+	$(INCIDENT_DEMO_BINARY) -brokers $(INCIDENT_DEMO_BROKERS) -prefix $(INCIDENT_DEMO_PREFIX) cleanup
+
+.PHONY: incident-demo-down
+incident-demo-down: ## Stop the incident-demo Docker environment
+	docker compose -f $(INCIDENT_DEMO_COMPOSE) --profile kafka down -v
+
+.PHONY: incident-demo-down-redpanda
+incident-demo-down-redpanda: ## Stop the Redpanda incident-demo environment
+	docker compose -f $(INCIDENT_DEMO_COMPOSE) --profile redpanda down -v
 
 PROFILE_PKG ?= ./internal/kafka
 
@@ -337,8 +423,7 @@ deps: ## Check for outdated and vulnerable Go dependencies
 	@go list -m -u all 2>/dev/null | grep '\[' || echo "All dependencies up to date."
 	@echo ""
 	@echo "=== Vulnerability Check ==="
-	@command -v govulncheck >/dev/null 2>&1 || { echo "Installing govulncheck..."; go install golang.org/x/vuln/cmd/govulncheck@latest; }
-	govulncheck ./...
+	go run golang.org/x/vuln/cmd/govulncheck@$(GOVULNCHECK_VERSION) ./...
 
 changelog: ## Generate CHANGELOG.md from Conventional Commits
 	@command -v git-chglog >/dev/null 2>&1 || { echo "Installing git-chglog..."; go install github.com/git-chglog/git-chglog/cmd/git-chglog@latest; }
@@ -418,25 +503,25 @@ check-gen: ## Verify generated code is up to date (fails if stale)
 
 sdk-setup: ## Install SDK test dependencies (Python, Node.js)
 	@echo "=== SDK Dependency Setup ==="
-	@echo "Prerequisites: Python 3.8+, pip, Node.js 18+, npm"
+	@echo "Prerequisites: Python 3.10+, pip, Node.js 18+, npm"
 	@echo "--- Python SDK (langchain) ---"
-	cd sdk/python/kafkamcp_langchain && pip install -q -e ".[test]" 2>/dev/null || pip install -q -e . 2>/dev/null || echo "FAILED: pip install for kafkamcp_langchain"
+	cd sdk/python/kafkamcp_langchain && $(PYTHON) -m pip install -q -e ".[test]" 2>/dev/null || $(PYTHON) -m pip install -q -e . 2>/dev/null || echo "FAILED: pip install for kafkamcp_langchain"
 	@echo "--- Python SDK (crewai) ---"
-	cd sdk/python/kafkamcp_crewai && pip install -q -e ".[test]" 2>/dev/null || pip install -q -e . 2>/dev/null || echo "FAILED: pip install for kafkamcp_crewai"
-	@echo "--- VS Code Extension ---"
-	cd sdk/vscode && npm install --silent 2>/dev/null || echo "FAILED: npm install for vscode extension"
+	cd sdk/python/kafkamcp_crewai && $(PYTHON) -m pip install -q --no-deps -e . 2>/dev/null || echo "FAILED: editable install for kafkamcp_crewai"
+	@echo "--- TypeScript SDK ---"
+	cd sdk/typescript && npm install --silent
 	@echo "SDK dependencies installed."
 
-sdk-test: ## Run tests for all SDKs (Go, Python, VS Code)
+sdk-test: ## Run tests for all SDKs (Go, Python, TypeScript)
 	@echo "=== SDK Tests ==="
 	@echo "--- Go SDK ---"
 	go test ./sdk/go/...
 	@echo "--- Python SDK (langchain) ---"
-	cd sdk/python/kafkamcp_langchain && pip install -q -e . && python -m pytest -q
+	cd sdk/python/kafkamcp_langchain && $(PYTHON) -m pip install -q -e . && $(PYTHON) -m pytest -q
 	@echo "--- Python SDK (crewai) ---"
-	cd sdk/python/kafkamcp_crewai && pip install -q -e . && python -m pytest -q
-	@echo "--- VS Code Extension ---"
-	cd sdk/vscode && npm install --silent && npm test
+	cd sdk/python/kafkamcp_crewai && PYTHONPATH=. $(PYTHON) -m pytest -q
+	@echo "--- TypeScript SDK ---"
+	cd sdk/typescript && npm install --silent && npm test && npm run lint
 	@echo "All SDK tests complete."
 
 docs: ## Build the Docusaurus documentation site
@@ -445,9 +530,14 @@ docs: ## Build the Docusaurus documentation site
 docs-serve: ## Serve the documentation site locally for preview
 	cd website && npm run start
 
-security: ## Run govulncheck for known vulnerabilities
-	@command -v govulncheck >/dev/null 2>&1 || { echo "Installing govulncheck..."; go install golang.org/x/vuln/cmd/govulncheck@latest; }
-	govulncheck ./...
+helm-check: ## Lint and smoke-test production Helm rendering and safety guards
+	./scripts/check-helm.sh
+
+security-static: ## Run the pinned gosec production gate (HIGH/HIGH findings block)
+	go run ./cmd/gosec-gate $(if $(GOSEC_REPORT),-out $(GOSEC_REPORT),)
+
+security: security-static ## Run static analysis and govulncheck
+	go run golang.org/x/vuln/cmd/govulncheck@$(GOVULNCHECK_VERSION) ./...
 
 ci: validate-ci ## Alias for validate-ci
 

@@ -1,0 +1,62 @@
+name: Design-partner feedback
+description: Share how you use (or want to use) KafkaMCP as a secure Kafka gateway for agents.
+title: "[feedback] "
+labels: ["feedback", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping shape KafkaMCP's narrowed, governance-focused roadmap.
+        We do **not** fabricate users or testimonials — this template collects
+        genuine, opt-in feedback. Share only what you are comfortable making public.
+  - type: dropdown
+    id: role
+    attributes:
+      label: How do you interact with Kafka + agents?
+      options:
+        - Platform / infra engineer
+        - Data / streaming engineer
+        - Security / governance
+        - Application developer
+        - Evaluating / researching
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: use-case
+    attributes:
+      label: What are you trying to do?
+      description: The task or workflow you want an AI agent to perform against Kafka.
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Which Kafka platform(s)?
+      multiple: true
+      options:
+        - Apache Kafka
+        - Redpanda
+        - Amazon MSK
+        - Confluent Cloud
+        - Confluent Platform
+        - Other
+  - type: textarea
+    id: governance
+    attributes:
+      label: Governance needs
+      description: Do you need approvals, audit, masking, least-privilege, multi-vendor neutrality? Rank what matters most.
+  - type: dropdown
+    id: interest
+    attributes:
+      label: Would you consider a design-partner conversation?
+      description: Purely optional. This is not a sales commitment.
+      options:
+        - "Not now — just sharing feedback"
+        - "Maybe — open to a conversation"
+        - "Yes — actively evaluating"
+  - type: input
+    id: contact
+    attributes:
+      label: Contact (optional)
+      description: How to reach you if you opted into a conversation. Leave blank to stay anonymous.
