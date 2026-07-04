@@ -1,3 +1,8 @@
+{{- $config := deepCopy .Values.config }}
+{{- if .Values.persistence.enabled }}
+{{- $persistence := dict "backend" "sqlite" "path" (printf "%s/%s" (trimSuffix "/" .Values.persistence.mountPath) .Values.persistence.filename) }}
+{{- $_ := set $config.server "persistence" $persistence }}
+{{- end }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -6,4 +11,4 @@ metadata:
     {{- include "kafkamcp.labels" . | nindent 4 }}
 data:
   kafkamcp.yaml: |
-    {{- .Values.config | toYaml | nindent 4 }}
+    {{- $config | toYaml | nindent 4 }}

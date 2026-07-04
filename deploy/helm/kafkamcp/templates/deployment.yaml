@@ -1,3 +1,5 @@
+{{- include "kafkamcp.validateValues" . }}
+{{- $singleton := eq (include "kafkamcp.requiresSingleton" . | trim) "true" }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -8,6 +10,10 @@ spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
+  {{- if $singleton }}
+  strategy:
+    type: Recreate
+  {{- else }}
   strategy:
     type: {{ .Values.updateStrategy.type }}
     {{- if eq .Values.updateStrategy.type "RollingUpdate" }}
@@ -15,6 +21,7 @@ spec:
       maxUnavailable: {{ .Values.updateStrategy.rollingUpdate.maxUnavailable }}
       maxSurge: {{ .Values.updateStrategy.rollingUpdate.maxSurge }}
     {{- end }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "kafkamcp.selectorLabels" . | nindent 6 }}
@@ -33,6 +40,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "kafkamcp.serviceAccountName" . }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -49,8 +57,12 @@ spec:
               containerPort: {{ .Values.config.server.port }}
               protocol: TCP
             - name: metrics
-              containerPort: {{ add .Values.config.server.port 1 }}
+              containerPort: {{ .Values.config.server.metrics_port }}
               protocol: TCP
+          {{- with .Values.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           {{- with .Values.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}
@@ -65,6 +77,10 @@ spec:
             - name: config
               mountPath: /etc/kafkamcp
               readOnly: true
+            {{- if .Values.persistence.enabled }}
+            - name: state
+              mountPath: {{ .Values.persistence.mountPath }}
+            {{- end }}
           {{- if .Values.existingSecret }}
           envFrom:
             - secretRef:
@@ -78,6 +94,11 @@ spec:
         - name: config
           configMap:
             name: {{ include "kafkamcp.fullname" . }}-config
+        {{- if .Values.persistence.enabled }}
+        - name: state
+          persistentVolumeClaim:
+            claimName: {{ default (printf "%s-state" (include "kafkamcp.fullname" .)) .Values.persistence.existingClaim }}
+        {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

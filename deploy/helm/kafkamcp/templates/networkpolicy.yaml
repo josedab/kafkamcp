@@ -16,11 +16,16 @@ spec:
     - ports:
         - port: {{ .Values.config.server.port }}
           protocol: TCP
-        - port: {{ add .Values.config.server.port 1 }}
-          protocol: TCP
       {{- if .Values.networkPolicy.ingressFrom }}
       from:
         {{- toYaml .Values.networkPolicy.ingressFrom | nindent 8 }}
+      {{- end }}
+    - ports:
+        - port: {{ .Values.config.server.metrics_port }}
+          protocol: TCP
+      {{- if .Values.networkPolicy.metricsIngressFrom }}
+      from:
+        {{- toYaml .Values.networkPolicy.metricsIngressFrom | nindent 8 }}
       {{- end }}
   egress:
     # Allow DNS resolution
@@ -48,6 +53,19 @@ spec:
           protocol: TCP
         - port: 443
           protocol: TCP
+    {{- if .Values.networkPolicy.telemetry.enabled }}
+    # Allow OTLP trace/metric export.
+    - ports:
+        {{- range .Values.networkPolicy.telemetry.ports }}
+        - port: {{ . }}
+          protocol: TCP
+        {{- end }}
+      {{- if .Values.networkPolicy.telemetry.cidr }}
+      to:
+        - ipBlock:
+            cidr: {{ .Values.networkPolicy.telemetry.cidr }}
+      {{- end }}
+    {{- end }}
     {{- if .Values.networkPolicy.additionalEgress }}
     {{- toYaml .Values.networkPolicy.additionalEgress | nindent 4 }}
     {{- end }}

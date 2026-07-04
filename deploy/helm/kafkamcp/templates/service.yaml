@@ -10,6 +10,11 @@ metadata:
   {{- end }}
 spec:
   type: {{ .Values.service.type }}
+  sessionAffinity: {{ .Values.service.sessionAffinity }}
+  {{- if eq .Values.service.sessionAffinity "ClientIP" }}
+  sessionAffinityConfig:
+    {{- toYaml .Values.service.sessionAffinityConfig | nindent 4 }}
+  {{- end }}
   ports:
     - port: {{ .Values.service.port }}
       targetPort: http
