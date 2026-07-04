@@ -11,13 +11,14 @@ ADRs document significant architectural decisions made during the project's deve
 | [ADR-001](001-mcp-protocol.md) | Use Model Context Protocol (MCP) | Accepted |
 | [ADR-002](002-multi-cluster-support.md) | Multi-Cluster Architecture | Accepted |
 | [ADR-003](003-policy-engine.md) | YAML-Based Policy Engine | Accepted |
-| [ADR-004](004-subsystem-grouping.md) | Subsystem Grouping Architecture | Accepted |
+| [ADR-004](004-subsystem-grouping.md) | Subsystem Grouping Architecture | Superseded in part |
 | [ADR-005](005-engine-pattern.md) | Shared Engine Store Pattern | Accepted |
-| [ADR-006](006-persistent-engine-store.md) | Persistent Engine Store with Pluggable Backend | Accepted |
+| [ADR-006](006-persistent-engine-store.md) | Embedded Persistence for Guarded Operations | Accepted (revised) |
 | [ADR-007](007-agent-identity-oidc.md) | Agent Identity & OIDC Verification | Accepted |
-| [ADR-008](008-avro-wire-format-codec.md) | First-class Avro Wire-format Codec | Accepted |
+| [ADR-008](008-avro-wire-format-codec.md) | First-class Avro Wire-format Codec | Superseded |
 | [ADR-009](009-mtls-identity-provider.md) | mTLS Identity Provider | Accepted |
-| [ADR-010](010-protobuf-wire-codec.md) | First-class Protobuf Wire-format Codec | Accepted |
+| [ADR-010](010-protobuf-wire-codec.md) | First-class Protobuf Wire-format Codec | Superseded |
+| [ADR-0001](0001-defer-managed-cloud-saml-billing.md) | Defer managed cloud, SSO/SAML, and billing | Accepted |
 
 ## Format
 

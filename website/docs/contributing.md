@@ -20,7 +20,7 @@ This guide covers the fastest path to building, testing, and contributing change
 Clone the repository and build the binary:
 
 ```bash
-git clone https://github.com/kafkamcp/kafkamcp.git
+git clone https://github.com/josedab/kafkamcp.git
 cd kafkamcp
 go build -o bin/kafkamcp ./cmd/kafkamcp
 ```
@@ -74,49 +74,22 @@ kafkamcp/
 
 ## How to add a new tool
 
-Adding a KafkaMCP tool usually touches four areas.
+KafkaMCP has no experimental pack for incomplete work. A tool is registered
+only after it performs real Kafka/provider behavior and has unit plus
+integration/provider-contract tests.
 
-### 1. Register the tool
+1. Implement reusable logic in `internal/kafka/`, `internal/schema/`, or a
+   narrowly scoped supported domain package.
+2. Add a handler in `internal/server/tools_<name>.go` using the common auth,
+   approval, idempotency, masking, and audit paths.
+3. Add a registration file and include the name in exactly one allow-list in
+   `internal/server/tool_packs.go`.
+4. Add tests, regenerate the tool reference, and run every release gate.
 
-Add the MCP tool definition in `internal/server/server.go` (in the `registerTools()` method).
-
-That includes:
-
-- tool name
-- description
-- parameters
-- handler wiring
-
-### 2. Implement the handler
-
-Add a handler in the appropriate handler file based on the tool's tier:
-
-- `internal/server/tools_p0.go` — Core (P0) tool handlers
-- `internal/server/tools_p1.go` — Advanced (P1) tool handlers
-- `internal/server/tools_p2.go` — Intelligence (P2) tool handlers
-
-The handler should:
-- checks rate limits
-- checks authorization if needed
-- calls into the Kafka, schema, or connect layer
-- writes audit entries
-- marshals a JSON result
-
-### 3. Add business logic
-
-Put reusable implementation in the right package:
-
-- `internal/kafka/` for Kafka admin, producer, consumer, or higher-level operations
-- `internal/schema/` for Schema Registry work
-- `internal/auth/` or `internal/ratelimit/` only if the feature changes those systems directly
-
-### 4. Add tests and docs
-
-At minimum:
-
-- unit tests for new logic
-- handler tests when behavior is non-trivial
-- documentation updates in `website/docs/`
+Do not register handlers that return canned, simulated, placeholder, or
+metadata-only success. See the root
+[`CONTRIBUTING.md`](https://github.com/josedab/kafkamcp/blob/main/CONTRIBUTING.md)
+for the full admission checklist.
 
 :::info
 If a new tool reads or mutates Kafka data, make sure the auth model, audit logging, and metrics story are clear before you merge it.

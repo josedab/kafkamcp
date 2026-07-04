@@ -4,14 +4,17 @@
 # services running in the same Docker Compose stack.
 
 server:
-  transport: sse          # SSE transport enables remote access and the embedded web dashboard
+  transport: sse          # SSE transport enables remote MCP access
   host: 0.0.0.0           # Bind to all interfaces (required inside Docker containers)
-  port: 3100              # MCP server port; metrics/health available on port 3101
+  port: 3100              # MCP server port
+  metrics_host: 0.0.0.0   # Required so Docker can publish the metrics/probe port
+  metrics_port: 3101
   log_level: info         # Log verbosity: debug, info, warn, error
+  tool_packs: [core-read]
 
 clusters:
   - name: local                            # Logical cluster name
-    bootstrap_servers: "kafka:9092"        # Docker Compose service name resolves to the Kafka container
+    bootstrap_servers: "kafka:29092"       # Internal Docker listener
     security_protocol: PLAINTEXT           # No auth needed for local dev; use SASL_SSL for production
     schema_registry:
       url: "http://schema-registry:8081"   # Docker Compose service name for Schema Registry
@@ -24,3 +27,23 @@ schema_cache:
 audit:
   enabled: true         # Log all agent tool calls for debugging
   max_entries: 10000    # In-memory ring buffer size
+
+policies:
+  default_deny: true
+  identity:
+    provider: static
+    allow_header_fallback: false
+    static:
+      tokens:
+        - token: "${KAFKAMCP_AGENT_TOKEN}"
+          agent_id: local-operator
+  agents:
+    - id: local-operator
+      role: admin
+      topics:
+        - pattern: "*"
+          permissions: [read]
+      consumer_groups:
+        permissions: [read, describe]
+      schemas:
+        permissions: [read]

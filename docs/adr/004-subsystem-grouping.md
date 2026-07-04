@@ -2,7 +2,12 @@
 
 ## Status
 
-Accepted
+Superseded in part by the supported-surface cleanup.
+
+The original broad subsystem inventory below is historical. The current server
+retains only three small groups: Governance, Analytics (lag diagnosis only),
+and Platform (discovery, OPA, ACL reconciliation, OTel). See
+[`docs/ARCHITECTURE.md`](../ARCHITECTURE.md).
 
 ## Context
 

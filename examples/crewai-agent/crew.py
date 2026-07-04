@@ -19,8 +19,9 @@ except ImportError:
     sys.exit(1)
 
 try:
-    from kafkamcp_crewai import create_kafka_tools
+    from kafkamcp_crewai import StdioMCPClient, create_kafka_tools
 except ImportError:
+    StdioMCPClient = None
     create_kafka_tools = None
 
 
@@ -35,59 +36,59 @@ def main():
         print("Install with: pip install -r requirements.txt")
         sys.exit(1)
 
-    kafka_tools = create_kafka_tools()
+    config_path = os.environ.get("KAFKAMCP_CONFIG", "kafkamcp.yaml")
+    with StdioMCPClient(args=["--config", config_path]) as mcp_client:
+        kafka_tools = create_kafka_tools(mcp_client)
 
-    # Specialized agents
-    monitor_agent = Agent(
-        role="Kafka Monitor",
-        goal="Monitor Kafka cluster health and detect anomalies",
-        backstory="Expert in Kafka operations and monitoring",
-        tools=kafka_tools,
-    )
+        monitor_agent = Agent(
+            role="Kafka Monitor",
+            goal="Monitor Kafka cluster health and detect anomalies",
+            backstory="Expert in Kafka operations and monitoring",
+            tools=kafka_tools,
+        )
 
-    analyst_agent = Agent(
-        role="Data Analyst",
-        goal="Analyze message patterns and generate insights",
-        backstory="Data analysis expert specializing in streaming data",
-        tools=kafka_tools,
-    )
+        analyst_agent = Agent(
+            role="Data Analyst",
+            goal="Analyze message patterns and generate insights",
+            backstory="Data analysis expert specializing in streaming data",
+            tools=kafka_tools,
+        )
 
-    remediation_agent = Agent(
-        role="DLQ Remediation Specialist",
-        goal="Analyze and remediate dead letter queue messages",
-        backstory="Expert in error handling and message recovery",
-        tools=kafka_tools,
-    )
+        remediation_agent = Agent(
+            role="DLQ Remediation Specialist",
+            goal="Analyze dead letter queue messages",
+            backstory="Expert in error handling and message investigation",
+            tools=kafka_tools,
+        )
 
-    # Tasks
-    monitor_task = Task(
-        description="Check cluster health, list topics, and report any issues",
-        expected_output="Cluster health report with any anomalies",
-        agent=monitor_agent,
-    )
+        monitor_task = Task(
+            description="Check cluster health, list topics, and report any issues",
+            expected_output="Cluster health report with any anomalies",
+            agent=monitor_agent,
+        )
 
-    analysis_task = Task(
-        description="Analyze the orders topic for recent failure patterns",
-        expected_output="Analysis report with failure patterns and recommendations",
-        agent=analyst_agent,
-    )
+        analysis_task = Task(
+            description="Analyze the orders topic for recent failure patterns",
+            expected_output="Analysis report with failure patterns and recommendations",
+            agent=analyst_agent,
+        )
 
-    dlq_task = Task(
-        description="Check DLQ topics for messages that can be retried",
-        expected_output="List of DLQ messages with remediation recommendations",
-        agent=remediation_agent,
-    )
+        dlq_task = Task(
+            description="Analyze recent messages in configured DLQ topics",
+            expected_output="DLQ failure categories, samples, and recommended next steps",
+            agent=remediation_agent,
+        )
 
-    crew = Crew(
-        agents=[monitor_agent, analyst_agent, remediation_agent],
-        tasks=[monitor_task, analysis_task, dlq_task],
-        verbose=True,
-    )
+        crew = Crew(
+            agents=[monitor_agent, analyst_agent, remediation_agent],
+            tasks=[monitor_task, analysis_task, dlq_task],
+            verbose=True,
+        )
 
-    print("KafkaMCP CrewAI Example")
-    print("Starting crew execution...")
-    result = crew.kickoff()
-    print(f"\nCrew result:\n{result}")
+        print("KafkaMCP CrewAI Example")
+        print("Starting crew execution...")
+        result = crew.kickoff()
+        print(f"\nCrew result:\n{result}")
 
 
 if __name__ == "__main__":

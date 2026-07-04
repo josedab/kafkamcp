@@ -62,7 +62,8 @@ KafkaMCP integrates schema awareness into every relevant operation, not as an ad
 
 That `field_summary` field is key. It's generated from the schema structure and gives the agent a single-line mental model of what the message looks like. The agent doesn't need to parse nested Avro JSON — it reads a type signature.
 
-**Compatibility checking.** Before an agent produces a message, it can call `kafka_check_schema_compatibility`:
+**Compatibility checking.** Before a team adopts a proposed producer schema, an
+agent can call `kafka_check_schema_compatibility`:
 
 ```
 Agent: "Check if this schema is compatible with orders.created-value"
@@ -72,39 +73,43 @@ Agent: "Check if this schema is compatible with orders.created-value"
 
 If the schema is incompatible, the agent gets specific error messages explaining why. No silent failures.
 
-**Schema evolution advice.** When an agent (or the human behind it) wants to change a schema, `kafka_suggest_schema_evolution` analyzes the change description and suggests compatible strategies:
+**Schema evolution workflow.** When an agent wants to change a schema, it can
+retrieve the current definition with `kafka_get_schema`, construct the proposed
+schema, and validate that concrete proposal before registration:
 
 ```
 Agent: "I want to add an email field to the user schema"
-→ kafka_suggest_schema_evolution(subject: "users-value", change: "add a new field for email")
-→ [
-    { "strategy": "add_optional_field", "compatible": true, 
-      "steps": ["Add with default value", "Register new version", "Update producers", "Update consumers"] },
-    { "strategy": "add_nullable_field", "compatible": true,
-      "steps": ["Define as union [null, string] with default null", ...] }
-  ]
+→ kafka_get_schema(subject: "users-value")
+→ kafka_check_schema_compatibility(
+    subject: "users-value",
+    schema: "{\"type\":\"record\", ... }",
+    schema_type: "AVRO"
+  )
+→ { "is_compatible": true, "messages": [] }
 ```
 
-The agent doesn't just know the schema. It can reason about schema evolution and propose safe changes.
+The agent can reason about the existing schema, but the broker-facing safety
+decision is based on an explicit candidate schema and Schema Registry's actual
+compatibility policy.
 
 ## The difference in practice
 
-Here's the same scenario from the opening — an agent needs to produce a payment event — with and without schema awareness.
+Here's the same scenario from the opening — an agent needs to diagnose malformed
+payment events — with and without schema awareness.
 
 **Without (schema-blind):**
-1. Agent guesses field names based on the topic name: `total_price`, `order_id`, `status`
-2. Message serialized as JSON string, sent to Kafka
-3. Downstream consumer fails to deserialize (expected `total_amount`, not `total_price`)
-4. Message routed to DLQ
-5. Alert fires hours later when DLQ count crosses threshold
-6. Human investigates, finds the typo, updates the agent, replays messages
+1. Agent samples the DLQ and sees `total_price`, `order_id`, and `status`
+2. It guesses that the payload is valid because the fields look plausible
+3. The actual mismatch with the registered `total_amount` field is missed
+4. A human later compares the payload and schema manually
 
 **With KafkaMCP (schema-aware):**
-1. Agent calls `kafka_get_schema(subject: "payments.completed-value")`
-2. Gets field summary: `PaymentCompleted { order_id: string, total_amount: double, currency: string, status: string, processed_at: timestamp-millis }`
-3. Agent produces message with correct field names
-4. Message deserializes successfully downstream
-5. No DLQ, no alert, no human intervention
+1. Agent calls `kafka_analyze_dlq` and
+   `kafka_get_schema(subject: "payments.completed-value")`
+2. It compares the sampled payload with the field summary:
+   `PaymentCompleted { order_id: string, total_amount: double, ... }`
+3. It identifies `total_price` as the likely producer/schema mismatch
+4. It reports concrete evidence and a remediation path without guessing
 
 The schema cost nothing. It was already in the Schema Registry. The agent just needed a way to ask for it.
 
@@ -112,8 +117,11 @@ The schema cost nothing. It was already in the Schema Registry. The agent just n
 
 Schema blindness is the difference between agents that work in staging and agents that survive production. If your agents interact with Kafka and don't know the schema, they're guessing. Sometimes they guess right. Eventually they won't, and the failure mode is silent data corruption.
 
-KafkaMCP makes the schema a first-class part of every agent interaction with Kafka. Because the alternative — agents operating on vibes in your production event streams — is not a real option.
+KafkaMCP exposes schemas as first-class tools and resources for agent workflows.
+It does not silently validate or wire-serialize every produced payload; the
+schema metadata and compatibility result give the agent evidence instead of
+guesses.
 
 ---
 
-*KafkaMCP is open source under the Apache 2.0 license. [GitHub](https://github.com/kafkamcp/kafkamcp) · [Docs](https://kafkamcp.dev) · [Discord](https://discord.gg/kafkamcp)*
+*KafkaMCP is open source under the Apache 2.0 license. [GitHub](https://github.com/josedab/kafkamcp) · [Docs](https://josedab.github.io/kafkamcp/) · [Discussions](https://github.com/josedab/kafkamcp/discussions)*

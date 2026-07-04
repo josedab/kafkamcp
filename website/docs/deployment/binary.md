@@ -7,12 +7,17 @@ title: Binary Deployment
 
 Binary deployment is the simplest way to run KafkaMCP in production or on a workstation.
 
+:::warning Pre-release
+GitHub Release archives are not published yet. Use `go install` or build from
+source until the first signed tag is released.
+:::
+
 ## Install from GitHub Releases
 
 KafkaMCP publishes release archives from GitHub Actions and GoReleaser.
 
 ```bash
-curl -sSL https://github.com/kafkamcp/kafkamcp/releases/latest/download/kafkamcp_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m).tar.gz | tar xz
+curl -sSL https://github.com/josedab/kafkamcp/releases/latest/download/kafkamcp_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m).tar.gz | tar xz
 sudo mv kafkamcp /usr/local/bin/
 ```
 
@@ -27,7 +32,7 @@ kafkamcp version
 If you already use Go, install directly from source:
 
 ```bash
-go install github.com/kafkamcp/kafkamcp/cmd/kafkamcp@latest
+go install github.com/josedab/kafkamcp/cmd/kafkamcp@latest
 ```
 
 ## Platform support
@@ -116,7 +121,8 @@ For systemd deployments, the default `TimeoutStopSec=90s` is more than sufficien
 ## Operational notes
 
 - main HTTP endpoint uses `server.port`
-- Prometheus metrics listen on `server.port + 1`
+- Prometheus metrics and probes use `server.metrics_host` /
+  `server.metrics_port` (defaults: `127.0.0.1`, `server.port + 1`)
 - set `audit.log_file` if you want durable JSONL audit logs
 - use environment variables for secrets instead of hard-coding credentials
 

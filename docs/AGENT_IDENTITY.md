@@ -9,7 +9,7 @@ flows through the request lifecycle.
 
 ## Why this exists
 
-The policy engine (`internal/policy/`) and audit log (`internal/audit/`)
+The policy engine (`internal/auth/policy.go`) and audit log (`internal/audit/`)
 both key off **agent IDs**. Before this feature, the agent ID came from
 the `X-Agent-ID` header — a string the client picks at will. In a
 multi-tenant deployment that means any caller could impersonate any
@@ -25,19 +25,19 @@ against a trusted source before the policy engine ever sees the ID.
 | `oidc` | JWT bearer tokens verified against an OIDC issuer's JWKS. | Multi-tenant, cloud, SSO-managed deployments. |
 | `mtls` | TLS client certificate presented during the handshake. | Service-mesh / SPIFFE / zero-trust deployments where every workload already has an x509 identity. |
 
-When a provider is configured but the request does not carry a token,
-KafkaMCP **falls back** to the legacy `X-Agent-ID` header. When a token
-is present but invalid, the request is treated as **anonymous** and the
-failure is logged with the provider name and error class (the token
-itself is never logged).
+Cryptographic providers reject missing or invalid credentials by default.
+Legacy `X-Agent-ID` fallback remains enabled only for `provider: none`, or when
+an operator explicitly enables `allow_header_fallback` during a controlled
+migration. Token material is never logged. Static tokens are converted to
+SHA-256 fingerprints at startup and verified with constant-time comparison.
 
 ## Configuration
 
-The identity block lives under `policy.identity` in `kafkamcp.yaml`:
+The identity block lives under `policies.identity` in `kafkamcp.yaml`:
 
 ```yaml
-policy:
-  enabled: true
+policies:
+  default_deny: true
   identity:
     provider: oidc      # none | static | oidc | mtls
     # allow_header_fallback (optional, default depends on provider):
@@ -51,19 +51,16 @@ policy:
     # allow_header_fallback: false
     static:
       tokens:
-        - token: "supersecret"
+        - token: "${KAFKAMCP_CI_TOKEN}"
           agent_id: "ci-runner"
-        - token: "anothersecret"
+        - token: "${KAFKAMCP_SCHEDULER_TOKEN}"
           agent_id: "scheduler"
     oidc:
-      issuer: "https://auth.example.com/realms/agents"
-      audience: "kafkamcp"
+      issuer_url: "https://auth.example.com/realms/agents"
+      client_id: "kafkamcp"
       agent_id_claim: "sub"        # default: sub
       groups_claim: "groups"       # optional
       email_claim: "email"         # optional
-      # Optional: explicit JWKS URL when the issuer's discovery
-      # document is unreachable from KafkaMCP (e.g. internal-only).
-      # jwks_url: "https://auth.example.com/realms/agents/protocol/openid-connect/certs"
 ```
 
 ### Issuer-specific examples
@@ -72,8 +69,8 @@ policy:
 
 ```yaml
 oidc:
-  issuer: "https://YOUR_TENANT.auth0.com/"
-  audience: "https://kafkamcp.example.com"
+  issuer_url: "https://YOUR_TENANT.auth0.com/"
+  client_id: "https://kafkamcp.example.com"
   agent_id_claim: "sub"
   groups_claim: "https://kafkamcp.example.com/groups"
 ```
@@ -86,8 +83,8 @@ agent ID to `sub` (default) or to a custom namespaced claim and update
 
 ```yaml
 oidc:
-  issuer: "https://YOUR_ORG.okta.com/oauth2/default"
-  audience: "api://kafkamcp"
+  issuer_url: "https://YOUR_ORG.okta.com/oauth2/default"
+  client_id: "api://kafkamcp"
   agent_id_claim: "cid"     # client_id (service-to-service)
   groups_claim: "groups"
 ```
@@ -100,8 +97,8 @@ of.
 
 ```yaml
 oidc:
-  issuer: "https://keycloak.example.com/realms/agents"
-  audience: "kafkamcp"
+  issuer_url: "https://keycloak.example.com/realms/agents"
+  client_id: "kafkamcp"
   agent_id_claim: "preferred_username"
   groups_claim: "groups"
 ```
@@ -113,8 +110,8 @@ the `groups` claim.
 
 ```yaml
 oidc:
-  issuer: "https://login.microsoftonline.com/TENANT_ID/v2.0"
-  audience: "api://kafkamcp"
+  issuer_url: "https://login.microsoftonline.com/TENANT_ID/v2.0"
+  client_id: "api://kafkamcp"
   agent_id_claim: "oid"     # immutable object ID
   groups_claim: "groups"
   email_claim: "preferred_username"
@@ -128,12 +125,12 @@ and is stable across all of a user's Azure AD logins.
 For every incoming MCP request the middleware applies the following
 order:
 
-1. **mTLS peer certificate** — if `policy.identity.provider == mtls`
+1. **mTLS peer certificate** — if `policies.identity.provider == mtls`
    the HTTP middleware extracts the verified client cert from the TLS
    handshake (`r.TLS.PeerCertificates[0]`) and derives an
    `AgentIdentity` before the MCP handler runs. The TLS terminator
    has already validated the chain against the configured
-   `policy.identity.mtls.ca_bundle`, so the middleware only enforces
+   `policies.identity.mtls.ca_bundle`, so the middleware only enforces
    the identity-extraction allow-lists.
 2. **Identity provider** — if configured and the request carries an
    `Authorization: Bearer ...` header, the provider verifies the token
@@ -160,8 +157,8 @@ server:
   tls_cert: /etc/kafkamcp/tls/server.crt
   tls_key:  /etc/kafkamcp/tls/server.key
 
-policy:
-  enabled: true
+policies:
+  default_deny: true
   identity:
     provider: mtls
     mtls:
@@ -241,7 +238,7 @@ DEBUG identity verified provider=oidc agent_id=ci-runner issuer=https://auth.exa
 WARN  agent identity verification failed provider=oidc error="oidc: token is expired"
 ```
 
-## Limitations & follow-ups
+## Current behavior and limitations
 
 - **Audit log enrichment** — done. Each audit entry now carries
   `identity_method`, `issuer`, and `subject` populated from the verified
@@ -250,9 +247,9 @@ WARN  agent identity verification failed provider=oidc error="oidc: token is exp
   (legacy `X-Agent-ID`, STDIO transport, `provider: none`) leave those
   fields empty, which downstream audit consumers can use to distinguish
   trusted from un-trusted identities.
-- **mTLS / SPIFFE** — not implemented in this iteration. ADR-007 lays
-  out why we picked OIDC first. mTLS will be added as a fourth provider
-  when the connection-level plumbing is in place.
+- **mTLS / SPIFFE** — implemented. KafkaMCP derives identity from SPIFFE URI
+  SAN, URI SAN, or (when explicitly allowed) Subject CN and configures the HTTP
+  server to require and verify client certificates against the configured CA.
 - **Token caching / introspection** — the OIDC provider verifies the
   signature locally against cached JWKS but does not call the
   introspection endpoint. For very short-lived tokens or revocation

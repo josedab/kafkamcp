@@ -63,7 +63,7 @@ async def main():
                 tools = KafkaMCPToolkit(mcp_client=session)
                 llm = ChatOpenAI(model="gpt-4")
                 agent = initialize_agent(
-                    tools.get_tools(),
+                    tools,
                     llm,
                     agent=AgentType.OPENAI_FUNCTIONS,
                     verbose=True,
@@ -71,12 +71,12 @@ async def main():
 
                 query = "What topics are available in the cluster?"
                 print(f"\nAgent query: {query}")
-                result = agent.run(query)
+                result = await agent.ainvoke({"input": query})
                 print(f"Result: {result}")
             else:
                 # Direct MCP tool call without LangChain toolkit
                 print("\nCalling list_topics directly via MCP...")
-                result = await session.call_tool("list_topics", {"filter": ""})
+                result = await session.call_tool("kafka_list_topics", {"filter": ""})
                 print(f"Topics: {result}")
 
     print("\nDone.")

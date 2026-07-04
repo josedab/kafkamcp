@@ -5,10 +5,16 @@ title: Docker Deployment
 
 # Docker Deployment
 
-KafkaMCP publishes container images to GHCR:
+:::warning Pre-release
+The GHCR image is not published yet. This page documents the image contract
+that the first tagged release will publish. Build locally with
+`docker build -t kafkamcp:dev .` in the meantime.
+:::
+
+Tagged releases publish container images to GHCR:
 
 ```text
-ghcr.io/kafkamcp/kafkamcp:latest
+ghcr.io/josedab/kafkamcp:VERSION
 ```
 
 ## What the image expects
@@ -34,7 +40,7 @@ docker run --rm \
   -p 3100:3100 \
   -p 3101:3101 \
   -v $(pwd)/kafkamcp.yaml:/etc/kafkamcp/kafkamcp.yaml:ro \
-  ghcr.io/kafkamcp/kafkamcp:latest
+  ghcr.io/josedab/kafkamcp:VERSION
 ```
 
 This assumes your config uses an HTTP transport such as `sse` or `streamable-http`.
@@ -46,6 +52,8 @@ server:
   transport: sse
   host: 0.0.0.0
   port: 3100
+  metrics_host: 0.0.0.0
+  metrics_port: 3101
   log_level: info
 
 clusters:
@@ -89,7 +97,7 @@ docker run --rm \
   -e KAFKA_USERNAME='agent-user' \
   -e KAFKA_PASSWORD='secret-password' \
   -v $(pwd)/kafkamcp.yaml:/etc/kafkamcp/kafkamcp.yaml:ro \
-  ghcr.io/kafkamcp/kafkamcp:latest
+  ghcr.io/josedab/kafkamcp:VERSION
 ```
 
 ## Common volume mounts
@@ -127,12 +135,16 @@ For HTTP transports:
 
 - MCP endpoint: `http://localhost:3100`
 - Metrics: `http://localhost:3101/metrics`
-- Health: `http://localhost:3101/healthz`
+- Liveness: `http://localhost:3101/livez`
+- Kafka health: `http://localhost:3101/healthz`
+- Readiness: `http://localhost:3101/ready`
 
 ## Runtime notes
 
 - the image runs as a non-root `kafkamcp` user
 - expose port `3100` for the MCP API and `3101` for metrics
+- set `server.metrics_host: 0.0.0.0` only when port `3101` is protected by
+  container-network/firewall rules
 - mount config read-only whenever possible
 - prefer environment variables over baking secrets into images
 

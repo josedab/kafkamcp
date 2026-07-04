@@ -1,6 +1,6 @@
 # KafkaMCP with Multi-Cluster Setup
 # Connects to multiple Kafka clusters with per-agent access control policies.
-# See https://kafkamcp.dev/docs/guides/multi-cluster for full reference.
+# See https://josedab.github.io/kafkamcp/docs/guides/multi-cluster for full reference.
 
 server:
   transport: sse        # SSE transport for remote/multi-agent access (also supports "streamable-http")
@@ -33,9 +33,18 @@ clusters:
 # Access control policies — per-agent authorization with default-deny semantics
 policies:
   default_deny: true     # When true, agents without an explicit policy are denied all access
+  identity:
+    provider: static
+    allow_header_fallback: false
+    static:
+      tokens:
+        - token: "${INCIDENT_AGENT_TOKEN}"
+          agent_id: "incident-agent"
+        - token: "${PIPELINE_AGENT_TOKEN}"
+          agent_id: "pipeline-agent"
   agents:
     # Read-only agent scoped to specific topic patterns
-    - id: "incident-agent"             # Agent identifier (matched via X-Agent-ID or X-Client-ID header)
+    - id: "incident-agent"             # Verified from INCIDENT_AGENT_TOKEN
       role: reader                     # Informational role label (does not affect enforcement)
       topics:
         - pattern: "*.dlq"             # Glob pattern matching dead-letter-queue topics across all namespaces
@@ -52,7 +61,7 @@ policies:
         requests_per_minute: 120       # Token bucket rate limit; requests beyond this are throttled
 
     # Admin agent with full access
-    - id: "pipeline-agent"
+    - id: "pipeline-agent"             # Verified from PIPELINE_AGENT_TOKEN
       role: admin
       topics:
         - pattern: "*"                 # Wildcard — full access to all topics

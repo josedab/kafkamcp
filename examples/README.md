@@ -13,8 +13,8 @@ This directory contains example configurations, Docker Compose setups, and SDK i
 | [`docker-compose.yaml`](docker-compose.yaml) | Docker | Local Kafka + Schema Registry + KafkaMCP dev stack | Docker | `docker compose -f examples/docker-compose.yaml up -d` |
 | [`docker-compose-kafkamcp.yaml`](docker-compose-kafkamcp.yaml) | Docker | Full-stack Kafka + KafkaMCP (containerised) | Docker | `docker compose -f examples/docker-compose-kafkamcp.yaml up -d` |
 | [`go-sdk/`](go-sdk/) | SDK | Go SDK integration example | Go 1.25+ | See [`go-sdk/README.md`](go-sdk/README.md) |
-| [`langchain-agent/`](langchain-agent/) | SDK | LangChain Python agent example | Python 3.8+ | See [`langchain-agent/README.md`](langchain-agent/README.md) |
-| [`crewai-agent/`](crewai-agent/) | SDK | CrewAI multi-agent example | Python 3.8+ | See [`crewai-agent/README.md`](crewai-agent/README.md) |
+| [`langchain-agent/`](langchain-agent/) | SDK | LangChain Python agent example | Python 3.10+ | See [`langchain-agent/README.md`](langchain-agent/README.md) |
+| [`crewai-agent/`](crewai-agent/) | SDK | CrewAI multi-agent example | Python 3.10+ | See [`crewai-agent/README.md`](crewai-agent/README.md) |
 | [`http-client/`](http-client/) | SDK | HTTP/SSE client example | Python 3.8+ | See [`http-client/README.md`](http-client/README.md) |
 
 ## Getting Started
@@ -23,4 +23,4 @@ This directory contains example configurations, Docker Compose setups, and SDK i
 2. **Local dev** — Use `docker-compose.yaml` to spin up Kafka, then run KafkaMCP with `minimal.yaml`.
 3. **Cloud** — Copy `confluent-cloud.yaml` and fill in your Confluent Cloud credentials.
 
-See the [documentation site](https://kafkamcp.dev) for full guides.
+See the [documentation site](https://josedab.github.io/kafkamcp/) for full guides.

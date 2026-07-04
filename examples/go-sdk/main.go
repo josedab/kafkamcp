@@ -17,7 +17,7 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/kafkamcp/kafkamcp/sdk/go/kafkamcpsdk"
+	"github.com/josedab/kafkamcp/sdk/go/kafkamcpsdk"
 )
 
 // stdioTransport implements kafkamcpsdk.Transport over a child process stdin/stdout.
@@ -28,9 +28,11 @@ type stdioTransport struct {
 	cancel context.CancelFunc
 }
 
-func newStdioTransport(ctx context.Context, command string, args ...string) (*stdioTransport, error) {
+func newStdioTransport(ctx context.Context, configPath string) (*stdioTransport, error) {
 	ctx, cancel := context.WithCancel(ctx)
-	cmd := exec.CommandContext(ctx, command, args...)
+	// #nosec G702 -- the executable and flags are fixed; configPath is passed
+	// as one argv value without a shell.
+	cmd := exec.CommandContext(ctx, "kafkamcp", "--config", configPath)
 	cmd.Stderr = os.Stderr
 
 	stdin, err := cmd.StdinPipe()
@@ -87,6 +89,13 @@ func (t *stdioTransport) Close() error {
 }
 
 func main() {
+	if err := run(); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
 	configPath := "kafkamcp.yaml"
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]
@@ -98,25 +107,24 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	transport, err := newStdioTransport(ctx, "kafkamcp", "--config", configPath)
+	transport, err := newStdioTransport(ctx, configPath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error connecting to KafkaMCP: %v\n", err)
 		fmt.Fprintln(os.Stderr, "Hint: ensure kafkamcp is installed and Kafka is running (make docker-dev)")
-		os.Exit(1)
+		return fmt.Errorf("connecting to KafkaMCP: %w", err)
 	}
-	defer transport.Close()
+	defer func() {
+		if cerr := transport.Close(); cerr != nil {
+			fmt.Fprintf(os.Stderr, "warning: closing transport: %v\n", cerr)
+		}
+	}()
 
-	client := kafkamcpsdk.New(transport,
-		kafkamcpsdk.WithAgentID("go-sdk-example"),
-		kafkamcpsdk.WithTimeout(15*time.Second),
-	)
+	client := kafkamcpsdk.New(transport, kafkamcpsdk.WithTimeout(15*time.Second))
 
 	// List all topics
 	fmt.Println("Listing topics...")
 	topics, err := client.ListTopics(ctx, "")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "ListTopics error: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("listing topics: %w", err)
 	}
 
 	if len(topics) == 0 {
@@ -127,4 +135,5 @@ func main() {
 			fmt.Printf("  %-30s  partitions=%d  replication=%d\n", t.Name, t.Partitions, t.ReplicationFactor)
 		}
 	}
+	return nil
 }

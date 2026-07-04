@@ -9,17 +9,22 @@ KafkaMCP exposes Prometheus metrics for tool activity, throughput, denials, and 
 
 ## Metrics endpoint
 
-When KafkaMCP runs with `sse` or `streamable-http`, it starts a separate metrics server on **`port + 1`**.
+When KafkaMCP runs with `sse` or `streamable-http`, it starts a separate
+metrics server on `server.metrics_host:server.metrics_port` (defaults:
+`127.0.0.1` and `server.port + 1`).
 
 Example:
 
 - KafkaMCP API: `http://localhost:3100`
 - Prometheus metrics: `http://localhost:3101/metrics`
-- Health check: `http://localhost:3101/healthz`
+- Process liveness: `http://localhost:3101/livez`
+- Kafka health: `http://localhost:3101/healthz`
+- Full readiness: `http://localhost:3101/ready`
 
 ```bash
 curl -s http://localhost:3101/metrics
-curl -s http://localhost:3101/healthz
+curl -s http://localhost:3101/livez
+curl -s http://localhost:3101/ready
 ```
 
 :::info
@@ -34,7 +39,7 @@ KafkaMCP defines these 10 metric families.
 |---|---|---|---|
 | `kafkamcp_tool_calls_total` | Counter | `tool`, `agent_id`, `cluster`, `status` | Total MCP tool invocations |
 | `kafkamcp_tool_latency_seconds` | Histogram | `tool`, `agent_id`, `cluster` | Tool call latency distribution |
-| `kafkamcp_messages_consumed_total` | Counter | `topic`, `agent_id`, `cluster` | Messages consumed via `kafka_consume` and `kafka_subscribe` |
+| `kafkamcp_messages_consumed_total` | Counter | `topic`, `agent_id`, `cluster` | Messages consumed via `kafka_consume` |
 | `kafkamcp_messages_produced_total` | Counter | `topic`, `agent_id`, `cluster` | Messages produced via `kafka_produce` |
 | `kafkamcp_schema_cache_hits_total` | Counter | `cluster` | Schema cache hit count |
 | `kafkamcp_schema_cache_misses_total` | Counter | `cluster` | Schema cache miss count |
@@ -153,23 +158,28 @@ histogram_quantile(
 ## Operational guidance
 
 - scrape `/metrics` from the metrics port, not the main MCP port
+- use `/livez` for liveness and `/ready` for readiness; Kafka outages must not
+  cause process restarts
+- set `metrics_host: 0.0.0.0` only inside a protected container/pod network
 - label clusters clearly so dashboards stay readable in multi-cluster deployments
 - alert on denials separately from Kafka errors; they mean different problems
 - track `status="error"` on `kafkamcp_tool_calls_total` to spot failing tools early
 
 ## Concurrency limits
 
-KafkaMCP limits concurrent execution of expensive tools (`kafka_aggregate`, `kafka_join`, `kafka_search`) to **5 simultaneous operations**. Additional requests are queued until a slot becomes available. Factor this into capacity planning when multiple agents run heavy analytics concurrently.
+KafkaMCP limits concurrent execution of expensive tools (e.g. `kafka_search`) to **5 simultaneous operations**. Additional requests are queued until a slot becomes available. Factor this into capacity planning when multiple agents run heavy analytics concurrently.
 
 :::tip
 Start with latency, denials, and throughput. Those three views answer most production questions quickly.
 :::
 
-## Pre-built Grafana dashboard
+## Building a Grafana dashboard
 
-KafkaMCP ships a ready-to-use Grafana dashboard at [`deploy/grafana/kafkamcp-overview.json`](https://github.com/kafkamcp/kafkamcp/tree/main/deploy/grafana/kafkamcp-overview.json).
+KafkaMCP exposes standard Prometheus metrics but does not bundle a versioned
+Grafana dashboard. Build a dashboard from the queries in this guide so it
+matches your labels, retention, and alerting conventions.
 
-### Panels included (23 total)
+Useful panels include:
 
 | Section | Panels |
 |---|---|
@@ -180,11 +190,5 @@ KafkaMCP ships a ready-to-use Grafana dashboard at [`deploy/grafana/kafkamcp-ove
 | **Security & Rate Limiting** | Kafka Connection Errors, Authorization Denials, Rate Limit Denials |
 | **Connections** | Active Connections by Transport, Tool Call Rate by Agent |
 
-### Import into Grafana
-
-1. Open Grafana → **Dashboards** → **Import**
-2. Upload `deploy/grafana/kafkamcp-overview.json` (or paste its contents)
-3. Select your **Prometheus** data source when prompted
-4. Click **Import**
-
-The dashboard expects the default `kafkamcp_*` metric names. No additional configuration is required if you are scraping the KafkaMCP metrics endpoint.
+Use the default `kafkamcp_*` metric names shown above and select the Prometheus
+data source that scrapes KafkaMCP's metrics endpoint.

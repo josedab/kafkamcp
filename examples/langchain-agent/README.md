@@ -13,7 +13,9 @@ Demonstrates building a LangChain AI agent that interacts with Kafka through Kaf
 
 ```bash
 # Install Python dependencies
+cd examples/langchain-agent
 pip install -r requirements.txt
+pip install -e ../../sdk/python/kafkamcp_langchain
 
 # Set your OpenAI API key
 export OPENAI_API_KEY=your-key
@@ -34,7 +36,7 @@ python agent.py
 Connecting to KafkaMCP server...
 Connected to KafkaMCP
 
-Available tools (155):
+Available tools (29):
   - kafka_list_topics: List all topics in the Kafka cluster...
   - kafka_consume: Consume messages from a topic...
   ...
@@ -45,7 +47,8 @@ Topics: [...]
 Done.
 ```
 
-If `kafkamcp-langchain` is installed, the agent will use GPT-4 to answer natural language queries about your Kafka cluster.
+If `kafkamcp-langchain` is installed, the agent uses its read-only wrapper
+subset and LangChain's asynchronous invocation path to answer the query.
 
 ## How It Works
 

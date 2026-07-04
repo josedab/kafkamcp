@@ -54,28 +54,33 @@ KafkaMCP integrates schema awareness into every relevant operation, not as an ad
 
 That `field_summary` field is key. It gives the agent a single-line mental model of what the message looks like. The agent doesn't need to parse nested Avro JSON — it reads a type signature.
 
-**Compatibility checking.** Before an agent produces a message, it can call `kafka_check_schema_compatibility` to verify the message shape is valid. No silent failures.
+**Compatibility checking.** Before a team adopts a proposed producer schema, an
+agent can call `kafka_check_schema_compatibility` against the registry's actual
+policy.
 
-**Schema evolution advice.** `kafka_suggest_schema_evolution` analyzes a change description and suggests compatible strategies — adding optional fields, nullable fields, with concrete steps for each approach.
+**Schema evolution workflow.** The agent can retrieve the current definition,
+construct a concrete candidate schema, and check that proposal before
+registration.
 
 ## The difference in practice
 
 **Without (schema-blind):**
-1. Agent guesses field names based on the topic name
-2. Message serialized as JSON string, sent to Kafka
-3. Downstream consumer fails to deserialize
-4. Message routed to DLQ
-5. Alert fires hours later
-6. Human investigates, finds the typo, replays messages
+1. Agent samples a DLQ payload and sees plausible field names
+2. It guesses that the payload is valid
+3. The mismatch with the registered schema is missed
+4. A human later compares the payload and schema manually
 
 **With KafkaMCP (schema-aware):**
-1. Agent calls `kafka_get_schema(subject: "payments.completed-value")`
-2. Gets field summary with correct field names
-3. Agent produces message with correct field names
-4. Message deserializes successfully downstream
+1. Agent calls `kafka_analyze_dlq` and `kafka_get_schema`
+2. It compares the sampled payload with the field summary
+3. It identifies the likely producer/schema mismatch
+4. It reports concrete evidence and a remediation path
 
 Schema blindness is the difference between agents that work in staging and agents that survive production.
 
+KafkaMCP exposes schema evidence; it does not silently validate or
+wire-serialize every produced payload.
+
 ---
 
-*KafkaMCP is open source under the Apache 2.0 license. [GitHub](https://github.com/kafkamcp/kafkamcp) · [Docs](https://kafkamcp.dev) · [Discord](https://discord.gg/kafkamcp)*
+*KafkaMCP is open source under the Apache 2.0 license. [GitHub](https://github.com/josedab/kafkamcp) · [Docs](https://josedab.github.io/kafkamcp/) · [Discussions](https://github.com/josedab/kafkamcp/discussions)*

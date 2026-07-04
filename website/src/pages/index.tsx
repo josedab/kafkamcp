@@ -70,16 +70,16 @@ function HeroSection() {
           <img src="https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go&logoColor=white" alt="Go" />
           <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License" />
           <img src="https://img.shields.io/badge/MCP-compatible-8A2BE2" alt="MCP" />
-          <img src="https://img.shields.io/badge/Tools-251-green" alt="251 Tools" />
+          <img src="https://img.shields.io/badge/Default%20Surface-%E2%89%A415%20tools-green" alt="Default ≤15 tools" />
         </div>
         <div className={styles.installCommand}>
-          <code>go install github.com/kafkamcp/kafkamcp/cmd/kafkamcp@latest</code>
+          <code>go install github.com/josedab/kafkamcp/cmd/kafkamcp@latest</code>
         </div>
         <div className={styles.buttons}>
           <Link className="button button--secondary button--lg" to="/docs/getting-started">
             Get Started in 5 Minutes →
           </Link>
-          <Link className="button button--outline button--lg" to="https://github.com/kafkamcp/kafkamcp" style={{marginLeft: '1rem', color: 'white', borderColor: 'white'}}>
+          <Link className="button button--outline button--lg" to="https://github.com/josedab/kafkamcp" style={{marginLeft: '1rem', color: 'white', borderColor: 'white'}}>
             ★ GitHub
           </Link>
         </div>
@@ -101,8 +101,8 @@ function HowItWorksSection() {
             <div className={styles.stepCard}>
               <div className={styles.stepNumber}>1</div>
               <Heading as="h3">Install</Heading>
-              <code className={styles.stepCode}>go install github.com/kafkamcp/kafkamcp/cmd/kafkamcp@latest</code>
-              <p>Single binary, no JVM, no dependencies. Also available via Docker and pre-built binaries.</p>
+              <code className={styles.stepCode}>go install github.com/josedab/kafkamcp/cmd/kafkamcp@latest</code>
+              <p>Single Go binary, no JVM or CGO. Signed Docker images and pre-built binaries begin with the first tagged release.</p>
             </div>
           </div>
           <div className="col col--4">
@@ -177,7 +177,11 @@ function UseCasesSection() {
               ))}
             </div>
             <p style={{marginTop: '1.5rem'}}>
-              <strong>251 MCP tools</strong> and <strong>18 resources</strong> covering discovery, consumption, production, schema management, consumer groups, connectors, stream processing, anomaly detection, and more.
+              <strong>Read-only by default</strong> (≤15 tools in <code>core-read</code> pack).
+              Additional packs — <code>ops-write</code> and <code>governance</code> —
+              unlock real, guarded mutations and policy controls behind approval enforcement.
+              Full tool catalog and <strong>9 MCP resources</strong> cover discovery, consumption, schema
+              management, consumer groups, connectors, and more.
             </p>
           </div>
           <div className="col col--6">
@@ -230,8 +234,8 @@ function ArchitectureSection() {
 ┌──────────────▼─────────────────────▼─────────────────────┐
 │                   KafkaMCP Server                         │
 │  ┌─────────┐ ┌─────────┐ ┌──────┐ ┌────────┐ ┌────────┐ │
-│  │ 251     │ │ 18      │ │ Auth │ │ Rate   │ │ Audit  │ │
-│  │ Tools   │ │ Rsrcs   │ │Engine│ │Limiter │ │ Logger │ │
+│  │ ≤15     │ │ 18      │ │ Auth │ │ Rate   │ │ Audit  │ │
+│  │ Tools * │ │ Rsrcs   │ │Engine│ │Limiter │ │ Logger │ │
 │  └────┬────┘ └────┬────┘ └──────┘ └────────┘ └────────┘ │
 │       └───────────┼──────────────────────────────────────│
 │  ┌────────────────▼────────────────────────────────────┐ │
@@ -243,7 +247,8 @@ function ArchitectureSection() {
 ┌─────────┐  ┌───────────┐  ┌──────────┐
 │  Kafka  │  │  Schema   │  │  Kafka   │
 │ Brokers │  │ Registry  │  │ Connect  │
-└─────────┘  └───────────┘  └──────────┘`}
+└─────────┘  └───────────┘  └──────────┘
+* Default core-read pack. ops-write/governance packs available.`}
           </pre>
         </div>
         <div style={{textAlign: 'center', marginTop: '1.5rem'}}>
@@ -266,29 +271,29 @@ function CommunitySection() {
         </p>
         <div className="row" style={{justifyContent: 'center'}}>
           <div className="col col--3" style={{textAlign: 'center'}}>
-            <Link to="https://github.com/kafkamcp/kafkamcp" className={styles.communityLink}>
+            <Link to="https://github.com/josedab/kafkamcp" className={styles.communityLink}>
               <div className={styles.communityIcon}>🐙</div>
               <strong>GitHub</strong>
               <p>Star, fork, contribute</p>
             </Link>
           </div>
           <div className="col col--3" style={{textAlign: 'center'}}>
-            <Link to="https://github.com/kafkamcp/kafkamcp/discussions" className={styles.communityLink}>
+            <Link to="https://github.com/josedab/kafkamcp/discussions" className={styles.communityLink}>
               <div className={styles.communityIcon}>💬</div>
               <strong>Discussions</strong>
               <p>Ask questions, share ideas</p>
             </Link>
           </div>
           <div className="col col--3" style={{textAlign: 'center'}}>
-            <Link to="https://discord.gg/kafkamcp" className={styles.communityLink}>
-              <div className={styles.communityIcon}>🎮</div>
-              <strong>Discord</strong>
-              <p>Chat with the community</p>
+            <Link to="https://github.com/josedab/kafkamcp/issues/new?template=design_partner_feedback.yml" className={styles.communityLink}>
+              <div className={styles.communityIcon}>🤝</div>
+              <strong>Design Partner</strong>
+              <p>Share how you use KafkaMCP</p>
             </Link>
           </div>
           <div className="col col--3" style={{textAlign: 'center'}}>
             <Link to="/docs/contributing" className={styles.communityLink}>
-              <div className={styles.communityIcon}>🤝</div>
+              <div className={styles.communityIcon}>📝</div>
               <strong>Contribute</strong>
               <p>Read the contributor guide</p>
             </Link>

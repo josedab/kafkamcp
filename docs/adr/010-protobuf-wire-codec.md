@@ -1,10 +1,14 @@
 # ADR-010: Protobuf Wire-Format Codec
 
-- Status: **Accepted**
+- Status: **Superseded by the supported-surface cleanup**
 - Date: 2026-05-04
 - Supersedes: —
-- Superseded by: —
+- Superseded by: the 29-tool supported-product boundary
 - Related: [ADR-008 Avro wire-format codec](./008-avro-wire-format-codec.md)
+
+> Historical: the standalone codec tool family and `internal/codec` package
+> were removed. Supported produce/consume operations remain, but KafkaMCP no
+> longer exposes a public Protobuf codec engine/tool.
 
 ## Context
 

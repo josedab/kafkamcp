@@ -14,22 +14,22 @@ If you discover a security vulnerability in KafkaMCP, please report it responsib
 
 ### How to Report
 
-1. Email **security@kafkamcp.dev** with a detailed description of the vulnerability.
-2. Include steps to reproduce the issue, if possible.
+Use [**GitHub Private Vulnerability Reporting**](https://github.com/josedab/kafkamcp/security/advisories/new) to submit a security advisory. This channel is confidential and visible only to repository maintainers.
+
+1. Navigate to **Security → Advisories → Report a vulnerability** in this repository, or use the link above.
+2. Describe the vulnerability, steps to reproduce, and potential impact.
 3. Provide any relevant logs, screenshots, or proof-of-concept code.
 
-### Encrypted Reports
-
-For sensitive vulnerability details, you may request our PGP key by emailing security@kafkamcp.dev.
+> There is no public `security@` email address for this project. GitHub private vulnerability reporting is the only supported channel.
 
 A machine-readable [`security.txt`](https://securitytxt.org/) is provided below:
 
 ```
 # security.txt (RFC 9116)
-Contact: mailto:security@kafkamcp.dev
+Contact: https://github.com/josedab/kafkamcp/security/advisories/new
 Preferred-Languages: en
-Canonical: https://github.com/kafkamcp/kafkamcp/blob/main/SECURITY.md
-Policy: https://github.com/kafkamcp/kafkamcp/blob/main/SECURITY.md
+Canonical: https://github.com/josedab/kafkamcp/blob/main/SECURITY.md
+Policy: https://github.com/josedab/kafkamcp/blob/main/SECURITY.md
 Expires: 2027-12-31T23:59:59.000Z
 ```
 

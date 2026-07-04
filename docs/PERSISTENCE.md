@@ -5,11 +5,8 @@
 > The historical in-memory behaviour remains the default, so existing
 > deployments are unchanged unless they explicitly opt in.
 
-This file is referenced by the startup banner emitted by `kafkamcp serve`:
-
-```
-VOLATILE STATE: keys, audit ring-buffer, rate-limit buckets, sessions, ...
-```
+This file is referenced by the startup persistence warning emitted by
+`kafkamcp serve`.
 
 ## TL;DR — choosing a backend
 
@@ -23,8 +20,9 @@ server:
 - `inmem` (default) — historical behaviour. State lives in process
   memory and is lost on restart.
 - `sqlite` — embedded pure-Go SQLite (`modernc.org/sqlite`), WAL mode.
-  State persists across restarts; back it up by copying the file. Use
-  this for single-node KafkaMCP deployments where durability matters.
+  State persists across restarts; use SQLite's online backup command described
+  in [`OPERATIONS.md`](OPERATIONS.md), not a live raw file copy. Use this for
+  single-node KafkaMCP deployments where durability matters.
 
 ## What persists on disk
 
@@ -33,84 +31,50 @@ server:
 | Audit log | If `audit.log_file` is set, structured-JSON audit lines are appended to that file. Without `log_file`, audit records live only in an in-memory ring buffer (`audit.max_entries`). |
 | Telemetry / traces | Exported live to the configured OTLP endpoint. The server keeps no local copy. |
 | Prometheus metrics | Scraped over HTTP. Counters reset on restart by design. |
-| **Materialised views** (when `backend: sqlite`) | View definitions and view records are persisted in the SQLite `kv` table under namespaces `viewstore.definitions` and `viewstore.records`. Restored on next start. |
 | **Audit ring-buffer** (when `backend: sqlite`) | The in-memory tail of recent audit entries is mirrored to namespace `audit.entries` so the recent history survives a restart. The `audit.log_file` append stream is still the long-term durable copy. |
 | **Rate-limit token buckets** (when `backend: sqlite`) | Global and per-agent token-bucket state is persisted under namespace `ratelimit.buckets`. Restarting no longer hands every agent a free fresh quota. |
-| **Agent memory** (when `backend: sqlite`) | Per-agent KV entries (`internal/agentmemory`) are persisted under namespace `agentmemory.entries`. Expired entries are GC'd on load. |
+| **Approval grants and token indexes** (when `backend: sqlite`) | Requests, signed decision chains, current grant state, and token-to-grant indexes persist under `approval_grants` and `approval_token_index`. Single-use consumption uses atomic compare-and-swap. |
+| **Idempotency receipts** (when `backend: sqlite`) | Pending reservations and successful retry receipts persist under `idempotency_receipts`. Reservation, completion, and abort use atomic compare-and-swap. |
 
 ## What is volatile (lost on restart)
 
-The following subsystems still use process-local maps and channels with no
-persistence layer. Their data is destroyed when the server exits and must be
-re-created by clients on the next boot. They are scheduled for migration to
-the engine backend, one PR at a time, following the pattern documented in
-[ADR-006](./adr/006-persistent-engine-store.md).
+The supported product intentionally keeps these caches/process metrics
+transient:
 
-- **Encryption** — keys, agent policies, field-encryption configs, key
-  versions. Restart → all encrypted data becomes undecryptable.
-- **Streaming sessions** — open consumer sessions (`kafka_stream`). Restart
-  drops all of them.
-- **Chaos experiments** — recorded in `chaos.Engine` and never written out.
-  (Experimental; see below.)
-- **WASM plugin runtime** — uploaded modules, their sandbox configs, run
-  counters. (Experimental.)
-- **Digital twin / replay / replay-studio / dag-workflow / task queue /
-  state machine / persona / tenant / collaboration / config-VCS /
-  cost-attribution / sandbox / catalog / etc.**
-  — every "engine" under `internal/` keeps state in `sync.RWMutex`-guarded
-  maps.
-- **Plugin registry, agent profiles, observability sampling counters** —
-  also in-memory only.
+- Schema Registry cache entries.
+- Prometheus counters and histograms.
+- OIDC/JWKS and transport connection caches.
+- Cluster-discovery results and lag-analysis calculations.
 
-## What "experimental" means
+They are reconstructed from configuration and external systems after restart;
+no supported workflow/session engine depends on hidden process state.
 
-`config.experimental.*` flags gate features whose implementation is a
-metadata-only simulation. Even with the flag enabled the tool runs locally
-and does not affect a real Kafka cluster:
+## No simulated tools
 
-- `experimental.chaos` — chaos injection records experiments but does **not**
-  partition brokers, slow consumers, or break schemas.
-- `experimental.wasm_runtime` — `kafka_wasm_execute` does **not** execute
-  WebAssembly; it returns a canned `{"status":"ok"}` payload.
-- `experimental.kafka_proxy` — the proxy accepts Kafka client connections
-  but, in the absence of a wired `OnTranslated` MCP callback, responds with
-  hardcoded "ok" / "unknown server error" frames. Do **not** point real
-  clients at it.
-- `experimental.migration` — `kafka_autopilot_execute` and
-  `kafka_autopilot_rollback` are gated because the underlying
-  `migration.Planner.ExecutePlan` does **not** actually mutate the target
-  cluster; it only updates in-process status counters. Dry-runs, assessment,
-  and plan generation remain available without the flag.
-- `experimental.control_plane` — `kafka_controlplane_*` tools fabricate
-  org/instance/billing data; there is no SaaS layer behind them.
-- `experimental.marketplace` — `kafka_plugin_install` only flips an
-  in-memory boolean. It does **not** download, verify, or sandbox a real
-  plugin artifact.
+KafkaMCP ships **no simulated or placeholder tools**. There is no
+`experimental` config block and no metadata-only simulation gated behind a
+feature flag. Future incomplete work stays out of runtime packs until it has a
+real implementation and integration tests.
 
-Each flag, when enabled, also emits a loud `WARN` log at startup so the
-behaviour is obvious in operational dashboards.
+> The previously shipped simulated tools and their engines were deleted from
+> the binary: chaos injection, the WASM runtime, the Kafka proxy, and migration
+> planning (`kafka_chaos_*`, `kafka_wasm_*`, `kafka_proxy`,
+> `kafka_migration_plan`), along with the control-plane, marketplace/plugin,
+> agent-store, and cloud-deploy surfaces. None can be re-enabled by any config
+> flag.
 
 ## Recommended mitigations
 
-Treat the still-volatile subsystems as request-scoped:
+1. **Audit** — set `audit.log_file` and ship it to your log pipeline.
+2. **Guarded writes** — use SQLite so approval and idempotency state survives
+   restart.
+3. **Rate limiting** — SQLite preserves buckets; with `inmem`, enforce any
+   cross-replica/global quota at an upstream proxy.
 
-1. **Audit** — set `audit.log_file` and ship the file to your log pipeline.
-2. **Encryption keys** — manage them externally (Vault/KMS) and load on
-   startup; do not rely on the in-memory key store for anything you cannot
-   recreate.
-3. **Streaming sessions / pipelines / dag-workflows** — treat as
-   request-scoped. Agents must be prepared to re-create them after a restart.
-4. **Rate limiting** — accept that buckets reset on restart. If you need
-   durable quota, enforce it at an upstream proxy.
-5. **Disable experimental flags in production** — they are off by default
-   and should stay off.
+## Concurrency boundary
 
-## Roadmap
-
-The pluggable backend introduced by [ADR-006](./adr/006-persistent-engine-store.md)
-covers the **materialised view store** in this release. The remaining
-engines (`agentmemory`, `audit`, `ratelimit`, ...) keep their legacy
-in-process maps; they are scheduled for incremental migration using the
-same `NewEngineWithBackend(ctx, logger, be)` pattern. See the ADR for
-the migration template.
-
+The backend's compare-and-swap primitive is a single atomic SQL statement, so
+separate managers that briefly overlap during failover cannot both consume one
+approval token or reserve one idempotency key. This hardens transitions, but it
+does **not** make shared-file multi-replica SQLite supported: WAL locking,
+background engines, and operational ownership still require one active writer.

@@ -281,9 +281,14 @@ KafkaMCP only starts the metrics server for `sse` and `streamable-http` transpor
 
 ### Fix
 
-Use an HTTP transport and check `server.port + 1`.
+Use an HTTP transport and check `server.metrics_host` /
+`server.metrics_port`.
 
 If your main port is `3100`, metrics are on `3101`.
+
+For Docker/Kubernetes, set `metrics_host: 0.0.0.0` and expose/protect port
+`3101`. Probe `/livez` for process liveness and `/ready` for dependency
+readiness.
 
 ## Docker-specific issues
 

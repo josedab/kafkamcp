@@ -2,7 +2,12 @@
 
 ## Status
 
-Accepted
+Superseded by the supported-surface cleanup.
+
+The standalone codec tool family and `internal/codec` package were removed from
+the product. KafkaMCP still delegates serialization/deserialization requested
+by supported produce/consume tools to the Kafka layer, but no public codec
+engine/tool is shipped. The remainder of this ADR is historical.
 
 ## Context
 

@@ -1,3 +1,2 @@
 crewai>=0.30.0
-kafkamcp-crewai>=0.1.0
 langchain-openai>=0.1.0

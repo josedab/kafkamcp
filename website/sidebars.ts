@@ -17,9 +17,6 @@ const sidebars: SidebarsConfig = {
         'guides/multi-cluster',
         'guides/access-control',
         'guides/monitoring',
-        'guides/dashboard',
-        'guides/openapi-spec',
-        'guides/intellij',
       ],
     },
     {

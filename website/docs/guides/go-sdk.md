@@ -5,12 +5,14 @@ title: Go SDK Usage
 
 # Go SDK Usage
 
-KafkaMCP provides a native Go SDK at [`sdk/go/kafkamcpsdk`](https://github.com/kafkamcp/kafkamcp/tree/main/sdk/go/kafkamcpsdk) for programmatic access to all KafkaMCP tools and resources.
+KafkaMCP provides a native Go SDK at
+[`sdk/go/kafkamcpsdk`](https://github.com/josedab/kafkamcp/tree/main/sdk/go/kafkamcpsdk)
+for a tested subset of topic, message, schema, consumer-group, and lag tools.
 
 ## Installation
 
 ```bash
-go get github.com/kafkamcp/kafkamcp/sdk/go/kafkamcpsdk
+go get github.com/josedab/kafkamcp/sdk/go/kafkamcpsdk
 ```
 
 ## Creating a client
@@ -24,12 +26,11 @@ import (
     "log"
     "time"
 
-    "github.com/kafkamcp/kafkamcp/sdk/go/kafkamcpsdk"
+    "github.com/josedab/kafkamcp/sdk/go/kafkamcpsdk"
 )
 
 func main() {
     client := kafkamcpsdk.New(transport,
-        kafkamcpsdk.WithAgentID("my-agent"),
         kafkamcpsdk.WithTimeout(30*time.Second),
     )
     defer client.Close()
@@ -69,7 +70,7 @@ deliveries, err := client.Produce(ctx, "ops.events", []map[string]any{
         "key":   "deploy-123",
         "value": map[string]any{"status": "started", "service": "billing"},
     },
-})
+}, kafkamcpsdk.MutationOptions{ApprovalToken: approvalToken})
 if err != nil {
     log.Fatal(err)
 }
@@ -77,6 +78,34 @@ for _, d := range deliveries {
     fmt.Printf("Delivered to partition %d offset %d\n", d.Partition, d.Offset)
 }
 ```
+
+The transport owns authentication. Every guarded mutation requires a
+short-lived token returned by `kafka_approval`; retry-safe topic mutations may
+also set `IdempotencyKey`.
+
+## Resetting consumer offsets
+
+```go
+err := client.ResetOffsets(
+    ctx,
+    "order-processor",
+    "orders.created",
+    "timestamp",
+    kafkamcpsdk.ResetOffsetsOptions{
+        MutationOptions: kafkamcpsdk.MutationOptions{
+            ApprovalToken: approvalToken,
+        },
+        Value:  "2026-07-27T00:00:00Z",
+        DryRun: true,
+    },
+)
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+Set `Value` for timestamp resets. Use `DryRun` to preview the partition offset
+changes before applying the approved request.
 
 ## Searching messages
 
@@ -86,20 +115,6 @@ if err != nil {
     log.Fatal(err)
 }
 fmt.Printf("Found %d failed payment messages\n", len(results))
-```
-
-## Setting up watch subscriptions
-
-```go
-subID, err := client.Watch(ctx,
-    "orders.*",           // topic pattern
-    "",                   // key filter (empty = all)
-    "https://hooks.example.com/alerts",  // webhook URL
-)
-if err != nil {
-    log.Fatal(err)
-}
-fmt.Printf("Watch subscription created: %s\n", subID)
 ```
 
 ## Error handling

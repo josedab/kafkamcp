@@ -5,24 +5,28 @@ title: TypeScript SDK Usage
 
 # TypeScript SDK Usage
 
-KafkaMCP provides a TypeScript SDK at [`sdk/typescript/`](https://github.com/kafkamcp/kafkamcp/tree/main/sdk/typescript) for type-safe, async/await access to all KafkaMCP tools from Node.js or TypeScript agents.
+KafkaMCP provides a TypeScript SDK at
+[`sdk/typescript/`](https://github.com/josedab/kafkamcp/tree/main/sdk/typescript)
+for a tested subset of topic, message, schema, consumer-group, and lag tools.
 
 ## Installation
 
+The TypeScript SDK is currently a private workspace package and is not
+published to npm.
+
 ```bash
-npm install @kafkamcp/sdk
+git clone https://github.com/josedab/kafkamcp.git
+cd kafkamcp/sdk/typescript
+npm install
 ```
 
 ## Creating a Client
 
 ```typescript
-import { KafkaMCPClient } from "@kafkamcp/sdk";
+import { KafkaMCPClient } from "@josedab/kafkamcp-sdk";
 
 // Provide an MCP transport (stdio, SSE, or HTTP)
-const client = new KafkaMCPClient(transport, {
-  agentId: "my-ts-agent",
-  timeout: 30000,
-});
+const client = new KafkaMCPClient(transport);
 ```
 
 ## Topic Operations
@@ -37,10 +41,13 @@ const details = await client.describeTopic("orders.created");
 // Create a topic
 await client.createTopic("events.new", 6, 3, {
   "retention.ms": "604800000",
-});
+}, { approvalToken, idempotencyKey: "create-events-new" });
 
 // Delete a topic
-await client.deleteTopic("events.old");
+await client.deleteTopic("events.old", {
+  approvalToken,
+  idempotencyKey: "delete-events-old",
+});
 ```
 
 ## Message Operations
@@ -53,7 +60,7 @@ const messages = await client.consume("orders.created", 10, "latest");
 const results = await client.produce("orders.created", [
   { key: "order-1", value: { id: 1, total: 99.99 } },
   { key: "order-2", value: { id: 2, total: 149.99 } },
-]);
+], { approvalToken });
 
 // Search messages by content
 const matches = await client.search("orders.created", "refund", 50);
@@ -69,7 +76,12 @@ const groups = await client.listConsumerGroups();
 const group = await client.describeConsumerGroup("order-processor");
 
 // Reset offsets (group must be inactive)
-await client.resetOffsets("order-processor", "orders.created", "earliest");
+await client.resetOffsets(
+  "order-processor",
+  "orders.created",
+  "earliest",
+  { approvalToken },
+);
 ```
 
 ## Schema Registry
@@ -79,26 +91,7 @@ await client.resetOffsets("order-processor", "orders.created", "earliest");
 const subjects = await client.listSchemas();
 
 // Describe a schema
-const schema = await client.describeSchema("orders-value");
-```
-
-## AI & Analytics
-
-```typescript
-// Natural language query
-const answer = await client.naturalLanguageQuery(
-  "What are the busiest topics in the last hour?"
-);
-
-// Get anomalies
-const anomalies = await client.getAnomalies("critical", 10);
-
-// Advisor scan and report
-const scan = await client.advisorScan();
-const report = await client.advisorReport();
-
-// Diagnose consumer lag
-const diagnosis = await client.diagnoseLag("order-processor");
+const schema = await client.getSchema("orders-value");
 ```
 
 ## Cleanup
@@ -114,12 +107,15 @@ The SDK exports the following TypeScript interfaces:
 | Interface | Description |
 |-----------|-------------|
 | `Transport` | MCP transport abstraction (implement for custom connectivity) |
-| `ClientOptions` | Client configuration (`agentId`, `timeout`) |
+| `MutationOptions` | Approval token, optional idempotency key, and cluster |
 | `TopicSummary` | Topic metadata (name, partitions, replication factor) |
 | `Message` | Consumed/searched message (partition, offset, key, value, headers) |
 | `DeliveryResult` | Produce result (partition, offset, timestamp, status) |
 | `ConsumerGroupSummary` | Group overview (group_id, state, member_count, total_lag) |
 | `SchemaSubject` | Schema Registry subject (subject, version, schema_type) |
+
+Identity and timeouts are configured by the MCP `Transport`. KafkaMCP write
+tools reject calls without a matching short-lived approval token.
 
 ## See Also
 

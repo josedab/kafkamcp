@@ -40,7 +40,7 @@ docker run -d --name kafka -p 9092:9092 \
 ## Minute 1: Install KafkaMCP
 
 ```bash
-go install github.com/kafkamcp/kafkamcp/cmd/kafkamcp@latest
+go install github.com/josedab/kafkamcp/cmd/kafkamcp@latest
 ```
 
 Verify it's working:
@@ -177,10 +177,10 @@ Now Claude can read from `orders.*` topics and read/write `test-*` topics, but n
 
 ## Next steps
 
-- [Access Control Guide](https://kafkamcp.dev/docs/guides/access-control) — restrict what agents can do
-- [Multi-Cluster Setup](https://kafkamcp.dev/docs/guides/multi-cluster) — connect to multiple Kafka clusters
-- [API Reference](https://kafkamcp.dev/docs/api-reference/tools) — all tools documented
+- [Access Control Guide](https://josedab.github.io/kafkamcp/docs/guides/access-control) — restrict what agents can do
+- [Multi-Cluster Setup](https://josedab.github.io/kafkamcp/docs/guides/multi-cluster) — connect to multiple Kafka clusters
+- [API Reference](https://josedab.github.io/kafkamcp/docs/api-reference/tools) — full tool catalog
 
 ---
 
-*KafkaMCP is open source under the Apache 2.0 license. [GitHub](https://github.com/kafkamcp/kafkamcp) · [Docs](https://kafkamcp.dev) · [Discord](https://discord.gg/kafkamcp)*
+*KafkaMCP is open source under the Apache 2.0 license. [GitHub](https://github.com/josedab/kafkamcp) · [Docs](https://josedab.github.io/kafkamcp/) · [Discussions](https://github.com/josedab/kafkamcp/discussions)*

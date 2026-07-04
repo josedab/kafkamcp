@@ -13,22 +13,30 @@ KafkaMCP implements defense-in-depth with multiple layers:
 
 ```mermaid
 flowchart LR
-    Agent -->|Identity| AuthN[Agent Identity]
-    AuthN -->|Policy Check| AuthZ[Authorization]
-    AuthZ -->|Budget Check| RL[Rate Limiting]
+    Agent -->|Credential| AuthN[Agent Identity\nstatic / OIDC / mTLS]
+    AuthN -->|Policy Check| AuthZ[Authorization\ndefault-deny]
+    AuthZ -->|Approval Gate| AP[Signed Approval / Decision\nGuarded packs]
+    AP -->|Budget Check| RL[Rate Limiting]
     RL -->|Execute| Kafka[Kafka Operation]
-    Kafka -->|Record| Audit[Audit Log]
+    Kafka -->|Record| Audit[Audit Log\nsigned chain]
 ```
 
 ### Agent Identity
 
-KafkaMCP resolves agent identity from HTTP headers in this order:
+KafkaMCP supports four identity providers, selected by `policies.identity.provider`:
 
-1. `X-Agent-ID` header
-2. `X-Client-ID` header
-3. Falls back to `anonymous`
+| Provider | Credential | Suitable for |
+|----------|-----------|--------------|
+| `none` (default) | `X-Agent-ID` / `X-Client-ID` header | stdio transport, local dev |
+| `static` | `Authorization: Bearer <token>` against an inline token table | Simple multi-agent deployments |
+| `oidc` | JWT bearer token verified against an OIDC issuer's JWKS | Enterprise / SSO environments |
+| `mtls` | TLS client certificate (SPIFFE URI SAN → URI SAN → Subject CN) | Service-mesh / zero-trust deployments |
 
-For `stdio` transport (local agents like Claude Desktop), the agent typically runs as `anonymous` unless the MCP client sends identity headers.
+**Network transport enforcement:** `sse` and `streamable-http` transports refuse to start without a cryptographic identity provider (`static`, `oidc`, or `mtls`) and `policies.default_deny: true`. The `X-Agent-ID` header fallback is rejected by default for all cryptographic providers — an attacker cannot bypass verification by omitting their credential. Use `server.dangerously_allow_unauthenticated_network: true` only for local development.
+
+Static provider tokens are converted to SHA-256 fingerprints at startup; raw
+tokens are not retained, and verification scans all configured fingerprints
+with constant-time comparison.
 
 ### Authorization (Policy Engine)
 
@@ -38,6 +46,29 @@ The YAML policy engine provides fine-grained access control:
 - **Glob pattern matching** — topic rules use patterns like `orders.*`, `*.dlq`, `payments-*`
 - **Per-resource permissions** — topics (`read`, `write`, `create`, `delete`, `admin`), consumer groups (`describe`, `reset`), schemas (`read`)
 - **Auth-filtered results** — list operations only return resources the agent is authorized to see
+
+### Approval Grants and Decisions (guarded packs)
+
+`ops-write` and `governance` are **rejected on stdio**. The config validator
+enforces a complete secure posture at startup:
+
+| Requirement | Value |
+|-------------|-------|
+| Transport | `sse` or `streamable-http` (not stdio) |
+| Identity provider | `static`, `oidc`, or `mtls` |
+| Header fallback | disabled (`allow_header_fallback: false`) |
+| Authorization | `default_deny: true` |
+| Signing key | `KAFKAMCP_APPROVAL_SIGNING_KEY` ≥32 bytes |
+| Self-approval | `false` (two-person rule, default) |
+
+Every mutating or destructive action then requires a short-lived, single-use
+approval grant before it executes:
+
+1. **Request** — agent calls `kafka_approval` with `action=request`, specifying the target tool, cluster, resource, and arguments. KafkaMCP server-digests the normalized arguments into `args_digest`.
+2. **Policy simulation** — call `kafka_governance_decision` with `action=simulate` to preview whether the grant would be authorized, including blast-radius and recovery guidance, without side effects.
+3. **Approve** — a different identity (two-person rule; `allow_self_approval: false` by default) calls `kafka_approval` with `action=approve`.
+4. **Use** — the original agent uses the approval token when calling the mutating tool. The token is consumed on first use.
+5. **Audit** — every transition (request → approve → use / expire / revoke) is signed with `KAFKAMCP_APPROVAL_SIGNING_KEY` and recorded. Use `action=verify` to validate a grant's decision chain and `action=export` to export records.
 
 ### Rate Limiting
 
@@ -65,11 +96,15 @@ Audit entries are kept in memory and optionally written to a JSONL file for dura
 
 ### TLS
 
-KafkaMCP enforces **TLS 1.3** as the minimum version for all TLS connections:
+KafkaMCP applies transport-specific TLS minimums:
 
-- Kafka broker connections (`security_protocol: SSL` or `SASL_SSL`)
-- Kafka Connect REST API calls
-- HTTPS server (when `tls_cert` and `tls_key` are configured)
+- The inbound MCP HTTPS server requires **TLS 1.3**.
+- Kafka broker connections (`security_protocol: SSL` or `SASL_SSL`) default to
+  **TLS 1.2** for provider compatibility and can be raised to TLS 1.3 with
+  `tls_min_version`.
+- Kafka Connect REST calls follow the same TLS 1.2 default and support an
+  explicit TLS 1.3 minimum through `connect_tls.min_version`.
+- Schema Registry HTTPS uses Go's secure TLS defaults.
 
 ### SASL Authentication
 
@@ -149,20 +184,26 @@ When running with SSE or streamable-http transport, KafkaMCP applies security he
 - `X-Frame-Options: DENY`
 - `Strict-Transport-Security` (when TLS is enabled)
 
-The metrics endpoint binds to `127.0.0.1` only, preventing external access to operational metrics.
+The metrics endpoint defaults to `127.0.0.1`. Container deployments may set
+`server.metrics_host: 0.0.0.0`, but must restrict the metrics port with
+firewall or NetworkPolicy rules.
 
 ## Best Practices
 
 ### Production Checklist
 
-1. **Enable default-deny** — set `policies.default_deny: true`
-2. **Define agent policies** — give each agent only the permissions it needs
-3. **Enable audit logging** — set `audit.enabled: true` with a `log_file` for durability
-4. **Use TLS everywhere** — configure `security_protocol: SASL_SSL` for Kafka, HTTPS for Schema Registry
-5. **Set rate limits** — configure `requests_per_minute` for every agent
-6. **Enable data masking** — mask PII fields before they reach agents
-7. **Use environment variables** — keep credentials out of config files with `${VAR}` expansion
-8. **Review audit logs** — regularly inspect what agents are doing
+1. **Use a cryptographic identity provider** — configure `policies.identity.provider: static`, `oidc`, or `mtls` (required for network transports)
+2. **Enable default-deny** — set `policies.default_deny: true`
+3. **Define agent policies** — give each agent only the permissions it needs
+4. **Set `KAFKAMCP_APPROVAL_SIGNING_KEY`** — required (≥32 bytes) for `ops-write` or `governance`; previous keys can be configured during rotation
+5. **Keep guarded deployments single-active** — `ops-write`, `governance`, and SQLite must not run on multiple active replicas
+6. **Keep `allow_self_approval: false`** — enforce two-person approval for write operations (default)
+7. **Enable audit logging** — set `audit.enabled: true` with a `log_file` for durability
+8. **Use TLS everywhere** — configure `security_protocol: SASL_SSL` for Kafka, HTTPS for Schema Registry
+9. **Set rate limits** — configure `requests_per_minute` for every agent
+10. **Enable data masking** — mask PII fields before they reach agents
+11. **Use environment variables** — keep credentials out of config files with `${VAR}` expansion
+12. **Review audit logs** — regularly inspect what agents are doing
 
 ### Least Privilege Example
 
@@ -191,8 +232,8 @@ This agent can only read DLQ and monitoring topics, describe consumer groups, an
 If you discover a security vulnerability, please report it responsibly:
 
 1. **Do not** open a public GitHub issue
-2. Email the maintainers or use the [GitHub Security Advisories](https://github.com/kafkamcp/kafkamcp/security/advisories) feature
+2. Use [**GitHub Private Vulnerability Reporting**](https://github.com/josedab/kafkamcp/security/advisories/new) — this is the only supported reporting channel
 3. Include steps to reproduce and potential impact
 4. Allow reasonable time for a fix before public disclosure
 
-See [SECURITY.md](https://github.com/kafkamcp/kafkamcp/blob/main/SECURITY.md) for full details.
+See [SECURITY.md](https://github.com/josedab/kafkamcp/blob/main/SECURITY.md) for full details.

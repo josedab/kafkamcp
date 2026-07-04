@@ -14,17 +14,20 @@ KafkaMCP provides Python SDKs for two popular AI agent frameworks: **LangChain**
 | [`kafkamcp-langchain`](langchain-sdk.md) | LangChain | Single-agent workflows, chains, and OpenAI function-calling agents |
 | [`kafkamcp-crewai`](crewai-sdk.md) | CrewAI | Multi-agent crews with role-based collaboration |
 
-Both SDKs share the same MCP transport layer and connect to the same KafkaMCP server.
+Both SDKs invoke the same KafkaMCP tool contracts. LangChain uses a
+caller-supplied MCP client; CrewAI includes a synchronous stdio adapter.
 
 ## Quick Install
 
 ```bash
 # LangChain integration
-pip install kafkamcp-langchain
+pip install "git+https://github.com/josedab/kafkamcp.git#subdirectory=sdk/python/kafkamcp_langchain"
 
 # CrewAI integration
-pip install kafkamcp-crewai
+pip install "git+https://github.com/josedab/kafkamcp.git#subdirectory=sdk/python/kafkamcp_crewai"
 ```
+
+The Python integrations are not yet published to PyPI.
 
 ## Prerequisites
 

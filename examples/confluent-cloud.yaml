@@ -1,5 +1,5 @@
 # KafkaMCP with Confluent Cloud
-# See https://kafkamcp.dev/docs/guides/multi-cluster for full reference.
+# See https://josedab.github.io/kafkamcp/docs/guides/multi-cluster for full reference.
 
 server:
   transport: stdio          # Use "stdio" for local/Claude Desktop, "sse" or "streamable-http" for remote

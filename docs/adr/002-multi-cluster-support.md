@@ -42,7 +42,7 @@ Each cluster has independent configuration for:
 - Agents can query across clusters in a single conversation ("compare topic configs between prod and staging").
 - Single deployment simplifies operations — one instance, one config file.
 - Per-cluster Schema Registry and Connect clients are isolated.
-- Config drift detection (`kafka_config_drift`) and migration planning (`kafka_migration_plan`) work across clusters natively.
+- Config drift detection and cross-cluster inspection work across clusters natively.
 
 ### Negative
 

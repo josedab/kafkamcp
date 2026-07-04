@@ -35,7 +35,7 @@ docker run -d --name kafka -p 9092:9092 \
 ## Minute 1: Install KafkaMCP
 
 ```bash
-go install github.com/kafkamcp/kafkamcp/cmd/kafkamcp@latest
+go install github.com/josedab/kafkamcp/cmd/kafkamcp@latest
 ```
 
 Verify it's working:
@@ -193,13 +193,17 @@ The full tool set available to your agent:
 | Category | Tools |
 |----------|-------|
 | **Discovery** | `kafka_list_topics`, `kafka_describe_topic`, `kafka_list_schemas`, `kafka_get_schema`, `kafka_list_consumer_groups`, `kafka_describe_consumer_group` |
-| **Data Access** | `kafka_consume`, `kafka_produce`, `kafka_subscribe`, `kafka_search` |
+| **Data Access** | `kafka_consume`, `kafka_produce`, `kafka_search` |
 | **Operations** | `kafka_create_topic`, `kafka_alter_topic`, `kafka_delete_topic`, `kafka_reset_offsets` |
-| **Analysis** | `kafka_analyze_dlq`, `kafka_aggregate`, `kafka_join`, `kafka_query` |
-| **Schema** | `kafka_check_schema_compatibility`, `kafka_suggest_schema_evolution` |
-| **Connect** | `kafka_list_connectors`, `kafka_describe_connector` |
+| **Analysis** | `kafka_analyze_dlq`, `kafka_diagnose_lag`, `kafka_health`, `kafka_metrics` |
+| **Schema** | `kafka_check_schema_compatibility` |
+| **Connect** | `kafka_create_connector`, `kafka_update_connector`, `kafka_delete_connector`, `kafka_restart_connector` |
+| **Governance** | `kafka_approval`, `kafka_governance_decision`, `kafka_acl_manage`, `kafka_policy_evaluate`, `kafka_policy_simulate` |
 
-22 tools. All available to Claude instantly.
+The default `core-read` pack exposes 15 read-only tools. Write and management
+tools require the `ops-write` and/or `governance` pack, cryptographic identity,
+default-deny policy, and approval grants. The generated
+[`tool-reference.md`](../docs/tool-reference.md) is the authoritative list.
 
 ## Adding access control
 
@@ -244,11 +248,11 @@ Now Claude can read from `orders.*` topics and read/write `test-*` topics, but n
 
 ## Next steps
 
-- [Access Control Guide](https://kafkamcp.dev/docs/guides/access-control) — restrict what agents can do
-- [Multi-Cluster Setup](https://kafkamcp.dev/docs/guides/multi-cluster) — connect to multiple Kafka clusters
-- [API Reference](https://kafkamcp.dev/docs/api-reference/tools) — all 22 tools documented
-- [Docker Compose Guide](https://kafkamcp.dev/docs/guides/docker-compose) — full local environment with Kafka + Schema Registry + KafkaMCP
+- [Access Control Guide](https://josedab.github.io/kafkamcp/docs/guides/access-control) — restrict what agents can do
+- [Multi-Cluster Setup](https://josedab.github.io/kafkamcp/docs/guides/multi-cluster) — connect to multiple Kafka clusters
+- [API Reference](https://josedab.github.io/kafkamcp/docs/api-reference/tools) — full tool catalog
+- [Docker Compose Guide](https://josedab.github.io/kafkamcp/docs/guides/docker-compose) — full local environment with Kafka + Schema Registry + KafkaMCP
 
 ---
 
-*KafkaMCP is open source under the Apache 2.0 license. [GitHub](https://github.com/kafkamcp/kafkamcp) · [Docs](https://kafkamcp.dev) · [Discord](https://discord.gg/kafkamcp)*
+*KafkaMCP is open source under the Apache 2.0 license. [GitHub](https://github.com/josedab/kafkamcp) · [Docs](https://josedab.github.io/kafkamcp/) · [Discussions](https://github.com/josedab/kafkamcp/discussions)*

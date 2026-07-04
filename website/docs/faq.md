@@ -13,14 +13,12 @@ MCP (Model Context Protocol) is an open standard that lets AI agents discover an
 
 ### What Kafka versions does KafkaMCP support?
 
-KafkaMCP uses the [franz-go](https://github.com/twmb/franz-go) client library, which supports the Kafka protocol from 0.8+ through the latest versions. It works with:
-
-- Apache Kafka 2.x, 3.x
-- Confluent Platform
-- Amazon MSK
-- Azure Event Hubs (Kafka protocol)
-- Redpanda
-- Aiven for Apache Kafka
+KafkaMCP uses [franz-go](https://github.com/twmb/franz-go) and negotiates the
+Kafka protocol with the broker. The repository includes a reusable compatibility
+harness for Apache Kafka and Redpanda, plus configuration guidance (not
+certification) for Amazon MSK and Confluent Cloud. See the
+[compatibility contract](https://github.com/josedab/kafkamcp/blob/main/docs/COMPATIBILITY.md)
+for the current verified matrix.
 
 ### Does KafkaMCP require a JVM?
 
@@ -28,32 +26,36 @@ No. KafkaMCP is written in pure Go and compiles to a single static binary. No JV
 
 ### How many tools does KafkaMCP expose?
 
-KafkaMCP exposes **251 MCP tools** and **18 MCP resources** as of v0.1.0. These range from basic consume/produce to advanced features like windowed aggregations, natural language queries, anomaly detection, and schema evolution workflows.
+KafkaMCP exposes **29 supported tools** across explicit packs and **nine stable
+read-only resources**. The default `core-read` pack contains only 15 tools.
+Archived feature experiments outside the supported packs are not registered or
+callable.
 
 ### Is KafkaMCP production-ready?
 
-KafkaMCP v0.1.0 is suitable for production use with appropriate security configuration (TLS, access control, rate limiting, audit logging). See the [Security](./security) page for the production checklist.
+KafkaMCP is currently pre-release. The repository includes production-oriented
+security controls, but no GA/LTS claim is made until the objective and external
+gates in the [roadmap](https://github.com/josedab/kafkamcp/blob/main/docs/ROADMAP.md)
+are met.
 
 ## Installation
 
 ### Can I run KafkaMCP without Go installed?
 
-Yes. You can use:
-
-- **Pre-built binaries** from [GitHub Releases](https://github.com/kafkamcp/kafkamcp/releases) (Linux, macOS, Windows on amd64/arm64)
-- **Docker** — `docker run ghcr.io/kafkamcp/kafkamcp:latest`
+Not before the first tagged release. Today, build/install with Go. Signed
+pre-built binaries and GHCR images will be published by the release workflow.
 
 ### How do I update KafkaMCP?
 
 ```bash
 # Go install (always fetches latest)
-go install github.com/kafkamcp/kafkamcp/cmd/kafkamcp@latest
+go install github.com/josedab/kafkamcp/cmd/kafkamcp@latest
 
-# Docker
-docker pull ghcr.io/kafkamcp/kafkamcp:latest
+# Docker (after the first tagged release)
+docker pull ghcr.io/josedab/kafkamcp:VERSION
 
-# Binary — download the latest release
-curl -sSL https://github.com/kafkamcp/kafkamcp/releases/latest/download/kafkamcp_$(uname -s)_$(uname -m).tar.gz | tar xz
+# Binary (after the first tagged release)
+curl -sSL https://github.com/josedab/kafkamcp/releases/latest/download/kafkamcp_$(uname -s)_$(uname -m).tar.gz | tar xz
 ```
 
 ## Configuration
@@ -116,22 +118,29 @@ Any MCP-compatible agent, including:
 - **CrewAI** agents (via the Python SDK)
 - **AutoGen** agents
 - **Custom agents** using the Go, TypeScript, or Python SDKs
-- **VS Code** and **Cursor** via MCP extensions
-- **IntelliJ/JetBrains** via the plugin
+- **Cursor** and other MCP clients via `sdk/cursor/mcp.json`
 
 ### Can I use KafkaMCP from a non-MCP application?
 
-Yes. Use the `openapi-spec` tool (`kafka_openapi_spec`) to generate an OpenAPI 3.0 specification, then call KafkaMCP over HTTP like any REST API. You can also use the SDKs directly.
+KafkaMCP exposes MCP, not a parallel REST/OpenAPI facade. Use an MCP transport
+directly or one of the SDK wrappers with a real MCP `Transport`
+implementation.
 
 ## Operations
 
 ### Where are Prometheus metrics exposed?
 
-Metrics are served at `/metrics` on `server.port + 1` (default: `3101`), bound to `127.0.0.1`. Metrics are only available when using HTTP transports (`sse` or `streamable-http`).
+Metrics are served at `/metrics` on `server.metrics_port` (default:
+`server.port + 1`, normally `3101`) and bind to `server.metrics_host` (default
+`127.0.0.1`). Containers and pods must set `metrics_host: 0.0.0.0` and protect
+the port with firewall/NetworkPolicy rules. `/livez` is process liveness,
+`/healthz` checks Kafka, and `/ready` checks Kafka plus persistence.
 
 ### How do I monitor KafkaMCP in Grafana?
 
-Import the ready-made dashboard from `deploy/grafana/kafkamcp-overview.json`. It includes 23 panels covering tool call rates, latency percentiles, message throughput, schema cache performance, auth/rate-limit denials, and active connections. See the [Monitoring Guide](./guides/monitoring).
+Build a dashboard from the PromQL examples in the
+[Monitoring Guide](./guides/monitoring). KafkaMCP exposes standard Prometheus
+metrics but does not bundle a versioned Grafana dashboard.
 
 ### How do I debug connection issues?
 
@@ -144,6 +153,5 @@ See [Troubleshooting](./troubleshooting) for common issues and fixes.
 
 ## Still have questions?
 
-- [GitHub Discussions](https://github.com/kafkamcp/kafkamcp/discussions) — ask the community
-- [Discord](https://discord.gg/kafkamcp) — real-time chat
+- [GitHub Discussions](https://github.com/josedab/kafkamcp/discussions) — ask the community
 - [Troubleshooting](./troubleshooting) — common issues and fixes

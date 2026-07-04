@@ -1,0 +1,14 @@
+server:
+  transport: stdio
+  log_level: info
+  tool_packs:
+    - core-read
+  dangerously_allow_unauthenticated_network: false
+
+clusters:
+  - name: incident-demo
+    bootstrap_servers: "localhost:9092"
+    security_protocol: PLAINTEXT
+    schema_registry:
+      url: "http://localhost:8081"
+    default: true

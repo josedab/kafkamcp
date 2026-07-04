@@ -108,10 +108,13 @@ docker compose up --build
 - Schema Registry on `http://localhost:8081`
 - KafkaMCP SSE endpoint on `http://localhost:3100`
 - Prometheus metrics on `http://localhost:3101/metrics`
-- Health check on `http://localhost:3101/healthz`
+- Process liveness on `http://localhost:3101/livez`
+- Full readiness on `http://localhost:3101/ready`
 
 :::info
-KafkaMCP exposes metrics on `port + 1` for HTTP transports. In this example, the server listens on `3100`, so metrics are on `3101`.
+This example explicitly binds `metrics_host: 0.0.0.0` so Docker can publish
+port `3101`. Direct binary deployments default the metrics listener to
+`127.0.0.1`.
 :::
 
 ## Test the stack
@@ -119,13 +122,13 @@ KafkaMCP exposes metrics on `port + 1` for HTTP transports. In this example, the
 In another terminal, verify KafkaMCP is up:
 
 ```bash
-curl -s http://localhost:3101/healthz
+curl -s http://localhost:3101/ready
 ```
 
 You should get:
 
 ```text
-ok
+ready
 ```
 
 ## Connect an MCP client

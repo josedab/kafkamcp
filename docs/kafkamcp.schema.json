@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://github.com/kafkamcp/kafkamcp/docs/kafkamcp.schema.json",
+  "$id": "https://github.com/josedab/kafkamcp/docs/kafkamcp.schema.json",
   "title": "KafkaMCP Configuration",
   "description": "Configuration schema for KafkaMCP — an MCP server for Apache Kafka.",
   "type": "object",
@@ -11,25 +11,50 @@
       "properties": {
         "transport": {
           "type": "string",
-          "enum": ["stdio", "sse", "streamable-http"],
+          "x-stability": "stable",
+          "enum": [
+            "stdio",
+            "sse",
+            "streamable-http"
+          ],
           "default": "stdio",
           "description": "Protocol used by the MCP server."
         },
         "host": {
           "type": "string",
+          "x-stability": "stable",
           "default": "0.0.0.0",
           "description": "Bind address for SSE/HTTP transports."
         },
         "port": {
           "type": "integer",
+          "x-stability": "stable",
           "default": 3100,
           "minimum": 1,
           "maximum": 65535,
           "description": "Listen port for SSE/HTTP transports."
         },
+        "metrics_host": {
+          "type": "string",
+          "default": "127.0.0.1",
+          "description": "Bind address for Prometheus metrics and health endpoints. Use 0.0.0.0 only behind network controls such as the Helm chart NetworkPolicy."
+        },
+        "metrics_port": {
+          "type": "integer",
+          "default": 3101,
+          "minimum": 1,
+          "maximum": 65535,
+          "description": "Listen port for Prometheus metrics and health endpoints. Defaults to server.port + 1."
+        },
         "log_level": {
           "type": "string",
-          "enum": ["debug", "info", "warn", "error"],
+          "x-stability": "stable",
+          "enum": [
+            "debug",
+            "info",
+            "warn",
+            "error"
+          ],
           "default": "info",
           "description": "Log verbosity level."
         },
@@ -47,16 +72,46 @@
           "type": "string",
           "description": "Path to TLS private key file."
         },
-        "dashboard": {
-          "type": "object",
-          "description": "Dashboard web UI settings.",
-          "properties": {
-            "api_key": {
-              "type": "string",
-              "description": "API key required for dashboard access. When set, all dashboard requests must include Authorization: Bearer <key> or X-API-Key: <key>."
-            }
+        "tool_packs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "core-read",
+              "ops-write",
+              "governance",
+              "essential",
+              "ops"
+            ]
           },
-          "additionalProperties": false
+          "default": [
+            "core-read"
+          ],
+          "description": "Curated tool surface. 'core-read' is the default <=15 read-only surface. The guarded 'ops-write' and 'governance' packs require sse or streamable-http, cryptographic identity, default_deny=true, allow_header_fallback=false, and KAFKAMCP_APPROVAL_SIGNING_KEY >=32 bytes; stdio is core-read only. 'essential' and 'ops' are deprecated aliases. The former 'analytics', 'streaming', and 'all' values are rejected."
+        },
+        "persistence": {
+          "type": "object",
+          "description": "Durable storage backend for stateful engines and approval grants.",
+          "properties": {
+            "backend": {
+              "type": "string",
+              "enum": [
+                "inmem",
+                "sqlite"
+              ],
+              "default": "inmem",
+              "description": "Persistence driver. 'inmem' loses state on restart; 'sqlite' persists supported engines."
+            },
+            "path": {
+              "type": "string",
+              "description": "On-disk path for the sqlite backend."
+            }
+          }
+        },
+        "dangerously_allow_unauthenticated_network": {
+          "type": "boolean",
+          "default": false,
+          "description": "LOCAL DEVELOPMENT ONLY. Disables the fail-closed guard that prevents network transports (sse, streamable-http) from starting without a cryptographic identity provider and default-deny. Never enable in production. Can also be set via KAFKAMCP_UNSAFE_ALLOW_UNAUTHENTICATED_NETWORK=true."
         }
       },
       "additionalProperties": false
@@ -67,38 +122,66 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["name", "bootstrap_servers"],
+        "required": [
+          "name",
+          "bootstrap_servers"
+        ],
         "properties": {
           "name": {
             "type": "string",
+            "x-stability": "stable",
             "description": "Unique cluster identifier."
           },
           "bootstrap_servers": {
             "type": "string",
+            "x-stability": "stable",
             "description": "Comma-separated broker addresses (e.g., 'localhost:9092')."
           },
           "security_protocol": {
             "type": "string",
-            "enum": ["PLAINTEXT", "SSL", "SASL_SSL", "SASL_PLAINTEXT"],
+            "x-stability": "stable",
+            "enum": [
+              "PLAINTEXT",
+              "SSL",
+              "SASL_SSL",
+              "SASL_PLAINTEXT"
+            ],
             "default": "PLAINTEXT",
             "description": "Kafka security protocol."
           },
           "sasl_mechanism": {
             "type": "string",
-            "enum": ["PLAIN", "SCRAM-SHA-256", "SCRAM-SHA-512"],
+            "x-stability": "stable",
+            "enum": [
+              "PLAIN",
+              "SCRAM-SHA-256",
+              "SCRAM-SHA-512"
+            ],
             "description": "SASL authentication mechanism."
           },
           "sasl_username": {
             "type": "string",
+            "x-stability": "stable",
             "description": "SASL username (required when sasl_mechanism is set)."
           },
           "sasl_password": {
             "type": "string",
+            "x-stability": "stable",
             "description": "SASL password (required when sasl_mechanism is set)."
           },
           "ssl_ca_location": {
             "type": "string",
+            "x-stability": "stable",
             "description": "Path to CA certificate bundle for SSL connections."
+          },
+          "tls_min_version": {
+            "type": "string",
+            "enum": [
+              "1.2",
+              "1.3"
+            ],
+            "default": "1.2",
+            "description": "Minimum TLS version for Kafka broker connections. TLS 1.2 is the compatibility default; use 1.3 when every broker and proxy supports it."
           },
           "schema_registry": {
             "type": "object",
@@ -106,6 +189,7 @@
             "properties": {
               "url": {
                 "type": "string",
+                "x-stability": "stable",
                 "format": "uri",
                 "description": "Schema Registry URL."
               },
@@ -144,12 +228,21 @@
                 "type": "boolean",
                 "default": false,
                 "description": "Skip TLS verification (requires KAFKAMCP_ALLOW_INSECURE=true)."
+              },
+              "min_version": {
+                "type": "string",
+                "enum": [
+                  "1.2",
+                  "1.3"
+                ],
+                "description": "Minimum Kafka Connect TLS version. Defaults to the enclosing cluster tls_min_version."
               }
             },
             "additionalProperties": false
           },
           "default": {
             "type": "boolean",
+            "x-stability": "stable",
             "default": false,
             "description": "Mark this cluster as the default."
           }
@@ -182,15 +275,191 @@
       "properties": {
         "default_deny": {
           "type": "boolean",
+          "x-stability": "stable",
           "default": false,
           "description": "When true, deny access unless explicitly allowed."
+        },
+        "approval": {
+          "type": "object",
+          "description": "Short-lived, single-use approval grants and governance decision records. When ops-write or governance is enabled, approval enforcement cannot be disabled and KAFKAMCP_APPROVAL_SIGNING_KEY (>=32 bytes) is required.",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Toggle approval enforcement. When unset, follows policies.default_deny. Cannot be false when ops-write is in server.tool_packs."
+            },
+            "ttl_seconds": {
+              "type": "integer",
+              "default": 300,
+              "description": "Default grant lifetime in seconds (capped by max_ttl_seconds)."
+            },
+            "max_ttl_seconds": {
+              "type": "integer",
+              "default": 3600,
+              "description": "Hard cap on grant lifetime in seconds."
+            },
+            "single_use": {
+              "type": "boolean",
+              "default": true,
+              "description": "Consume a grant on first use."
+            },
+            "allow_self_approval": {
+              "type": "boolean",
+              "default": false,
+              "description": "Allow the requesting identity to approve its own grant. Defaults to false (two-person rule). Override to true only in single-operator or development scenarios."
+            },
+            "signing_key_env": {
+              "type": "string",
+              "default": "KAFKAMCP_APPROVAL_SIGNING_KEY",
+              "description": "Name of the environment variable holding the HMAC-SHA-256 key (>= 32 bytes) used to sign tamper-evident approval decision and grant-state records. The secret is never stored in this config file. Defaults to KAFKAMCP_APPROVAL_SIGNING_KEY. Required when ops-write or governance is enabled."
+            },
+            "previous_signing_key_envs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": [],
+              "description": "Environment variable names containing previous >=32-byte signing keys accepted while rotating the current key. In-flight grants signed only by an old key must be requested again."
+            },
+            "terminal_retention_seconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2592000,
+              "default": 604800,
+              "description": "Retention for used, revoked, expired, or abandoned grants before pruning. Zero uses seven days."
+            }
+          }
+        },
+        "identity": {
+          "type": "object",
+          "description": "Cryptographic agent identity verification. The default provider ('none') trusts the X-Agent-ID header. Network transports (sse, streamable-http) require a cryptographic provider (static/oidc/mtls) and reject header fallback unless dangerously_allow_unauthenticated_network is set.",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": [
+                "none",
+                "static",
+                "oidc",
+                "mtls"
+              ],
+              "default": "none",
+              "description": "Identity verification method. 'none': trust X-Agent-ID header (stdio only). 'static': verify Authorization bearer token against an inline token table. 'oidc': verify JWT bearer token against an OIDC issuer's JWKS. 'mtls': derive identity from verified TLS client certificate."
+            },
+            "allow_header_fallback": {
+              "type": "boolean",
+              "description": "Allow falling back to X-Agent-ID / X-Client-ID headers when provider verification fails. Defaults to false for all cryptographic providers (static/oidc/mtls) and true for 'none'. Network transports enforce this to be false. Set explicitly only during a controlled migration window."
+            },
+            "static": {
+              "type": "object",
+              "description": "Inline shared-secret token table (provider=static).",
+              "properties": {
+                "tokens": {
+                  "type": "array",
+                  "description": "List of bearer-token-to-agent-ID mappings.",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "token",
+                      "agent_id"
+                    ],
+                    "properties": {
+                      "token": {
+                        "type": "string",
+                        "description": "Shared-secret bearer token (supports ${ENV_VAR} expansion; never hard-code in config)."
+                      },
+                      "agent_id": {
+                        "type": "string",
+                        "description": "Agent identifier resolved from this token."
+                      },
+                      "groups": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "description": "Optional group labels surfaced in audit logs."
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "additionalProperties": false
+            },
+            "oidc": {
+              "type": "object",
+              "description": "OIDC bearer-token verifier configuration (provider=oidc).",
+              "properties": {
+                "issuer_url": {
+                  "type": "string",
+                  "description": "OIDC issuer URL (used as discovery base for /.well-known/openid-configuration)."
+                },
+                "client_id": {
+                  "type": "string",
+                  "description": "Expected token audience (aud claim)."
+                },
+                "agent_id_claim": {
+                  "type": "string",
+                  "default": "sub",
+                  "description": "JWT claim used as the agent ID. Defaults to 'sub'."
+                },
+                "groups_claim": {
+                  "type": "string",
+                  "default": "groups",
+                  "description": "JWT claim containing the agent's groups. Defaults to 'groups'."
+                },
+                "email_claim": {
+                  "type": "string",
+                  "default": "email",
+                  "description": "JWT claim containing the agent's email. Defaults to 'email'."
+                }
+              },
+              "additionalProperties": false
+            },
+            "mtls": {
+              "type": "object",
+              "description": "mTLS client certificate identity provider (provider=mtls). Identity extraction order: SPIFFE URI SAN → URI SAN → Subject CN.",
+              "properties": {
+                "ca_bundle": {
+                  "type": "string",
+                  "description": "Path to PEM file of CAs trusted to sign client certificates. When set, the HTTP transport requires and verifies client certs against this bundle."
+                },
+                "allowed_spiffe_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Allow-list of SPIFFE IDs. When non-empty, only certs with a matching SPIFFE URI SAN are accepted."
+                },
+                "allowed_trust_domains": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Allow-list of SPIFFE trust domains (e.g. 'example.org'). Checked when allowed_spiffe_ids is empty."
+                },
+                "groups_from_ous": {
+                  "type": "boolean",
+                  "default": false,
+                  "description": "Map Subject OrganizationalUnit values into the identity Groups field."
+                },
+                "allow_cn_fallback": {
+                  "type": "boolean",
+                  "default": true,
+                  "description": "Use Subject CN as agent ID when the cert has no URI SANs."
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
         },
         "agents": {
           "type": "array",
           "description": "Per-agent permission definitions.",
           "items": {
             "type": "object",
-            "required": ["id"],
+            "required": [
+              "id"
+            ],
             "properties": {
               "id": {
                 "type": "string",
@@ -198,7 +467,11 @@
               },
               "role": {
                 "type": "string",
-                "enum": ["reader", "writer", "admin"],
+                "enum": [
+                  "reader",
+                  "writer",
+                  "admin"
+                ],
                 "description": "Agent role shorthand."
               },
               "topics": {
@@ -215,7 +488,13 @@
                       "type": "array",
                       "items": {
                         "type": "string",
-                        "enum": ["read", "write", "create", "delete", "admin"]
+                        "enum": [
+                          "read",
+                          "write",
+                          "create",
+                          "delete",
+                          "admin"
+                        ]
                       },
                       "description": "Allowed operations on matching topics."
                     }
@@ -231,7 +510,10 @@
                     "type": "array",
                     "items": {
                       "type": "string",
-                      "enum": ["describe", "reset"]
+                      "enum": [
+                        "describe",
+                        "reset"
+                      ]
                     },
                     "description": "Allowed consumer group operations."
                   }
@@ -246,7 +528,10 @@
                     "type": "array",
                     "items": {
                       "type": "string",
-                      "enum": ["read", "write"]
+                      "enum": [
+                        "read",
+                        "write"
+                      ]
                     },
                     "description": "Allowed schema operations."
                   }
@@ -278,6 +563,7 @@
       "properties": {
         "enabled": {
           "type": "boolean",
+          "x-stability": "stable",
           "default": false,
           "description": "Enable structured audit logging."
         },
@@ -289,6 +575,7 @@
         },
         "log_file": {
           "type": "string",
+          "x-stability": "stable",
           "description": "Path to audit log file (JSONL format)."
         }
       },
@@ -303,12 +590,20 @@
           "default": false,
           "description": "Enable data masking."
         },
+        "key_env": {
+          "type": "string",
+          "default": "KAFKAMCP_MASKING_KEY",
+          "description": "Name of the environment variable holding the HMAC-SHA-256 key used by the 'hash' and 'tokenize' actions. The secret is never stored in this config file. If unset, the hash/tokenize actions fail closed (fully redact). Key must be at least 16 bytes."
+        },
         "rules": {
           "type": "array",
           "description": "Masking rules applied to message content.",
           "items": {
             "type": "object",
-            "required": ["name", "type"],
+            "required": [
+              "name",
+              "type"
+            ],
             "properties": {
               "name": {
                 "type": "string",
@@ -316,7 +611,14 @@
               },
               "type": {
                 "type": "string",
-                "enum": ["email", "ssn", "credit_card", "phone", "regex", "ner"],
+                "enum": [
+                  "email",
+                  "ssn",
+                  "credit_card",
+                  "phone",
+                  "regex",
+                  "ner"
+                ],
                 "description": "Built-in masking rule type."
               },
               "field_path": {
@@ -334,7 +636,9 @@
               },
               "agents": {
                 "type": "array",
-                "items": { "type": "string" },
+                "items": {
+                  "type": "string"
+                },
                 "description": "Apply only to these agents (empty = all)."
               }
             },
@@ -369,15 +673,22 @@
         },
         "sample_rate": {
           "type": "number",
-          "default": 1.0,
-          "minimum": 0.0,
-          "maximum": 1.0,
+          "default": 1,
+          "minimum": 0,
+          "maximum": 1,
           "description": "Trace sampling rate (0.0 = none, 1.0 = all)."
+        },
+        "activation_metrics": {
+          "type": "boolean",
+          "default": false,
+          "description": "Opt into extra, privacy-preserving LOCAL activation metrics (setup/validation, active verified agents, tool-pack use, denied unsafe calls, approval outcomes, core workflow completions). Exposed on the local Prometheus endpoint only — no phone-home."
         }
       },
       "additionalProperties": false
     }
   },
-  "required": ["clusters"],
+  "required": [
+    "clusters"
+  ],
   "additionalProperties": false
 }

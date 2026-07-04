@@ -4,17 +4,17 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
   title: 'KafkaMCP',
-  tagline: 'Make Kafka topics fully readable, writable, and discoverable by AI agents',
+  tagline: 'Secure, vendor-neutral Kafka operations for AI agents',
   favicon: 'img/favicon.ico',
 
   future: {
     v4: true,
   },
 
-  url: 'https://kafkamcp.dev',
-  baseUrl: '/',
+  url: 'https://josedab.github.io',
+  baseUrl: '/kafkamcp/',
 
-  organizationName: 'kafkamcp',
+  organizationName: 'josedab',
   projectName: 'kafkamcp',
 
   onBrokenLinks: 'throw',
@@ -41,7 +41,7 @@ const config: Config = {
       {
         docs: {
           sidebarPath: './sidebars.ts',
-          editUrl: 'https://github.com/kafkamcp/kafkamcp/tree/main/website/',
+          editUrl: 'https://github.com/josedab/kafkamcp/tree/main/website/',
         },
         blog: {
           showReadingTime: true,
@@ -50,7 +50,7 @@ const config: Config = {
             type: ['rss', 'atom'],
             xslt: true,
           },
-          editUrl: 'https://github.com/kafkamcp/kafkamcp/tree/main/website/',
+          editUrl: 'https://github.com/josedab/kafkamcp/tree/main/website/',
         },
         theme: {
           customCss: './src/css/custom.css',
@@ -86,7 +86,7 @@ const config: Config = {
         },
         {to: '/blog', label: 'Blog', position: 'left'},
         {
-          href: 'https://github.com/kafkamcp/kafkamcp',
+          href: 'https://github.com/josedab/kafkamcp',
           label: 'GitHub',
           position: 'right',
         },
@@ -108,9 +108,7 @@ const config: Config = {
         {
           title: 'Community',
           items: [
-            {label: 'GitHub Discussions', href: 'https://github.com/kafkamcp/kafkamcp/discussions'},
-            {label: 'Discord', href: 'https://discord.gg/kafkamcp'},
-            {label: 'Twitter / X', href: 'https://x.com/kafkamcp'},
+            {label: 'GitHub Discussions', href: 'https://github.com/josedab/kafkamcp/discussions'},
           ],
         },
         {
@@ -118,8 +116,8 @@ const config: Config = {
           items: [
             {label: 'Blog', to: '/blog'},
             {label: 'FAQ', to: '/docs/faq'},
-            {label: 'GitHub', href: 'https://github.com/kafkamcp/kafkamcp'},
-            {label: 'Releases', href: 'https://github.com/kafkamcp/kafkamcp/releases'},
+            {label: 'GitHub', href: 'https://github.com/josedab/kafkamcp'},
+            {label: 'Releases', href: 'https://github.com/josedab/kafkamcp/releases'},
           ],
         },
       ],

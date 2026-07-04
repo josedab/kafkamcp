@@ -28,7 +28,7 @@ Here's what the integration looks like for most teams today:
 4. Repeat for every additional topic
 ```
 
-I've seen this pattern at companies running anywhere from 50 to 2,000+ Kafka topics. The numbers are consistent: each integration takes 2-4 weeks of a data engineer's time, produces 3+ layers of bespoke code, and delivers an agent that can read but not write, can't discover new topics, has zero understanding of message schemas, and requires its own monitoring and on-call coverage independent of Kafka itself.
+I've seen this pattern at companies running anywhere from 50 to 2,000+ Kafka topics. Each integration takes non-trivial engineering time, produces multiple layers of bespoke code, and delivers an agent that can read but not write, can't discover new topics, has zero understanding of message schemas, and requires its own monitoring and on-call coverage independent of Kafka itself.
 
 Multiply that by the 5-15 agents a typical platform team deploys, and you're looking at a full-time headcount consumed by wrapper maintenance.
 
@@ -46,13 +46,11 @@ The obvious question: why not use Confluent's REST Proxy, or ksqlDB, or embed a 
 
 ## The gap that shouldn't exist
 
-Apache Kafka processes trillions of messages daily. Roughly 80% of Fortune 100 companies run Kafka in production. MCP has over 12,000 servers live and 97 million monthly SDK downloads as of early 2026. 80% of Fortune 500 companies now deploy AI agents over MCP.
+Apache Kafka processes trillions of messages daily and is used across a broad range of production deployments. MCP adoption is growing rapidly. These are two enormous, converging ecosystems.
 
-These are two enormous, converging ecosystems. And between them: no production-grade bridge.
+Existing open-source Kafka MCP servers provide basic produce/consume with a handful of tools. No schema awareness. No access control. No consumer group operations. No multi-cluster support. Most are starter projects suitable for experimentation, not production governance.
 
-Existing Kafka MCP servers provide basic produce/consume with 5-6 tools. No schema awareness. No access control. No consumer group operations. No multi-cluster support. They're weekend projects, not production infrastructure.
-
-The result: data engineering teams at companies operating hundreds of Kafka topics are individually building the same three-layer wrapper, with the same blind spots, at the same 2-4 week cost per integration.
+The result: data engineering teams at companies operating hundreds of Kafka topics are individually building the same three-layer wrapper, with the same blind spots.
 
 ## What a real solution looks like
 
@@ -60,15 +58,18 @@ I've been operating Kafka at scale for years — 47-broker clusters, controller 
 
 It's a single Go binary. You write 8 lines of YAML, point it at your Kafka cluster, and your agent gets MCP tools covering:
 
-- **Discovery:** list topics, describe schemas, inspect consumer groups, browse cluster topology
+- **Discovery:** list topics and schemas, inspect consumer groups, and retrieve cluster metadata
 - **Data access:** consume with offset/timestamp/latest positioning, produce with delivery confirmation, search by key/header/value/time range
 - **Operations:** create/alter/delete topics, reset consumer group offsets, analyze dead-letter queues
-- **Intelligence:** windowed aggregation, cross-topic joins, schema compatibility checks, natural language query translation
+- **Governance:** schema compatibility checks, approvals, policy evaluation, and live Kafka ACL reconciliation
 
-Every tool call goes through a middleware chain: agent ID extraction → rate limiting → per-agent authorization (default-deny policy engine) → execution → audit logging → Prometheus metrics.
+Every tool call goes through a middleware chain: verified identity → rate
+limiting → per-agent policy enforcement → execution → audit logging →
+Prometheus metrics. Guarded packs require production-safe policy and approval
+configuration.
 
 It's Apache 2.0 licensed, pure Go (no CGO, no JVM, no native deps), and runs on Linux, macOS, and Windows.
 
 ---
 
-*KafkaMCP is open source under the Apache 2.0 license. [GitHub repository](https://github.com/kafkamcp/kafkamcp) · [Documentation](https://kafkamcp.dev) · [Discord community](https://discord.gg/kafkamcp)*
+*KafkaMCP is open source under the Apache 2.0 license. [GitHub repository](https://github.com/josedab/kafkamcp) · [Documentation](https://josedab.github.io/kafkamcp/) · [Discussions](https://github.com/josedab/kafkamcp/discussions)*

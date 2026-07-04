@@ -14,6 +14,11 @@ clusters:
 
 masking:
   enabled: true
+  # HMAC-SHA-256 key for the "hash" and "tokenize" actions is read from this
+  # environment variable (never stored in this file). Generate one with e.g.:
+  #   openssl rand -hex 32
+  # If the variable is unset, hash/tokenize actions FAIL CLOSED (fully redact).
+  key_env: KAFKAMCP_MASKING_KEY
   rules:
     # Mask email addresses in any JSON field matching the path pattern
     - name: mask-emails

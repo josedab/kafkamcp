@@ -42,7 +42,8 @@ We use the [mcp-go](https://github.com/mark3labs/mcp-go) library as the Go MCP s
 
 - MCP is a relatively new protocol — ecosystem maturity is still growing.
 - Agents that don't support MCP natively require an MCP client wrapper (addressed by our SDKs).
-- MCP's request-response model requires workarounds for streaming use cases (addressed by `kafka_stream` sessions).
+- MCP's request-response model favors bounded tool calls; KafkaMCP therefore
+  exposes bounded consume and search operations rather than long-lived streams.
 
 ### Neutral
 

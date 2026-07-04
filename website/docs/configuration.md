@@ -29,22 +29,18 @@ Controls how KafkaMCP listens for MCP traffic.
 |---|---|---:|---|---|
 | `transport` | string | No | `stdio` | MCP transport. Valid values: `stdio`, `sse`, `streamable-http`. |
 | `host` | string | No | `0.0.0.0` | Bind host for HTTP transports. Ignored for `stdio`. |
-| `port` | integer | No | `3100` | Bind port for HTTP transports. Metrics listen on `port + 1`. |
+| `port` | integer | No | `3100` | Bind port for HTTP transports. |
+| `metrics_host` | string | No | `127.0.0.1` | Bind host for metrics and health endpoints. Use `0.0.0.0` only behind network controls. |
+| `metrics_port` | integer | No | `port + 1` | Bind port for metrics, `/livez`, `/healthz`, and `/ready`. |
 | `log_level` | string | No | `info` | Log level: `debug`, `info`, `warn`, `error`. |
 | `max_message_size` | integer | No | `1048576` | Max MCP message size in bytes (1 MB). Used to validate produce message payloads. |
 | `tls_cert` | string | No | — | Path to TLS certificate for HTTPS. |
 | `tls_key` | string | No | — | Path to TLS private key for HTTPS. |
 
-### `server.dashboard`
-
-| Field | Type | Required | Default | Description |
-|---|---|---:|---|---|
-| `api_key` | string | No | — | API key for dashboard authentication. When set, all dashboard API requests must include `Authorization: Bearer <key>` or `X-API-Key: <key>`. Supports `${ENV_VAR}` expansion. |
-
 ### Notes
 
 - `tls_cert` and `tls_key` must both be set to enable TLS.
-- KafkaMCP enforces **TLS 1.3** as the minimum version for all TLS connections (Kafka broker SSL, Kafka Connect REST API, and HTTPS server).
+- The inbound MCP HTTPS server requires TLS 1.3. Kafka broker and Connect clients default to TLS 1.2 for provider compatibility and can be raised to TLS 1.3 per cluster.
 - `stdio` is the right choice for local MCP subprocess clients such as Claude Desktop.
 - `sse` and `streamable-http` are the right choices for network-accessible deployments.
 
@@ -58,11 +54,12 @@ At least one cluster is required.
 |---|---|---:|---|---|
 | `name` | string | Yes | — | Unique cluster name used by the `cluster` parameter and `kafka://clusters`. |
 | `bootstrap_servers` | string | Yes | — | Comma-separated Kafka broker list. |
-| `security_protocol` | string | No | empty | Kafka security mode such as `PLAINTEXT`, `SSL`, `SASL_PLAINTEXT`, or `SASL_SSL`. |
+| `security_protocol` | string | No | `PLAINTEXT` | Kafka security mode: `PLAINTEXT`, `SSL`, `SASL_PLAINTEXT`, or `SASL_SSL`. SASL modes require a mechanism and credentials. |
 | `sasl_mechanism` | string | No | empty | SASL mechanism such as `PLAIN`, `SCRAM-SHA-256`, or `SCRAM-SHA-512`. |
 | `sasl_username` | string | Conditionally | empty | SASL username. Required when `sasl_mechanism` is set. |
 | `sasl_password` | string | Conditionally | empty | SASL password. Required when `sasl_mechanism` is set. |
 | `ssl_ca_location` | string | No | empty | Path to a CA bundle used for TLS broker validation. |
+| `tls_min_version` | string | No | `1.2` | Minimum broker TLS version: `1.2` or `1.3`. |
 | `schema_registry` | object | No | — | Optional Schema Registry configuration for this cluster. |
 | `connect_url` | string | No | empty | Optional Kafka Connect base URL for connector tools. |
 | `connect_tls` | object | No | — | Optional TLS settings for the Kafka Connect REST API. |
@@ -88,6 +85,7 @@ At least one cluster is required.
 |---|---|---:|---|---|
 | `ca_file` | string | No | empty | Path to a CA certificate file for verifying the Connect REST API server. |
 | `insecure_skip_verify` | boolean | No | `false` | Skip TLS certificate verification (not recommended for production). |
+| `min_version` | string | No | cluster `tls_min_version` | Minimum Connect TLS version: `1.2` or `1.3`. |
 
 :::tip
 If no cluster is marked `default: true`, KafkaMCP automatically uses the first cluster in the list as the default.

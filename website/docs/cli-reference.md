@@ -98,22 +98,19 @@ Error: configuration validation failed: at least one cluster is required
 
 ### `kafkamcp dev`
 
-Start a local development environment with pre-populated sample data and guided tutorials. Requires a local Kafka broker (or use `make docker-dev`).
+Start KafkaMCP in local read-only development mode. It uses the configured
+`core-read` surface and does not create topics or seed data automatically.
 
 ```bash
 kafkamcp dev --config kafkamcp.yaml
 ```
 
-This mode creates sample topics (`orders`, `user-events`, `iot-sensors`, `click-stream`, `payments`) and provides interactive tutorials for exploring KafkaMCP capabilities.
+For a deterministic lag, DLQ, and schema-drift scenario, run:
 
-**Quick Start (dev mode):**
-
-1. Ensure a local Kafka broker is running (`make docker-dev`)
-2. Connect with your MCP client
-3. Call `kafka_dev_environment` for setup info
-4. Call `kafka_dev_tutorial action=list` to see available tutorials
-
-**Available tutorials:** `getting-started`, `anomaly-detection`, `schema-management`
+```bash
+make incident-demo-up incident-demo-setup
+kafkamcp dev --config examples/incident-demo/kafkamcp-demo.yaml
+```
 
 ### `kafkamcp serve`
 
@@ -155,8 +152,7 @@ KafkaMCP uses standard exit codes for scripting and CI/CD integration.
 | Code | Meaning | Example cause |
 |------|---------|---------------|
 | `0` | Success | Server shut down cleanly, config validated, version printed. |
-| `1` | General error | Invalid flags, unsupported transport, server startup failure. |
-| `2` | Configuration error | Config file not found, YAML parse error, validation failure (`kafkamcp validate`). |
+| `1` | General/configuration error | Invalid flags, config error, or startup failure. |
 
 In CI/CD pipelines you can rely on the exit code to gate deployments:
 
@@ -164,7 +160,8 @@ In CI/CD pipelines you can rely on the exit code to gate deployments:
 kafkamcp validate --config kafkamcp.yaml || exit 1
 ```
 
-Error details are printed to stderr as structured JSON when `--log-level` is set, or as plain text otherwise.
+Command errors are printed to stderr; runtime logs use the configured structured
+logger.
 
 ## Examples
 

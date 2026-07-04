@@ -5,51 +5,41 @@ title: Python SDK (CrewAI)
 
 # Python SDK — CrewAI Integration
 
-KafkaMCP provides a CrewAI integration at [`sdk/python/kafkamcp_crewai`](https://github.com/kafkamcp/kafkamcp/tree/main/sdk/python/kafkamcp_crewai) for building Kafka-aware AI agent crews.
+KafkaMCP provides a CrewAI integration at [`sdk/python/kafkamcp_crewai`](https://github.com/josedab/kafkamcp/tree/main/sdk/python/kafkamcp_crewai) for building Kafka-aware AI agent crews.
 
 ## Installation
 
 ```bash
-pip install kafkamcp-crewai
+pip install "git+https://github.com/josedab/kafkamcp.git#subdirectory=sdk/python/kafkamcp_crewai"
 ```
+
+The package is not yet published to PyPI.
 
 ## Quick Start
 
 ```python
-from kafkamcp_crewai import create_kafka_tools
+from kafkamcp_crewai import StdioMCPClient, create_kafka_tools
 from crewai import Agent, Task, Crew
 
-from mcp import ClientSession, StdioServerParameters
-from mcp.client.stdio import stdio_client
+with StdioMCPClient(args=["--config", "kafkamcp.yaml"]) as client:
+    kafka_tools = create_kafka_tools(mcp_client=client)
 
-server_params = StdioServerParameters(
-    command="kafkamcp",
-    args=["--config", "kafkamcp.yaml"]
-)
+    kafka_agent = Agent(
+        role="Kafka Analyst",
+        goal="Analyze Kafka topics and consumer groups",
+        backstory="Expert in Apache Kafka operations and data analysis.",
+        tools=kafka_tools,
+    )
 
-async with stdio_client(server_params) as (read, write):
-    async with ClientSession(read, write) as session:
-        await session.initialize()
+    task = Task(
+        description="List all topics and report consumer group lag for each.",
+        expected_output="A topic and consumer lag report.",
+        agent=kafka_agent,
+    )
 
-        # Create CrewAI tools from KafkaMCP
-        kafka_tools = create_kafka_tools(mcp_client=session)
-
-        # Build an agent with Kafka capabilities
-        kafka_agent = Agent(
-            role="Kafka Analyst",
-            goal="Analyze Kafka topics and consumer groups",
-            backstory="Expert in Apache Kafka operations and data analysis.",
-            tools=kafka_tools,
-        )
-
-        task = Task(
-            description="List all topics and report consumer group lag for each.",
-            agent=kafka_agent,
-        )
-
-        crew = Crew(agents=[kafka_agent], tasks=[task])
-        result = crew.kickoff()
-        print(result)
+    crew = Crew(agents=[kafka_agent], tasks=[task])
+    result = crew.kickoff()
+    print(result)
 ```
 
 ## Available Tools
@@ -63,34 +53,29 @@ async with stdio_client(server_params) as (read, write):
 | `KafkaCreateTopicTool` | `kafka_create_topic` | Create a new topic |
 | `KafkaDeleteTopicTool` | `kafka_delete_topic` | Delete a Kafka topic |
 | `KafkaSearchTool` | `kafka_search` | Search messages by content |
-| `KafkaWatchTool` | `kafka_watch` | Subscribe to topic patterns |
 | `KafkaDescribeGroupTool` | `kafka_describe_consumer_group` | Get consumer group state and lag |
 | `KafkaListGroupsTool` | `kafka_list_consumer_groups` | List all consumer groups |
 | `KafkaGetSchemaTool` | `kafka_get_schema` | Get schema definition |
-| `KafkaDLQRemediateTool` | `kafka_remediate_dlq` | Analyze and remediate DLQ messages |
-| `KafkaAggregateTool` | `kafka_aggregate` | Aggregate messages (count, sum, avg, min, max) |
+| `KafkaAnalyzeDLQTool` | `kafka_analyze_dlq` | Analyze dead-letter queue failures |
 
 ## Factory Functions
 
 | Function | Description |
 |----------|-------------|
-| `create_kafka_tools(mcp_client)` | Create all 13 tools |
-| `create_monitoring_tools(mcp_client)` | Monitoring subset (list, describe, groups, search, watch) |
+| `create_kafka_tools(mcp_client)` | Create the eight read-only default wrappers |
+| `create_guarded_tools(mcp_client)` | Create three approval-gated mutation wrappers |
+| `create_monitoring_tools(mcp_client)` | Read-only monitoring subset |
 | `create_remediation_tools(mcp_client)` | DLQ remediation subset (consume, remediate, search, schema) |
 
 ## Individual Tool Usage
 
 ```python
-from kafkamcp_crewai import KafkaConsumeTool, KafkaSearchTool
+from kafkamcp_crewai import KafkaConsumeTool, KafkaSearchTool, StdioMCPClient
 
-consume = KafkaConsumeTool(mcp_client=session)
-search = KafkaSearchTool(mcp_client=session)
-
-agent = Agent(
-    role="Data Investigator",
-    tools=[consume, search],
-    ...
-)
+with StdioMCPClient(args=["--config", "kafkamcp.yaml"]) as client:
+    consume = KafkaConsumeTool(mcp_client=client)
+    search = KafkaSearchTool(mcp_client=client)
+    agent = Agent(role="Data Investigator", tools=[consume, search], ...)
 ```
 
 ## See Also

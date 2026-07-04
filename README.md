@@ -1,15 +1,18 @@
 # KafkaMCP
 
-> **Open Source MCP Server That Makes Kafka Topics Fully Readable, Writable, and Discoverable by AI Agents**
+> **Secure, vendor-neutral Kafka operations gateway for AI agents**
 
-[![Go](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)](https://go.dev)
-[![CI](https://github.com/kafkamcp/kafkamcp/actions/workflows/ci.yml/badge.svg)](https://github.com/kafkamcp/kafkamcp/actions/workflows/ci.yml)
-[![Coverage](https://codecov.io/gh/kafkamcp/kafkamcp/branch/main/graph/badge.svg)](https://codecov.io/gh/kafkamcp/kafkamcp)
-[![Coverage Threshold](https://img.shields.io/badge/coverage%20threshold-70%25-brightgreen)](https://github.com/kafkamcp/kafkamcp/blob/main/.github/workflows/ci.yml)
-[![GoDoc](https://pkg.go.dev/badge/github.com/kafkamcp/kafkamcp)](https://pkg.go.dev/github.com/kafkamcp/kafkamcp)
+[![Go](https://img.shields.io/badge/Go-1.26.5-00ADD8?style=flat&logo=go)](https://go.dev)
+[![CI](https://github.com/josedab/kafkamcp/actions/workflows/ci.yml/badge.svg)](https://github.com/josedab/kafkamcp/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/josedab/kafkamcp/branch/main/graph/badge.svg)](https://codecov.io/gh/josedab/kafkamcp)
+[![Coverage Threshold](https://img.shields.io/badge/coverage%20threshold-70%25-brightgreen)](https://github.com/josedab/kafkamcp/blob/main/.github/workflows/ci.yml)
+[![GoDoc](https://pkg.go.dev/badge/github.com/josedab/kafkamcp)](https://pkg.go.dev/github.com/josedab/kafkamcp)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-KafkaMCP is an MCP (Model Context Protocol) server that transforms Apache Kafka into a first-class, agent-accessible data layer. It exposes Kafka topics, consumer groups, schemas, and cluster metadata as MCP tools and resources — enabling any MCP-compatible AI agent to discover, read from, write to, and reason about Kafka data with zero custom integration code.
+KafkaMCP exposes a curated, read-only-by-default MCP surface for Kafka topics,
+messages, schemas, consumer groups, health, lag, and DLQs. Optional mutations
+require verified identity, default-deny policy, and short-lived two-person
+approval.
 
 <!-- To generate a demo GIF: install vhs (https://github.com/charmbracelet/vhs), then run: vhs demo.tape -->
 
@@ -46,9 +49,9 @@ KafkaMCP is an MCP (Model Context Protocol) server that transforms Apache Kafka 
 - **📝 Audit Logging** — Structured JSON audit trail of all agent interactions
 - **🔌 Dual Transport** — stdio (local/Claude Desktop) and SSE/HTTP (remote/multi-agent)
 - **🏢 Multi-Cluster** — Connect to multiple Kafka clusters with per-cluster configuration
-- **🩺 Self-Healing** — Consumer group health monitoring with automated remediation recommendations
+- **✅ Guarded Mutations** — Two-person approvals, policy simulation, blast-radius previews, and idempotency receipts
 
-> **How does KafkaMCP compare?** A detailed comparison matrix against Kafka REST Proxy, LangChain, Kafka Connect, and ksqlDB is planned for the project website (the `kafkamcp.dev` domain is not yet live).
+> **How does KafkaMCP compare?** See [`docs/COMPARISON.md`](docs/COMPARISON.md) for a sourced, date-stamped comparison against KIP-1318, Confluent, AWS MSK, Redpanda, Aiven, and Conduktor. The live documentation site is at [**josedab.github.io/kafkamcp**](https://josedab.github.io/kafkamcp/).
 
 ## Quick Start
 
@@ -58,34 +61,25 @@ KafkaMCP is an MCP (Model Context Protocol) server that transforms Apache Kafka 
 
 **From source:**
 ```bash
-go install github.com/kafkamcp/kafkamcp/cmd/kafkamcp@latest
+go install github.com/josedab/kafkamcp/cmd/kafkamcp@latest
 kafkamcp version
 ```
 
-**From binary** ([all platforms](https://github.com/kafkamcp/kafkamcp/releases) — Linux, macOS, Windows on amd64/arm64):
-```bash
-# Download from GitHub Releases
-curl -sSL https://github.com/kafkamcp/kafkamcp/releases/latest/download/kafkamcp_$(uname -s)_$(uname -m).tar.gz | tar xz
-sudo mv kafkamcp /usr/local/bin/
-kafkamcp version
-```
-
-**Docker:**
-```bash
-docker run --rm ghcr.io/kafkamcp/kafkamcp:latest version
-docker run --rm -v $(pwd)/kafkamcp.yaml:/etc/kafkamcp/kafkamcp.yaml \
-  ghcr.io/kafkamcp/kafkamcp:latest --config /etc/kafkamcp/kafkamcp.yaml
-```
+Prebuilt binaries and `ghcr.io/josedab/kafkamcp` images will be available
+after the first signed GitHub release. Until then, install from source. The
+release workflow already generates checksums, SBOMs, Sigstore signatures, and
+GitHub provenance attestations.
 
 ### 2. Configure
 
 Generate a starter configuration:
 
 ```bash
-kafkamcp init
+kafkamcp init --output kafkamcp.yaml
 ```
 
-This creates a `kafkamcp.yaml` in the current directory. Edit it to match your environment, or create one manually. See [`.env.example`](.env.example) for environment variable templates used by the example configs.
+This creates `kafkamcp.yaml` in the current directory. Edit it to match your
+environment. See [`.env.example`](.env.example) for environment templates.
 
 ```yaml
 server:
@@ -176,341 +170,24 @@ Once connected, your AI agent can:
 
 ## MCP Tools
 
-> **Full reference:** The auto-generated [Tool Reference](docs/tool-reference.md) lists all **317 tools** with complete parameter details. By default, only the **essential** tool pack (~30 tools) is advertised to MCP clients so LLM tool-routing quality stays high; opt into `ops`, `analytics`, `governance`, `streaming`, `experimental`, or `all` via `server.tool_packs` in `kafkamcp.yaml`.
+KafkaMCP exposes **29 supported tools** through three explicit packs:
 
-### P0 — Core Tools
-| Tool | Description |
-|------|-------------|
-| `kafka_list_topics` | List all topics with metadata |
-| `kafka_describe_topic` | Get detailed topic metadata |
-| `kafka_consume` | Read messages (earliest/latest/offset/timestamp) |
-| `kafka_produce` | Publish messages with delivery confirmation |
-| `kafka_list_schemas` | List Schema Registry subjects |
-| `kafka_get_schema` | Get full schema definition |
-| `kafka_describe_consumer_group` | Get consumer group state and lag |
-| `kafka_list_consumer_groups` | List all consumer groups |
+| Pack | Stability | Purpose |
+|---|---|---|
+| `core-read` | Stable | Default set of 15 read-only Kafka inspection and diagnosis tools |
+| `ops-write` | Beta | Real Kafka and Connect mutations, protected by verified identity, default-deny policy, two-person approval, and optional idempotency receipts |
+| `governance` | Beta | Approval lifecycle, policy simulation, ACL planning, and tamper-evident decision export |
 
-### P1 — Advanced Tools
-| Tool | Description |
-|------|-------------|
-| `kafka_subscribe` | Subscribe with consumer group semantics (batch polling) |
-| `kafka_create_topic` | Create a topic with partitions, replication, configs |
-| `kafka_alter_topic` | Modify topic configuration |
-| `kafka_delete_topic` | Delete a topic |
-| `kafka_search` | Search messages by key, header, value, time range |
-| `kafka_reset_offsets` | Reset consumer group offsets (with dry-run) |
-| `kafka_check_schema_compatibility` | Validate schema against compatibility policy |
-| `kafka_analyze_dlq` | Analyze dead-letter queue: categorize errors, samples |
+Every shipped tool performs real behavior. KafkaMCP ships **no simulated or
+placeholder tools**: incomplete integrations stay out of runtime packs until
+they have real implementations and integration tests.
 
-### P2 — Stream Processing & Intelligence
-| Tool | Description |
-|------|-------------|
-| `kafka_aggregate` | Windowed aggregation (count/sum/avg/min/max) on a field |
-| `kafka_join` | Time-windowed join across two topics on a key field |
-| `kafka_query` | Natural language query translated to topic + filter |
-| `kafka_suggest_schema_evolution` | Schema change advisor with compatible strategies |
-| `kafka_list_connectors` | List Kafka Connect connectors with status |
-| `kafka_describe_connector` | Full connector config, tasks, and errors |
+The canonical, generated list and parameter reference is [docs/tool-reference.md](docs/tool-reference.md). The same generated content powers the [website API reference](https://josedab.github.io/kafkamcp/docs/api-reference/tools). Source files for archived feature experiments may remain during compatibility work, but tools outside these packs are not registered or callable.
 
-### P3 — Event-Driven & Remediation
-| Tool | Description |
-|------|-------------|
-| `kafka_watch` | Register event-driven watch subscriptions on topic patterns |
-| `kafka_remediate_dlq` | Auto-remediate DLQ messages: retry, route, or suggest fixes |
-| `kafka_schema_diff` | Field-by-field diff between two schema versions |
-
-### Streaming
-| Tool | Description |
-|------|-------------|
-| `kafka_stream` | Manage streaming consumer sessions for real-time delivery |
-| `kafka_agent_registry` | Multi-agent collaboration: register, claim partitions, handoff |
-
-### Advanced — Connector Management & Intelligence
-| Tool | Description |
-|------|-------------|
-| `kafka_create_connector` | Create a new Kafka Connect connector |
-| `kafka_update_connector` | Update an existing connector configuration |
-| `kafka_delete_connector` | Delete a Kafka Connect connector |
-| `kafka_restart_connector` | Restart a connector or specific failed tasks |
-| `kafka_connector_health` | Health score and diagnostics for a connector |
-| `kafka_time_travel` | Point-in-time topic queries: snapshot or diff state |
-| `kafka_recommend` | Intelligent topic optimization recommendations |
-| `kafka_trace_message` | End-to-end message tracing via correlation IDs |
-| `kafka_list_acls` | List Kafka ACLs with security analysis |
-| `kafka_config_drift` | Detect configuration drift across clusters |
-| `kafka_playground` | Sandboxed environment for safe Kafka experimentation |
-
-### Feature — AI & Analytics
-| Tool | Description |
-|------|-------------|
-| `kafka_anomalies` | AI-detected anomalies in lag, throughput, and error rates |
-| `kafka_anomaly_ingest` | Manually ingest data points for anomaly detection |
-| `kafka_nl_query` | Query Kafka with plain English (NL → pipeline) |
-| `kafka_cost_analyze` | Analyze storage and compute costs for a topic |
-| `kafka_cost_waste` | Detect cost waste: idle topics, over-replication, etc. |
-| `kafka_cost_whatif` | Simulate config changes and see cost impact |
-| `kafka_workflows` | Pre-built workflow templates for common operations |
-| `kafka_gitops_diff` | Compare declarative YAML config against live cluster state |
-| `kafka_knowledge_graph` | Query topic relationships and schema dependencies |
-| `kafka_platform_info` | Get info about configured Kafka-compatible platforms |
-| `kafka_validate_contract` | Validate messages against data contracts |
-| `kafka_diagnose_lag` | Deep diagnostic analysis of consumer group lag |
-| `kafka_migration_plan` | Plan and validate Kafka migrations between clusters |
-| `kafka_trace_lineage` | Track data lineage and PII/compliance annotations |
-| `kafka_group_health` | Consumer group health scoring with auto-remediation hints |
-| `kafka_persona` | Declarative agent personas (SRE, data-engineer, etc.) |
-| `kafka_forecast` | ML-based capacity forecasting (throughput, storage, lag) |
-
-### Advisor
-| Tool | Description |
-|------|-------------|
-| `kafka_advisor_scan` | Scan topics for best-practice violations and improvement opportunities |
-| `kafka_advisor_report` | Generate a detailed advisory report with health scores and recommendations |
-
-### Agent Profiling
-| Tool | Description |
-|------|-------------|
-| `kafka_agent_profile` | Profile agent performance: latency, tool call patterns, error rates |
-| `kafka_agent_optimize` | Get optimization suggestions based on agent call patterns |
-| `kafka_agent_report` | Generate a comprehensive agent efficiency report |
-
-### Alerting
-| Tool | Description |
-|------|-------------|
-| `kafka_alert_create` | Create an alerting rule for Kafka metrics with configurable thresholds |
-| `kafka_alert_list` | List all configured alerting rules |
-| `kafka_alert_delete` | Delete an alerting rule by ID |
-
-### Capacity
-| Tool | Description |
-|------|-------------|
-| `kafka_capacity_plan` | Generate a comprehensive capacity plan with ML-based forecasting |
-| `kafka_capacity_forecast` | Forecast capacity for a specific topic using exponential smoothing |
-
-### Catalog
-| Tool | Description |
-|------|-------------|
-| `kafka_catalog_search` | Search the data catalog by name, tag, owner, or quality score |
-| `kafka_catalog_tag` | Add tags to a catalog entry or set lineage information |
-| `kafka_catalog_stats` | Get catalog statistics: entry counts, freshness, quality scores |
-
-### Chaos Engineering
-| Tool | Description |
-|------|-------------|
-| `kafka_chaos_inject` | Inject controlled chaos: broker outage, network partition, slow consumer, etc. |
-| `kafka_chaos_status` | Get status of chaos experiments |
-| `kafka_chaos_stop` | Stop a running chaos experiment and trigger rollback |
-
-### Compliance
-| Tool | Description |
-|------|-------------|
-| `kafka_compliance_scan` | Scan topics for GDPR, HIPAA, SOC2, or PCI-DSS compliance |
-| `kafka_compliance_report` | Generate a comprehensive compliance report with scores and violations |
-| `kafka_compliance_violations` | List detected compliance violations with filters |
-
-### Config VCS
-| Tool | Description |
-|------|-------------|
-| `kafka_config_history` | Get configuration change history with full diff details |
-| `kafka_config_rollback` | Rollback a resource configuration to a previous version |
-| `kafka_config_compare` | Compare two versions of a resource configuration |
-
-### Cost Attribution
-| Tool | Description |
-|------|-------------|
-| `kafka_cost_live` | Get real-time cost metrics with per-hour/day/month breakdowns |
-| `kafka_cost_allocate` | Create or view cost allocation groups for teams or services |
-| `kafka_cost_budget` | Create spending budgets with alert thresholds |
-
-### Contracts
-| Tool | Description |
-|------|-------------|
-| `kafka_contract_violations` | View contract violations, enforce contracts, or infer from samples |
-
-### Dashboard
-| Tool | Description |
-|------|-------------|
-| `kafka_dashboard_create` | Auto-provision Kafka monitoring dashboards for Grafana or Datadog |
-
-### Federation
-| Tool | Description |
-|------|-------------|
-| `kafka_federation_join` | Manage federation membership: join, leave, heartbeat |
-| `kafka_federation_query` | Execute a query across all federated instances |
-| `kafka_federation_status` | Get federation status: instances, policies, health |
-
-### Flow Debug
-| Tool | Description |
-|------|-------------|
-| `kafka_flow_debug` | Live message flow debugging with real-time throughput/latency graphs |
-| `kafka_flow_bottlenecks` | Detect bottlenecks: high lag, low throughput, high error rates |
-
-### Memory
-| Tool | Description |
-|------|-------------|
-| `kafka_memory_store` | Store a memory entry for the current agent with TTL and tags |
-| `kafka_memory_recall` | Recall a specific memory entry by key or list all entries |
-| `kafka_memory_search` | Search agent memory using TF-IDF semantic search |
-
-### Migration
-| Tool | Description |
-|------|-------------|
-| `kafka_migrate_execute` | Execute a migration plan with dry-run and progress tracking |
-| `kafka_migrate_status` | Get the status and progress of a migration execution |
-| `kafka_migrate_rollback` | Rollback a completed or failed migration |
-
-### OpenAPI
-| Tool | Description |
-|------|-------------|
-| `kafka_openapi_spec` | Generate an OpenAPI 3.0 specification from registered MCP tools |
-
-### Plugin
-| Tool | Description |
-|------|-------------|
-| `kafka_plugin_search` | Search the plugin marketplace for extensions |
-| `kafka_plugin_install` | Install a plugin from the marketplace |
-| `kafka_plugin_list` | List installed plugins with status and version |
-
-### Quota
-| Tool | Description |
-|------|-------------|
-| `kafka_quota_status` | Get adaptive rate limit status for an agent |
-| `kafka_quota_request` | Request a quota adjustment: increase, decrease, reset, or burst |
-
-### Replay
-| Tool | Description |
-|------|-------------|
-| `kafka_replay_create` | Create a bookmark capturing message state for later replay |
-| `kafka_replay_diff` | Compare message payloads between two bookmarks |
-| `kafka_replay_simulate` | Simulate replaying messages through a consumer group |
-
-### Replication
-| Tool | Description |
-|------|-------------|
-| `kafka_replication_status` | Get real-time cross-cluster replication status |
-| `kafka_replication_lag` | Get partition-level replication lag for a link |
-| `kafka_failover_readiness` | Evaluate failover readiness with RPO/RTO estimates |
-
-### Sandbox
-| Tool | Description |
-|------|-------------|
-| `kafka_sandbox_create` | Create an isolated sandbox environment for safe experimentation |
-| `kafka_sandbox_exec` | Execute a Kafka tool within a sandbox |
-| `kafka_sandbox_destroy` | Destroy a sandbox or generate a promotion report |
-
-### Schema Workflow
-| Tool | Description |
-|------|-------------|
-| `kafka_schema_propose` | Propose a schema change with migration plan and compatibility validation |
-| `kafka_schema_apply` | Apply, review, or rollback a schema proposal |
-
-### StreamSQL
-| Tool | Description |
-|------|-------------|
-| `kafka_sql_execute` | Execute a streaming SQL query against Kafka topics |
-| `kafka_sql_explain` | Explain a streaming SQL query plan without executing it |
-| `kafka_sql_manage` | Manage SQL queries: list, get, delete |
-
-### Task Queue
-| Tool | Description |
-|------|-------------|
-| `kafka_task_publish` | Publish a task to a priority queue for other agents |
-| `kafka_task_claim` | Claim the highest-priority pending task from a queue |
-| `kafka_task_complete` | Mark a claimed task as completed or failed |
-| `kafka_task_status` | Get task status, queue statistics, or list tasks |
-
-### TimeSeries
-| Tool | Description |
-|------|-------------|
-| `kafka_timeseries_analyze` | Advanced time-series analysis: trend detection, seasonality, outliers |
-
-### Tracing Flow
-| Tool | Description |
-|------|-------------|
-| `kafka_trace_flow` | Distributed tracing for Kafka messages with W3C Trace Context |
-
-### Usage
-| Tool | Description |
-|------|-------------|
-| `kafka_usage_report` | Generate usage analytics and chargeback reports |
-
-### View Store
-| Tool | Description |
-|------|-------------|
-| `kafka_view_create` | Create a materialized view over a Kafka topic |
-| `kafka_view_query` | Query a materialized view with point lookups or range scans |
-| `kafka_view_status` | Manage materialized views: list, get, delete, stats |
-
-### DAG Workflow
-| Tool | Description |
-|------|-------------|
-| `kafka_workflow_create` | Create a reusable DAG-based workflow with conditional branching |
-| `kafka_workflow_run` | Start a workflow execution from a template |
-| `kafka_workflow_status` | Get workflow status, manage workflows, or advance a run |
-
-### Pipeline
-| Tool | Description |
-|------|-------------|
-| `kafka_pipeline_create` | Create a streaming function pipeline with filter/map/enrich steps |
-| `kafka_pipeline_execute` | Execute a pipeline on messages from a source topic |
-| `kafka_pipeline_manage` | Manage streaming function pipelines |
-
-### Semantic Search
-| Tool | Description |
-|------|-------------|
-| `kafka_semantic_index` | Index Kafka messages for semantic search |
-| `kafka_semantic_search` | Search indexed messages by meaning using semantic similarity |
-| `kafka_rag_context` | Build RAG context from indexed Kafka messages |
-| `kafka_semantic_stats` | Get statistics about the semantic search index |
-
-### Onboarding
-| Tool | Description |
-|------|-------------|
-| `kafka_quickstart` | Guided onboarding: auto-discovers clusters and generates getting started guide |
-| `kafka_discover_clusters` | Auto-discover Kafka clusters by scanning common ports and DNS |
-| `kafka_suggest_rbac` | Generate recommended RBAC configuration based on topology |
-
-### OPA Policy
-| Tool | Description |
-|------|-------------|
-| `kafka_policy_evaluate` | Evaluate an OPA Rego policy for an authorization decision |
-| `kafka_policy_simulate` | Simulate a policy evaluation showing rule matching |
-| `kafka_policy_manage` | Manage OPA Rego policies: list, register, delete, export |
-
-### Auto-Heal
-| Tool | Description |
-|------|-------------|
-| `kafka_group_heal` | Auto-heal consumer groups: diagnose root cause and generate remediation |
-
-### Collaboration
-| Tool | Description |
-|------|-------------|
-| `agent_lock_acquire` | Acquire a distributed lock on a shared resource |
-| `agent_lock_release` | Release a previously acquired distributed lock |
-| `agent_lock_list` | List all active distributed locks |
-| `agent_clock_get` | Get the vector clock for a resource |
-| `agent_clock_increment` | Increment the vector clock for a resource |
-| `agent_message_send` | Send a message to another agent for coordination |
-| `agent_message_inbox` | Read messages sent to this agent |
-| `agent_coordinate_register` | Register agent capabilities for coordination |
-| `agent_coordinate_list` | List all registered agents with status and capabilities |
-
-### Gateway
-| Tool | Description |
-|------|-------------|
-| `gateway_list_backends` | List registered multi-protocol streaming backends |
-| `gateway_produce` | Produce a message through a named streaming backend |
-| `gateway_consume` | Consume messages from a named streaming backend |
-| `gateway_list_topics` | List topics/queues/subjects on a backend |
-| `gateway_create_topic` | Create a topic/queue/subject on a backend |
-
-### Kubernetes Operator
-| Tool | Description |
-|------|-------------|
-| `k8s_operator_manage` | Manage KafkaMCP Kubernetes operator instances |
-
-> **Note:** Schema tools (`kafka_list_schemas`, `kafka_get_schema`, `kafka_check_schema_compatibility`, `kafka_schema_diff`) require `schema_registry.url` in cluster config.
-> Kafka Connect tools require `connect_url` in cluster config.
+The guarded `ops-write` and `governance` packs are rejected on stdio. They
+require SSE or streamable HTTP, a cryptographic identity provider,
+`default_deny: true`, header fallback disabled, and
+`KAFKAMCP_APPROVAL_SIGNING_KEY` set to at least 32 bytes.
 
 ## MCP Resources
 
@@ -525,57 +202,46 @@ Once connected, your AI agent can:
 | `kafka://groups` | Consumer group catalog with state and lag |
 | `kafka://groups/{id}` | Individual consumer group detail |
 | `kafka://audit/log` | Agent audit trail (recent 1000 entries) |
-| `kafka://topic_graph` | Producer → topic → consumer group topology graph |
-| `kafka://replication/status` | Cross-cluster replication status with lag |
-| `kafka://plugins` | Registered plugins and extensions |
-| `kafka://watch/subscriptions` | Active watch subscriptions |
-| `kafka://anomalies` | AI-detected anomaly alerts |
-| `kafka://workflows` | Pre-built workflow templates |
-| `kafka://knowledge_graph` | Topic relationships and schema dependencies |
-| `kafka://flow_graph` | Real-time message flow visualization with throughput and latency data |
-| `kafka://platforms` | Configured Kafka-compatible platforms and their capabilities |
 
 ## Security & Access Control
 
-- **Per-agent authorization** — YAML policy engine with default-deny, topic glob patterns
+- **Per-agent authorization** — YAML policy engine with configurable default-deny and topic glob patterns
 - **Rate limiting** — Token bucket per agent, configurable via policy
-- **Agent ID extraction** — From `X-Agent-ID` or `X-Client-ID` headers
-- **TLS 1.3 minimum** — All TLS connections (Kafka broker, Connect API, HTTPS) enforce TLS 1.3 as the minimum version
+- **Verified network identity** — Static bearer tokens, OIDC, or mTLS; legacy identity-header fallback is rejected on network transports
+- **Guarded mutations** — `ops-write` requires two-person, argument-scoped, single-use approvals with tamper-evident decision records
+- **TLS policy** — Inbound MCP HTTPS requires TLS 1.3; Kafka and Connect clients default to TLS 1.2 for provider compatibility and can require TLS 1.3
 - **TLS support** — HTTPS for SSE/HTTP transports via `tls_cert`/`tls_key` config
 - **Audit logging** — Structured JSON audit trail (file + ring buffer)
 - **Auth-filtered list results** — Agents only see resources they're authorized to access
 
 ## Observability
 
-- **Prometheus metrics** at `/metrics` (port+1, bound to `127.0.0.1`) — tool call counts, latencies, message throughput, auth denials, rate limit denials
-- **Health check** at `/healthz`
+- **Prometheus metrics** at `/metrics` on `server.metrics_port` (default `3101`, bound to `server.metrics_host`, default `127.0.0.1`) — tool call counts, latencies, message throughput, auth denials, rate limit denials
+- **Process liveness** at `/livez`, Kafka health at `/healthz`, and full readiness at `/ready`
 - **Structured JSON logging** via `slog`
 - **OpenTelemetry tracing** — optional OTLP export for distributed trace analysis (see [Telemetry config](#telemetry-opentelemetry))
-- **Grafana dashboard** — a ready-to-use dashboard ships at [`deploy/grafana/kafkamcp-overview.json`](deploy/grafana/kafkamcp-overview.json) with 23 panels covering tool call rates, latency percentiles, message throughput, schema cache performance, auth/rate-limit denials, and active connections. Import it into Grafana and select your Prometheus data source.
 
 ## SDKs & Editor Integrations
 
 | SDK / Integration | Path | Description |
 |-------------------|------|-------------|
-| **Go SDK** | [`sdk/go/`](sdk/go/) | Programmatic Go client for KafkaMCP — list topics, consume, produce, search, watch |
+| **Go SDK** | [`sdk/go/`](sdk/go/) | Programmatic Go client for KafkaMCP — list topics, consume, produce, search |
 | **Python LangChain** | [`sdk/python/kafkamcp_langchain/`](sdk/python/kafkamcp_langchain/) | LangChain toolkit — use Kafka tools in any LangChain agent |
 | **Python CrewAI** | [`sdk/python/kafkamcp_crewai/`](sdk/python/kafkamcp_crewai/) | CrewAI tools — build Kafka-aware multi-agent crews |
-| **VS Code Extension** | [`sdk/vscode/`](sdk/vscode/) | Topic explorer, schema browser, NL query, and workflow templates inside VS Code |
 | **Cursor Integration** | [`sdk/cursor/`](sdk/cursor/) | Native MCP support — configure `.cursor/mcp.json` and use all tools directly |
-| **IntelliJ Plugin** | [`sdk/intellij/`](sdk/intellij/) | IntelliJ/JetBrains IDE integration |
 | **TypeScript SDK** | [`sdk/typescript/`](sdk/typescript/) | Type-safe async/await client for Node.js and TypeScript agents |
 
 **Go SDK quick example:**
 ```go
-import "github.com/kafkamcp/kafkamcp/sdk/go/kafkamcpsdk"
+import "github.com/josedab/kafkamcp/sdk/go/kafkamcpsdk"
 
-client := kafkamcpsdk.New(transport, kafkamcpsdk.WithAgentID("my-agent"))
+client := kafkamcpsdk.New(transport)
 topics, _ := client.ListTopics(ctx, "orders.*")
 ```
 
 **Python LangChain quick example:**
 ```bash
-pip install kafkamcp-langchain
+pip install "git+https://github.com/josedab/kafkamcp.git#subdirectory=sdk/python/kafkamcp_langchain"
 ```
 ```python
 from kafkamcp_langchain import KafkaMCPToolkit
@@ -584,11 +250,13 @@ tools = KafkaMCPToolkit(mcp_client=session)
 
 **Python CrewAI quick example:**
 ```bash
-pip install kafkamcp-crewai
+pip install "git+https://github.com/josedab/kafkamcp.git#subdirectory=sdk/python/kafkamcp_crewai"
 ```
 ```python
-from kafkamcp_crewai import create_kafka_tools
-tools = create_kafka_tools(mcp_client=session)
+from kafkamcp_crewai import StdioMCPClient, create_kafka_tools
+
+with StdioMCPClient(args=["--config", "kafkamcp.yaml"]) as client:
+    tools = create_kafka_tools(mcp_client=client)
 ```
 
 ## Architecture
@@ -658,9 +326,9 @@ The [`examples/`](examples/) directory contains ready-to-use configurations and 
 
 | Resource | Description |
 |----------|-------------|
-| [`deploy/helm/kafkamcp/`](deploy/helm/kafkamcp/) | Production-ready Helm chart (Deployment, Service, HPA, PDB, NetworkPolicy, ServiceMonitor) |
-| [`deploy/grafana/`](deploy/grafana/) | Grafana dashboard JSON for KafkaMCP monitoring |
-| [`docs/PERSISTENCE.md`](docs/PERSISTENCE.md) | What state survives a restart (almost nothing) and how to mitigate it |
+| [`deploy/helm/kafkamcp/`](deploy/helm/kafkamcp/) | Production-oriented Helm chart (Deployment, Service, HPA, PDB, NetworkPolicy, ServiceMonitor) |
+| [`docs/PERSISTENCE.md`](docs/PERSISTENCE.md) | SQLite durability, atomic approval/idempotency transitions, and remaining volatile state |
+| [`docs/PRODUCTION_CHECKLIST.md`](docs/PRODUCTION_CHECKLIST.md) | Pre-deployment security, state, network, observability, and rollback checklist |
 
 ## Configuration Reference
 
@@ -670,15 +338,14 @@ The [`examples/`](examples/) directory contains ready-to-use configurations and 
 | `transport` | string | `stdio` | MCP transport: `stdio`, `sse`, `streamable-http` |
 | `host` | string | `0.0.0.0` | Bind host for SSE/HTTP |
 | `port` | int | `3100` | Bind port for SSE/HTTP |
+| `metrics_host` | string | `127.0.0.1` | Bind host for metrics and `/livez`, `/healthz`, `/ready` |
+| `metrics_port` | int | `port + 1` | Metrics and health/readiness port |
 | `log_level` | string | `info` | Log level: `debug`, `info`, `warn`, `error` |
 | `max_message_size` | int | `1048576` | Max MCP message size in bytes (1 MB default) |
 | `tls_cert` | string | — | Path to TLS certificate for HTTPS |
 | `tls_key` | string | — | Path to TLS private key for HTTPS |
-
-### Dashboard
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `server.dashboard.api_key` | string | — | API key for dashboard authentication. When set, requests must include `Authorization: Bearer <key>` or `X-API-Key: <key>`. |
+| `tool_packs` | []string | `[core-read]` | Valid values: `core-read`, `ops-write`, `governance`. The guarded `ops-write` and `governance` packs require secure HTTP identity, default-deny, and signed approvals; stdio is core-read only. `essential` and `ops` are deprecated aliases. |
+| `dangerously_allow_unauthenticated_network` | bool | `false` | **Local dev only.** Disables fail-closed guard for network transports. Never enable in production. |
 
 ### Clusters
 | Field | Type | Required | Description |
@@ -690,6 +357,7 @@ The [`examples/`](examples/) directory contains ready-to-use configurations and 
 | `sasl_username` | string | No | SASL username (supports `${ENV_VAR}`) |
 | `sasl_password` | string | No | SASL password (supports `${ENV_VAR}`) |
 | `ssl_ca_location` | string | No | Path to CA certificate bundle for SSL/TLS |
+| `tls_min_version` | string | No | Minimum broker TLS version, `1.2` (default) or `1.3` |
 | `schema_registry.url` | string | No | Schema Registry URL |
 | `schema_registry.auth.username` | string | No | Schema Registry basic-auth username |
 | `schema_registry.auth.password` | string | No | Schema Registry basic-auth password |
@@ -697,6 +365,7 @@ The [`examples/`](examples/) directory contains ready-to-use configurations and 
 | `connect_tls` | object | No | TLS settings for the Kafka Connect REST API |
 | `connect_tls.ca_file` | string | No | Path to CA certificate for verifying the Connect REST API server |
 | `connect_tls.insecure_skip_verify` | bool | No | Skip TLS certificate verification (default `false`) |
+| `connect_tls.min_version` | string | No | Minimum Connect TLS version; defaults to `tls_min_version` |
 | `default` | bool | No | Mark as default cluster |
 
 ### Policies
@@ -704,12 +373,53 @@ The [`examples/`](examples/) directory contains ready-to-use configurations and 
 |-------|------|---------|-------------|
 | `default_deny` | bool | `false` | Deny all access by default |
 | `agents[].id` | string | — | Agent identifier |
-| `agents[].role` | string | — | Agent role (e.g., `admin`, `viewer`) |
+| `agents[].role` | string | — | Agent role (e.g., `reader`, `writer`, `admin`) |
 | `agents[].topics[].pattern` | string | — | Glob pattern (e.g., `orders.*`) |
 | `agents[].topics[].permissions` | []string | — | `read`, `write`, `create`, `delete` |
 | `agents[].consumer_groups.permissions` | []string | — | Consumer group permissions |
 | `agents[].schemas.permissions` | []string | — | Schema Registry permissions |
 | `agents[].rate_limit.requests_per_minute` | int | — | Max requests per minute for this agent |
+
+### Approval (guarded packs)
+
+> **`ops-write` and `governance` require all five conditions simultaneously; startup is rejected if any is missing:**
+> 1. Transport must be `sse` or `streamable-http` — **stdio is core-read only**
+> 2. `policies.identity.provider` must be `static`, `oidc`, or `mtls` (cryptographic identity)
+> 3. `policies.identity.allow_header_fallback` must be `false` (default for cryptographic providers)
+> 4. `policies.default_deny` must be `true`
+> 5. `KAFKAMCP_APPROVAL_SIGNING_KEY` must contain ≥32 bytes
+>
+> Approval enforcement cannot be disabled when either guarded pack is active. Two-person approval is the default (`allow_self_approval: false`).
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `policies.approval.enabled` | bool | follows `default_deny` | Toggle enforcement. Cannot be `false` for guarded packs. |
+| `policies.approval.ttl_seconds` | int | `300` | Default grant lifetime (seconds) |
+| `policies.approval.max_ttl_seconds` | int | `3600` | Hard cap on grant lifetime |
+| `policies.approval.single_use` | bool | `true` | Consume grant on first use |
+| `policies.approval.allow_self_approval` | bool | `false` | Allow requester to approve their own grant. Defaults to false (two-person rule). |
+| `policies.approval.signing_key_env` | string | `KAFKAMCP_APPROVAL_SIGNING_KEY` | Env var holding the HMAC-SHA-256 signing key (≥32 bytes) for tamper-evident decision records |
+| `policies.approval.previous_signing_key_envs` | []string | `[]` | Previous ≥32-byte keys accepted during rotation |
+| `policies.approval.terminal_retention_seconds` | int | `604800` | Retention for terminal/abandoned grants before pruning (max 30 days) |
+
+**Approval grant lifecycle:** `request` → `approve` (by a different identity unless `allow_self_approval: true`) → `use`. Every transition and the current grant state are signed. Use `kafka_governance_decision` for `simulate`, `verify`, and `export`.
+
+### Identity
+
+> **Required for network transports.** `sse` and `streamable-http` transports refuse to start without a cryptographic identity provider (`static`, `oidc`, or `mtls`) and `policies.default_deny: true`, unless `server.dangerously_allow_unauthenticated_network: true` (local dev only). Identity header fallback is rejected by default for all cryptographic providers.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `policies.identity.provider` | string | `none` | Verification method: `none` (header, stdio only), `static` (shared-secret tokens), `oidc` (JWT/JWKS), `mtls` (TLS client cert) |
+| `policies.identity.allow_header_fallback` | bool | `false`\* | Allow `X-Agent-ID` fallback after provider fails. \*Defaults to `true` for `none`, `false` for all cryptographic providers. |
+| `policies.identity.static.tokens[].token` | string | — | Bearer token (use `${ENV_VAR}`; never hard-code) |
+| `policies.identity.static.tokens[].agent_id` | string | — | Agent ID resolved from this token |
+| `policies.identity.oidc.issuer_url` | string | — | OIDC issuer URL |
+| `policies.identity.oidc.client_id` | string | — | Expected `aud` claim |
+| `policies.identity.oidc.agent_id_claim` | string | `sub` | JWT claim used as agent ID |
+| `policies.identity.mtls.ca_bundle` | string | — | PEM file of trusted client-cert CAs |
+| `policies.identity.mtls.allowed_spiffe_ids` | []string | — | SPIFFE URI SAN allow-list |
+| `policies.identity.mtls.allowed_trust_domains` | []string | — | SPIFFE trust domain allow-list |
 
 ### Schema Cache
 | Field | Type | Default | Description |
@@ -758,6 +468,9 @@ sasl_password: "${KAFKA_PASSWORD:-changeme}"
 | `KAFKAMCP_TRANSPORT` | Overrides `server.transport` from the config file at runtime. Valid values: `stdio`, `sse`, `streamable-http`. |
 | `KAFKAMCP_ALLOW_INSECURE` | Set to `true` to allow `insecure_skip_verify` in `connect_tls` settings. Required as an explicit opt-in for skipping TLS certificate verification. **Not recommended for production.** |
 | `KAFKAMCP_LOG_LEVEL` | Overrides `server.log_level` from the config file at runtime. Valid values: `debug`, `info`, `warn`, `error`. The `--log-level` CLI flag takes precedence over this variable. |
+| `KAFKAMCP_APPROVAL_SIGNING_KEY` | HMAC-SHA-256 key (≥32 bytes) for signing tamper-evident approval decision records. **Required when `ops-write` is in `server.tool_packs`.** Set in the deployment environment; never place in `kafkamcp.yaml`. |
+| `KAFKAMCP_MASKING_KEY` | HMAC-SHA-256 key (≥16 bytes) for the `hash`/`tokenize` masking actions. If unset, those actions fail closed (fully redact). |
+| `KAFKAMCP_UNSAFE_ALLOW_UNAUTHENTICATED_NETWORK` | Set to `true` to disable the fail-closed guard for network transports. **Local development only. Never enable in production.** Equivalent to `server.dangerously_allow_unauthenticated_network: true`. |
 
 ```bash
 KAFKAMCP_TRANSPORT=sse ./bin/kafkamcp --config kafkamcp.yaml
@@ -784,6 +497,16 @@ KafkaMCP validates the configuration at startup and refuses to start if any rule
 | Bootstrap servers required per cluster | `cluster[N] (name): bootstrap_servers is required` |
 | SASL credentials required when mechanism set | `cluster[N] (name): sasl_username and sasl_password are required when sasl_mechanism is set` |
 | Transport must be valid | `invalid transport "X"; must be one of: stdio, sse, streamable-http` |
+| Invalid tool pack name | `invalid tool_pack "X"` (see valid values in Server table above) |
+| guarded packs rejected on stdio | `ops-write and governance require sse or streamable-http ...; stdio is core-read only` |
+| guarded packs require cryptographic identity | `guarded tool packs require a secure network posture: policies.identity.provider must be one of static, oidc, mtls` |
+| guarded packs reject header fallback | `guarded tool packs require a secure network posture: policies.identity.allow_header_fallback must be false` |
+| guarded packs require default-deny | `guarded tool packs require a secure network posture: policies.default_deny must be true` |
+| guarded packs require signing key | `KAFKAMCP_APPROVAL_SIGNING_KEY must contain at least 32 bytes when ops-write or governance is enabled` |
+| ops-write cannot disable approval | `policies.approval.enabled cannot be false while server.tool_packs includes ops-write` |
+| Network transport requires cryptographic identity | `refusing to start "sse"/"streamable-http" network transport without a secure posture: policies.identity.provider must be one of static, oidc, mtls` |
+| Network transport rejects header fallback | `policies.identity.allow_header_fallback must be false` (for network transports with cryptographic providers) |
+| Network transport requires default-deny | `policies.default_deny must be true` (for network transports) |
 
 ## Development
 
@@ -867,139 +590,48 @@ make help
 | `make test-short` | Run tests without `-race` for fast iteration |
 | `make test-race-short` | Run tests with `-race` and `-short` for fast-but-safe iteration |
 | `make benchmark` | Run Go benchmarks with memory stats |
-| `make new-tool NAME=xyz` | Scaffold a new tool (engine, handler, registration) |
+| `make new-tool NAME=xyz` | Create a compile-only tool skeleton; real integration/tests are required before registration |
 | `make sdk-setup` | Install SDK test dependencies (Python, Node.js) |
-| `make sdk-test` | Run tests for all SDKs (Go, Python, VS Code) |
+| `make sdk-test` | Run Go, Python, and TypeScript SDK tests |
 | `make docs-serve` | Serve the Docusaurus documentation site locally |
 | `make changelog` | Generate CHANGELOG.md from Conventional Commits |
 | `make check-deps` | Check that go.mod/go.sum are tidy |
 | `make deps` | Check for outdated and vulnerable Go dependencies |
-| `make security` | Run govulncheck for known vulnerabilities |
+| `make security` | Run the gosec production gate and govulncheck |
 
 ## Project Structure
 
-```
+```text
 kafkamcp/
-├── cmd/kafkamcp/          # CLI entrypoint
-│   └── main.go
+├── cmd/                    # CLI, readiness, generators, incident demo
 ├── internal/
-│   ├── aclmgmt/           # Kafka ACL management tools
-│   ├── adaptiverate/      # Adaptive rate limiting
-│   ├── advisor/           # Cluster health advisor
-│   ├── agentmemory/       # Agent memory persistence
-│   ├── agentprofile/      # ML-based agent behavioral threat detection
-│   ├── anomaly/           # AI-powered anomaly detection (z-score, IQR)
-│   ├── audit/             # Structured JSON audit logger
-│   ├── auth/              # Policy engine (per-agent access control)
-│   ├── benchmark/         # Built-in benchmarking and load testing
-│   ├── capability/        # Dynamic MCP capability negotiation
-│   ├── catalog/           # Data catalog discovery
-│   ├── cdc/               # Change Data Capture bridge
-│   ├── chaos/             # Chaos testing toolkit
-│   ├── chat/              # Conversational chat engine
-│   ├── cloud/             # Cloud provider integrations
-│   ├── clouddeploy/       # Zero-config deployment templates
-│   ├── codec/             # Avro and Protobuf wire-format serialization
-│   ├── collaboration/     # Multi-agent collaboration
-│   ├── compliance/        # Compliance policy enforcement
-│   ├── config/            # YAML config loader with env var expansion
-│   ├── configvcs/         # Configuration version control
-│   ├── contracts/         # Schema-aware data contracts
-│   ├── controlplane/      # Multi-tenant SaaS control plane
-│   ├── correlation/       # Unified observability correlation engine
-│   ├── cost/              # Kafka cost analysis and waste detection
-│   ├── costattribution/   # Cost attribution per team/topic
-│   ├── crosslineage/      # Cross-topic data lineage tracking
-│   ├── dagworkflow/       # DAG-based workflow engine
-│   ├── dashboard/         # Dashboard data aggregation
-│   ├── dataquality/       # Real-time data quality scoring and SLA monitoring
-│   ├── devmode/           # Local development mode with sample data
-│   ├── digitaltwin/       # In-memory Kafka cluster simulation
-│   ├── dlq/               # Dead-letter queue remediation
-│   ├── engine/            # Generic thread-safe in-memory store
-│   ├── eventsourcing/     # Event-sourced agent action recording (CQRS)
-│   ├── evolution/         # Schema evolution advisor
-│   ├── federation/        # Multi-cluster federation
-│   ├── finops/            # FinOps infrastructure cost tracking
-│   ├── flowdebug/         # Message flow debugging
-│   ├── forecast/          # ML-based capacity forecasting
-│   ├── gateway/           # API gateway integration
-│   ├── gitops/            # GitOps configuration management
-│   ├── graph/             # Embedded knowledge graph
-│   ├── healthscore/       # Unified health score aggregation
-│   ├── ide/               # IDE integration utilities
-│   ├── incident/          # AI-assisted incident correlation
-│   ├── kafka/             # Kafka client manager (admin, consume, produce)
-│   ├── lagdiag/           # Consumer lag root cause analysis
-│   ├── lineage/           # Topic data lineage tracking
-│   ├── llmpipeline/       # LLM training data export from Kafka
-│   ├── masking/           # PII redaction and data masking engine
-│   ├── match/             # Topic pattern matching utilities
-│   ├── metrics/           # Prometheus metrics collection
-│   ├── migration/         # Kafka migration planning assistant
-│   ├── msgsampling/       # Statistical message sampling and profiling
-│   ├── nlpipeline/        # Natural language pipeline descriptions
-│   ├── nlquery/           # Natural language query engine
-│   ├── observability/     # Observability pipeline
-│   ├── onboarding/        # Guided onboarding flows
-│   ├── opa/               # Open Policy Agent integration
-│   ├── operator/          # Kubernetes operator support
-│   ├── orchestration/     # Multi-agent orchestration engine
-│   ├── persona/           # Declarative agent personas
-│   ├── pipeline/          # Stream processing pipelines
-│   ├── platform/          # Multi-platform abstraction (Kafka, Redpanda, MSK)
-│   ├── playbook/          # Anomaly detection playbooks
-│   ├── plugin/            # Plugin/extension registry
-│   ├── predictalert/      # Predictive consumer group alerting
-│   ├── profiler/          # Performance profiling
-│   ├── randid/            # Cryptographically random ID generation
-│   ├── ratelimit/         # Per-agent rate limiting
-│   ├── replay/            # Message replay engine
-│   ├── replication/       # Cross-cluster replication monitoring
-│   ├── retention/         # Intelligent data retention policy management
-│   ├── runbook/           # Multi-step operational runbook execution
-│   ├── sandbox/           # Sandboxed execution environment
-│   ├── schema/            # Schema Registry client with LRU cache
-│   ├── schemaadvisor/     # AI-powered schema evolution advisor
-│   ├── schemaplayground/  # Interactive schema testing environment
-│   ├── selfheal/          # Self-healing consumer group monitor
-│   ├── semantic/          # Semantic search over messages
-│   ├── server/            # MCP server, tool/resource handlers
-│   ├── sessionreplay/     # Session recording and replay
-│   ├── sidecar/           # Embeddable in-process MCP server
-│   ├── smartroute/        # Intelligent message routing
-│   ├── streamsql/         # SQL over Kafka streams
-│   ├── taskqueue/         # Background task queue
-│   ├── telemetry/         # OpenTelemetry tracing provider
-│   ├── tenant/            # Multi-tenant isolation
-│   ├── timeseries/        # Time-series metric storage
-│   ├── topicportal/       # Self-service topic provisioning
-│   ├── topictemplate/     # Declarative topic configuration templates
-│   ├── urlutil/           # URL validation utilities
-│   ├── vectorsync/        # Kafka-to-vector-store synchronization
-│   ├── viewstore/         # Materialized view store
-│   ├── watch/             # Event-driven watch subscriptions
-│   └── workflow/          # Agent workflow templates
-├── sdk/
-│   ├── go/                # Go client SDK
-│   ├── python/            # Python SDKs (LangChain, CrewAI)
-│   ├── vscode/            # VS Code extension
-│   ├── cursor/            # Cursor editor integration
-│   └── intellij/          # IntelliJ plugin (placeholder — VS Code and Cursor are prioritized)
-├── deploy/
-│   ├── grafana/            # Grafana dashboard (kafkamcp-overview.json)
-│   └── helm/              # Helm chart for Kubernetes
-├── docs/
-│   ├── adr/               # Architecture Decision Records (001–004)
-│   └── internal/          # Internal docs (PRD.md, GTM.md)
-├── blog/                  # Blog posts & content strategy
-├── website/               # Docusaurus documentation site (kafkamcp.dev)
-├── examples/              # Example configurations
-├── .github/workflows/     # CI/CD
-├── Dockerfile
-├── kafkamcp.yaml          # Example configuration
-├── go.mod
-└── go.sum
+│   ├── app/                # Runtime, transports, probes, shutdown
+│   ├── config/             # YAML schema, validation, defaults
+│   ├── server/             # 29 tools, 9 resources, middleware
+│   ├── kafka/              # Supported Kafka, ACL, and Connect operations
+│   ├── schema/             # Schema Registry client and cache
+│   ├── auth/               # Policy and identity providers
+│   ├── approval/           # Signed approval grants
+│   ├── idempotency/        # Retry reservation and replay receipts
+│   ├── engine/             # In-memory / SQLite persistence
+│   ├── audit/              # Structured audit logging
+│   ├── masking/            # Message payload masking
+│   ├── ratelimit/          # Request budgets
+│   ├── metrics/            # Prometheus metrics
+│   ├── telemetry/          # OpenTelemetry
+│   ├── lagdiag/            # Lag diagnosis
+│   ├── onboarding/         # Cluster discovery
+│   ├── opa/                # Policy evaluate/simulate
+│   ├── aclmgmt/            # ACL diff/audit/reconcile
+│   ├── doctor/             # Deployment diagnostics
+│   ├── readiness/          # Release gates
+│   └── tooleval/           # Tool-routing evaluation
+├── sdk/                    # Go, Python, TypeScript, Cursor
+├── deploy/helm/            # Production Kubernetes chart
+├── docs/                   # Architecture, operations, compatibility, ADRs
+├── website/                # Docusaurus documentation
+├── examples/               # Configs and incident demo
+└── .github/workflows/      # CI, security, release, website
 ```
 
 ## License
@@ -1034,7 +666,11 @@ Verify `sasl_mechanism`, `sasl_username`, and `sasl_password` match your broker 
 error: listen tcp :3100: bind: address already in use
 ```
 
-Another process is using the configured port. Either stop that process or change `server.port` in your config. The metrics endpoint runs on `127.0.0.1:port+1` (default `127.0.0.1:3101`); in container or Kubernetes deployments you may need to expose it separately since it only binds to localhost.
+Another process is using the configured port. Either stop that process or change
+`server.port` / `server.metrics_port` in your config. Metrics and probes bind to
+`server.metrics_host` (default `127.0.0.1`). Container and Kubernetes configs
+must set `metrics_host: 0.0.0.0` and restrict access with firewall or
+NetworkPolicy rules.
 
 ### Permission denied
 
@@ -1046,8 +682,26 @@ For deployment walk-throughs see [`deploy/helm/kafkamcp/`](deploy/helm/kafkamcp/
 
 ## Documentation & Community
 
-- 📖 **In-repo docs** — [`docs/`](docs/) (architecture, ADRs, tool reference, persistence)
+- 📖 **Documentation website** — [josedab.github.io/kafkamcp](https://josedab.github.io/kafkamcp/)
+- 📖 **In-repo docs** — [`docs/`](docs/)
+  - [Architecture](docs/ARCHITECTURE.md)
+  - [Operations & Production Guide](docs/OPERATIONS.md)
+  - [Production Deployment Checklist](docs/PRODUCTION_CHECKLIST.md)
+  - [Persistence](docs/PERSISTENCE.md)
+  - [API Stability Contract](docs/API_STABILITY.md)
+  - [Compatibility Matrix](docs/COMPATIBILITY.md)
+  - [Versioning & Deprecation Policy](docs/VERSIONING.md)
+  - [Vendor Compatibility Matrix](docs/VENDOR_COMPAT.md)
+  - [Incident Triage Playbook](docs/INCIDENT_TRIAGE.md)
+  - [Comparison with KIP-1318, Confluent, MSK, Redpanda, Aiven, Conduktor](docs/COMPARISON.md)
+  - [KIP-1318 Coexistence](docs/KIP-1318.md)
+  - [Roadmap](docs/ROADMAP.md)
+  - [Release & Supply-Chain Verification](docs/RELEASE.md)
+  - [Community & Contribution](docs/COMMUNITY.md)
+  - [ADRs](docs/adr/)
 - 📋 **Changelog** — [CHANGELOG.md](CHANGELOG.md)
+- 💬 **Discussions** — [GitHub Discussions](https://github.com/josedab/kafkamcp/discussions) (questions, ideas, feedback)
+- 🔒 **Security** — [Private vulnerability reporting](https://github.com/josedab/kafkamcp/security/advisories/new)
 - 📝 **Blog**:
   - [Your AI Agents Are Blind to Kafka — And That's Costing You Weeks](blog/01-agents-blind-to-kafka.md)
   - [Connect Claude to Your Kafka Cluster in 5 Minutes](blog/02-connect-claude-to-kafka.md)
@@ -1069,17 +723,23 @@ To report a vulnerability, please see [SECURITY.md](SECURITY.md).
 
 ## Roadmap
 
-- [x] **v0.1**: Core P0 tools (list, describe, consume, produce, schemas, groups)
-- [x] **v0.2**: Auth enforcement, rate limiting, Prometheus metrics
-- [x] **v0.3**: P1 tools (subscribe, topic CRUD, search, offset reset, DLQ analysis, schema compat)
-- [x] **v0.4**: P2 tools (aggregate, join, NL query, schema evolution, Kafka Connect, topic graph)
-- [x] **v0.4**: All MCP resources (15 static + 3 templates)
-- [x] **v0.5**: Data masking and PII redaction
-- [x] **v0.6**: Anomaly detection, cost analysis, self-healing consumer groups, lag diagnostics
-- [x] **v0.7**: Knowledge graph, data lineage, migration planning, capacity forecasting
-- [x] **v0.8**: Multi-platform support (Redpanda, MSK), GitOps, agent personas, workflows
-- [x] **v0.9**: Advisor, catalog, compliance, federation, OPA integration, Grafana dashboard
-- [ ] **v0.10**: DAG workflows, semantic search, stream SQL, replay engine, sandbox execution
-- [ ] **v1.0**: Cloud managed service, enterprise features (SSO)
+KafkaMCP is positioned as a **secure, vendor-neutral Kafka operations gateway for AI agents**. The roadmap was reset to prioritize a small, trustworthy, production-grade core over feature breadth. New feature families are frozen; managed cloud, billing, SAML/SSO, a marketplace, and generic streaming-platform expansion are **demand-gated non-goals** (see the [cloud-deferral ADR](docs/adr/0001-defer-managed-cloud-saml-billing.md)).
 
-See the [PRD](docs/internal/PRD.md) for the complete roadmap.
+### Capability classification
+
+| Classification | Meaning | Examples |
+| --- | --- | --- |
+| **Stable** | Read-only core protected by compatibility snapshots; not a GA/LTS claim | `core-read` pack: topic/schema discovery, bounded consume/search, lag/DLQ diagnosis, health/metrics, capability discovery |
+| **Beta** | Real, functional, but still hardening | `ops-write` (approval-gated mutations), `governance` (policy/audit/masking), approval grants |
+
+### Direction
+
+- [x] **Reset** — vendor-neutral gateway framing; read-only `core-read` default (≤15 tools); `analytics`/`streaming`/`all` packs removed
+- [x] **Security core** — keyed HMAC masking/tokenization; fail-closed network transports (cryptographic identity + default-deny required); approval grants for every write/destructive tool
+- [x] **Governance wedge (beta)** — two-person approval (default), policy simulation, blast-radius previews, recovery guidance, signed per-grant decision chains, verify/export; marketplace/control-plane/agent-store/cloud-deploy tools removed from all packs
+- [ ] **Validation** — opt-in activation metrics, doctor/validate workflow, reproducible incident-triage demo, design-partner playbook
+- [ ] **Vendor-neutral compatibility** — Apache Kafka + Redpanda harnesses; documented MSK/Confluent profiles; KIP-1318 adapter boundary
+- [ ] **v1 readiness** — stable API/naming/deprecation policy, compatibility snapshots, production ops docs, readiness report
+- [ ] **Commercial gate** — a managed cloud / enterprise service is **not** implemented until three independent customers request it and two commit to paid pilots
+
+See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the full reset roadmap. Historical/internal product documents under `docs/internal/` are retained for context only and are explicitly labeled as historical — they do not describe current shipping behavior.

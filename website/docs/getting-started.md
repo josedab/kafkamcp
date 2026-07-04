@@ -13,9 +13,15 @@ Get KafkaMCP running and connected to your Kafka cluster in under 5 minutes.
 - **One** of the following (choose your preferred install method):
   - Go 1.25+ (for source install)
   - Docker
-  - Pre-built binary from [GitHub Releases](https://github.com/kafkamcp/kafkamcp/releases)
+  - Pre-built binary from [GitHub Releases](https://github.com/josedab/kafkamcp/releases)
 
 ## Step 1: Install
+
+:::warning Pre-release repository
+No signed binary or GHCR image has been published yet. Use **Go Install** or
+**From Source** today. The Binary and Docker commands below become available
+after the first tagged release.
+:::
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -24,31 +30,31 @@ import TabItem from '@theme/TabItem';
 <TabItem value="go" label="Go Install" default>
 
 ```bash
-go install github.com/kafkamcp/kafkamcp/cmd/kafkamcp@latest
+go install github.com/josedab/kafkamcp/cmd/kafkamcp@latest
 ```
 
 </TabItem>
-<TabItem value="binary" label="Binary">
+<TabItem value="binary" label="Binary (after first release)">
 
 ```bash
 # Download the latest release for your platform
-# Browse all releases: https://github.com/kafkamcp/kafkamcp/releases
-curl -sSL https://github.com/kafkamcp/kafkamcp/releases/latest/download/kafkamcp_$(uname -s)_$(uname -m).tar.gz | tar xz
+# Browse all releases: https://github.com/josedab/kafkamcp/releases
+curl -sSL https://github.com/josedab/kafkamcp/releases/latest/download/kafkamcp_$(uname -s)_$(uname -m).tar.gz | tar xz
 sudo mv kafkamcp /usr/local/bin/
 ```
 
 </TabItem>
-<TabItem value="docker" label="Docker">
+<TabItem value="docker" label="Docker (after first release)">
 
 ```bash
-docker pull ghcr.io/kafkamcp/kafkamcp:latest
+docker pull ghcr.io/josedab/kafkamcp:VERSION
 ```
 
 </TabItem>
 <TabItem value="source" label="From Source">
 
 ```bash
-git clone https://github.com/kafkamcp/kafkamcp.git
+git clone https://github.com/josedab/kafkamcp.git
 cd kafkamcp
 go build -o bin/kafkamcp ./cmd/kafkamcp
 ```
@@ -64,6 +70,8 @@ Create a `kafkamcp.yaml` file:
 server:
   transport: stdio
   log_level: info
+  # tool_packs defaults to [core-read] — ≤15 read-only tools.
+  # Guarded packs (ops-write/governance) require secure HTTP identity and a signing key.
 
 clusters:
   - name: local
@@ -78,6 +86,18 @@ audit:
 
 :::tip
 For Confluent Cloud, AWS MSK, or other managed Kafka services, see the [configuration reference](./configuration) for SASL/TLS settings.
+:::
+
+:::warning Guarded packs require a network transport
+`ops-write` and `governance` **cannot be used with `transport: stdio`**. To
+enable either pack you must:
+
+1. Switch to `transport: sse` or `transport: streamable-http`
+2. Configure a cryptographic identity provider (`policies.identity.provider: static`, `oidc`, or `mtls`)
+3. Set `policies.default_deny: true`
+4. Set `KAFKAMCP_APPROVAL_SIGNING_KEY` (≥32 bytes) in your environment
+
+Every mutating tool will then require a short-lived, two-person approval grant before it executes. See the [Security guide](./security) for the full approval workflow.
 :::
 
 ## Step 3: Validate
@@ -155,4 +175,4 @@ Try more:
 - [**Core Concepts**](./core-concepts) — Understand tools, resources, and the auth model
 - [**Claude Desktop Guide**](./guides/claude-desktop) — Detailed Claude Desktop setup
 - [**Docker Compose Guide**](./guides/docker-compose) — Full local environment with Kafka + KafkaMCP
-- [**API Reference**](./api-reference/tools) — All 251 tools with examples
+- [**API Reference**](./api-reference/tools) — Full tool catalog with examples
