@@ -170,4 +170,3 @@ After `make incident-demo-up-redpanda` and `make incident-demo-setup`:
 go test -tags=integration -run TestKafkaProviderContract ./internal/kafka/ \
   -kafka-brokers=localhost:9092 -kafka-provider=redpanda
 ```
-
