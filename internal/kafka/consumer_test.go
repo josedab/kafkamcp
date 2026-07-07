@@ -52,6 +52,56 @@ func TestSelectTargetPartitions(t *testing.T) {
 	}
 }
 
+func TestResolveConsumePosition(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name            string
+		value           string
+		wantKind        consumePositionKind
+		wantOffset      int64
+		wantTimestampMs int64
+	}{
+		{
+			name:     "earliest",
+			value:    "earliest",
+			wantKind: consumePositionEarliest,
+		},
+		{
+			name:     "latest",
+			value:    "latest",
+			wantKind: consumePositionLatest,
+		},
+		{
+			name:       "numeric",
+			value:      "42",
+			wantKind:   consumePositionAbsolute,
+			wantOffset: 42,
+		},
+		{
+			name:            "timestamp",
+			value:           "2024-01-02T03:04:05Z",
+			wantKind:        consumePositionTimestamp,
+			wantTimestampMs: 1704164645000,
+		},
+		{
+			name:     "invalid falls back to end",
+			value:    "not-an-offset",
+			wantKind: consumePositionEnd,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := resolveConsumePosition(tt.value)
+			if got.kind != tt.wantKind || got.offset != tt.wantOffset || got.timestampMillis != tt.wantTimestampMs {
+				t.Fatalf("resolveConsumePosition(%q) = %#v", tt.value, got)
+			}
+		})
+	}
+}
+
 func TestConsume_MockManager_DefaultOffset(t *testing.T) {
 	t.Parallel()
 	mock := &MockKafkaManager{

@@ -39,6 +39,7 @@ func (m *Manager) Consume(ctx context.Context, cluster, topic string, partition 
 		// the total limit despite integer division truncation.
 		perPartitionLimit = (limit / len(targetPartitions)) + 1
 	}
+	position := resolveConsumePosition(offset)
 
 	// Build consumer offsets
 	consumeOffsets := make(map[string]map[int32]kgo.Offset)
@@ -46,10 +47,10 @@ func (m *Manager) Consume(ctx context.Context, cluster, topic string, partition 
 
 	for _, p := range targetPartitions {
 		var kgoOffset kgo.Offset
-		switch offset {
-		case "earliest":
+		switch position.kind {
+		case consumePositionEarliest:
 			kgoOffset = kgo.NewOffset().AtStart()
-		case "latest":
+		case consumePositionLatest:
 			endOffsets, err := admin.ListEndOffsets(ctx, topic)
 			if err != nil {
 				return nil, fmt.Errorf("listing end offsets: %w", err)
@@ -63,23 +64,21 @@ func (m *Manager) Consume(ctx context.Context, cluster, topic string, partition 
 				startAt = 0
 			}
 			kgoOffset = kgo.NewOffset().At(startAt)
-		default:
-			if off, err := strconv.ParseInt(offset, 10, 64); err == nil {
-				kgoOffset = kgo.NewOffset().At(off)
-			} else if ts, tsErr := parseTimestamp(offset); tsErr == nil {
-				listed, lErr := admin.ListOffsetsAfterMilli(ctx, ts.UnixMilli(), topic)
-				if lErr == nil {
-					if lo, ok := listed.Lookup(topic, p); ok && lo.Offset >= 0 {
-						kgoOffset = kgo.NewOffset().At(lo.Offset)
-					} else {
-						kgoOffset = kgo.NewOffset().AtEnd()
-					}
+		case consumePositionAbsolute:
+			kgoOffset = kgo.NewOffset().At(position.offset)
+		case consumePositionTimestamp:
+			listed, err := admin.ListOffsetsAfterMilli(ctx, position.timestampMillis, topic)
+			if err == nil {
+				if listedOffset, ok := listed.Lookup(topic, p); ok && listedOffset.Offset >= 0 {
+					kgoOffset = kgo.NewOffset().At(listedOffset.Offset)
 				} else {
 					kgoOffset = kgo.NewOffset().AtEnd()
 				}
 			} else {
 				kgoOffset = kgo.NewOffset().AtEnd()
 			}
+		default:
+			kgoOffset = kgo.NewOffset().AtEnd()
 		}
 		consumeOffsets[topic][p] = kgoOffset
 	}
@@ -152,4 +151,36 @@ func selectTargetPartitions(requested int32, available []kadm.PartitionDetail) [
 		selected = append(selected, partition.Partition)
 	}
 	return selected
+}
+
+type consumePositionKind uint8
+
+const (
+	consumePositionEnd consumePositionKind = iota
+	consumePositionEarliest
+	consumePositionLatest
+	consumePositionAbsolute
+	consumePositionTimestamp
+)
+
+type consumePosition struct {
+	kind            consumePositionKind
+	offset          int64
+	timestampMillis int64
+}
+
+func resolveConsumePosition(value string) consumePosition {
+	switch value {
+	case "earliest":
+		return consumePosition{kind: consumePositionEarliest}
+	case "latest":
+		return consumePosition{kind: consumePositionLatest}
+	}
+	if offset, err := strconv.ParseInt(value, 10, 64); err == nil {
+		return consumePosition{kind: consumePositionAbsolute, offset: offset}
+	}
+	if timestamp, err := parseTimestamp(value); err == nil {
+		return consumePosition{kind: consumePositionTimestamp, timestampMillis: timestamp.UnixMilli()}
+	}
+	return consumePosition{kind: consumePositionEnd}
 }
