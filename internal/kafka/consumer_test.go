@@ -5,8 +5,10 @@ import (
 	"errors"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/twmb/franz-go/pkg/kadm"
+	"github.com/twmb/franz-go/pkg/kgo"
 )
 
 func TestSelectTargetPartitions(t *testing.T) {
@@ -99,6 +101,40 @@ func TestResolveConsumePosition(t *testing.T) {
 				t.Fatalf("resolveConsumePosition(%q) = %#v", tt.value, got)
 			}
 		})
+	}
+}
+
+func TestMessageFromRecord(t *testing.T) {
+	t.Parallel()
+
+	record := &kgo.Record{
+		Partition: 3,
+		Offset:    42,
+		Timestamp: time.Date(2024, time.January, 2, 3, 4, 5, 6000000, time.FixedZone("offset", 3600)),
+		Key:       []byte("key"),
+		Value:     []byte(`{"status":"ok"}`),
+		Headers: []kgo.RecordHeader{
+			{Key: "trace-id", Value: []byte("first")},
+			{Key: "trace-id", Value: []byte("last")},
+		},
+	}
+
+	message := messageFromRecord(record, "auto")
+	if message.Partition != 3 || message.Offset != 42 {
+		t.Fatalf("messageFromRecord metadata = %#v", message)
+	}
+	if message.Timestamp != "2024-01-02T02:04:05.006Z" {
+		t.Fatalf("messageFromRecord timestamp = %q", message.Timestamp)
+	}
+	if message.Key != "key" {
+		t.Fatalf("messageFromRecord key = %#v", message.Key)
+	}
+	value, ok := message.Value.(map[string]any)
+	if !ok || value["status"] != "ok" {
+		t.Fatalf("messageFromRecord value = %#v", message.Value)
+	}
+	if message.Headers["trace-id"] != "last" {
+		t.Fatalf("messageFromRecord headers = %#v", message.Headers)
 	}
 }
 

@@ -114,20 +114,7 @@ func (m *Manager) Consume(ctx context.Context, cluster, topic string, partition 
 			if len(messages) >= limit {
 				return
 			}
-			headers := make(map[string]string)
-			for _, h := range r.Headers {
-				headers[h.Key] = string(h.Value)
-			}
-
-			msg := Message{
-				Partition: r.Partition,
-				Offset:    r.Offset,
-				Timestamp: r.Timestamp.UTC().Format("2006-01-02T15:04:05.000Z"),
-				Key:       decodeValue(r.Key, deserializer),
-				Value:     decodeValue(r.Value, deserializer),
-				Headers:   headers,
-			}
-			messages = append(messages, msg)
+			messages = append(messages, messageFromRecord(r, deserializer))
 		})
 
 		if fetches.NumRecords() == 0 {
@@ -183,4 +170,19 @@ func resolveConsumePosition(value string) consumePosition {
 		return consumePosition{kind: consumePositionTimestamp, timestampMillis: timestamp.UnixMilli()}
 	}
 	return consumePosition{kind: consumePositionEnd}
+}
+
+func messageFromRecord(record *kgo.Record, deserializer string) Message {
+	headers := make(map[string]string)
+	for _, header := range record.Headers {
+		headers[header.Key] = string(header.Value)
+	}
+	return Message{
+		Partition: record.Partition,
+		Offset:    record.Offset,
+		Timestamp: record.Timestamp.UTC().Format("2006-01-02T15:04:05.000Z"),
+		Key:       decodeValue(record.Key, deserializer),
+		Value:     decodeValue(record.Value, deserializer),
+		Headers:   headers,
+	}
 }
