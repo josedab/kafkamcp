@@ -274,50 +274,35 @@ func (m *Manager) SearchMessages(ctx context.Context, cluster string, req Search
 		if len(matched) >= req.Limit {
 			break
 		}
-
-		// Time range filter
-		if !endTime.IsZero() {
-			if t, err := time.Parse("2006-01-02T15:04:05.000Z", msg.Timestamp); err == nil {
-				if t.After(endTime) {
-					continue
-				}
-			}
-		}
-
-		// Key filter
-		if req.KeyFilter != "" {
-			keyStr := fmt.Sprintf("%v", msg.Key)
-			if !strings.Contains(keyStr, req.KeyFilter) {
-				continue
-			}
-		}
-
-		// Header filter
-		if req.HeaderKey != "" {
-			if msg.Headers == nil {
-				continue
-			}
-			hv, ok := msg.Headers[req.HeaderKey]
-			if !ok {
-				continue
-			}
-			if req.HeaderValue != "" && hv != req.HeaderValue {
-				continue
-			}
-		}
-
-		// Value content filter
-		if req.ValueContains != "" {
-			valStr := fmt.Sprintf("%v", msg.Value)
-			if !strings.Contains(valStr, req.ValueContains) {
-				continue
-			}
+		if !searchMessageMatches(msg, req, endTime) {
+			continue
 		}
 
 		matched = append(matched, msg)
 	}
 
 	return matched, scanned, nil
+}
+
+func searchMessageMatches(message Message, req SearchRequest, endTime time.Time) bool {
+	if !endTime.IsZero() {
+		if timestamp, err := time.Parse("2006-01-02T15:04:05.000Z", message.Timestamp); err == nil && timestamp.After(endTime) {
+			return false
+		}
+	}
+	if req.KeyFilter != "" && !strings.Contains(fmt.Sprintf("%v", message.Key), req.KeyFilter) {
+		return false
+	}
+	if req.HeaderKey != "" {
+		if message.Headers == nil {
+			return false
+		}
+		headerValue, ok := message.Headers[req.HeaderKey]
+		if !ok || (req.HeaderValue != "" && headerValue != req.HeaderValue) {
+			return false
+		}
+	}
+	return req.ValueContains == "" || strings.Contains(fmt.Sprintf("%v", message.Value), req.ValueContains)
 }
 
 // AnalyzeDLQResult is the result of DLQ analysis.
