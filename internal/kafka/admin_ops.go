@@ -331,44 +331,48 @@ func (m *Manager) AnalyzeDLQ(ctx context.Context, cluster, topic string, limit i
 		return nil, err
 	}
 
+	return summarizeDLQ(topic, msgs), nil
+}
+
+func summarizeDLQ(topic string, messages []Message) *AnalyzeDLQResult {
 	result := &AnalyzeDLQResult{
 		Topic:         topic,
-		TotalMessages: len(msgs),
+		TotalMessages: len(messages),
 		ErrorTypes:    make(map[string]int),
 	}
 
-	for _, msg := range msgs {
+	for _, message := range messages {
 		// Categorize by error headers
 		errorType := "unknown"
-		if msg.Headers != nil {
-			if et, ok := msg.Headers["error.type"]; ok {
+		if message.Headers != nil {
+			if et, ok := message.Headers["error.type"]; ok {
 				errorType = et
-			} else if et, ok := msg.Headers["x-error-type"]; ok {
+			} else if et, ok := message.Headers["x-error-type"]; ok {
 				errorType = et
-			} else if et, ok := msg.Headers["error_type"]; ok {
+			} else if et, ok := message.Headers["error_type"]; ok {
 				errorType = et
-			} else if _, ok := msg.Headers["error.message"]; ok {
+			} else if _, ok := message.Headers["error.message"]; ok {
 				errorType = "processing_error"
-			} else if _, ok := msg.Headers["x-error-message"]; ok {
+			} else if _, ok := message.Headers["x-error-message"]; ok {
 				errorType = "processing_error"
 			}
 		}
 		result.ErrorTypes[errorType]++
 
-		if result.TimeRange.Earliest == "" || msg.Timestamp < result.TimeRange.Earliest {
-			result.TimeRange.Earliest = msg.Timestamp
+		if result.TimeRange.Earliest == "" || message.Timestamp < result.TimeRange.Earliest {
+			result.TimeRange.Earliest = message.Timestamp
 		}
-		if result.TimeRange.Latest == "" || msg.Timestamp > result.TimeRange.Latest {
-			result.TimeRange.Latest = msg.Timestamp
+		if result.TimeRange.Latest == "" || message.Timestamp > result.TimeRange.Latest {
+			result.TimeRange.Latest = message.Timestamp
 		}
 	}
 
 	// Include a few sample messages (max 5)
 	sampleCount := 5
-	if len(msgs) < sampleCount {
-		sampleCount = len(msgs)
+	if len(messages) < sampleCount {
+		sampleCount = len(messages)
 	}
-	result.Samples = msgs[:sampleCount]
+	result.Samples = messages[:sampleCount]
 
-	return result, nil
+	return result
 }

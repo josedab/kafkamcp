@@ -75,3 +75,46 @@ func TestSearchMessageMatches(t *testing.T) {
 		})
 	}
 }
+
+func TestSummarizeDLQ(t *testing.T) {
+	t.Parallel()
+
+	messages := []Message{
+		{Offset: 0, Timestamp: "2024-01-03T00:00:00.000Z", Headers: map[string]string{
+			"error.type": "primary", "x-error-type": "secondary",
+		}},
+		{Offset: 1, Timestamp: "2024-01-01T00:00:00.000Z", Headers: map[string]string{
+			"x-error-type": "secondary",
+		}},
+		{Offset: 2, Timestamp: "2024-01-02T00:00:00.000Z", Headers: map[string]string{
+			"error_type": "tertiary",
+		}},
+		{Offset: 3, Timestamp: "2024-01-04T00:00:00.000Z", Headers: map[string]string{
+			"error.message": "failed",
+		}},
+		{Offset: 4, Timestamp: "2024-01-05T00:00:00.000Z", Headers: map[string]string{
+			"x-error-message": "failed",
+		}},
+		{Offset: 5, Timestamp: "2024-01-06T00:00:00.000Z"},
+	}
+
+	result := summarizeDLQ("orders.dlq", messages)
+	if result.Topic != "orders.dlq" || result.TotalMessages != 6 {
+		t.Fatalf("summarizeDLQ metadata = %#v", result)
+	}
+	wantTypes := map[string]int{
+		"primary": 1, "secondary": 1, "tertiary": 1, "processing_error": 2, "unknown": 1,
+	}
+	for errorType, want := range wantTypes {
+		if got := result.ErrorTypes[errorType]; got != want {
+			t.Fatalf("summarizeDLQ error type %q = %d, want %d", errorType, got, want)
+		}
+	}
+	if result.TimeRange.Earliest != "2024-01-01T00:00:00.000Z" ||
+		result.TimeRange.Latest != "2024-01-06T00:00:00.000Z" {
+		t.Fatalf("summarizeDLQ time range = %#v", result.TimeRange)
+	}
+	if len(result.Samples) != 5 || result.Samples[4].Offset != 4 {
+		t.Fatalf("summarizeDLQ samples = %#v", result.Samples)
+	}
+}
