@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/twmb/franz-go/pkg/kadm"
 	"github.com/twmb/franz-go/pkg/kgo"
 )
 
@@ -30,14 +31,7 @@ func (m *Manager) Consume(ctx context.Context, cluster, topic string, partition 
 		return nil, fmt.Errorf("topic %q not found", topic)
 	}
 
-	var targetPartitions []int32
-	if partition >= 0 {
-		targetPartitions = []int32{partition}
-	} else {
-		for _, p := range td.Partitions.Sorted() {
-			targetPartitions = append(targetPartitions, p.Partition)
-		}
-	}
+	targetPartitions := selectTargetPartitions(partition, td.Partitions.Sorted())
 
 	perPartitionLimit := limit
 	if partition < 0 && len(targetPartitions) > 0 {
@@ -147,4 +141,15 @@ func (m *Manager) Consume(ctx context.Context, cluster, topic string, partition 
 	}
 
 	return messages, nil
+}
+
+func selectTargetPartitions(requested int32, available []kadm.PartitionDetail) []int32 {
+	if requested >= 0 {
+		return []int32{requested}
+	}
+	var selected []int32
+	for _, partition := range available {
+		selected = append(selected, partition.Partition)
+	}
+	return selected
 }

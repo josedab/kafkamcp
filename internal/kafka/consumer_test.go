@@ -3,8 +3,54 @@ package kafka
 import (
 	"context"
 	"errors"
+	"reflect"
 	"testing"
+
+	"github.com/twmb/franz-go/pkg/kadm"
 )
+
+func TestSelectTargetPartitions(t *testing.T) {
+	t.Parallel()
+
+	available := []kadm.PartitionDetail{
+		{Partition: 0},
+		{Partition: 2},
+		{Partition: 5},
+	}
+	tests := []struct {
+		name      string
+		requested int32
+		available []kadm.PartitionDetail
+		want      []int32
+	}{
+		{
+			name:      "specific partition ignores available metadata",
+			requested: 4,
+			available: available,
+			want:      []int32{4},
+		},
+		{
+			name:      "all partitions preserve metadata order",
+			requested: -1,
+			available: available,
+			want:      []int32{0, 2, 5},
+		},
+		{
+			name:      "no available partitions",
+			requested: -1,
+			want:      nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			if got := selectTargetPartitions(tt.requested, tt.available); !reflect.DeepEqual(got, tt.want) {
+				t.Fatalf("selectTargetPartitions() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
 
 func TestConsume_MockManager_DefaultOffset(t *testing.T) {
 	t.Parallel()
