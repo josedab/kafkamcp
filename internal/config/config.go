@@ -463,51 +463,8 @@ func (c *Config) validate() error {
 	if err := c.validateTransport(); err != nil {
 		return err
 	}
-
-	if len(c.Server.ToolPacks) > 0 {
-		for i, p := range c.Server.ToolPacks {
-			norm := strings.ToLower(strings.TrimSpace(p))
-			if !ValidToolPacks[norm] {
-				return fmt.Errorf("server.tool_packs[%d] %q is invalid; must be one of: core-read, ops-write, governance, experimental (deprecated: essential, ops)", i, p)
-			}
-		}
-	}
-
-	guardedPacksEnabled := HasToolPack(c.Server.ToolPacks, PackOpsWrite) ||
-		HasToolPack(c.Server.ToolPacks, PackGovernance)
-	if guardedPacksEnabled {
-		if c.Policies.Approval.Enabled != nil && !*c.Policies.Approval.Enabled {
-			return fmt.Errorf("policies.approval.enabled cannot be false while a guarded tool pack is enabled")
-		}
-		if !c.NetworkTransport() {
-			return fmt.Errorf("ops-write and governance require sse or streamable-http so callers can use cryptographically verified identities; stdio is core-read only")
-		}
-		if err := c.TransportSecurityError(); err != nil {
-			return fmt.Errorf("guarded tool packs require a secure network posture: %w", err)
-		}
-		keyEnv := c.Policies.Approval.EffectiveSigningKeyEnv()
-		key := os.Getenv(keyEnv)
-		if len(key) < 32 {
-			return fmt.Errorf("%s must contain at least 32 bytes when ops-write or governance is enabled so approval decisions are tamper-evident", keyEnv)
-		}
-		for i, previousEnv := range c.Policies.Approval.PreviousSigningKeyEnvs {
-			previousEnv = strings.TrimSpace(previousEnv)
-			if previousEnv == "" {
-				return fmt.Errorf("policies.approval.previous_signing_key_envs[%d] must not be empty", i)
-			}
-			if len(os.Getenv(previousEnv)) < 32 {
-				return fmt.Errorf("%s must contain at least 32 bytes while configured as a previous approval signing key", previousEnv)
-			}
-		}
-	}
-	if c.Policies.Approval.TTLSeconds < 0 {
-		return fmt.Errorf("policies.approval.ttl_seconds must be non-negative")
-	}
-	if c.Policies.Approval.MaxTTLSeconds < 0 || c.Policies.Approval.MaxTTLSeconds > 3600 {
-		return fmt.Errorf("policies.approval.max_ttl_seconds must be between 0 and 3600")
-	}
-	if retention := c.Policies.Approval.TerminalRetentionSeconds; retention < 0 || retention > 2592000 {
-		return fmt.Errorf("policies.approval.terminal_retention_seconds must be between 0 and 2592000")
+	if err := c.validateToolPacksAndApproval(); err != nil {
+		return err
 	}
 
 	if backend := strings.ToLower(strings.TrimSpace(c.Server.Persistence.Backend)); backend != "" {
@@ -556,6 +513,55 @@ func (c *Config) validate() error {
 
 	if err := c.TransportSecurityError(); err != nil {
 		return err
+	}
+	return nil
+}
+
+func (c *Config) validateToolPacksAndApproval() error {
+	if len(c.Server.ToolPacks) > 0 {
+		for i, p := range c.Server.ToolPacks {
+			norm := strings.ToLower(strings.TrimSpace(p))
+			if !ValidToolPacks[norm] {
+				return fmt.Errorf("server.tool_packs[%d] %q is invalid; must be one of: core-read, ops-write, governance, experimental (deprecated: essential, ops)", i, p)
+			}
+		}
+	}
+
+	guardedPacksEnabled := HasToolPack(c.Server.ToolPacks, PackOpsWrite) ||
+		HasToolPack(c.Server.ToolPacks, PackGovernance)
+	if guardedPacksEnabled {
+		if c.Policies.Approval.Enabled != nil && !*c.Policies.Approval.Enabled {
+			return fmt.Errorf("policies.approval.enabled cannot be false while a guarded tool pack is enabled")
+		}
+		if !c.NetworkTransport() {
+			return fmt.Errorf("ops-write and governance require sse or streamable-http so callers can use cryptographically verified identities; stdio is core-read only")
+		}
+		if err := c.TransportSecurityError(); err != nil {
+			return fmt.Errorf("guarded tool packs require a secure network posture: %w", err)
+		}
+		keyEnv := c.Policies.Approval.EffectiveSigningKeyEnv()
+		key := os.Getenv(keyEnv)
+		if len(key) < 32 {
+			return fmt.Errorf("%s must contain at least 32 bytes when ops-write or governance is enabled so approval decisions are tamper-evident", keyEnv)
+		}
+		for i, previousEnv := range c.Policies.Approval.PreviousSigningKeyEnvs {
+			previousEnv = strings.TrimSpace(previousEnv)
+			if previousEnv == "" {
+				return fmt.Errorf("policies.approval.previous_signing_key_envs[%d] must not be empty", i)
+			}
+			if len(os.Getenv(previousEnv)) < 32 {
+				return fmt.Errorf("%s must contain at least 32 bytes while configured as a previous approval signing key", previousEnv)
+			}
+		}
+	}
+	if c.Policies.Approval.TTLSeconds < 0 {
+		return fmt.Errorf("policies.approval.ttl_seconds must be non-negative")
+	}
+	if c.Policies.Approval.MaxTTLSeconds < 0 || c.Policies.Approval.MaxTTLSeconds > 3600 {
+		return fmt.Errorf("policies.approval.max_ttl_seconds must be between 0 and 3600")
+	}
+	if retention := c.Policies.Approval.TerminalRetentionSeconds; retention < 0 || retention > 2592000 {
+		return fmt.Errorf("policies.approval.terminal_retention_seconds must be between 0 and 2592000")
 	}
 	return nil
 }
