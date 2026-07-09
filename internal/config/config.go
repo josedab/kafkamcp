@@ -457,52 +457,8 @@ func Load(path string) (*Config, error) {
 }
 
 func (c *Config) validate() error {
-	if len(c.Clusters) == 0 {
-		return fmt.Errorf("at least one cluster must be configured")
-	}
-
-	seen := make(map[string]bool)
-	for i, cluster := range c.Clusters {
-		if cluster.Name == "" {
-			return fmt.Errorf("cluster[%d]: name is required", i)
-		}
-		if seen[cluster.Name] {
-			return fmt.Errorf("cluster[%d]: duplicate cluster name %q", i, cluster.Name)
-		}
-		seen[cluster.Name] = true
-		if cluster.BootstrapServers == "" {
-			return fmt.Errorf("cluster[%d] (%s): bootstrap_servers is required", i, cluster.Name)
-		}
-		protocol := strings.ToUpper(strings.TrimSpace(cluster.SecurityProtocol))
-		if protocol == "" {
-			protocol = "PLAINTEXT"
-		}
-		switch protocol {
-		case "PLAINTEXT", "SSL", "SASL_SSL", "SASL_PLAINTEXT":
-		default:
-			return fmt.Errorf("cluster[%d] (%s): invalid security_protocol %q; must be one of: PLAINTEXT, SSL, SASL_SSL, SASL_PLAINTEXT", i, cluster.Name, cluster.SecurityProtocol)
-		}
-		saslMechanism := strings.ToUpper(strings.TrimSpace(cluster.SASLMechanism))
-		// SASL consistency: if SASL mechanism is set, username and password are required
-		if saslMechanism != "" && (cluster.SASLUsername == "" || cluster.SASLPassword == "") {
-			return fmt.Errorf("cluster[%d] (%s): sasl_username and sasl_password are required when sasl_mechanism is set", i, cluster.Name)
-		}
-		if strings.HasPrefix(protocol, "SASL_") && saslMechanism == "" {
-			return fmt.Errorf("cluster[%d] (%s): sasl_mechanism is required when security_protocol=%s", i, cluster.Name, protocol)
-		}
-		if saslMechanism != "" && !strings.HasPrefix(protocol, "SASL_") {
-			return fmt.Errorf("cluster[%d] (%s): security_protocol must be SASL_SSL or SASL_PLAINTEXT when sasl_mechanism is set", i, cluster.Name)
-		}
-		if err := validateTLSVersion(cluster.TLSMinVersion); err != nil {
-			return fmt.Errorf("cluster[%d] (%s): tls_min_version: %w", i, cluster.Name, err)
-		}
-		if err := validateTLSVersion(cluster.ConnectTLS.MinVersion); err != nil {
-			return fmt.Errorf("cluster[%d] (%s): connect_tls.min_version: %w", i, cluster.Name, err)
-		}
-		// InsecureSkipVerify requires explicit env gate
-		if cluster.ConnectTLS.InsecureSkipVerify && os.Getenv("KAFKAMCP_ALLOW_INSECURE") != "true" {
-			return fmt.Errorf("cluster[%d] (%s): insecure_skip_verify requires KAFKAMCP_ALLOW_INSECURE=true environment variable", i, cluster.Name)
-		}
+	if err := c.validateClusters(); err != nil {
+		return err
 	}
 
 	transport := c.Server.Transport
@@ -627,6 +583,57 @@ func (c *Config) validate() error {
 
 	if err := c.TransportSecurityError(); err != nil {
 		return err
+	}
+	return nil
+}
+
+func (c *Config) validateClusters() error {
+	if len(c.Clusters) == 0 {
+		return fmt.Errorf("at least one cluster must be configured")
+	}
+
+	seen := make(map[string]bool)
+	for i, cluster := range c.Clusters {
+		if cluster.Name == "" {
+			return fmt.Errorf("cluster[%d]: name is required", i)
+		}
+		if seen[cluster.Name] {
+			return fmt.Errorf("cluster[%d]: duplicate cluster name %q", i, cluster.Name)
+		}
+		seen[cluster.Name] = true
+		if cluster.BootstrapServers == "" {
+			return fmt.Errorf("cluster[%d] (%s): bootstrap_servers is required", i, cluster.Name)
+		}
+		protocol := strings.ToUpper(strings.TrimSpace(cluster.SecurityProtocol))
+		if protocol == "" {
+			protocol = "PLAINTEXT"
+		}
+		switch protocol {
+		case "PLAINTEXT", "SSL", "SASL_SSL", "SASL_PLAINTEXT":
+		default:
+			return fmt.Errorf("cluster[%d] (%s): invalid security_protocol %q; must be one of: PLAINTEXT, SSL, SASL_SSL, SASL_PLAINTEXT", i, cluster.Name, cluster.SecurityProtocol)
+		}
+		saslMechanism := strings.ToUpper(strings.TrimSpace(cluster.SASLMechanism))
+		// SASL consistency: if SASL mechanism is set, username and password are required
+		if saslMechanism != "" && (cluster.SASLUsername == "" || cluster.SASLPassword == "") {
+			return fmt.Errorf("cluster[%d] (%s): sasl_username and sasl_password are required when sasl_mechanism is set", i, cluster.Name)
+		}
+		if strings.HasPrefix(protocol, "SASL_") && saslMechanism == "" {
+			return fmt.Errorf("cluster[%d] (%s): sasl_mechanism is required when security_protocol=%s", i, cluster.Name, protocol)
+		}
+		if saslMechanism != "" && !strings.HasPrefix(protocol, "SASL_") {
+			return fmt.Errorf("cluster[%d] (%s): security_protocol must be SASL_SSL or SASL_PLAINTEXT when sasl_mechanism is set", i, cluster.Name)
+		}
+		if err := validateTLSVersion(cluster.TLSMinVersion); err != nil {
+			return fmt.Errorf("cluster[%d] (%s): tls_min_version: %w", i, cluster.Name, err)
+		}
+		if err := validateTLSVersion(cluster.ConnectTLS.MinVersion); err != nil {
+			return fmt.Errorf("cluster[%d] (%s): connect_tls.min_version: %w", i, cluster.Name, err)
+		}
+		// InsecureSkipVerify requires explicit env gate
+		if cluster.ConnectTLS.InsecureSkipVerify && os.Getenv("KAFKAMCP_ALLOW_INSECURE") != "true" {
+			return fmt.Errorf("cluster[%d] (%s): insecure_skip_verify requires KAFKAMCP_ALLOW_INSECURE=true environment variable", i, cluster.Name)
+		}
 	}
 	return nil
 }
