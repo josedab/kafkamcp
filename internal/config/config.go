@@ -460,35 +460,8 @@ func (c *Config) validate() error {
 	if err := c.validateClusters(); err != nil {
 		return err
 	}
-
-	transport := c.Server.Transport
-	if transport == "" {
-		transport = "stdio"
-	}
-	validTransports := map[string]bool{"stdio": true, "sse": true, "streamable-http": true}
-	if !validTransports[transport] {
-		return fmt.Errorf("invalid transport %q; must be one of: stdio, sse, streamable-http", transport)
-	}
-	serverPort := c.Server.Port
-	if serverPort == 0 {
-		serverPort = 3100
-	}
-	if serverPort < 1 || serverPort > 65535 {
-		return fmt.Errorf("server.port must be between 1 and 65535")
-	}
-	metricsPort := c.Server.MetricsPort
-	if metricsPort == 0 {
-		if serverPort == 65535 {
-			return fmt.Errorf("server.metrics_port is required when server.port is 65535")
-		}
-		metricsPort = serverPort + 1
-	}
-	if metricsPort < 1 || metricsPort > 65535 {
-		return fmt.Errorf("server.metrics_port must be between 1 and 65535")
-	}
-	if c.NetworkTransport() && metricsPort == serverPort &&
-		effectiveHost(c.Server.MetricsHost, "127.0.0.1") == effectiveHost(c.Server.Host, "0.0.0.0") {
-		return fmt.Errorf("server.metrics_port must differ from server.port when both listeners use the same host")
+	if err := c.validateTransport(); err != nil {
+		return err
 	}
 
 	if len(c.Server.ToolPacks) > 0 {
@@ -583,6 +556,39 @@ func (c *Config) validate() error {
 
 	if err := c.TransportSecurityError(); err != nil {
 		return err
+	}
+	return nil
+}
+
+func (c *Config) validateTransport() error {
+	transport := c.Server.Transport
+	if transport == "" {
+		transport = "stdio"
+	}
+	validTransports := map[string]bool{"stdio": true, "sse": true, "streamable-http": true}
+	if !validTransports[transport] {
+		return fmt.Errorf("invalid transport %q; must be one of: stdio, sse, streamable-http", transport)
+	}
+	serverPort := c.Server.Port
+	if serverPort == 0 {
+		serverPort = 3100
+	}
+	if serverPort < 1 || serverPort > 65535 {
+		return fmt.Errorf("server.port must be between 1 and 65535")
+	}
+	metricsPort := c.Server.MetricsPort
+	if metricsPort == 0 {
+		if serverPort == 65535 {
+			return fmt.Errorf("server.metrics_port is required when server.port is 65535")
+		}
+		metricsPort = serverPort + 1
+	}
+	if metricsPort < 1 || metricsPort > 65535 {
+		return fmt.Errorf("server.metrics_port must be between 1 and 65535")
+	}
+	if c.NetworkTransport() && metricsPort == serverPort &&
+		effectiveHost(c.Server.MetricsHost, "127.0.0.1") == effectiveHost(c.Server.Host, "0.0.0.0") {
+		return fmt.Errorf("server.metrics_port must differ from server.port when both listeners use the same host")
 	}
 	return nil
 }
