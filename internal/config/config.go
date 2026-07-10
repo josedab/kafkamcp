@@ -466,15 +466,8 @@ func (c *Config) validate() error {
 	if err := c.validateToolPacksAndApproval(); err != nil {
 		return err
 	}
-
-	if backend := strings.ToLower(strings.TrimSpace(c.Server.Persistence.Backend)); backend != "" {
-		validBackends := map[string]bool{"inmem": true, "memory": true, "in-memory": true, "sqlite": true, "sqlite3": true}
-		if !validBackends[backend] {
-			return fmt.Errorf("invalid server.persistence.backend %q; must be one of: inmem, sqlite", c.Server.Persistence.Backend)
-		}
-		if (backend == "sqlite" || backend == "sqlite3") && strings.TrimSpace(c.Server.Persistence.Path) == "" {
-			return fmt.Errorf("server.persistence.path is required when server.persistence.backend=%q", c.Server.Persistence.Backend)
-		}
+	if err := c.validatePersistence(); err != nil {
+		return err
 	}
 
 	switch strings.ToLower(strings.TrimSpace(c.Policies.Identity.Provider)) {
@@ -513,6 +506,21 @@ func (c *Config) validate() error {
 
 	if err := c.TransportSecurityError(); err != nil {
 		return err
+	}
+	return nil
+}
+
+func (c *Config) validatePersistence() error {
+	backend := strings.ToLower(strings.TrimSpace(c.Server.Persistence.Backend))
+	if backend == "" {
+		return nil
+	}
+	validBackends := map[string]bool{"inmem": true, "memory": true, "in-memory": true, "sqlite": true, "sqlite3": true}
+	if !validBackends[backend] {
+		return fmt.Errorf("invalid server.persistence.backend %q; must be one of: inmem, sqlite", c.Server.Persistence.Backend)
+	}
+	if (backend == "sqlite" || backend == "sqlite3") && strings.TrimSpace(c.Server.Persistence.Path) == "" {
+		return fmt.Errorf("server.persistence.path is required when server.persistence.backend=%q", c.Server.Persistence.Backend)
 	}
 	return nil
 }
