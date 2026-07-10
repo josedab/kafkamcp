@@ -469,7 +469,17 @@ func (c *Config) validate() error {
 	if err := c.validatePersistence(); err != nil {
 		return err
 	}
+	if err := c.validateIdentity(); err != nil {
+		return err
+	}
 
+	if err := c.TransportSecurityError(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Config) validateIdentity() error {
 	switch strings.ToLower(strings.TrimSpace(c.Policies.Identity.Provider)) {
 	case "", "none", "disabled":
 		// no-op
@@ -502,10 +512,6 @@ func (c *Config) validate() error {
 		// silently at request time.
 	default:
 		return fmt.Errorf("invalid policies.identity.provider %q; must be one of: none, static, oidc, mtls", c.Policies.Identity.Provider)
-	}
-
-	if err := c.TransportSecurityError(); err != nil {
-		return err
 	}
 	return nil
 }
