@@ -58,18 +58,7 @@ func (s *Server) handleApproval(ctx context.Context, request mcp.CallToolRequest
 			return s.handleApprovalApproveAction(ctx, request, agentID, args, start)
 
 		case "list":
-			filter := request.GetString("agent_id", "")
-			if filter == "" {
-				filter = agentID
-			}
-			if filter != agentID && !s.isAdmin(agentID) {
-				return mcp.NewToolResultError("admin role is required to list another agent's approvals"), nil
-			}
-			grants, err := s.approvalManager.List(ctx, filter)
-			if err != nil {
-				return s.toolError("failed to list grants", err), nil
-			}
-			return marshalResult(map[string]any{"action": "list", "grants": grants, "total": len(grants)})
+			return s.handleApprovalListAction(ctx, request, agentID)
 
 		case "get":
 			id := request.GetString("grant_id", "")
@@ -116,6 +105,21 @@ func (s *Server) handleApproval(ctx context.Context, request mcp.CallToolRequest
 			return mcp.NewToolResultError("unknown action; expected one of: request, approve, list, get, revoke, status"), nil
 		}
 	})(ctx, request)
+}
+
+func (s *Server) handleApprovalListAction(ctx context.Context, request mcp.CallToolRequest, agentID string) (*mcp.CallToolResult, error) {
+	filter := request.GetString("agent_id", "")
+	if filter == "" {
+		filter = agentID
+	}
+	if filter != agentID && !s.isAdmin(agentID) {
+		return mcp.NewToolResultError("admin role is required to list another agent's approvals"), nil
+	}
+	grants, err := s.approvalManager.List(ctx, filter)
+	if err != nil {
+		return s.toolError("failed to list grants", err), nil
+	}
+	return marshalResult(map[string]any{"action": "list", "grants": grants, "total": len(grants)})
 }
 
 func (s *Server) handleApprovalApproveAction(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
