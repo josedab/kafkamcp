@@ -55,23 +55,7 @@ func (s *Server) handleApproval(ctx context.Context, request mcp.CallToolRequest
 			return s.handleApprovalRequestAction(ctx, request, agentID, args, start)
 
 		case "approve":
-			if deny := s.checkAuth(agentID, "kafka_approval", auth.ResourceCluster, "*", auth.ActionAdmin); deny != nil {
-				return deny, nil
-			}
-			id := request.GetString("grant_id", "")
-			if id == "" {
-				return mcp.NewToolResultError("grant_id is required for action=approve"), nil
-			}
-			ttl := time.Duration(request.GetInt("ttl_seconds", 0)) * time.Second
-			g, token, err := s.approvalManager.Approve(ctx, id, agentID, ttl)
-			if err != nil {
-				return s.toolError("failed to approve grant", err), nil
-			}
-			s.logAudit(ctx, agentID, "kafka_approval", args, "", "success", 1, nil, start)
-			return marshalResult(map[string]any{
-				"action": "approve", "grant": g, "approval_token": token,
-				"warning": "the token is shown once; pass it as approval_token to the target tool before it expires",
-			})
+			return s.handleApprovalApproveAction(ctx, request, agentID, args, start)
 
 		case "list":
 			filter := request.GetString("agent_id", "")
@@ -132,6 +116,26 @@ func (s *Server) handleApproval(ctx context.Context, request mcp.CallToolRequest
 			return mcp.NewToolResultError("unknown action; expected one of: request, approve, list, get, revoke, status"), nil
 		}
 	})(ctx, request)
+}
+
+func (s *Server) handleApprovalApproveAction(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+	if deny := s.checkAuth(agentID, "kafka_approval", auth.ResourceCluster, "*", auth.ActionAdmin); deny != nil {
+		return deny, nil
+	}
+	id := request.GetString("grant_id", "")
+	if id == "" {
+		return mcp.NewToolResultError("grant_id is required for action=approve"), nil
+	}
+	ttl := time.Duration(request.GetInt("ttl_seconds", 0)) * time.Second
+	g, token, err := s.approvalManager.Approve(ctx, id, agentID, ttl)
+	if err != nil {
+		return s.toolError("failed to approve grant", err), nil
+	}
+	s.logAudit(ctx, agentID, "kafka_approval", args, "", "success", 1, nil, start)
+	return marshalResult(map[string]any{
+		"action": "approve", "grant": g, "approval_token": token,
+		"warning": "the token is shown once; pass it as approval_token to the target tool before it expires",
+	})
 }
 
 func (s *Server) handleApprovalRequestAction(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
