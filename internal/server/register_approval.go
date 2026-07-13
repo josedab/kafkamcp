@@ -52,51 +52,7 @@ func (s *Server) handleApproval(ctx context.Context, request mcp.CallToolRequest
 		action := request.GetString("action", "")
 		switch action {
 		case "request":
-			tool := request.GetString("tool", "")
-			if tool == "" {
-				return mcp.NewToolResultError("tool is required for action=request"), nil
-			}
-			if !IsWriteTool(tool) {
-				return mcp.NewToolResultError("tool is not a mutating/destructive tool; approval is only required for write tools"), nil
-			}
-			requestReason := request.GetString("request_reason", "")
-			if requestReason == "" {
-				return mcp.NewToolResultError("request_reason is required for action=request"), nil
-			}
-			targetArgs, ok := args["args"].(map[string]any)
-			if !ok || len(targetArgs) == 0 {
-				return mcp.NewToolResultError("args is required for action=request and must contain the exact target-tool arguments"), nil
-			}
-			if !requiresApproval(tool, targetArgs) {
-				return mcp.NewToolResultError("the requested tool action is read-only and does not require approval"), nil
-			}
-			scope, err := s.approvalScopeFor(ctx, tool, agentID, targetArgs)
-			if err != nil {
-				return mcp.NewToolResultError(err.Error()), nil
-			}
-			policy, _ := policyForWriteTool(tool)
-			decision := s.policyEngine.Evaluate(agentID, policy.ResourceType, scope.Resource, policy.Action)
-			if !decision.Allowed {
-				s.logAudit(ctx, agentID, "kafka_approval", args, scope.Cluster, "denied", 0, nil, start)
-				return mcp.NewToolResultError("approval request denied by policy: " + decision.Reason + "; " +
-					leastPrivilegeRecommendation(decision)), nil
-			}
-			preview := s.blastRadiusPreview(ctx, tool, scope, targetArgs)
-			g, err := s.approvalManager.Request(ctx, approval.RequestSpec{
-				Scope: scope, Preview: preview["summary"].(string), Requester: agentID, Reason: requestReason,
-			})
-			if err != nil {
-				return s.toolError("failed to request approval", err), nil
-			}
-			s.logAudit(ctx, agentID, "kafka_approval", args, scope.Cluster, "success", 1, nil, start)
-			return marshalResult(map[string]any{
-				"action": "request", "grant": g,
-				"policy_simulation": decision,
-				"blast_radius":      preview,
-				"request_reason":    requestReason,
-				"recovery_guidance": recoveryGuidance(tool),
-				"next":              "have an operator approve grant_id via action=approve; then call the target tool with approval_token=<token>",
-			})
+			return s.handleApprovalRequestAction(ctx, request, agentID, args, start)
 
 		case "approve":
 			if deny := s.checkAuth(agentID, "kafka_approval", auth.ResourceCluster, "*", auth.ActionAdmin); deny != nil {
@@ -176,6 +132,54 @@ func (s *Server) handleApproval(ctx context.Context, request mcp.CallToolRequest
 			return mcp.NewToolResultError("unknown action; expected one of: request, approve, list, get, revoke, status"), nil
 		}
 	})(ctx, request)
+}
+
+func (s *Server) handleApprovalRequestAction(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+	tool := request.GetString("tool", "")
+	if tool == "" {
+		return mcp.NewToolResultError("tool is required for action=request"), nil
+	}
+	if !IsWriteTool(tool) {
+		return mcp.NewToolResultError("tool is not a mutating/destructive tool; approval is only required for write tools"), nil
+	}
+	requestReason := request.GetString("request_reason", "")
+	if requestReason == "" {
+		return mcp.NewToolResultError("request_reason is required for action=request"), nil
+	}
+	targetArgs, ok := args["args"].(map[string]any)
+	if !ok || len(targetArgs) == 0 {
+		return mcp.NewToolResultError("args is required for action=request and must contain the exact target-tool arguments"), nil
+	}
+	if !requiresApproval(tool, targetArgs) {
+		return mcp.NewToolResultError("the requested tool action is read-only and does not require approval"), nil
+	}
+	scope, err := s.approvalScopeFor(ctx, tool, agentID, targetArgs)
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+	policy, _ := policyForWriteTool(tool)
+	decision := s.policyEngine.Evaluate(agentID, policy.ResourceType, scope.Resource, policy.Action)
+	if !decision.Allowed {
+		s.logAudit(ctx, agentID, "kafka_approval", args, scope.Cluster, "denied", 0, nil, start)
+		return mcp.NewToolResultError("approval request denied by policy: " + decision.Reason + "; " +
+			leastPrivilegeRecommendation(decision)), nil
+	}
+	preview := s.blastRadiusPreview(ctx, tool, scope, targetArgs)
+	g, err := s.approvalManager.Request(ctx, approval.RequestSpec{
+		Scope: scope, Preview: preview["summary"].(string), Requester: agentID, Reason: requestReason,
+	})
+	if err != nil {
+		return s.toolError("failed to request approval", err), nil
+	}
+	s.logAudit(ctx, agentID, "kafka_approval", args, scope.Cluster, "success", 1, nil, start)
+	return marshalResult(map[string]any{
+		"action": "request", "grant": g,
+		"policy_simulation": decision,
+		"blast_radius":      preview,
+		"request_reason":    requestReason,
+		"recovery_guidance": recoveryGuidance(tool),
+		"next":              "have an operator approve grant_id via action=approve; then call the target tool with approval_token=<token>",
+	})
 }
 
 func (s *Server) handleGovernanceDecision(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
