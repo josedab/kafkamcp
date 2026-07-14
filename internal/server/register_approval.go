@@ -64,23 +64,7 @@ func (s *Server) handleApproval(ctx context.Context, request mcp.CallToolRequest
 			return s.handleApprovalGetAction(ctx, request, agentID)
 
 		case "revoke":
-			id := request.GetString("grant_id", "")
-			if id == "" {
-				return mcp.NewToolResultError("grant_id is required for action=revoke"), nil
-			}
-			existing, err := s.approvalManager.Get(ctx, id)
-			if err != nil {
-				return s.toolError("failed to get grant", err), nil
-			}
-			if existing.Scope.AgentID != agentID && !s.isAdmin(agentID) {
-				return mcp.NewToolResultError("admin role is required to revoke another agent's approval"), nil
-			}
-			g, err := s.approvalManager.Revoke(ctx, id, agentID, request.GetString("reason", ""))
-			if err != nil {
-				return s.toolError("failed to revoke grant", err), nil
-			}
-			s.logAudit(ctx, agentID, "kafka_approval", args, "", "success", 1, nil, start)
-			return marshalResult(map[string]any{"action": "revoke", "grant": g})
+			return s.handleApprovalRevokeAction(ctx, request, agentID, args, start)
 
 		case "status":
 			return marshalResult(map[string]any{
@@ -94,6 +78,26 @@ func (s *Server) handleApproval(ctx context.Context, request mcp.CallToolRequest
 			return mcp.NewToolResultError("unknown action; expected one of: request, approve, list, get, revoke, status"), nil
 		}
 	})(ctx, request)
+}
+
+func (s *Server) handleApprovalRevokeAction(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+	id := request.GetString("grant_id", "")
+	if id == "" {
+		return mcp.NewToolResultError("grant_id is required for action=revoke"), nil
+	}
+	existing, err := s.approvalManager.Get(ctx, id)
+	if err != nil {
+		return s.toolError("failed to get grant", err), nil
+	}
+	if existing.Scope.AgentID != agentID && !s.isAdmin(agentID) {
+		return mcp.NewToolResultError("admin role is required to revoke another agent's approval"), nil
+	}
+	g, err := s.approvalManager.Revoke(ctx, id, agentID, request.GetString("reason", ""))
+	if err != nil {
+		return s.toolError("failed to revoke grant", err), nil
+	}
+	s.logAudit(ctx, agentID, "kafka_approval", args, "", "success", 1, nil, start)
+	return marshalResult(map[string]any{"action": "revoke", "grant": g})
 }
 
 func (s *Server) handleApprovalGetAction(ctx context.Context, request mcp.CallToolRequest, agentID string) (*mcp.CallToolResult, error) {
