@@ -61,18 +61,7 @@ func (s *Server) handleApproval(ctx context.Context, request mcp.CallToolRequest
 			return s.handleApprovalListAction(ctx, request, agentID)
 
 		case "get":
-			id := request.GetString("grant_id", "")
-			if id == "" {
-				return mcp.NewToolResultError("grant_id is required for action=get"), nil
-			}
-			g, err := s.approvalManager.Get(ctx, id)
-			if err != nil {
-				return s.toolError("failed to get grant", err), nil
-			}
-			if g.Scope.AgentID != agentID && !s.isAdmin(agentID) {
-				return mcp.NewToolResultError("admin role is required to inspect another agent's approval"), nil
-			}
-			return marshalResult(map[string]any{"action": "get", "grant": g})
+			return s.handleApprovalGetAction(ctx, request, agentID)
 
 		case "revoke":
 			id := request.GetString("grant_id", "")
@@ -105,6 +94,21 @@ func (s *Server) handleApproval(ctx context.Context, request mcp.CallToolRequest
 			return mcp.NewToolResultError("unknown action; expected one of: request, approve, list, get, revoke, status"), nil
 		}
 	})(ctx, request)
+}
+
+func (s *Server) handleApprovalGetAction(ctx context.Context, request mcp.CallToolRequest, agentID string) (*mcp.CallToolResult, error) {
+	id := request.GetString("grant_id", "")
+	if id == "" {
+		return mcp.NewToolResultError("grant_id is required for action=get"), nil
+	}
+	g, err := s.approvalManager.Get(ctx, id)
+	if err != nil {
+		return s.toolError("failed to get grant", err), nil
+	}
+	if g.Scope.AgentID != agentID && !s.isAdmin(agentID) {
+		return mcp.NewToolResultError("admin role is required to inspect another agent's approval"), nil
+	}
+	return marshalResult(map[string]any{"action": "get", "grant": g})
 }
 
 func (s *Server) handleApprovalListAction(ctx context.Context, request mcp.CallToolRequest, agentID string) (*mcp.CallToolResult, error) {
