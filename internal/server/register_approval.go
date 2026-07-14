@@ -67,17 +67,21 @@ func (s *Server) handleApproval(ctx context.Context, request mcp.CallToolRequest
 			return s.handleApprovalRevokeAction(ctx, request, agentID, args, start)
 
 		case "status":
-			return marshalResult(map[string]any{
-				"action":         "status",
-				"enforced":       s.approvalEnforced,
-				"write_tools":    WriteToolNames(),
-				"token_argument": approvalTokenArg,
-			})
+			return s.handleApprovalStatusAction()
 
 		default:
 			return mcp.NewToolResultError("unknown action; expected one of: request, approve, list, get, revoke, status"), nil
 		}
 	})(ctx, request)
+}
+
+func (s *Server) handleApprovalStatusAction() (*mcp.CallToolResult, error) {
+	return marshalResult(map[string]any{
+		"action":         "status",
+		"enforced":       s.approvalEnforced,
+		"write_tools":    WriteToolNames(),
+		"token_argument": approvalTokenArg,
+	})
 }
 
 func (s *Server) handleApprovalRevokeAction(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
