@@ -208,36 +208,7 @@ func (s *Server) handleGovernanceDecision(ctx context.Context, request mcp.CallT
 	}, func(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
 		switch request.GetString("action", "") {
 		case "simulate":
-			tool := request.GetString("tool", "")
-			policy, ok := policyForWriteTool(tool)
-			if !ok {
-				return mcp.NewToolResultError("tool must be a supported ops-write tool"), nil
-			}
-			targetArgs, ok := args["args"].(map[string]any)
-			if !ok || len(targetArgs) == 0 {
-				return mcp.NewToolResultError("args is required for action=simulate"), nil
-			}
-			if !requiresApproval(tool, targetArgs) {
-				return marshalResult(map[string]any{
-					"action":            "simulate",
-					"approval_required": false,
-					"message":           "the requested tool action is read-only",
-				})
-			}
-			scope, err := s.approvalScopeFor(ctx, tool, agentID, targetArgs)
-			if err != nil {
-				return mcp.NewToolResultError(err.Error()), nil
-			}
-			decision := s.policyEngine.Evaluate(agentID, policy.ResourceType, scope.Resource, policy.Action)
-			s.logAudit(ctx, agentID, "kafka_governance_decision", args, scope.Cluster, "success", 1, nil, start)
-			return marshalResult(map[string]any{
-				"action":                         "simulate",
-				"scope":                          scope,
-				"policy_decision":                decision,
-				"blast_radius":                   s.blastRadiusPreview(ctx, tool, scope, targetArgs),
-				"recovery_guidance":              recoveryGuidance(tool),
-				"least_privilege_recommendation": leastPrivilegeRecommendation(decision),
-			})
+			return s.handleGovernanceSimulateAction(ctx, request, agentID, args, start)
 		case "verify":
 			id := request.GetString("grant_id", "")
 			if id == "" {
@@ -271,6 +242,39 @@ func (s *Server) handleGovernanceDecision(ctx context.Context, request mcp.CallT
 			return mcp.NewToolResultError("unknown action; expected one of: simulate, verify, export"), nil
 		}
 	})(ctx, request)
+}
+
+func (s *Server) handleGovernanceSimulateAction(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
+	tool := request.GetString("tool", "")
+	policy, ok := policyForWriteTool(tool)
+	if !ok {
+		return mcp.NewToolResultError("tool must be a supported ops-write tool"), nil
+	}
+	targetArgs, ok := args["args"].(map[string]any)
+	if !ok || len(targetArgs) == 0 {
+		return mcp.NewToolResultError("args is required for action=simulate"), nil
+	}
+	if !requiresApproval(tool, targetArgs) {
+		return marshalResult(map[string]any{
+			"action":            "simulate",
+			"approval_required": false,
+			"message":           "the requested tool action is read-only",
+		})
+	}
+	scope, err := s.approvalScopeFor(ctx, tool, agentID, targetArgs)
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+	decision := s.policyEngine.Evaluate(agentID, policy.ResourceType, scope.Resource, policy.Action)
+	s.logAudit(ctx, agentID, "kafka_governance_decision", args, scope.Cluster, "success", 1, nil, start)
+	return marshalResult(map[string]any{
+		"action":                         "simulate",
+		"scope":                          scope,
+		"policy_decision":                decision,
+		"blast_radius":                   s.blastRadiusPreview(ctx, tool, scope, targetArgs),
+		"recovery_guidance":              recoveryGuidance(tool),
+		"least_privilege_recommendation": leastPrivilegeRecommendation(decision),
+	})
 }
 
 func (s *Server) isAdmin(agentID string) bool {
