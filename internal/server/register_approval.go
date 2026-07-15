@@ -210,21 +210,7 @@ func (s *Server) handleGovernanceDecision(ctx context.Context, request mcp.CallT
 		case "simulate":
 			return s.handleGovernanceSimulateAction(ctx, request, agentID, args, start)
 		case "verify":
-			id := request.GetString("grant_id", "")
-			if id == "" {
-				return mcp.NewToolResultError("grant_id is required for action=verify"), nil
-			}
-			g, err := s.approvalManager.Get(ctx, id)
-			if err != nil {
-				return s.toolError("failed to get grant", err), nil
-			}
-			if g.Scope.AgentID != agentID && !s.isAdmin(agentID) {
-				return mcp.NewToolResultError("admin role is required to verify another agent's approval"), nil
-			}
-			if err := s.approvalManager.Verify(ctx, id); err != nil {
-				return s.toolError("decision verification failed", err), nil
-			}
-			return marshalResult(map[string]any{"action": "verify", "valid": true, "grant": g})
+			return s.handleGovernanceVerifyAction(ctx, request, agentID)
 		case "export":
 			filter := request.GetString("agent_id", "")
 			if filter == "" {
@@ -242,6 +228,24 @@ func (s *Server) handleGovernanceDecision(ctx context.Context, request mcp.CallT
 			return mcp.NewToolResultError("unknown action; expected one of: simulate, verify, export"), nil
 		}
 	})(ctx, request)
+}
+
+func (s *Server) handleGovernanceVerifyAction(ctx context.Context, request mcp.CallToolRequest, agentID string) (*mcp.CallToolResult, error) {
+	id := request.GetString("grant_id", "")
+	if id == "" {
+		return mcp.NewToolResultError("grant_id is required for action=verify"), nil
+	}
+	g, err := s.approvalManager.Get(ctx, id)
+	if err != nil {
+		return s.toolError("failed to get grant", err), nil
+	}
+	if g.Scope.AgentID != agentID && !s.isAdmin(agentID) {
+		return mcp.NewToolResultError("admin role is required to verify another agent's approval"), nil
+	}
+	if err := s.approvalManager.Verify(ctx, id); err != nil {
+		return s.toolError("decision verification failed", err), nil
+	}
+	return marshalResult(map[string]any{"action": "verify", "valid": true, "grant": g})
 }
 
 func (s *Server) handleGovernanceSimulateAction(ctx context.Context, request mcp.CallToolRequest, agentID string, args map[string]any, start time.Time) (*mcp.CallToolResult, error) {
