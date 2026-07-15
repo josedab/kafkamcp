@@ -212,22 +212,26 @@ func (s *Server) handleGovernanceDecision(ctx context.Context, request mcp.CallT
 		case "verify":
 			return s.handleGovernanceVerifyAction(ctx, request, agentID)
 		case "export":
-			filter := request.GetString("agent_id", "")
-			if filter == "" {
-				filter = agentID
-			}
-			if filter != agentID && !s.isAdmin(agentID) {
-				return mcp.NewToolResultError("admin role is required to export another agent's decisions"), nil
-			}
-			grants, err := s.approvalManager.List(ctx, filter)
-			if err != nil {
-				return s.toolError("failed to export decisions", err), nil
-			}
-			return marshalResult(map[string]any{"action": "export", "grants": grants, "total": len(grants)})
+			return s.handleGovernanceExportAction(ctx, request, agentID)
 		default:
 			return mcp.NewToolResultError("unknown action; expected one of: simulate, verify, export"), nil
 		}
 	})(ctx, request)
+}
+
+func (s *Server) handleGovernanceExportAction(ctx context.Context, request mcp.CallToolRequest, agentID string) (*mcp.CallToolResult, error) {
+	filter := request.GetString("agent_id", "")
+	if filter == "" {
+		filter = agentID
+	}
+	if filter != agentID && !s.isAdmin(agentID) {
+		return mcp.NewToolResultError("admin role is required to export another agent's decisions"), nil
+	}
+	grants, err := s.approvalManager.List(ctx, filter)
+	if err != nil {
+		return s.toolError("failed to export decisions", err), nil
+	}
+	return marshalResult(map[string]any{"action": "export", "grants": grants, "total": len(grants)})
 }
 
 func (s *Server) handleGovernanceVerifyAction(ctx context.Context, request mcp.CallToolRequest, agentID string) (*mcp.CallToolResult, error) {
