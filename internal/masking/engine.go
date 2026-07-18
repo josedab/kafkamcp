@@ -77,51 +77,20 @@ func NewEngine(cfg config.MaskingConfig, logger *slog.Logger) *Engine {
 	e.tokenizer = tok
 
 	for _, r := range cfg.Rules {
-		compiled := Rule{
-			Name:      r.Name,
-			Type:      r.Type,
-			FieldPath: r.FieldPath,
-			Replace:   r.Replace,
-		}
-		if compiled.Replace == "" {
-			compiled.Replace = defaultReplacement
-		}
-
-		if len(r.Agents) > 0 {
-			compiled.Agents = make(map[string]bool, len(r.Agents))
-			for _, a := range r.Agents {
-				compiled.Agents[a] = true
+		compiled, compileErr := compileMaskingRule(ruleCompileInput{
+			Name: r.Name, Type: r.Type, FieldPath: r.FieldPath,
+			Pattern: r.Pattern, Replace: r.Replace, Agents: r.Agents,
+		}, ruleCompileConfig)
+		if compileErr != nil {
+			switch compileErr.kind {
+			case ruleCompilePatternTooLong:
+				logger.Warn("masking regex pattern too long, skipping rule", "rule", r.Name, "length", len(r.Pattern), "max", maxRegexPatternLength)
+			case ruleCompilePatternUnsafe:
+				logger.Warn("masking regex contains potentially dangerous constructs, skipping rule", "rule", r.Name)
+			default:
+				logger.Warn("invalid masking regex, skipping rule", "rule", r.Name, "error", compileErr.cause)
 			}
-		}
-
-		switch r.Type {
-		case "email":
-			compiled.Pattern = emailRegex
-		case "ssn":
-			compiled.Pattern = ssnRegex
-		case "phone":
-			compiled.Pattern = phoneRegex
-		case "credit_card":
-			compiled.Pattern = creditCardRegex
-		case "regex":
-			if r.Pattern != "" {
-				if len(r.Pattern) > maxRegexPatternLength {
-					logger.Warn("masking regex pattern too long, skipping rule", "rule", r.Name, "length", len(r.Pattern), "max", maxRegexPatternLength)
-					continue
-				}
-				if strings.Contains(r.Pattern, "(?") && !strings.Contains(r.Pattern, "(?i)") {
-					logger.Warn("masking regex contains potentially dangerous constructs, skipping rule", "rule", r.Name)
-					continue
-				}
-				p, err := regexp.Compile(r.Pattern)
-				if err != nil {
-					logger.Warn("invalid masking regex, skipping rule", "rule", r.Name, "error", err)
-					continue
-				}
-				compiled.Pattern = p
-			}
-		case "ner":
-			// NER type uses all built-in patterns
+			continue
 		}
 
 		e.rules = append(e.rules, compiled)
@@ -472,23 +441,87 @@ func (e *Engine) RuleCount() int {
 
 // AddRule dynamically adds a masking rule at runtime.
 func (e *Engine) AddRule(name, ruleType, fieldPath, pattern, replace string, agents []string) error {
+	compiled, compileErr := compileMaskingRule(ruleCompileInput{
+		Name: name, Type: ruleType, FieldPath: fieldPath,
+		Pattern: pattern, Replace: replace, Agents: agents,
+	}, ruleCompileDynamic)
+	if compileErr != nil {
+		switch compileErr.kind {
+		case ruleCompilePatternRequired:
+			return fmt.Errorf("regex pattern is required for type 'regex'")
+		case ruleCompilePatternTooLong:
+			return fmt.Errorf("regex pattern exceeds maximum length of %d characters", maxRegexPatternLength)
+		case ruleCompilePatternUnsafe:
+			return fmt.Errorf("regex pattern contains potentially dangerous constructs")
+		case ruleCompileUnknownType:
+			return fmt.Errorf("unknown masking type %q; must be: email, ssn, phone, credit_card, regex, ner", ruleType)
+		default:
+			return fmt.Errorf("invalid regex pattern: %w", compileErr.cause)
+		}
+	}
+
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.rules = append(e.rules, compiled)
+	return nil
+}
+
+type ruleCompileSource uint8
+
+const (
+	ruleCompileConfig ruleCompileSource = iota
+	ruleCompileDynamic
+	ruleCompilePolicy
+)
+
+type ruleCompileErrorKind uint8
+
+const (
+	ruleCompilePatternRequired ruleCompileErrorKind = iota
+	ruleCompilePatternTooLong
+	ruleCompilePatternUnsafe
+	ruleCompilePatternInvalid
+	ruleCompileUnknownType
+)
+
+type ruleCompileError struct {
+	kind  ruleCompileErrorKind
+	cause error
+}
+
+type ruleCompileInput struct {
+	Name      string
+	Type      string
+	FieldPath string
+	Pattern   string
+	Replace   string
+	Agents    []string
+}
+
+func compileMaskingRule(input ruleCompileInput, source ruleCompileSource) (Rule, *ruleCompileError) {
 	compiled := Rule{
-		Name:      name,
-		Type:      ruleType,
-		FieldPath: fieldPath,
-		Replace:   replace,
+		Name:      input.Name,
+		Type:      input.Type,
+		FieldPath: input.FieldPath,
+		Replace:   input.Replace,
 	}
 	if compiled.Replace == "" {
 		compiled.Replace = defaultReplacement
 	}
-	if len(agents) > 0 {
-		compiled.Agents = make(map[string]bool, len(agents))
-		for _, a := range agents {
-			compiled.Agents[a] = true
+	if len(input.Agents) > 0 {
+		compiled.Agents = make(map[string]bool, len(input.Agents))
+		for _, agent := range input.Agents {
+			compiled.Agents[agent] = true
 		}
 	}
 
-	switch ruleType {
+	if source == ruleCompilePolicy {
+		pattern, compileErr := compileMaskingPattern(input.Pattern, false, false)
+		compiled.Pattern = pattern
+		return compiled, compileErr
+	}
+
+	switch input.Type {
 	case "email":
 		compiled.Pattern = emailRegex
 	case "ssn":
@@ -498,31 +531,41 @@ func (e *Engine) AddRule(name, ruleType, fieldPath, pattern, replace string, age
 	case "credit_card":
 		compiled.Pattern = creditCardRegex
 	case "regex":
-		if pattern == "" {
-			return fmt.Errorf("regex pattern is required for type 'regex'")
-		}
-		if len(pattern) > maxRegexPatternLength {
-			return fmt.Errorf("regex pattern exceeds maximum length of %d characters", maxRegexPatternLength)
-		}
-		// Block all (? constructs except (?i) at position 0 only
-		if idx := strings.Index(pattern, "(?"); idx >= 0 {
-			if !(idx == 0 && strings.HasPrefix(pattern, "(?i)") && !strings.Contains(pattern[4:], "(?")) {
-				return fmt.Errorf("regex pattern contains potentially dangerous constructs")
-			}
-		}
-		p, err := regexp.Compile(pattern)
-		if err != nil {
-			return fmt.Errorf("invalid regex pattern: %w", err)
-		}
-		compiled.Pattern = p
+		pattern, compileErr := compileMaskingPattern(input.Pattern, source == ruleCompileDynamic, source == ruleCompileDynamic)
+		compiled.Pattern = pattern
+		return compiled, compileErr
 	case "ner":
-		// NER uses all built-in patterns
+		// NER uses all built-in patterns.
 	default:
-		return fmt.Errorf("unknown masking type %q; must be: email, ssn, phone, credit_card, regex, ner", ruleType)
+		if source == ruleCompileDynamic {
+			return Rule{}, &ruleCompileError{kind: ruleCompileUnknownType}
+		}
 	}
+	return compiled, nil
+}
 
-	e.mu.Lock()
-	defer e.mu.Unlock()
-	e.rules = append(e.rules, compiled)
-	return nil
+func compileMaskingPattern(pattern string, requirePattern, strictFlags bool) (*regexp.Regexp, *ruleCompileError) {
+	if pattern == "" {
+		if requirePattern {
+			return nil, &ruleCompileError{kind: ruleCompilePatternRequired}
+		}
+		return nil, nil
+	}
+	if len(pattern) > maxRegexPatternLength {
+		return nil, &ruleCompileError{kind: ruleCompilePatternTooLong}
+	}
+	if idx := strings.Index(pattern, "(?"); idx >= 0 {
+		allowed := strings.Contains(pattern, "(?i)")
+		if strictFlags {
+			allowed = idx == 0 && strings.HasPrefix(pattern, "(?i)") && !strings.Contains(pattern[4:], "(?")
+		}
+		if !allowed {
+			return nil, &ruleCompileError{kind: ruleCompilePatternUnsafe}
+		}
+	}
+	compiled, err := regexp.Compile(pattern)
+	if err != nil {
+		return nil, &ruleCompileError{kind: ruleCompilePatternInvalid, cause: err}
+	}
+	return compiled, nil
 }
