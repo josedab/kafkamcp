@@ -61,34 +61,49 @@ func NewClient(baseURL, username, password string, cacheMaxEntries, cacheTTLSeco
 }
 
 func (c *Client) doRequest(ctx context.Context, method, path string) ([]byte, error) {
-	reqURL := c.baseURL + path
+	return c.executeRequest(ctx, method, path, nil, registryRequestMessages{
+		execute: "schema registry request failed",
+		read:    "reading response body",
+		status:  "schema registry error",
+	})
+}
 
-	req, err := http.NewRequestWithContext(ctx, method, reqURL, nil)
+type registryRequestMessages struct {
+	execute string
+	read    string
+	status  string
+}
+
+func (c *Client) executeRequest(ctx context.Context, method, path string, body io.Reader, messages registryRequestMessages) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, method, c.baseURL+path, body)
 	if err != nil {
 		return nil, fmt.Errorf("creating request: %w", err)
 	}
 
 	req.Header.Set("Accept", "application/vnd.schemaregistry.v1+json")
+	if body != nil {
+		req.Header.Set("Content-Type", "application/vnd.schemaregistry.v1+json")
+	}
 	if c.username != "" {
 		req.SetBasicAuth(c.username, c.password)
 	}
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("schema registry request failed: %w", err)
+		return nil, fmt.Errorf("%s: %w", messages.execute, err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	body, err := io.ReadAll(io.LimitReader(resp.Body, 10<<20))
+	responseBody, err := io.ReadAll(io.LimitReader(resp.Body, 10<<20))
 	if err != nil {
-		return nil, fmt.Errorf("reading response body: %w", err)
+		return nil, fmt.Errorf("%s: %w", messages.read, err)
 	}
 
 	if resp.StatusCode >= 400 {
-		return nil, fmt.Errorf("schema registry error (HTTP %d)", resp.StatusCode)
+		return nil, fmt.Errorf("%s (HTTP %d)", messages.status, resp.StatusCode)
 	}
 
-	return body, nil
+	return responseBody, nil
 }
 
 // ListSubjects returns all subjects in the Schema Registry.
@@ -411,30 +426,13 @@ func (c *Client) CheckCompatibility(ctx context.Context, subject, version, schem
 	path := fmt.Sprintf("/compatibility/subjects/%s/versions/%s",
 		url.PathEscape(subject), url.PathEscape(version))
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+path,
-		strings.NewReader(reqBody))
+	body, err := c.executeRequest(ctx, http.MethodPost, path, strings.NewReader(reqBody), registryRequestMessages{
+		execute: "executing compatibility check",
+		read:    "reading response",
+		status:  "compatibility check failed",
+	})
 	if err != nil {
-		return nil, fmt.Errorf("creating request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/vnd.schemaregistry.v1+json")
-	req.Header.Set("Accept", "application/vnd.schemaregistry.v1+json")
-	if c.username != "" {
-		req.SetBasicAuth(c.username, c.password)
-	}
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("executing compatibility check: %w", err)
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	body, err := io.ReadAll(io.LimitReader(resp.Body, 10<<20))
-	if err != nil {
-		return nil, fmt.Errorf("reading response: %w", err)
-	}
-
-	if resp.StatusCode >= 400 {
-		return nil, fmt.Errorf("compatibility check failed (HTTP %d)", resp.StatusCode)
+		return nil, err
 	}
 
 	var result struct {
@@ -463,30 +461,13 @@ func (c *Client) RegisterSchema(ctx context.Context, subject, schemaStr, schemaT
 
 	path := fmt.Sprintf("/subjects/%s/versions", url.PathEscape(subject))
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+path,
-		strings.NewReader(reqBody))
+	body, err := c.executeRequest(ctx, http.MethodPost, path, strings.NewReader(reqBody), registryRequestMessages{
+		execute: "registering schema",
+		read:    "reading response",
+		status:  "schema registration failed",
+	})
 	if err != nil {
-		return 0, fmt.Errorf("creating request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/vnd.schemaregistry.v1+json")
-	req.Header.Set("Accept", "application/vnd.schemaregistry.v1+json")
-	if c.username != "" {
-		req.SetBasicAuth(c.username, c.password)
-	}
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return 0, fmt.Errorf("registering schema: %w", err)
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	body, err := io.ReadAll(io.LimitReader(resp.Body, 10<<20))
-	if err != nil {
-		return 0, fmt.Errorf("reading response: %w", err)
-	}
-
-	if resp.StatusCode >= 400 {
-		return 0, fmt.Errorf("schema registration failed (HTTP %d)", resp.StatusCode)
+		return 0, err
 	}
 
 	var result struct {
