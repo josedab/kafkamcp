@@ -494,8 +494,8 @@ generate: ## Run all code generation (tool docs, go generate)
 check-gen: ## Verify generated code is up to date (fails if stale)
 	@echo "=== Checking generated code ==="
 	$(MAKE) generate
-	@if ! git diff --exit-code docs/tool-reference.md >/dev/null 2>&1; then \
-		echo "ERROR: docs/tool-reference.md is out of date."; \
+	@if ! git diff --exit-code docs/tool-reference.md website/docs/api-reference/tools.md sdk/tool-contract.json >/dev/null 2>&1; then \
+		echo "ERROR: generated tool references or SDK contract are out of date."; \
 		echo "Run 'make generate' and commit the updated file."; \
 		exit 1; \
 	fi

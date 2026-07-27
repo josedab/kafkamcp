@@ -5,21 +5,10 @@ const test = require("node:test");
 
 const { KafkaMCPClient } = require("../dist/index.js");
 
-const supportedTools = new Set([
-  "kafka_list_topics",
-  "kafka_describe_topic",
-  "kafka_create_topic",
-  "kafka_delete_topic",
-  "kafka_consume",
-  "kafka_produce",
-  "kafka_search",
-  "kafka_list_consumer_groups",
-  "kafka_describe_consumer_group",
-  "kafka_reset_offsets",
-  "kafka_list_schemas",
-  "kafka_get_schema",
-  "kafka_diagnose_lag",
-]);
+const contract = JSON.parse(
+  fs.readFileSync(path.join(__dirname, "../../tool-contract.json"), "utf8")
+);
+const supportedTools = new Set(contract.tools.map((tool) => tool.name));
 
 class MockTransport {
   constructor(responses = {}) {

@@ -1,5 +1,7 @@
 import asyncio
+import json
 import sys
+from pathlib import Path
 
 import pytest
 from mcp import ClientSession, StdioServerParameters
@@ -46,18 +48,10 @@ def test_guarded_toolkit_requires_approval_fields():
         assert "approval_token" in tool.args_schema.model_fields
 
 
-# The 29 tools KafkaMCP actually exposes (core-read + ops-write + governance).
+CONTRACT_PATH = Path(__file__).resolve().parents[3] / "tool-contract.json"
 SUPPORTED_TOOLS = {
-    "kafka_list_topics", "kafka_describe_topic", "kafka_list_schemas",
-    "kafka_get_schema", "kafka_check_schema_compatibility", "kafka_consume",
-    "kafka_search", "kafka_list_consumer_groups", "kafka_describe_consumer_group",
-    "kafka_diagnose_lag", "kafka_analyze_dlq", "kafka_health", "kafka_metrics",
-    "kafka_discover_clusters", "kafka_discover_tools", "kafka_produce",
-    "kafka_create_topic", "kafka_delete_topic", "kafka_alter_topic",
-    "kafka_reset_offsets", "kafka_acl_manage", "kafka_create_connector",
-    "kafka_update_connector", "kafka_delete_connector", "kafka_restart_connector",
-    "kafka_approval", "kafka_governance_decision", "kafka_policy_evaluate",
-    "kafka_policy_simulate",
+    tool["name"]
+    for tool in json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))["tools"]
 }
 
 

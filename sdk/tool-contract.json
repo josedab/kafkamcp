@@ -1,0 +1,1011 @@
+{
+  "version": 1,
+  "tools": [
+    {
+      "name": "kafka_acl_manage",
+      "description": "Inspect and reconcile live Kafka ACLs. Read-only actions (list, audit, diff, dry_run) read live broker ACLs against a caller-supplied desired state. Reconciling actions (apply, reconcile) create missing and delete obsolete exact ACLs on the broker and require an approval grant. Stateless: no desired state is stored server-side.",
+      "parameters": [
+        {
+          "name": "action",
+          "type": "string",
+          "required": true,
+          "description": "Action: list, audit, diff, dry_run, apply, reconcile"
+        },
+        {
+          "name": "principal",
+          "type": "string",
+          "required": false,
+          "description": "Principal filter or default principal for supplied rules (e.g. User:app1)"
+        },
+        {
+          "name": "resource_type",
+          "type": "string",
+          "required": false,
+          "description": "Resource type filter for list/audit: topic, group, cluster, transactional_id"
+        },
+        {
+          "name": "cluster",
+          "type": "string",
+          "required": false,
+          "description": "Cluster name for multi-cluster setups."
+        },
+        {
+          "name": "rules",
+          "type": "object",
+          "required": false,
+          "description": "Desired ACL rules array (for diff, dry_run, apply, reconcile). Each rule: {principal, host, resource_type, resource_name, pattern_type, operation, permission}"
+        },
+        {
+          "name": "approval_token",
+          "type": "string",
+          "required": false,
+          "description": "Short-lived token issued by kafka_approval for this exact request."
+        }
+      ],
+      "source_file": "register_aclmgmt.go",
+      "stability": "beta",
+      "category": "governance",
+      "packs": [
+        "governance",
+        "ops-write"
+      ]
+    },
+    {
+      "name": "kafka_alter_topic",
+      "description": "Modify configuration of an existing Kafka topic.",
+      "parameters": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "description": "Topic name"
+        },
+        {
+          "name": "cluster",
+          "type": "string",
+          "required": false,
+          "description": "Cluster name."
+        },
+        {
+          "name": "approval_token",
+          "type": "string",
+          "required": false,
+          "description": "Short-lived token issued by kafka_approval for this exact request."
+        }
+      ],
+      "source_file": "register_p1.go",
+      "stability": "beta",
+      "category": "streaming",
+      "packs": [
+        "ops-write"
+      ]
+    },
+    {
+      "name": "kafka_analyze_dlq",
+      "description": "Analyze a dead-letter queue topic: consume recent messages, parse error headers, categorize failure types, and return a statistical summary with samples.",
+      "parameters": [
+        {
+          "name": "topic",
+          "type": "string",
+          "required": true,
+          "description": "DLQ topic name"
+        },
+        {
+          "name": "limit",
+          "type": "number",
+          "required": false,
+          "description": "Max messages to analyze. Default: 100"
+        },
+        {
+          "name": "cluster",
+          "type": "string",
+          "required": false,
+          "description": "Cluster name."
+        }
+      ],
+      "source_file": "register_p1.go",
+      "stability": "stable",
+      "category": "streaming",
+      "packs": [
+        "core-read"
+      ]
+    },
+    {
+      "name": "kafka_approval",
+      "description": "Manage identity-bound, short-lived approval grants for ops-write tools. Grants are two-person by default, single-use, argument-scoped, persisted when SQLite is enabled, and recorded in a tamper-evident decision chain.",
+      "parameters": [
+        {
+          "name": "action",
+          "type": "string",
+          "required": true,
+          "description": "request | approve | list | get | revoke | status"
+        },
+        {
+          "name": "tool",
+          "type": "string",
+          "required": false,
+          "description": "Target write tool (for request), e.g. kafka_delete_topic"
+        },
+        {
+          "name": "request_reason",
+          "type": "string",
+          "required": false,
+          "description": "Why the mutation is needed (for request)"
+        },
+        {
+          "name": "grant_id",
+          "type": "string",
+          "required": false,
+          "description": "Grant identifier (for approve/get/revoke)"
+        },
+        {
+          "name": "ttl_seconds",
+          "type": "number",
+          "required": false,
+          "description": "Requested grant lifetime in seconds (for approve); capped by config"
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "required": false,
+          "description": "Reason (for revoke)"
+        },
+        {
+          "name": "agent_id",
+          "type": "string",
+          "required": false,
+          "description": "Optional agent filter for list (admin only)"
+        }
+      ],
+      "source_file": "register_approval.go",
+      "stability": "beta",
+      "category": "governance",
+      "packs": [
+        "governance",
+        "ops-write"
+      ]
+    },
+    {
+      "name": "kafka_check_schema_compatibility",
+      "description": "Check if a proposed schema is compatible with the subject's compatibility policy.",
+      "parameters": [
+        {
+          "name": "subject",
+          "type": "string",
+          "required": true,
+          "description": "Schema subject name"
+        },
+        {
+          "name": "schema",
+          "type": "string",
+          "required": true,
+          "description": "The proposed schema definition as a JSON string"
+        },
+        {
+          "name": "schema_type",
+          "type": "string",
+          "required": false,
+          "description": "Schema type: AVRO, PROTOBUF, JSON. Default: AVRO"
+        },
+        {
+          "name": "version",
+          "type": "string",
+          "required": false,
+          "description": "Version to check against. Default: 'latest'"
+        }
+      ],
+      "source_file": "register_p0.go",
+      "stability": "stable",
+      "category": "streaming",
+      "packs": [
+        "core-read"
+      ]
+    },
+    {
+      "name": "kafka_consume",
+      "description": "Read messages from a Kafka topic with flexible positioning. Supports earliest, latest, numeric offset, or ISO 8601 timestamp.",
+      "parameters": [
+        {
+          "name": "topic",
+          "type": "string",
+          "required": true,
+          "description": "Topic name"
+        },
+        {
+          "name": "partition",
+          "type": "number",
+          "required": false,
+          "description": "Specific partition (-1 for all). Default: all"
+        },
+        {
+          "name": "offset",
+          "type": "string",
+          "required": false,
+          "description": "Start position: 'earliest', 'latest', numeric offset, or ISO 8601 timestamp. Default: 'latest'"
+        },
+        {
+          "name": "limit",
+          "type": "number",
+          "required": false,
+          "description": "Maximum messages to return (1-1000). Default: 10"
+        },
+        {
+          "name": "deserializer",
+          "type": "string",
+          "required": false,
+          "description": "Deserialization format: auto, json, string, bytes. Auto tries JSON and falls back to string."
+        },
+        {
+          "name": "timeout_ms",
+          "type": "number",
+          "required": false,
+          "description": "Maximum wait time in ms. Default: 5000"
+        },
+        {
+          "name": "cluster",
+          "type": "string",
+          "required": false,
+          "description": "Cluster name."
+        }
+      ],
+      "source_file": "register_p0.go",
+      "stability": "stable",
+      "category": "streaming",
+      "packs": [
+        "core-read"
+      ]
+    },
+    {
+      "name": "kafka_create_connector",
+      "description": "Create a new Kafka Connect connector with the specified configuration.",
+      "parameters": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "description": "Connector name"
+        },
+        {
+          "name": "config",
+          "type": "object",
+          "required": true,
+          "description": "Connector configuration map"
+        },
+        {
+          "name": "cluster",
+          "type": "string",
+          "required": false,
+          "description": "Cluster name."
+        },
+        {
+          "name": "approval_token",
+          "type": "string",
+          "required": false,
+          "description": "Short-lived token issued by kafka_approval for this exact request."
+        },
+        {
+          "name": "idempotency_key",
+          "type": "string",
+          "required": false,
+          "description": "Optional retry key for safely suppressing a duplicate successful mutation."
+        }
+      ],
+      "source_file": "register_advanced.go",
+      "stability": "beta",
+      "category": "streaming",
+      "packs": [
+        "ops-write"
+      ]
+    },
+    {
+      "name": "kafka_create_topic",
+      "description": "Create a new Kafka topic with specified partitions, replication factor, and configuration.",
+      "parameters": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "description": "Topic name"
+        },
+        {
+          "name": "partitions",
+          "type": "number",
+          "required": false,
+          "description": "Number of partitions. Default: 1"
+        },
+        {
+          "name": "replication_factor",
+          "type": "number",
+          "required": false,
+          "description": "Replication factor. Default: 1"
+        },
+        {
+          "name": "cluster",
+          "type": "string",
+          "required": false,
+          "description": "Cluster name."
+        },
+        {
+          "name": "approval_token",
+          "type": "string",
+          "required": false,
+          "description": "Short-lived token issued by kafka_approval for this exact request."
+        },
+        {
+          "name": "idempotency_key",
+          "type": "string",
+          "required": false,
+          "description": "Optional retry key for safely suppressing a duplicate successful mutation."
+        }
+      ],
+      "source_file": "register_p1.go",
+      "stability": "beta",
+      "category": "streaming",
+      "packs": [
+        "ops-write"
+      ]
+    },
+    {
+      "name": "kafka_delete_connector",
+      "description": "Delete a Kafka Connect connector.",
+      "parameters": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "description": "Connector name"
+        },
+        {
+          "name": "cluster",
+          "type": "string",
+          "required": false,
+          "description": "Cluster name."
+        },
+        {
+          "name": "approval_token",
+          "type": "string",
+          "required": false,
+          "description": "Short-lived token issued by kafka_approval for this exact request."
+        },
+        {
+          "name": "idempotency_key",
+          "type": "string",
+          "required": false,
+          "description": "Optional retry key for safely suppressing a duplicate successful mutation."
+        }
+      ],
+      "source_file": "register_advanced.go",
+      "stability": "beta",
+      "category": "streaming",
+      "packs": [
+        "ops-write"
+      ]
+    },
+    {
+      "name": "kafka_delete_topic",
+      "description": "Delete a Kafka topic. This is a destructive operation.",
+      "parameters": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "description": "Topic name to delete"
+        },
+        {
+          "name": "cluster",
+          "type": "string",
+          "required": false,
+          "description": "Cluster name."
+        },
+        {
+          "name": "approval_token",
+          "type": "string",
+          "required": false,
+          "description": "Short-lived token issued by kafka_approval for this exact request."
+        },
+        {
+          "name": "idempotency_key",
+          "type": "string",
+          "required": false,
+          "description": "Optional retry key for safely suppressing a duplicate successful mutation."
+        }
+      ],
+      "source_file": "register_p1.go",
+      "stability": "beta",
+      "category": "streaming",
+      "packs": [
+        "ops-write"
+      ]
+    },
+    {
+      "name": "kafka_describe_consumer_group",
+      "description": "Get the state, members, partition assignments, and per-partition lag of a consumer group.",
+      "parameters": [
+        {
+          "name": "group_id",
+          "type": "string",
+          "required": true,
+          "description": "Consumer group ID"
+        },
+        {
+          "name": "cluster",
+          "type": "string",
+          "required": false,
+          "description": "Cluster name."
+        }
+      ],
+      "source_file": "register_p0.go",
+      "stability": "stable",
+      "category": "streaming",
+      "packs": [
+        "core-read"
+      ]
+    },
+    {
+      "name": "kafka_describe_topic",
+      "description": "Get detailed metadata for a specific topic including partition details, replicas, ISR, offsets, and configuration.",
+      "parameters": [
+        {
+          "name": "topic",
+          "type": "string",
+          "required": true,
+          "description": "Topic name"
+        },
+        {
+          "name": "cluster",
+          "type": "string",
+          "required": false,
+          "description": "Cluster name for multi-cluster setups."
+        }
+      ],
+      "source_file": "register_p0.go",
+      "stability": "stable",
+      "category": "streaming",
+      "packs": [
+        "core-read"
+      ]
+    },
+    {
+      "name": "kafka_diagnose_lag",
+      "description": "Deep diagnostic analysis of consumer group lag. Traces root cause: slow consumers, producer spikes, partition imbalance, or GC pressure.",
+      "parameters": [
+        {
+          "name": "group_id",
+          "type": "string",
+          "required": true,
+          "description": "Consumer group ID"
+        },
+        {
+          "name": "cluster",
+          "type": "string",
+          "required": false,
+          "description": "Cluster name."
+        }
+      ],
+      "source_file": "register_features.go",
+      "stability": "stable",
+      "category": "governance",
+      "packs": [
+        "core-read"
+      ]
+    },
+    {
+      "name": "kafka_discover_clusters",
+      "description": "Auto-discover Kafka clusters by scanning common ports, environment variables, and DNS records.",
+      "source_file": "register_onboarding.go",
+      "stability": "stable",
+      "category": "ops",
+      "packs": [
+        "core-read"
+      ]
+    },
+    {
+      "name": "kafka_discover_tools",
+      "description": "Discover the active provider, tool packs, and registered tools. Optionally filter legacy capability metadata by category.",
+      "parameters": [
+        {
+          "name": "category",
+          "type": "string",
+          "required": false,
+          "description": "Optional tool category to discover"
+        }
+      ],
+      "source_file": "register_capability.go",
+      "stability": "stable",
+      "category": "discovery",
+      "packs": [
+        "core-read"
+      ]
+    },
+    {
+      "name": "kafka_get_schema",
+      "description": "Get the full schema definition for a subject. Returns parsed schema, field summary, compatibility, and references.",
+      "parameters": [
+        {
+          "name": "subject",
+          "type": "string",
+          "required": true,
+          "description": "Schema subject name (e.g., 'orders.created-value')"
+        },
+        {
+          "name": "version",
+          "type": "string",
+          "required": false,
+          "description": "Version: 'latest' or number. Default: 'latest'"
+        }
+      ],
+      "source_file": "register_p0.go",
+      "stability": "stable",
+      "category": "streaming",
+      "packs": [
+        "core-read"
+      ]
+    },
+    {
+      "name": "kafka_governance_decision",
+      "description": "Simulate mutation policy, preview blast radius, generate least-privilege guidance, and verify/export tamper-evident approval decisions. Actions: simulate, verify, export.",
+      "parameters": [
+        {
+          "name": "action",
+          "type": "string",
+          "required": true,
+          "description": "simulate | verify | export"
+        },
+        {
+          "name": "tool",
+          "type": "string",
+          "required": false,
+          "description": "Target write tool (for simulate)"
+        },
+        {
+          "name": "args",
+          "type": "object",
+          "required": false,
+          "description": "Exact target-tool arguments (for simulate)"
+        },
+        {
+          "name": "grant_id",
+          "type": "string",
+          "required": false,
+          "description": "Grant identifier (for verify)"
+        },
+        {
+          "name": "agent_id",
+          "type": "string",
+          "required": false,
+          "description": "Optional agent filter (for export; admin only when different from caller)"
+        }
+      ],
+      "source_file": "register_approval.go",
+      "stability": "beta",
+      "category": "governance",
+      "packs": [
+        "governance"
+      ]
+    },
+    {
+      "name": "kafka_health",
+      "description": "Run a read-only Kafka health check using live cluster metadata, topic discovery, and consumer-group discovery.",
+      "parameters": [
+        {
+          "name": "cluster",
+          "type": "string",
+          "required": false,
+          "description": "Cluster name. Defaults to the configured default cluster."
+        }
+      ],
+      "source_file": "register_core_observability.go",
+      "stability": "stable",
+      "category": "observability",
+      "packs": [
+        "core-read"
+      ]
+    },
+    {
+      "name": "kafka_list_consumer_groups",
+      "description": "List all consumer groups with summary state, member count, and total lag.",
+      "parameters": [
+        {
+          "name": "state_filter",
+          "type": "string",
+          "required": false,
+          "description": "Filter by state (Stable, Empty, Dead)"
+        },
+        {
+          "name": "cluster",
+          "type": "string",
+          "required": false,
+          "description": "Cluster name."
+        }
+      ],
+      "source_file": "register_p0.go",
+      "stability": "stable",
+      "category": "streaming",
+      "packs": [
+        "core-read"
+      ]
+    },
+    {
+      "name": "kafka_list_schemas",
+      "description": "List all subjects in the Schema Registry with latest version, type, and compatibility level.",
+      "parameters": [
+        {
+          "name": "filter",
+          "type": "string",
+          "required": false,
+          "description": "Glob pattern to filter subject names"
+        }
+      ],
+      "source_file": "register_p0.go",
+      "stability": "stable",
+      "category": "streaming",
+      "packs": [
+        "core-read"
+      ]
+    },
+    {
+      "name": "kafka_list_topics",
+      "description": "List all Kafka topics in the cluster with metadata including partition count, replication factor, and estimated message count.",
+      "parameters": [
+        {
+          "name": "filter",
+          "type": "string",
+          "required": false,
+          "description": "Glob pattern to filter topic names (e.g., 'orders.*', '*-dlq')"
+        },
+        {
+          "name": "include_internal",
+          "type": "boolean",
+          "required": false,
+          "description": "Include internal topics (e.g., __consumer_offsets). Default: false"
+        },
+        {
+          "name": "cluster",
+          "type": "string",
+          "required": false,
+          "description": "Cluster name for multi-cluster setups."
+        }
+      ],
+      "source_file": "register_p0.go",
+      "stability": "stable",
+      "category": "streaming",
+      "packs": [
+        "core-read"
+      ]
+    },
+    {
+      "name": "kafka_metrics",
+      "description": "Return aggregated local KafkaMCP Prometheus metrics without exposing raw agent, topic, group, or cluster labels.",
+      "source_file": "register_core_observability.go",
+      "stability": "stable",
+      "category": "observability",
+      "packs": [
+        "core-read"
+      ]
+    },
+    {
+      "name": "kafka_policy_evaluate",
+      "description": "Evaluate an OPA Rego policy for an authorization decision. Returns whether the action is allowed with reasoning.",
+      "parameters": [
+        {
+          "name": "agent",
+          "type": "string",
+          "required": true,
+          "description": "Agent ID to evaluate"
+        },
+        {
+          "name": "action",
+          "type": "string",
+          "required": true,
+          "description": "Action: read, write, create, delete, admin"
+        },
+        {
+          "name": "resource",
+          "type": "string",
+          "required": true,
+          "description": "Resource type: topic, consumer_group, schema, cluster"
+        },
+        {
+          "name": "resource_name",
+          "type": "string",
+          "required": false,
+          "description": "Specific resource name. Default: *"
+        }
+      ],
+      "source_file": "register_opa.go",
+      "stability": "beta",
+      "category": "governance",
+      "packs": [
+        "governance"
+      ]
+    },
+    {
+      "name": "kafka_policy_simulate",
+      "description": "Simulate a policy evaluation showing how each policy rule matches, without recording the decision.",
+      "parameters": [
+        {
+          "name": "agent",
+          "type": "string",
+          "required": true,
+          "description": "Agent ID to simulate"
+        },
+        {
+          "name": "action",
+          "type": "string",
+          "required": true,
+          "description": "Action to simulate"
+        },
+        {
+          "name": "resource",
+          "type": "string",
+          "required": true,
+          "description": "Resource type"
+        },
+        {
+          "name": "resource_name",
+          "type": "string",
+          "required": false,
+          "description": "Specific resource name"
+        }
+      ],
+      "source_file": "register_opa.go",
+      "stability": "beta",
+      "category": "governance",
+      "packs": [
+        "governance"
+      ]
+    },
+    {
+      "name": "kafka_produce",
+      "description": "Publish one or more messages to a Kafka topic. Returns delivery confirmation with partition, offset, and timestamp.",
+      "parameters": [
+        {
+          "name": "topic",
+          "type": "string",
+          "required": true,
+          "description": "Topic name"
+        },
+        {
+          "name": "messages",
+          "type": "object",
+          "required": true,
+          "description": "Array of messages: [{key, value, headers, partition}]. Max 100."
+        },
+        {
+          "name": "acks",
+          "type": "string",
+          "required": false,
+          "description": "Acknowledgment level: 0, 1, all. Default: all"
+        },
+        {
+          "name": "cluster",
+          "type": "string",
+          "required": false,
+          "description": "Cluster name."
+        },
+        {
+          "name": "approval_token",
+          "type": "string",
+          "required": false,
+          "description": "Short-lived token issued by kafka_approval for this exact request."
+        }
+      ],
+      "source_file": "register_p0.go",
+      "stability": "beta",
+      "category": "streaming",
+      "packs": [
+        "ops-write"
+      ]
+    },
+    {
+      "name": "kafka_reset_offsets",
+      "description": "Reset consumer group offsets. Supports earliest, latest, or timestamp strategies with dry-run mode.",
+      "parameters": [
+        {
+          "name": "group_id",
+          "type": "string",
+          "required": true,
+          "description": "Consumer group ID"
+        },
+        {
+          "name": "topic",
+          "type": "string",
+          "required": true,
+          "description": "Topic name"
+        },
+        {
+          "name": "strategy",
+          "type": "string",
+          "required": true,
+          "description": "Reset strategy: earliest, latest, timestamp"
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "required": false,
+          "description": "Timestamp value for 'timestamp' strategy (ISO 8601)"
+        },
+        {
+          "name": "dry_run",
+          "type": "boolean",
+          "required": false,
+          "description": "Preview without applying. Default: false"
+        },
+        {
+          "name": "cluster",
+          "type": "string",
+          "required": false,
+          "description": "Cluster name."
+        },
+        {
+          "name": "approval_token",
+          "type": "string",
+          "required": false,
+          "description": "Short-lived token issued by kafka_approval for this exact request."
+        }
+      ],
+      "source_file": "register_p1.go",
+      "stability": "beta",
+      "category": "streaming",
+      "packs": [
+        "ops-write"
+      ]
+    },
+    {
+      "name": "kafka_restart_connector",
+      "description": "Restart a Kafka Connect connector or specific tasks. Supports bulk restart of failed tasks.",
+      "parameters": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "description": "Connector name"
+        },
+        {
+          "name": "task_id",
+          "type": "number",
+          "required": false,
+          "description": "Specific task ID to restart (-1 for all). Default: -1"
+        },
+        {
+          "name": "failed_only",
+          "type": "boolean",
+          "required": false,
+          "description": "Only restart failed tasks. Default: false"
+        },
+        {
+          "name": "cluster",
+          "type": "string",
+          "required": false,
+          "description": "Cluster name."
+        },
+        {
+          "name": "approval_token",
+          "type": "string",
+          "required": false,
+          "description": "Short-lived token issued by kafka_approval for this exact request."
+        }
+      ],
+      "source_file": "register_advanced.go",
+      "stability": "beta",
+      "category": "streaming",
+      "packs": [
+        "ops-write"
+      ]
+    },
+    {
+      "name": "kafka_search",
+      "description": "Search/filter messages in a topic by key, header, value content, or time range. Bounded scan.",
+      "parameters": [
+        {
+          "name": "topic",
+          "type": "string",
+          "required": true,
+          "description": "Topic name"
+        },
+        {
+          "name": "key_filter",
+          "type": "string",
+          "required": false,
+          "description": "Filter messages where key contains this string"
+        },
+        {
+          "name": "header_key",
+          "type": "string",
+          "required": false,
+          "description": "Filter messages that have this header key"
+        },
+        {
+          "name": "header_value",
+          "type": "string",
+          "required": false,
+          "description": "Filter messages where the header matches this value"
+        },
+        {
+          "name": "value_contains",
+          "type": "string",
+          "required": false,
+          "description": "Filter messages where value contains this string"
+        },
+        {
+          "name": "start_time",
+          "type": "string",
+          "required": false,
+          "description": "Start time (ISO 8601) for time range filter"
+        },
+        {
+          "name": "end_time",
+          "type": "string",
+          "required": false,
+          "description": "End time (ISO 8601) for time range filter"
+        },
+        {
+          "name": "max_scan",
+          "type": "number",
+          "required": false,
+          "description": "Max messages to scan. Default: 10000"
+        },
+        {
+          "name": "limit",
+          "type": "number",
+          "required": false,
+          "description": "Max matching messages to return. Default: 10"
+        },
+        {
+          "name": "cluster",
+          "type": "string",
+          "required": false,
+          "description": "Cluster name."
+        }
+      ],
+      "source_file": "register_p1.go",
+      "stability": "stable",
+      "category": "streaming",
+      "packs": [
+        "core-read"
+      ]
+    },
+    {
+      "name": "kafka_update_connector",
+      "description": "Update an existing Kafka Connect connector configuration.",
+      "parameters": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "description": "Connector name"
+        },
+        {
+          "name": "config",
+          "type": "object",
+          "required": true,
+          "description": "New connector configuration map"
+        },
+        {
+          "name": "cluster",
+          "type": "string",
+          "required": false,
+          "description": "Cluster name."
+        },
+        {
+          "name": "approval_token",
+          "type": "string",
+          "required": false,
+          "description": "Short-lived token issued by kafka_approval for this exact request."
+        },
+        {
+          "name": "idempotency_key",
+          "type": "string",
+          "required": false,
+          "description": "Optional retry key for safely suppressing a duplicate successful mutation."
+        }
+      ],
+      "source_file": "register_advanced.go",
+      "stability": "beta",
+      "category": "streaming",
+      "packs": [
+        "ops-write"
+      ]
+    }
+  ]
+}

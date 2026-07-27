@@ -3,6 +3,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -13,20 +14,25 @@ import (
 )
 
 type toolParam struct {
-	Name        string
-	Type        string
-	Required    bool
-	Description string
+	Name        string `json:"name"`
+	Type        string `json:"type"`
+	Required    bool   `json:"required"`
+	Description string `json:"description"`
 }
 
 type toolDef struct {
-	Name        string
-	Description string
-	Params      []toolParam
-	SourceFile  string
-	Tier        string
-	Category    string
-	Packs       []string
+	Name        string      `json:"name"`
+	Description string      `json:"description"`
+	Params      []toolParam `json:"parameters,omitempty"`
+	SourceFile  string      `json:"source_file"`
+	Tier        string      `json:"stability"`
+	Category    string      `json:"category,omitempty"`
+	Packs       []string    `json:"packs"`
+}
+
+type toolContract struct {
+	Version int       `json:"version"`
+	Tools   []toolDef `json:"tools"`
 }
 
 var (
@@ -129,6 +135,7 @@ func main() {
 	registerDir := filepath.Join("internal", "server")
 	outputFile := filepath.Join("docs", "tool-reference.md")
 	websiteOutputFile := filepath.Join("website", "docs", "api-reference", "tools.md")
+	contractOutputFile := filepath.Join("sdk", "tool-contract.json")
 
 	surface, err := toolSurfaceFromSource()
 	if err != nil {
@@ -212,7 +219,17 @@ KafkaMCP exposes %d MCP tools across the supported production surface.
 		fmt.Fprintf(os.Stderr, "error writing website output: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Printf("Generated %s and %s with %d tools\n", outputFile, websiteOutputFile, len(tools))
+	contract, err := renderContract(tools)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error rendering tool contract: %v\n", err)
+		os.Exit(1)
+	}
+	if err := os.WriteFile(contractOutputFile, contract, 0o644); err != nil {
+		fmt.Fprintf(os.Stderr, "error writing tool contract: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("Generated %s, %s, and %s with %d tools\n",
+		outputFile, websiteOutputFile, contractOutputFile, len(tools))
 }
 
 func parseFile(path string) ([]toolDef, error) {
@@ -389,4 +406,12 @@ func renderMarkdown(tools []toolDef) string {
 	}
 
 	return sb.String()
+}
+
+func renderContract(tools []toolDef) ([]byte, error) {
+	data, err := json.MarshalIndent(toolContract{Version: 1, Tools: tools}, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+	return append(data, '\n'), nil
 }

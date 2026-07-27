@@ -38,7 +38,7 @@ jobs:
       - name: Check tool docs are up to date
         run: |
           go run ./cmd/gen-tool-docs
-          git diff --exit-code docs/tool-reference.md website/docs/api-reference/tools.md
+          git diff --exit-code docs/tool-reference.md website/docs/api-reference/tools.md sdk/tool-contract.json
 
       - name: Check website tool count matches generated docs
         run: |

@@ -1,33 +1,35 @@
 package kafkamcpsdk
 
 import (
+	"encoding/json"
 	"os"
 	"regexp"
 	"testing"
 )
 
-// supportedTools is the exact set of 29 tools KafkaMCP exposes across the
-// core-read, ops-write and governance packs. The SDK must never call a tool
-// outside this allow-list. Keep in sync with internal/server/tool_packs.go.
-var supportedTools = map[string]bool{
-	// core-read (stable)
-	"kafka_list_topics": true, "kafka_describe_topic": true, "kafka_list_schemas": true,
-	"kafka_get_schema": true, "kafka_check_schema_compatibility": true, "kafka_consume": true,
-	"kafka_search": true, "kafka_list_consumer_groups": true, "kafka_describe_consumer_group": true,
-	"kafka_diagnose_lag": true, "kafka_analyze_dlq": true, "kafka_health": true,
-	"kafka_metrics": true, "kafka_discover_clusters": true, "kafka_discover_tools": true,
-	// ops-write + governance (beta)
-	"kafka_produce": true, "kafka_create_topic": true, "kafka_delete_topic": true,
-	"kafka_alter_topic": true, "kafka_reset_offsets": true, "kafka_acl_manage": true,
-	"kafka_create_connector": true, "kafka_update_connector": true, "kafka_delete_connector": true,
-	"kafka_restart_connector": true, "kafka_approval": true, "kafka_governance_decision": true,
-	"kafka_policy_evaluate": true, "kafka_policy_simulate": true,
+type toolContract struct {
+	Tools []struct {
+		Name string `json:"name"`
+	} `json:"tools"`
 }
 
 // TestSDKOnlyCallsSupportedTools enumerates every tool name the SDK emits via
 // CallTool and asserts it belongs to the supported 29-tool allow-list. This
 // prevents the SDK from re-introducing phantom tool names.
 func TestSDKOnlyCallsSupportedTools(t *testing.T) {
+	contractData, err := os.ReadFile("../../tool-contract.json")
+	if err != nil {
+		t.Fatalf("reading tool contract: %v", err)
+	}
+	var contract toolContract
+	if err := json.Unmarshal(contractData, &contract); err != nil {
+		t.Fatalf("parsing tool contract: %v", err)
+	}
+	supportedTools := make(map[string]bool, len(contract.Tools))
+	for _, tool := range contract.Tools {
+		supportedTools[tool.Name] = true
+	}
+
 	src, err := os.ReadFile("client.go")
 	if err != nil {
 		t.Fatalf("reading client.go: %v", err)

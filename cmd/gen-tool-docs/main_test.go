@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -174,5 +175,33 @@ func TestToolHelpers(t *testing.T) {
 
 	if got := escapeMDX("map { key: value }"); got != "map &#123; key: value &#125;" {
 		t.Fatalf("escapeMDX() = %q", got)
+	}
+}
+
+func TestRenderContract(t *testing.T) {
+	t.Parallel()
+
+	data, err := renderContract([]toolDef{{
+		Name:        "kafka_list_topics",
+		Description: "List topics",
+		SourceFile:  "register_p0.go",
+		Tier:        "stable",
+		Category:    "streaming",
+		Packs:       []string{"core-read"},
+		Params: []toolParam{{
+			Name: "filter", Type: "string", Description: "Topic filter",
+		}},
+	}})
+	if err != nil {
+		t.Fatalf("renderContract: %v", err)
+	}
+	var contract toolContract
+	if err := json.Unmarshal(data, &contract); err != nil {
+		t.Fatalf("unmarshal contract: %v", err)
+	}
+	if contract.Version != 1 || len(contract.Tools) != 1 ||
+		contract.Tools[0].Name != "kafka_list_topics" ||
+		contract.Tools[0].Params[0].Name != "filter" {
+		t.Fatalf("contract = %#v", contract)
 	}
 }
