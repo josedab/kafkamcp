@@ -298,7 +298,7 @@ func parseFile(path string) ([]toolDef, error) {
 func isIdempotentTool(name string) bool {
 	switch name {
 	case "kafka_create_topic", "kafka_delete_topic", "kafka_create_connector",
-		"kafka_update_connector", "kafka_delete_connector":
+		"kafka_update_connector", "kafka_delete_connector", "kafka_acl_manage":
 		return true
 	default:
 		return false

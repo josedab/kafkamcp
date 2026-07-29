@@ -164,6 +164,7 @@ func TestToolHelpers(t *testing.T) {
 		"kafka_create_connector",
 		"kafka_update_connector",
 		"kafka_delete_connector",
+		"kafka_acl_manage",
 	} {
 		if !isIdempotentTool(name) {
 			t.Errorf("isIdempotentTool(%q) = false", name)

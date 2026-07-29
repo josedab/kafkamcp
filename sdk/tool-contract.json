@@ -40,6 +40,12 @@
           "type": "string",
           "required": false,
           "description": "Short-lived token issued by kafka_approval for this exact request."
+        },
+        {
+          "name": "idempotency_key",
+          "type": "string",
+          "required": false,
+          "description": "Optional retry key for safely suppressing a duplicate successful mutation."
         }
       ],
       "source_file": "register_aclmgmt.go",

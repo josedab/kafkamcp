@@ -111,6 +111,7 @@ Inspect and reconcile live Kafka ACLs. Read-only actions (list, audit, diff, dry
 | `cluster` | string |  | Cluster name for multi-cluster setups. |
 | `rules` | object |  | Desired ACL rules array (for diff, dry_run, apply, reconcile). Each rule: {principal, host, resource_type, resource_name, pattern_type, operation, permission} |
 | `approval_token` | string |  | Short-lived token issued by kafka_approval for this exact request. |
+| `idempotency_key` | string |  | Optional retry key for safely suppressing a duplicate successful mutation. |
 
 ### `kafka_alter_topic`
 
